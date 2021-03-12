@@ -11,7 +11,7 @@ from scrapers.lunarcrush.session_key_handler import get_session_key
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "crypto_db.settings")
 django.setup()
 
-from crypto_db.model.models import LunarCrushTimeEntries, Asset, LunarCrushInfluencer
+from database.model.models import LunarCrushTimeEntries, Asset, LunarCrushInfluencer
 
 url = 'https://api2.lunarcrush.com/v2'
 
