@@ -5,10 +5,10 @@ import pytz
 import requests
 import django
 
-from scrapers.lunarcrush.headers import lunarcrush_headers
-from scrapers.lunarcrush.session_key_handler import get_session_key
+from data_processing.scrapers.lunarcrush.headers import lunarcrush_headers
+from data_processing.scrapers.lunarcrush.session_key_handler import get_session_key
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "crypto_db.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import LunarCrushTimeEntries, Asset, LunarCrushInfluencer
@@ -198,7 +198,7 @@ def get_lunarcrush_data(symbol, key, start=None, end=None, data_points=500, inte
 
 if __name__ == "__main__":
 
-    endpoint_option = 4
+    endpoint_option = 3
     symbol = "global"
 
     key = get_session_key()

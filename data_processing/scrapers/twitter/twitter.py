@@ -4,12 +4,12 @@ from datetime import timedelta, datetime
 
 import django
 from dateutil.parser import parse
-from scrapers.twitter.tweets_fetcher import get_tweets
+from data_processing.scrapers.twitter.tweets_fetcher import get_tweets
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "crypto_db.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Tweet, TwitterUser, Hashtag, LunarCrushTimeEntries
+from database.model.models import TwitterUser, Hashtag, LunarCrushTimeEntries
 
 
 def daterange(start_date, end_date):
