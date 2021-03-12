@@ -7,7 +7,7 @@ from sklearn.model_selection import TimeSeriesSplit
 
 from backtesting.ml_backtester import MLBacktester
 
-df = pd.read_csv('data/bitcoin_clean.csv', parse_dates=[0], index_col=0)
+df = pd.read_csv('data_processing/data/bitcoin_clean.csv', parse_dates=[0], index_col=0)
 
 target = 'returns_class_target'
 

@@ -1,7 +1,8 @@
 import numpy as np
 from sklearn.model_selection import TimeSeriesSplit
 
-from model.helpers.helper_methods import series_to_supervised, plot_learning_curve
+from model.helpers.helper_methods import plot_learning_curve
+from data_processing.transform.feature_engineering import get_lag_features
 from model.model_training import train_model
 
 
@@ -28,7 +29,7 @@ class MLBacktester:
         if self.returns_var not in [*other_features, *self.lag_features]:
             other_features.append(self.returns_var)
 
-        data = series_to_supervised(data[self.lag_features], self.nr_lags, 1).join(data[other_features], how='left')
+        data = get_lag_features(data[self.lag_features], self.nr_lags, 1).join(data[other_features], how='left')
         data.dropna(axis=0, inplace=True)
 
         cat_features = list(data.dtypes[(data.dtypes != 'int64') & (data.dtypes != 'float64')].index)
