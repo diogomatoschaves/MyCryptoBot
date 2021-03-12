@@ -1,7 +1,7 @@
 import requests
 from requests.exceptions import ConnectionError
 
-from scrapers.helpers.headers import get_headers
+from data_processing.scrapers.helpers.headers import get_headers
 
 
 def get_tweets(words, hashtags, from_date, until_date, min_favs=None):
