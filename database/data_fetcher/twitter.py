@@ -9,7 +9,7 @@ from scrapers.twitter.twitter import get_tweets
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "crypto_db.settings")
 django.setup()
 
-from crypto_db.model.models import Tweet, TwitterUser, Hashtag, LunarCrushTimeEntries
+from database.model.models import Tweet, TwitterUser, Hashtag, LunarCrushTimeEntries
 
 
 def daterange(start_date, end_date):

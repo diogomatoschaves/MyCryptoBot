@@ -13,7 +13,7 @@ DATABASES = {
 }
 
 INSTALLED_APPS = (
-    'crypto_db.model',
+    'database.model',
 )
 
 """
