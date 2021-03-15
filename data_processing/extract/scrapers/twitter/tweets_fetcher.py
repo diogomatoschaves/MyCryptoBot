@@ -1,12 +1,12 @@
 import requests
 from requests.exceptions import ConnectionError
 
-from data_processing.extract.scrapers.helpers.headers import get_headers
+from data_processing.extract.scrapers.helpers.headers import get_twitter_headers
 
 
 def get_tweets(words, hashtags, from_date, until_date, min_favs=None):
 
-    headers = get_headers()
+    headers = get_twitter_headers()
 
     words_string = '(' + '%20OR%20'.join(words) + ')%20'
 

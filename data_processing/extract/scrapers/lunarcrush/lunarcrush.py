@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
     key = get_session_key()
 
-    if endpoint_option in [1, 3]:
+    if endpoint_option == 1:
 
         end = datetime.utcnow() - timedelta(hours=1)
 
@@ -220,6 +220,22 @@ if __name__ == "__main__":
     elif endpoint_option == 2:
 
         get_lunarcrush_data(symbol, key, data_points=365, endpoint_option=endpoint_option)
+
+    if endpoint_option == 3:
+
+        beg = datetime.utcnow() - timedelta(hours=250)
+
+        start = datetime(2019, 9, 1) - timedelta(hours=250)
+
+        while beg > start:
+
+            print(beg)
+
+            beg_timestamp = int(beg.timestamp())
+
+            beg = get_lunarcrush_data(symbol, key, start=beg_timestamp, data_points=250, endpoint_option=endpoint_option)
+
+            beg = beg - timedelta(hours=250)
 
     elif endpoint_option == 4:
 
