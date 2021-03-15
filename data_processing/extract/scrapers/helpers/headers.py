@@ -1,4 +1,4 @@
-def get_headers():
+def get_twitter_headers():
 
     request_headers = {
         "authority": "twitter.com",
