@@ -134,3 +134,33 @@ class Asset(models.Model):
     symbol = models.TextField(primary_key=True)
     name = models.TextField(null=True)
 
+
+class MessariAPI(models.Model):
+
+    id = models.IntegerField(primary_key=True)
+    asset = models.ForeignKey('Asset', on_delete=models.SET_NULL, null=True)
+    time = models.DateTimeField(null=True)
+    interval = models.FloatField(null=True, default=3600)
+    open = models.FloatField(null=True)
+    close = models.FloatField(null=True)
+    high = models.FloatField(null=True)
+    low = models.FloatField(null=True)
+    volume = models.FloatField(null=True)
+    bitwise_volume = models.FloatField(null=True)
+    real_volume = models.FloatField(null=True)
+    reddit_users = models.IntegerField(null=True)
+    reddit_subscribers = models.IntegerField(null=True)
+    average_transfer_value_usd = models.FloatField(null=True)
+    flow_in_usd = models.FloatField(null=True)
+    flow_out_usd = models.FloatField(null=True)
+    transfers_count = models.IntegerField(null=True)
+    transfers_volume = models.FloatField(null=True)
+    active_addresses = models.IntegerField(null=True)
+    blocks_count = models.IntegerField(null=True)
+    transactions_count = models.IntegerField(null=True)
+    mean_difficulty = models.FloatField(null=True)
+    sharpe_30d = models.FloatField(null=True)
+    sharpe_90d = models.FloatField(null=True)
+    sharpe_1yr = models.FloatField(null=True)
+    sharpe_3yr = models.FloatField(null=True)
+
