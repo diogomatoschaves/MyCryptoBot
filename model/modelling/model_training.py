@@ -2,24 +2,17 @@ import logging
 import joblib
 
 from sklearn.base import is_classifier
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import Ridge, Lasso, LogisticRegression
-from sklearn.ensemble import RandomForestRegressor, AdaBoostClassifier, GradientBoostingClassifier, \
-    RandomForestClassifier, GradientBoostingRegressor
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.multioutput import MultiOutputRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVR, SVC
 
-from model.helpers.helper_methods import train_test_split_ts
-from model.helpers.logger import configure_logger
-from model.helpers.pipeline_classes import FeaturePolynomial, FeatureSelector, CustomOneHotEncoder, FeatureUnionNames, \
-    CustomStandardScaler, CustomPipeline, CustomPolynomialFeatures
-from model.settings import (
+from model.modelling.helpers import train_test_split_ts
+from model.modelling.helpers import configure_logger
+from model.modelling.helpers import FeatureSelector, CustomOneHotEncoder, CustomStandardScaler, CustomPipeline, CustomPolynomialFeatures
+from model.modelling.defaults import (
     estimator_params,
 )
-from model.model_evaluation import model_evaluation
+from model.modelling.model_evaluation import model_evaluation
 
 grid_search_params_defaults = {
     "reg__n_estimators": [250, 300, 350],

@@ -1,9 +1,9 @@
 import numpy as np
 from sklearn.model_selection import TimeSeriesSplit
 
-from model.helpers.helper_methods import plot_learning_curve
+from model.modelling.helpers import plot_learning_curve
 from data_processing.transform.feature_engineering import get_lag_features
-from model.model_training import train_model
+from model.modelling.model_training import train_model
 
 
 class MLBacktester:
