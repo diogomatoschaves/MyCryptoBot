@@ -22,8 +22,8 @@ url = "https://data.messari.io/api/v1/assets/1e31218a-e44e-4285-820c-8282ee22203
 messari_metrics = {
     "price": {
         "schemma": ["open", "high", "low", "close", "volume"],
-        "interval": '5m',
-        "time_frame": {'hours': int(250 / 12)}
+        "interval": '1m',
+        "time_frame": {'hours': int(500 / 60)}
     },
     # "reddit.active.users": {
     #     "schemma": ["reddit_users"],
@@ -161,6 +161,7 @@ if __name__ == "__main__":
         if "end_date" in metric_details:
             end = metric_details["end_date"]
         else:
+            # end = datetime(2019, 10, 2)
             end = datetime.utcnow()
 
         beg = end - timedelta(**metric_details["time_frame"])
