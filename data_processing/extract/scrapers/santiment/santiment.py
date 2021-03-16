@@ -45,17 +45,28 @@ def get_santiment_data(metric, beg=None, end=None, interval='1h', slug='bitcoin'
     process_response(response)
 
 
+intervals_dict = {
+    'minutes': {
+        "delay": lambda x: 1000 / (60 / x) * 3600,
+        "interval": lambda x: f"{x}m"
+    }
+}
+
+
 if __name__ == "__main__":
 
-    metric = 'active_addresses_1h'
-    time_frame = 'hours'
-    time_limit = 1000
+    interval = 5
+    interval_time_frame = 'minutes'
+
+    # metric = 'active_addresses_1h'
+    metric = 'volume_usd'
+    time_delay = dict(seconds=intervals_dict[interval_time_frame]["delay"](interval))
 
     start = datetime(2019, 9, 1)
 
-    end = datetime.utcnow() - timedelta(hours=1)
+    end = datetime.utcnow()
 
-    beg = end - timedelta(**{time_frame: time_limit})
+    beg = end - timedelta(**time_delay)
 
     while end > start:
 
@@ -68,7 +79,8 @@ if __name__ == "__main__":
             beg=beg_iso,
             end=end_iso,
             metric=metric,
+            interval=intervals_dict[interval_time_frame]["interval"](interval)
         )
 
         end = beg
-        beg = end - timedelta(**{time_frame: time_limit})
+        beg = end - timedelta(**time_delay)
