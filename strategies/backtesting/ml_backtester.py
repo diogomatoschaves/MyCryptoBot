@@ -19,6 +19,10 @@ class MLBacktester:
 
         self.get_lag_model_df()
 
+    def get_rolling_model_df(self):
+
+        pass
+
     def get_lag_model_df(self):
 
         data = self.data.copy()

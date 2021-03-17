@@ -7,7 +7,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, FeatureUnion
 
 from model.modelling.helpers import train_test_split_ts
-from model.modelling.helpers import configure_logger
+from utils.logger import configure_logger
 from model.modelling.helpers import FeatureSelector, CustomOneHotEncoder, CustomStandardScaler, CustomPipeline, CustomPolynomialFeatures
 from model.modelling.defaults import (
     estimator_params,
