@@ -2,7 +2,7 @@ import pandas as pd
 from fitfeats.feature_optimization import FeatureOptimizer
 from sklearn.model_selection import TimeSeriesSplit
 
-from strategies.backtesting.ml_backtester import MLBacktester
+from strategies.backtesting.vectorized.prediction import MLBacktester
 
 df = pd.read_csv('data_processing/data/bitcoin_clean.csv', parse_dates=[0], index_col=0)
 

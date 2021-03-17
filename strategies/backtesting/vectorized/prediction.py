@@ -4,11 +4,15 @@ from sklearn.model_selection import TimeSeriesSplit
 from model.modelling.helpers import plot_learning_curve
 from data_processing.transform.feature_engineering import get_lag_features
 from model.modelling.model_training import train_model
+from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 
-class MLBacktester:
+class MLBacktester(VectorizedBacktester):
 
     def __init__(self, data, lag_features, other_features, target, nr_lags=5, trading_costs=0):
+
+        super().__init__()
+
         self.data = data.copy()
         self.nr_lags = nr_lags
         self.tc = trading_costs / 100
@@ -50,16 +54,16 @@ class MLBacktester:
 
     def test_strategy(self, estimator, params=None, test_size=0.2, degree=1, print_results=True, plot_predictions=True):
 
-        self.train_model(estimator, params=params, test_size=test_size, degree=degree, print_results=True, plot_predictions=True)
-        self.assess_strategy()
-        self.assess_strategy(dataset='train')
+        self._train_model(estimator, params=params, test_size=test_size, degree=degree, print_results=True, plot_predictions=True)
+        self._assess_strategy()
 
-    def assess_strategy(self, dataset='test'):
-        X = getattr(self, f'X_{dataset}')
-        y = getattr(self, f'y_{dataset}')
+    def _assess_strategy(self, X, plot_results, title):
 
-        hits = np.sign(y * X.pred).value_counts()
-        accuracy = hits[1.0] / hits.sum()
+        # X = getattr(self, f'X_{dataset}')
+        # y = getattr(self, f'y_{dataset}')
+
+        # hits = np.sign(y * X.pred).value_counts()
+        # accuracy = hits[1.0] / hits.sum()
 
         X["trades"] = X.pred.diff().fillna(0).abs()
 
@@ -74,14 +78,14 @@ class MLBacktester:
         if self.tc != 0:
             plotting_cols.append("cstrategy_tc")
 
-        X[plotting_cols].plot(figsize = (15 , 10))
+        X[plotting_cols].plot(figsize=(15, 10))
 
         number_trades = X.trades.value_counts()[2.0]
 
-        print(f"Accuracy: {accuracy}")
+        # print(f"Accuracy: {accuracy}")
         print(f"Numer of trades: {number_trades}")
 
-    def train_model(self, estimator, params=None, test_size=0.2, degree=1, print_results=True, plot_predictions=True):
+    def _train_model(self, estimator, params=None, test_size=0.2, degree=1, print_results=True, plot_predictions=True):
 
         pipeline, X_train, X_test, y_train, y_test = train_model(
             self.data,
@@ -99,9 +103,9 @@ class MLBacktester:
         X_test = X_test.copy()
         X_train = X_train.copy()
 
-        X_test["pred"] = np.sign(pipeline.predict(X_test))
-        X_train["pred"] = np.sign(pipeline.predict(X_train))
-        self.data["pred"] = np.sign(pipeline.predict(self.data))
+        X_test["position"] = np.sign(pipeline.predict(X_test))
+        X_train["position"] = np.sign(pipeline.predict(X_train))
+        self.data["position"] = np.sign(pipeline.predict(self.data))
 
         self.pipeline = pipeline
         self.X_train = X_train
