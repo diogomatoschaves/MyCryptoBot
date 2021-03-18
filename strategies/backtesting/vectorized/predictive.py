@@ -11,17 +11,14 @@ class MLVectBacktester(VectorizedBacktester):
 
     def __init__(self, data, estimator, lag_features=None, excluded_features=None, nr_lags=5, trading_costs=0, symbol='BTCUSDT'):
 
-        super().__init__()
+        super().__init__(data, symbol=symbol, trading_costs=trading_costs)
 
-        self.data = data.copy()
         self.estimator = estimator
-        self.symbol = symbol
         self.nr_lags = nr_lags
-        self.tc = trading_costs / 100
-        self.lag_features = set(lag_features).add("returns") \
-            if isinstance(lag_features, list) else {"returns"}
-        self.excluded_features = set(excluded_features).add("close") \
-            if excluded_features is not None else {'close'}
+        self.lag_features = set(lag_features).add(self.returns_col) \
+            if isinstance(lag_features, list) else {self.returns_col}
+        self.excluded_features = set(excluded_features).add(self.price_col) \
+            if excluded_features is not None else {self.price_col}
 
         self.pipeline = None
         self.X_train = None
@@ -71,7 +68,7 @@ class MLVectBacktester(VectorizedBacktester):
         data = get_lag_features(data, columns=self.lag_features, n_in=self.nr_lags, n_out=1)
         data.dropna(axis=0, inplace=True)
 
-        y = data["returns"].shift(-1).dropna()
+        y = data[self.returns_col].shift(-1).dropna()
         X = data.iloc[:-1].copy()
 
         self.X = X

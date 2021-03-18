@@ -37,13 +37,10 @@ class SMAVectBacktester(VectorizedBacktester):
     """
 
     def __init__(self, data, SMA_S, SMA_L, trading_costs=0, symbol='BTCUSDT'):
-        super().__init__()
-        self.data = data.copy()
-        self.symbol = symbol
+        super().__init__(data, symbol=symbol, trading_costs=trading_costs)
+
         self.SMA_S = SMA_S
         self.SMA_L = SMA_L
-        self.tc = trading_costs / 100
-        self.results = None
 
         self._update_data()
 
