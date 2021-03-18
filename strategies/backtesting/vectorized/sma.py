@@ -20,10 +20,10 @@ class SMAVectBacktester(SMABase, VectorizedBacktester):
     def test_strategy(self, sma=None, plot_results=True):
         """ Backtests the trading strategy.
         """
-        if sma is not None and isinstance(sma, (tuple, list, type(np.array([])))):
-            self._set_parameters(sma[0], sma[1])
 
-        data = self.data.copy()
+        self._set_parameters(sma)
+
+        data = self.data.dropna().copy()
         data["position"] = np.where(data["SMA_S"] > data["SMA_L"], 1, -1)
 
         title = self.__repr__()

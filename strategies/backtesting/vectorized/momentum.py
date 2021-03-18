@@ -22,7 +22,7 @@ class MomentumVectBacktester(MomentumBase, VectorizedBacktester):
         self._set_parameters(window)
 
         data = self.data.copy().dropna()
-        data["position"] = np.sign(data[self.returns_col].rolling(self.window).mean())
+        data["position"] = np.sign(data[self.returns_col].rolling(self.window, min_periods=1).mean())
 
         title = self.__repr__()
 

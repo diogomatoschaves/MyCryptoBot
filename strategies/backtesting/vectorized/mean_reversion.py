@@ -30,8 +30,8 @@ class MeanRevVectBacktester(MeanRevBase, VectorizedBacktester):
     def test_strategy(self, ma_sd_pair=None, plot_results=True):
         """ Backtests the trading strategy.
         """
-        if ma_sd_pair is not None and isinstance(ma_sd_pair, (tuple, list, type(np.array([])))):
-            self._set_parameters(*ma_sd_pair)
+
+        self._set_parameters(ma_sd_pair)
 
         data = self.data.copy().dropna()
         data["distance"] = data[self.price_col] - data["sma"]
