@@ -9,109 +9,99 @@ from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 class MLBacktester(VectorizedBacktester):
 
-    def __init__(self, data, lag_features, other_features, target, nr_lags=5, trading_costs=0):
+    def __init__(self, data, estimator, lag_features=None, excluded_features=None, nr_lags=5, trading_costs=0, symbol='BTCUSDT'):
 
         super().__init__()
 
         self.data = data.copy()
+        self.estimator = estimator
+        self.symbol = symbol
         self.nr_lags = nr_lags
         self.tc = trading_costs / 100
-        self.lag_features = lag_features
-        self.other_features = other_features
-        self.target = target
-        self.returns_var = 'log_returns_target'
+        self.lag_features = set(lag_features).add("returns") \
+            if isinstance(lag_features, list) else {"returns"}
+        self.excluded_features = set(excluded_features).add("close") \
+            if excluded_features is not None else {'close'}
 
-        self.get_lag_model_df()
+        self.pipeline = None
+        self.X_train = None
+        self.y_train = None
+        self.X_test = None
+        self.y_test = None
+
+        self._update_data()
+
+    def __repr__(self):
+        return "{}(symbol = {}, estimator = {})".format(self.__class__.__name__, self.symbol, self.estimator)
+
+    def _update_data(self):
+        """ Retrieves and prepares the data.
+        """
+
+        super()._update_data()
+
+        self._get_lag_model_X_y()
+
+    def _set_parameters(self, estimator = None):
+        """ Updates SMA parameters and resp. time series.
+        """
+        if estimator is not None:
+            self.estimator = estimator
+
+    def _calculate_position(self, data):
+        """
+        Calculates position according to strategy
+
+        :param data:
+        :return: data with position calculated
+        """
+        data["position"] = np.sign(self.pipeline.predict(data))
+
+        return data
 
     def get_rolling_model_df(self):
 
         pass
 
-    def get_lag_model_df(self):
+    def _get_lag_model_X_y(self):
 
         data = self.data.copy()
+        data.drop(columns=self.excluded_features, inplace=True)
 
-        model_features = [*self.lag_features, *self.other_features]
-
-        other_features = [*self.other_features, self.target]
-        if self.returns_var not in [*other_features, *self.lag_features]:
-            other_features.append(self.returns_var)
-
-        data = get_lag_features(data[self.lag_features], self.nr_lags, 1).join(data[other_features], how='left')
+        data = get_lag_features(data, columns=self.lag_features, n_in=self.nr_lags, n_out=1)
         data.dropna(axis=0, inplace=True)
 
-        cat_features = list(data.dtypes[(data.dtypes != 'int64') & (data.dtypes != 'float64')].index)
+        y = data["returns"].shift(-1).dropna()
+        X = data.iloc[:-1].copy()
 
-        excluded_vars = {*cat_features, self.target, self.returns_var if self.returns_var not in model_features else None}
+        self.X = X
+        self.y = y
 
-        num_features = [col for col in data.columns if col not in excluded_vars]
+    def test_strategy(self, estimator=None, params=None, test_size=0.2, degree=1, print_results=True, plot_results=True):
 
-        data["direction"] = np.sign(data[self.returns_var])
-
-        self.data = data
-        self.num_features = num_features
-        self.cat_features = cat_features
-
-    def test_strategy(self, estimator, params=None, test_size=0.2, degree=1, print_results=True, plot_predictions=True):
-
-        self._train_model(estimator, params=params, test_size=test_size, degree=degree, print_results=True, plot_predictions=True)
-        self._assess_strategy()
-
-    def _assess_strategy(self, X, plot_results, title):
-
-        # X = getattr(self, f'X_{dataset}')
-        # y = getattr(self, f'y_{dataset}')
-
-        # hits = np.sign(y * X.pred).value_counts()
-        # accuracy = hits[1.0] / hits.sum()
-
-        X["trades"] = X.pred.diff().fillna(0).abs()
-
-        X["strategy"] = X.pred * X[self.returns_var]
-        X["strategy_tc"] = X["strategy"] - np.abs(X[self.returns_var]) * X.trades * self.tc
-
-        X["creturns"] = X[self.returns_var].cumsum().apply(np.exp)
-        X["cstrategy"] = X["strategy"].cumsum().apply(np.exp)
-        X["cstrategy_tc"] = X["strategy_tc"].cumsum().apply(np.exp)
-
-        plotting_cols = ["creturns", "cstrategy"]
-        if self.tc != 0:
-            plotting_cols.append("cstrategy_tc")
-
-        X[plotting_cols].plot(figsize=(15, 10))
-
-        number_trades = X.trades.value_counts()[2.0]
-
-        # print(f"Accuracy: {accuracy}")
-        print(f"Numer of trades: {number_trades}")
-
-    def _train_model(self, estimator, params=None, test_size=0.2, degree=1, print_results=True, plot_predictions=True):
+        if estimator is not None:
+            self._set_parameters(estimator)
 
         pipeline, X_train, X_test, y_train, y_test = train_model(
-            self.data,
-            estimator,
-            self.num_features,
-            self.cat_features,
-            self.target,
+            self.estimator,
+            self.X,
+            self.y,
             estimator_params_override=params,
             degree=degree,
             print_results=print_results,
-            plot_predictions=plot_predictions,
+            plot_results=plot_results,
             test_size=test_size
         )
-
-        X_test = X_test.copy()
-        X_train = X_train.copy()
-
-        X_test["position"] = np.sign(pipeline.predict(X_test))
-        X_train["position"] = np.sign(pipeline.predict(X_train))
-        self.data["position"] = np.sign(pipeline.predict(self.data))
 
         self.pipeline = pipeline
         self.X_train = X_train
         self.y_train = y_train
         self.X_test = X_test
         self.y_test = y_test
+
+        title = self.__repr__()
+
+        return self._assess_strategy(X_test, plot_results, title)
 
     def learning_curves(self, metric='accuracy'):
 

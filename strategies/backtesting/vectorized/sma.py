@@ -42,7 +42,7 @@ class SMABacktester(VectorizedBacktester):
         self.symbol = symbol
         self.SMA_S = SMA_S
         self.SMA_L = SMA_L
-        self.tc = trading_costs
+        self.tc = trading_costs / 100
         self.results = None
 
         self._update_data()

@@ -1,8 +1,9 @@
 import logging
 import joblib
 
+import numpy as np
 from sklearn.base import is_classifier
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, RandomForestClassifier, GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, FeatureUnion
 
@@ -50,8 +51,6 @@ def load_model(model_filepath):
 
 def build_pipeline(
     estimator_name,
-    num_features,
-    cat_features,
     estimator_params_override=None,
     grid_search=False,
     grid_search_params=None,
@@ -83,12 +82,12 @@ def build_pipeline(
     pipeline = Pipeline([
         ('features', FeatureUnion([
             ('num_features', CustomPipeline([
-                ('selector', FeatureSelector(num_features, 'num')),
+                ('selector', FeatureSelector('num')),
                 ('feature_polynomials', CustomPolynomialFeatures(degree=degree, include_bias=False)),
                 ('scaling', CustomStandardScaler())
             ])),
             ('cat_features', CustomPipeline([
-                ('selector', FeatureSelector(cat_features, 'cat')),
+                ('selector', FeatureSelector('cat')),
                 ('one-hot-encoder', CustomOneHotEncoder(drop='first'))
             ]))
         ])),
@@ -112,16 +111,14 @@ def build_pipeline(
 
 
 def train_model(
-    df,
     estimator_name,
-    num_features,
-    cat_features,
-    target,
+    X,
+    y,
     estimator_params_override=None,
     grid_search=False,
     evaluation_metric=None,
     print_results=True,
-    plot_predictions=True,
+    plot_results=True,
     test_size=0.2,
     degree=1
 ):
@@ -134,21 +131,21 @@ def train_model(
     :return: the fitted model
     """
 
-    X = df
-    y = df[target]
-
-    X_train, X_test, y_train, y_test = train_test_split_ts(X, y, test_size=test_size)
-
     logging.info("\tbuilding model...")
 
     model, is_clf = build_pipeline(
         estimator_name,
         estimator_params_override=estimator_params_override,
-        num_features=num_features,
-        cat_features=cat_features,
+        # num_features=num_features,
+        # cat_features=cat_features,
         grid_search=grid_search,
         degree=degree
     )
+
+    if is_clf:
+        y = np.sign(y)
+
+    X_train, X_test, y_train, y_test = train_test_split_ts(X, y, test_size=test_size)
 
     if grid_search:
         logging.info("\tPerforming grid search...")
@@ -165,12 +162,11 @@ def train_model(
         y_test,
         X_train,
         y_train,
-        target,
         is_clf=is_clf,
         evaluation_metric=evaluation_metric,
         grid_search=grid_search,
         print_results=print_results,
-        plot_results=plot_predictions
+        plot_results=plot_results
     )
 
     return model, X_train, X_test, y_train, y_test

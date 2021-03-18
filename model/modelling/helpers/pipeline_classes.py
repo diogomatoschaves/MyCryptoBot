@@ -59,7 +59,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     Selects features to be included in the final model.
     """
 
-    def __init__(self, columns, data_type):
+    def __init__(self, data_type, columns=None):
         self.data_type = data_type
         self.columns = columns
 
@@ -67,6 +67,9 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None, **transform_params):
+
+        if self.columns is None:
+            self.columns = X.columns
 
         if self.data_type == 'num':
 

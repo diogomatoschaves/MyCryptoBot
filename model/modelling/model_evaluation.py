@@ -1,16 +1,24 @@
 import logging
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 import seaborn as sb
-from sklearn.metrics import (mean_absolute_error,
-                             mean_squared_error, r2_score, f1_score, precision_score, recall_score)
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score,
+    f1_score,
+    precision_score,
+    recall_score,
+    accuracy_score
+)
 
 
 base_color = sb.color_palette()[0]
 
 
-def plot_predictions(y_test, y_pred, target, is_clf):
+def plot_predictions(y_test, y_pred, is_clf):
 
     if is_clf:
 
@@ -21,7 +29,7 @@ def plot_predictions(y_test, y_pred, target, is_clf):
         plt.bar(x=equal.index, height=equal, width=0.1, color='limegreen', label='Correct Predictions')
         plt.bar(x=not_equal.index, height=not_equal, width=0.1, color='r', label='Wrong Predictions')
         plt.yticks((-1, 1), ('Negative returns', 'Positive returns'))
-        plt.title(f'{target.replace("_", " ")}: Predictions')
+        plt.title(f'{y_test.name.replace("_", " ")}: Predictions')
         plt.legend()
 
     else:
@@ -29,7 +37,7 @@ def plot_predictions(y_test, y_pred, target, is_clf):
         plt.figure(figsize=(15, 10))
         plt.bar(x=y_test.index, height=y_test, width=0.3, color='deepskyblue', label='Real')
         plt.bar(x=y_test.index, height=y_pred, width=0.3, color='r', label='Prediction')
-        plt.title(f'{target.replace("_", " ")}: Real vs Predicted')
+        plt.title(f'{y_test.name.replace("_", " ")}: Real vs Predicted')
         plt.legend()
 
 
@@ -39,7 +47,6 @@ def model_evaluation(
     y_test,
     X_train,
     y_train,
-    target,
     is_clf,
     evaluation_metric=None,
     grid_search=False,
@@ -65,6 +72,11 @@ def model_evaluation(
 
     y_pred = model.predict(X_test)
 
+    hits = np.sign(y_pred * y_test).value_counts()
+    accuracy = hits[1.0] / hits.sum()
+
+    logging.info(f"\t\tAccuracy: {accuracy}")
+
     if print_results:
 
         if is_clf:
@@ -86,4 +98,4 @@ def model_evaluation(
             logging.info(f"\t\tMean squared error: {mse}")
 
     if plot_results:
-        plot_predictions(y_test, y_pred, target, is_clf)
+        plot_predictions(y_test, y_pred, is_clf)

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pandas import CategoricalDtype
 
-from model.helpers.ts_differencing import ts_differencing
+from model.modelling.helpers.ts_differencing import ts_differencing
 
 
 def add_returns_features(df):
