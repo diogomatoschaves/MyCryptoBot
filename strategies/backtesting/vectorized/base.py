@@ -58,6 +58,15 @@ class VectorizedBacktester:
         """
         raise NotImplementedError
 
+    def _calculate_position(self, data):
+        """
+        Calculates position according to strategy
+
+        :param data:
+        :return: data with position calculated
+        """
+        return data
+
     def test_strategy(self, *args):
         """ Backtests the trading strategy.
         """
@@ -65,11 +74,21 @@ class VectorizedBacktester:
 
     def _assess_strategy(self, data, plot_results, title):
 
+        data = self._calculate_position(data.copy())
+
+        data["trades"] = data["position"].diff().fillna(0).abs()
+
         data["strategy"] = data["position"].shift(1) * data["returns"]
+        data["strategy_tc"] = data["strategy"] - np.abs(data["returns"]) * data.trades * self.tc
         data.dropna(inplace=True)
 
         data["creturns"] = data["returns"].cumsum().apply(np.exp)
         data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
+        data["cstrategy_tc"] = data["strategy_tc"].cumsum().apply(np.exp)
+
+        number_trades = data.trades.sum()
+
+        print(f"Numer of trades: {number_trades}")
 
         self.results = data
 

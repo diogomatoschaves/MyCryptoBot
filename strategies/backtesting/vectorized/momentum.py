@@ -35,7 +35,7 @@ class MomentumBacktester(VectorizedBacktester):
         self.data = data.copy()
         self.window = window
         self.symbol = symbol
-        self.tc = trading_costs
+        self.tc = trading_costs / 100
         self.results = None
 
         self._update_data()
