@@ -7,7 +7,7 @@ from model.modelling.model_training import train_model
 from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 
-class MLBacktester(VectorizedBacktester):
+class MLVectBacktester(VectorizedBacktester):
 
     def __init__(self, data, estimator, lag_features=None, excluded_features=None, nr_lags=5, trading_costs=0, symbol='BTCUSDT'):
 
