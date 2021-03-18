@@ -1,9 +1,10 @@
 import numpy as np
 
+from strategies.backtesting.strategies import MeanRevBase
 from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 
-class MeanRevVectBacktester(VectorizedBacktester):
+class MeanRevVectBacktester(MeanRevBase, VectorizedBacktester):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
 
     Attributes
@@ -18,37 +19,11 @@ class MeanRevVectBacktester(VectorizedBacktester):
     """
 
     def __init__(self, data, ma, sd, trading_costs=0, symbol='BTCUSDT'):
-
-        super().__init__(data, trading_costs=trading_costs, symbol=symbol)
+        MeanRevBase.__init__(self)
+        VectorizedBacktester.__init__(self, data, trading_costs=trading_costs, symbol=symbol)
 
         self.ma = ma
         self.sd = sd
-
-        self._update_data()
-
-    def __repr__(self):
-        return "{}(symbol = {}, ma = {}, sd = {})".format(self.__class__.__name__, self.symbol, self.ma, self.sd)
-
-    def _update_data(self):
-        """ Retrieves and prepares the data.
-        """
-
-        super()._update_data()
-
-        data = self.data
-        data["sma"] = data["close"].rolling(self.ma).mean()
-        data["upper"] = data["sma"] + data["close"].rolling(self.ma).std() * self.sd
-        data["lower"] = data["sma"] - data["close"].rolling(self.ma).std() * self.sd
-
-        self.data = data
-
-    def _set_parameters(self, ma = None, sd = None):
-        """ Updates SMA parameters and resp. time series.
-        """
-        if ma is not None:
-            self.ma = int(ma)
-        if sd is not None:
-            self.sd = sd
 
         self._update_data()
 
@@ -59,9 +34,9 @@ class MeanRevVectBacktester(VectorizedBacktester):
             self._set_parameters(*ma_sd_pair)
 
         data = self.data.copy().dropna()
-        data["distance"] = data["close"] - data["sma"]
-        data["position"] = np.where(data["close"] > data["upper"], -1, np.nan)
-        data["position"] = np.where(data["close"] < data["lower"], 1, data["position"])
+        data["distance"] = data[self.price_col] - data["sma"]
+        data["position"] = np.where(data[self.price_col] > data["upper"], -1, np.nan)
+        data["position"] = np.where(data[self.price_col] < data["lower"], 1, data["position"])
         data["position"] = np.where(data["distance"] * data["distance"].shift(1) < 0, 0, data["position"])
         data["position"] = data["position"].ffill().fillna(0)
 

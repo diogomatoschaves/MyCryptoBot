@@ -2,16 +2,17 @@ import numpy as np
 from sklearn.model_selection import TimeSeriesSplit
 
 from model.modelling.helpers import plot_learning_curve
-from data_processing.transform.feature_engineering import get_lag_features
 from model.modelling.model_training import train_model
+from strategies.backtesting.strategies import MLBase
 from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 
-class MLVectBacktester(VectorizedBacktester):
+class MLVectBacktester(MLBase, VectorizedBacktester):
 
     def __init__(self, data, estimator, lag_features=None, excluded_features=None, nr_lags=5, trading_costs=0, symbol='BTCUSDT'):
 
-        super().__init__(data, symbol=symbol, trading_costs=trading_costs)
+        MLBase.__init__(self)
+        VectorizedBacktester.__init__(self, data, symbol=symbol, trading_costs=trading_costs)
 
         self.estimator = estimator
         self.nr_lags = nr_lags
@@ -20,59 +21,7 @@ class MLVectBacktester(VectorizedBacktester):
         self.excluded_features = set(excluded_features).add(self.price_col) \
             if excluded_features is not None else {self.price_col}
 
-        self.pipeline = None
-        self.X_train = None
-        self.y_train = None
-        self.X_test = None
-        self.y_test = None
-
         self._update_data()
-
-    def __repr__(self):
-        return "{}(symbol = {}, estimator = {})".format(self.__class__.__name__, self.symbol, self.estimator)
-
-    def _update_data(self):
-        """ Retrieves and prepares the data.
-        """
-
-        super()._update_data()
-
-        self._get_lag_model_X_y()
-
-    def _set_parameters(self, estimator = None):
-        """ Updates SMA parameters and resp. time series.
-        """
-        if estimator is not None:
-            self.estimator = estimator
-
-    def _calculate_position(self, data):
-        """
-        Calculates position according to strategy
-
-        :param data:
-        :return: data with position calculated
-        """
-        data["position"] = np.sign(self.pipeline.predict(data))
-
-        return data
-
-    def get_rolling_model_df(self):
-
-        pass
-
-    def _get_lag_model_X_y(self):
-
-        data = self.data.copy()
-        data.drop(columns=self.excluded_features, inplace=True)
-
-        data = get_lag_features(data, columns=self.lag_features, n_in=self.nr_lags, n_out=1)
-        data.dropna(axis=0, inplace=True)
-
-        y = data[self.returns_col].shift(-1).dropna()
-        X = data.iloc[:-1].copy()
-
-        self.X = X
-        self.y = y
 
     def test_strategy(self, estimator=None, params=None, test_size=0.2, degree=1, print_results=True, plot_results=True):
 

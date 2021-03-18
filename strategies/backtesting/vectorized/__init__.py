@@ -1,0 +1,4 @@
+from strategies.backtesting.vectorized.sma import SMAVectBacktester
+from strategies.backtesting.vectorized.momentum import MomentumVectBacktester
+from strategies.backtesting.vectorized.predictive import MLVectBacktester
+from strategies.backtesting.vectorized.mean_reversion import MeanRevVectBacktester
