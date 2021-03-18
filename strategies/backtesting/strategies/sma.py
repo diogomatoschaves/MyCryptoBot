@@ -1,3 +1,4 @@
+import numpy as np
 
 
 class SMABase:
@@ -20,9 +21,19 @@ class SMABase:
         self.data["SMA_S"] = self.data["close"].rolling(self.SMA_S).mean()
         self.data["SMA_L"] = self.data["close"].rolling(self.SMA_L).mean()
 
-    def _set_parameters(self, SMA_S = None, SMA_L = None):
+    def _set_parameters(self, sma=None):
         """ Updates SMA parameters and resp. time series.
         """
+
+        if sma is None:
+            return
+
+        if not isinstance(sma, (tuple, list, type(np.array([])))):
+            print(f"Invalid Parameters {sma}")
+            return
+
+        SMA_S, SMA_L = sma
+
         if SMA_S is not None:
             self.SMA_S = int(SMA_S)
             self.data["SMA_S"] = self.data["close"].rolling(self.SMA_S).mean()
