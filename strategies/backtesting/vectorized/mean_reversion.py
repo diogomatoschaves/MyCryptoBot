@@ -25,7 +25,7 @@ class MeanRevBacktester(VectorizedBacktester):
         self.ma = ma
         self.sd = sd
         self.symbol = symbol
-        self.tc = trading_costs
+        self.tc = trading_costs / 100
         self.results = None
 
         self._update_data()
