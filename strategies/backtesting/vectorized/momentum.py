@@ -29,14 +29,10 @@ class MomentumVectBacktester(VectorizedBacktester):
         plots the performance of the strategy compared to buy and hold
     """
 
-    def __init__(self, data, window=10, trading_costs=0, symbol='BTC'):
-        super().__init__()
+    def __init__(self, data, window=10, trading_costs=0, symbol='BTCUSDT'):
+        super().__init__(data, symbol=symbol, trading_costs=trading_costs)
 
-        self.data = data.copy()
         self.window = window
-        self.symbol = symbol
-        self.tc = trading_costs / 100
-        self.results = None
 
         self._update_data()
 

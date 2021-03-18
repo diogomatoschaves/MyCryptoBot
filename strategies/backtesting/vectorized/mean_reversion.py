@@ -19,14 +19,10 @@ class MeanRevVectBacktester(VectorizedBacktester):
 
     def __init__(self, data, ma, sd, trading_costs=0, symbol='BTCUSDT'):
 
-        super().__init__()
+        super().__init__(data, trading_costs=trading_costs, symbol=symbol)
 
-        self.data = data.copy()
         self.ma = ma
         self.sd = sd
-        self.symbol = symbol
-        self.tc = trading_costs / 100
-        self.results = None
 
         self._update_data()
 

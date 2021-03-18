@@ -41,12 +41,16 @@ class VectorizedBacktester:
         implements a brute force optimization for the two SMA parameters
     """
 
-    def __init__(self):
-        self.data = None
-        self.tc = None
+    def __init__(self, data, symbol, trading_costs=0, price_col='close', returns_col='returns'):
+        self.data = data.copy()
+        self.tc = trading_costs / 100
+        self.symbol = symbol
+        self.price_col = price_col
+        self.returns_col = returns_col
+        self.results = None
 
     def _calculate_returns(self):
-        self.data["returns"] = np.log(self.data.close / self.data.close.shift(1))
+        self.data[self.returns_col] = np.log(self.data[self.price_col] / self.data[self.price_col].shift(1))
 
     def _update_data(self):
         """ Retrieves and prepares the data.
@@ -78,11 +82,11 @@ class VectorizedBacktester:
 
         data["trades"] = data["position"].diff().fillna(0).abs()
 
-        data["strategy"] = data["position"].shift(1) * data["returns"]
-        data["strategy_tc"] = data["strategy"] - np.abs(data["returns"]) * data.trades * self.tc
+        data["strategy"] = data["position"].shift(1) * data[self.returns_col]
+        data["strategy_tc"] = data["strategy"] - np.abs(data[self.returns_col]) * data.trades * self.tc
         data.dropna(inplace=True)
 
-        data["creturns"] = data["returns"].cumsum().apply(np.exp)
+        data["creturns"] = data[self.returns_col].cumsum().apply(np.exp)
         data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
         data["cstrategy_tc"] = data["strategy_tc"].cumsum().apply(np.exp)
 
