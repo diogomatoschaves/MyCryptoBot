@@ -3,6 +3,7 @@ import joblib
 
 import numpy as np
 from sklearn.base import is_classifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, RandomForestClassifier, GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, FeatureUnion

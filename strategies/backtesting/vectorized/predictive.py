@@ -25,8 +25,7 @@ class MLVectBacktester(MLBase, VectorizedBacktester):
 
     def test_strategy(self, estimator=None, params=None, test_size=0.2, degree=1, print_results=True, plot_results=True):
 
-        if estimator is not None:
-            self._set_parameters(estimator)
+        self._set_parameters(estimator)
 
         pipeline, X_train, X_test, y_train, y_test = train_model(
             self.estimator,
