@@ -3,7 +3,7 @@ import numpy as np
 from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 
-class MeanRevBacktester(VectorizedBacktester):
+class MeanRevVectBacktester(VectorizedBacktester):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
 
     Attributes
