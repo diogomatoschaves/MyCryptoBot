@@ -30,7 +30,7 @@ class VectorizedBacktester(BacktestBase):
         """
         raise NotImplementedError
 
-    def _calculate_position(self, data):
+    def _calculate_positions(self, data):
         """
         Calculates position according to strategy
 

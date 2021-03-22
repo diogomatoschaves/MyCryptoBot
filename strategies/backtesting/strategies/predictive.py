@@ -1,6 +1,7 @@
 import numpy as np
 
 from data_processing.transform.feature_engineering import get_lag_features
+from model.modelling.model_training import train_model
 
 
 class MLBase:
@@ -66,3 +67,22 @@ class MLBase:
 
         self.X = X
         self.y = y
+
+    def _train_model(self, estimator, params=None, test_size=0.2, degree=1, print_results=True, plot_results=True):
+
+        pipeline, X_train, X_test, y_train, y_test = train_model(
+            estimator,
+            self.X,
+            self.y,
+            estimator_params_override=params,
+            degree=degree,
+            print_results=print_results,
+            plot_results=plot_results,
+            test_size=test_size
+        )
+
+        self.pipeline = pipeline
+        self.X_train = X_train
+        self.y_train = y_train
+        self.X_test = X_test
+        self.y_test = y_test
