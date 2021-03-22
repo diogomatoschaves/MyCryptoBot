@@ -51,7 +51,8 @@ class IterativeBacktester(BacktestBase):
 
     def get_values(self, data, bar):
         price = data.iloc[bar][self.price_col]
-        date = data.index[bar].date()
+
+        date = data.index[bar]
 
         return date, price
 
