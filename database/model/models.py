@@ -199,3 +199,33 @@ class MessariAPI(models.Model):
     sharpe_1yr = models.FloatField(null=True)
     sharpe_3yr = models.FloatField(null=True)
 
+
+class Symbol(models.Model):
+
+    name = models.TextField(primary_key=True)
+    base = models.ForeignKey(Asset, null=True, on_delete=models.SET_NULL, related_name='base_asset')
+    quote = models.ForeignKey(Asset, null=True, on_delete=models.SET_NULL, related_name='quote_asset')
+
+
+class Exchange(models.Model):
+
+    name = models.TextField(primary_key=True)
+
+
+class ExchangeData(models.Model):
+
+    id = models.IntegerField(primary_key=True)
+    exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
+    open_time = models.DateTimeField(null=True)
+    close_time = models.DateTimeField(null=True)
+    symbol = models.ForeignKey(Symbol, null=True, on_delete=models.SET_NULL)
+    interval = models.TextField()
+    open = models.FloatField(null=True)
+    high = models.FloatField(null=True)
+    low = models.FloatField(null=True)
+    close = models.FloatField(null=True)
+    volume = models.FloatField(null=True)
+    quote_volume = models.FloatField(null=True)
+    trades = models.IntegerField(null=True)
+    taker_buy_asset_volume = models.FloatField(null=True)
+    taker_buy_quote_volume = models.FloatField(null=True)
