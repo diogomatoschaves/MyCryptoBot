@@ -26,4 +26,4 @@ class MomentumVectBacktester(MomentumBase, VectorizedBacktester):
 
         title = self.__repr__()
 
-        return self._assess_strategy(data, plot_results, title)
+        return self._assess_strategy(data, data, title, plot_results)

@@ -46,7 +46,7 @@ class MLVectBacktester(MLBase, VectorizedBacktester):
 
         title = self.__repr__()
 
-        return self._assess_strategy(X_test, plot_results, title)
+        return self._assess_strategy(X_test, title, plot_results)
 
     def learning_curves(self, metric='accuracy'):
 

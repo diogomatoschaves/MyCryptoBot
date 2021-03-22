@@ -1,10 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from strategies.backtesting.base import BacktestBase
 
-class IterativeBacktester:
+
+class IterativeBacktester(BacktestBase):
 
     def __init__(self, data, amount, symbol='BTCUSDT', trading_costs=0, price_col='close', returns_col='returns'):
+        BacktestBase.__init__(self)
+
         self.data = data.copy()
         self.results = None
         self.initial_balance = amount
@@ -42,37 +46,8 @@ class IterativeBacktester:
         data["position"] = self.positions
         return data
 
-    def _assess_strategy(self, data, title, plot_results=True):
-
-        data = self._calculate_position(data.copy())
-
-        data["trades"] = data.position.diff().fillna(0).abs()
-
-        data["strategy"] = data.position.shift(1) * data.returns
-        data["strategy_tc"] = data["strategy"] - np.abs(data[self.returns_col]) * data.trades * self.tc
-
-        data.dropna(inplace=True)
-
-        data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
-        data["creturns"] = data["returns"].cumsum().apply(np.exp)
-        data["cstrategy_tc"] = data["strategy_tc"].cumsum().apply(np.exp)
-
-        number_trades = self.trades
-
-        print(f"Numer of trades: {number_trades}")
-
-        self.results = data
-
-        # absolute performance of the strategy
-        perf = data["cstrategy"].iloc[-1]
-
-        # out-/underperformance of strategy
-        outperf = perf - data["creturns"].iloc[-1]
-
-        if plot_results:
-            self.plot_results(title)
-
-        return round(perf, 6), round(outperf, 6)
+    def _get_trades(self, data):
+        return self.trades
 
     def get_values(self, data, bar):
         price = data.iloc[bar][self.price_col]
@@ -127,7 +102,7 @@ class IterativeBacktester:
     # helper method
     def go_long(self, date, price, units=None, amount=None):
         if self.position == -1:
-            self.buy_instrument(date, price, units=-self.units) # if short position, go neutral first
+            self.buy_instrument(date, price, units=-self.units)  # if short position, go neutral first
         if units:
             self.buy_instrument(date, price, units=units)
         elif amount:
@@ -161,17 +136,3 @@ class IterativeBacktester:
         if cols is None:
             cols = "close"
         self.data[cols].plot(figsize=(12, 8), title='BTC/USD')
-
-    def plot_results(self, title):
-        """ Plots the cumulative performance of the trading strategy
-        compared to buy and hold.
-        """
-        if self.results is None:
-            print("No results to plot yet. Run a strategy first.")
-        else:
-            plotting_cols = ["creturns", "cstrategy", "position"]
-            if self.tc != 0:
-                plotting_cols.append("cstrategy_tc")
-
-            self.results[plotting_cols].plot(title=title, figsize=(12, 8), secondary_y='position')
-            plt.show()
