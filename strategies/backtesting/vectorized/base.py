@@ -2,13 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import brute
 
+from strategies.backtesting.base import BacktestBase
 
-class VectorizedBacktester:
+
+class VectorizedBacktester(BacktestBase):
     """ Class for the vectorized backtesting.
 
     """
 
     def __init__(self, data, symbol, trading_costs=0, price_col='close', returns_col='returns'):
+        BacktestBase.__init__(self)
+
         self.data = data.copy()
         self.tc = trading_costs / 100
         self.symbol = symbol
@@ -40,50 +44,8 @@ class VectorizedBacktester:
         """
         raise NotImplementedError
 
-    def _assess_strategy(self, data, plot_results, title):
-
-        data = self._calculate_position(data.copy())
-
-        data["trades"] = data["position"].diff().fillna(0).abs()
-
-        data["strategy"] = data["position"].shift(1) * data[self.returns_col]
-        data["strategy_tc"] = data["strategy"] - np.abs(data[self.returns_col]) * data.trades * self.tc
-        data.dropna(inplace=True)
-
-        data["creturns"] = data[self.returns_col].cumsum().apply(np.exp)
-        data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
-        data["cstrategy_tc"] = data["strategy_tc"].cumsum().apply(np.exp)
-
-        number_trades = data.trades.sum()
-
-        print(f"Numer of trades: {number_trades}")
-
-        self.results = data
-
-        # absolute performance of the strategy
-        perf = data["cstrategy"].iloc[-1]
-
-        # out-/underperformance of strategy
-        outperf = perf - data["creturns"].iloc[-1]
-
-        if plot_results:
-            self.plot_results(title)
-
-        return round(perf, 6), round(outperf, 6)
-
-    def plot_results(self, title):
-        """ Plots the cumulative performance of the trading strategy
-        compared to buy and hold.
-        """
-        if self.results is None:
-            print("No results to plot yet. Run a strategy first.")
-        else:
-            plotting_cols = ["creturns", "cstrategy", "position"]
-            if self.tc != 0:
-                plotting_cols.append("cstrategy_tc")
-
-            self.results[plotting_cols].plot(title=title, figsize=(12, 8), secondary_y='position')
-            plt.show()
+    def _get_trades(self, data):
+        return data.trades.sum()
 
     def _update_and_run(self, *args, plot_results=False):
         """ Updates SMA parameters and returns the negative absolute performance (for minimization algorithm).
