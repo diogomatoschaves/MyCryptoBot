@@ -9,7 +9,7 @@ class BacktestBase:
         self.tc = None
         self.returns_col = None
 
-    def _calculate_position(self, data):
+    def _calculate_positions(self, data):
         raise NotImplementedError
 
     def _get_trades(self, data):
@@ -17,7 +17,7 @@ class BacktestBase:
 
     def _assess_strategy(self, data, title, plot_results=True):
 
-        data = self._calculate_position(data.copy())
+        data = self._calculate_positions(data.copy())
 
         data["trades"] = data.position.diff().fillna(0).abs()
 
