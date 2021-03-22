@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('model', '0020_messariapi_interval'),
+        ('model', '0013_asset_name'),
     ]
 
     operations = [
