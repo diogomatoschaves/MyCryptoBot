@@ -7,6 +7,8 @@ from dotenv import load_dotenv, find_dotenv
 from binance.client import Client
 import django
 
+import database
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
@@ -36,9 +38,9 @@ binance_key = {
 
 def get_symbol(symbol, quote, base):
 
-    if Symbol.objects.filter(name=symbol).exists():
+    try:
         return Symbol.objects.get(name=symbol)
-    else:
+    except database.model.models.Symbol.DoesNotExist:
         quote_asset = Asset.objects.get_or_create(symbol=quote)[0]
         base_asset = Asset.objects.get_or_create(symbol=base)[0]
 
@@ -84,6 +86,7 @@ if __name__ == "__main__":
 
     exchange_name = 'binance'
 
-    start_date = int(datetime(2019, 9, 1).timestamp() * 1000)
+    # start_date = int(datetime(2021, 3, 23, 12, 33).timestamp() * 1000)
+    start_date = datetime.utcnow()
 
     get_historical_data(exchange_name, client, quote, base, client.KLINE_INTERVAL_1MINUTE, start_date)
