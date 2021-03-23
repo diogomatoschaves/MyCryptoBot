@@ -2,16 +2,15 @@
 
 class Trader:
 
-    def __init__(self, data, amount):
+    def __init__(self, amount):
 
-        self.data = data.copy()
+        self.data = None
         self.initial_balance = amount
         self.current_balance = amount
         self.units = 0
         self.trades = 0
 
         self.position = 0
-        self.positions = []
 
     def buy_instrument(self, date, row, units=None, amount=None):
         raise NotImplementedError
@@ -19,7 +18,7 @@ class Trader:
     def sell_instrument(self, date, row, units=None, amount=None):
         raise NotImplementedError
 
-    def close_pos(self, data, bar):
+    def close_pos(self, date, bar):
         raise NotImplementedError
 
     # helper method
