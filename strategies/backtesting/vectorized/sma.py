@@ -9,13 +9,10 @@ class SMAVectBacktester(SMABase, VectorizedBacktester):
     """
 
     def __init__(self, data, SMA_S, SMA_L, trading_costs=0, symbol='BTCUSDT'):
-        SMABase.__init__(self)
+        SMABase.__init__(self, SMA_S, SMA_L)
         VectorizedBacktester.__init__(self, data, symbol=symbol, trading_costs=trading_costs)
 
-        self.SMA_S = SMA_S
-        self.SMA_L = SMA_L
-
-        self._update_data()
+        self.data = self.update_data(self.data)
 
     def test_strategy(self, sma=None, plot_results=True):
         """ Backtests the trading strategy.

@@ -5,21 +5,25 @@ class MeanRevBase:
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self):
+    def __init__(self, ma, sd):
         self.data = None
-        self.price_col = None
+        self.price_col = 'close'
+        self.ma = ma
+        self.sd = sd
         self.symbol = None
 
     def __repr__(self):
         return "{}(symbol = {}, ma = {}, sd = {})".format(self.__class__.__name__, self.symbol, self.ma, self.sd)
 
-    def _update_data(self):
+    def update_data(self, data):
         """ Retrieves and prepares the data.
         """
 
-        self.data["sma"] = self.data[self.price_col].rolling(self.ma).mean()
-        self.data["upper"] = self.data["sma"] + self.data[self.price_col].rolling(self.ma).std() * self.sd
-        self.data["lower"] = self.data["sma"] - self.data[self.price_col].rolling(self.ma).std() * self.sd
+        data["sma"] = data[self.price_col].rolling(self.ma).mean()
+        data["upper"] = data["sma"] + data[self.price_col].rolling(self.ma).std() * self.sd
+        data["lower"] = data["sma"] - data[self.price_col].rolling(self.ma).std() * self.sd
+
+        return data
 
     def _set_parameters(self, ma_sd_pair=None):
         """ Updates SMA parameters and resp. time series.
@@ -39,4 +43,4 @@ class MeanRevBase:
         if sd is not None:
             self.sd = sd
 
-        self._update_data()
+        self.data = self.update_data(self.data)

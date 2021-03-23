@@ -9,12 +9,10 @@ class MomentumVectBacktester(MomentumBase, VectorizedBacktester):
     """
 
     def __init__(self, data, window=10, trading_costs=0, symbol='BTCUSDT'):
-        MomentumBase.__init__(self)
+        MomentumBase.__init__(self, window)
         VectorizedBacktester.__init__(self, data, symbol=symbol, trading_costs=trading_costs)
 
-        self.window = window
-
-        self._update_data()
+        self.data = self.update_data(self.data)
 
     def test_strategy(self, window=None, plot_results=True):
         """ Backtests the trading strategy.

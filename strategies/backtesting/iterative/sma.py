@@ -5,13 +5,10 @@ from strategies.backtesting.strategies import SMABase
 class SMAIterBacktester(SMABase, IterativeBacktester):
 
     def __init__(self, data, amount, SMA_S, SMA_L, trading_costs=0, symbol='BTCUSDT'):
-        SMABase.__init__(self)
+        SMABase.__init__(self, SMA_S, SMA_L)
         IterativeBacktester.__init__(self, data, amount, symbol=symbol, trading_costs=trading_costs)
 
-        self.SMA_S = SMA_S
-        self.SMA_L = SMA_L
-
-        self._update_data()
+        self.data = self.update_data(self.data)
 
     def _get_signal(self, row):
         if row["SMA_S"] > row["SMA_L"]:

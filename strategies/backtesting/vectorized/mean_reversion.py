@@ -19,13 +19,10 @@ class MeanRevVectBacktester(MeanRevBase, VectorizedBacktester):
     """
 
     def __init__(self, data, ma, sd, trading_costs=0, symbol='BTCUSDT'):
-        MeanRevBase.__init__(self)
+        MeanRevBase.__init__(self, ma, sd)
         VectorizedBacktester.__init__(self, data, trading_costs=trading_costs, symbol=symbol)
 
-        self.ma = ma
-        self.sd = sd
-
-        self._update_data()
+        self.data = self.update_data(self.data)
 
     def test_strategy(self, ma_sd_pair=None, plot_results=True):
         """ Backtests the trading strategy.

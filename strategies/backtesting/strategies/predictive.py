@@ -27,12 +27,14 @@ class MLBase:
     def __repr__(self):
         return "{}(symbol = {}, estimator = {})".format(self.__class__.__name__, self.symbol, self.estimator)
 
-    def _update_data(self):
+    # TODO: Refactor this case
+    def update_data(self):
         """ Retrieves and prepares the data.
         """
 
         self._get_lag_model_X_y()
 
+    # TODO: make it possible to update all parameters
     def _set_parameters(self, estimator = None):
         """ Updates SMA parameters and resp. time series.
         """
