@@ -5,21 +5,23 @@ class SMABase:
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self):
+    def __init__(self, SMA_S, SMA_L):
         self.data = None
-        self.SMA_S = None
-        self.SMA_L = None
+        self.SMA_S = SMA_S
+        self.SMA_L = SMA_L
         self.symbol = None
 
     def __repr__(self):
         return "{}(symbol = {}, SMA_S = {}, SMA_L = {})".format(self.__class__.__name__, self.symbol, self.SMA_S, self.SMA_L)
 
-    def _update_data(self):
+    def update_data(self, data):
         """ Retrieves and prepares the data.
         """
 
-        self.data["SMA_S"] = self.data["close"].rolling(self.SMA_S).mean()
-        self.data["SMA_L"] = self.data["close"].rolling(self.SMA_L).mean()
+        data["SMA_S"] = data["close"].rolling(self.SMA_S).mean()
+        data["SMA_L"] = data["close"].rolling(self.SMA_L).mean()
+
+        return data
 
     def _set_parameters(self, sma=None):
         """ Updates SMA parameters and resp. time series.
@@ -36,7 +38,7 @@ class SMABase:
 
         if SMA_S is not None:
             self.SMA_S = int(SMA_S)
-            self.data["SMA_S"] = self.data["close"].rolling(self.SMA_S).mean()
         if SMA_L is not None:
             self.SMA_L = int(SMA_L)
-            self.data["SMA_L"] = self.data["close"].rolling(self.SMA_L).mean()
+
+        self.data = self.update_data(self.data)

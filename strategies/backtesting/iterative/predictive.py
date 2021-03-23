@@ -37,7 +37,7 @@ class MLIterBacktester(MLBase, IterativeBacktester):
         self.excluded_features = set(excluded_features).add(self.price_col) \
             if excluded_features is not None else {self.price_col}
 
-        self._update_data()
+        self.update_data()
 
     def get_values(self, date, row):
         price = self.data.loc[date][self.price_col]

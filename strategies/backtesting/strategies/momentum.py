@@ -4,22 +4,25 @@ class MomentumBase:
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self):
+    def __init__(self, window, returns_col='returns'):
         self.data = None
-        self.window = None
+        self.window = window
         self.symbol = None
-        self.returns_col = None
+        self.returns_col = returns_col
 
     def __repr__(self):
         return "{}(symbol = {}, window = {})".format(self.__class__.__name__, self.symbol, self.window)
 
-    def _update_data(self):
+    def update_data(self, data):
         """ Retrieves and prepares the data.
         """
-        self.data["rolling_returns"] = self.data[self.returns_col].rolling(self.window, min_periods=1).mean()
+        data["rolling_returns"] = data[self.returns_col].rolling(self.window, min_periods=1).mean()
+        return data
 
     def _set_parameters(self, window):
         """ Updates SMA parameters and resp. time series.
         """
         if window is not None:
             self.window = int(window)
+
+        self.data = self.update_data(self.data)

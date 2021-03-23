@@ -21,7 +21,7 @@ class MLVectBacktester(MLBase, VectorizedBacktester):
         self.excluded_features = set(excluded_features).add(self.price_col) \
             if excluded_features is not None else {self.price_col}
 
-        self._update_data()
+        self.update_data()
 
     def test_strategy(self, estimator=None, params=None, test_size=0.2, degree=1, print_results=True, plot_results=True):
 

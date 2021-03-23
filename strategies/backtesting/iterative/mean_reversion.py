@@ -5,7 +5,7 @@ from strategies.backtesting.strategies import MeanRevBase
 class MeanRevIterBacktester(MeanRevBase, IterativeBacktester):
 
     def __init__(self, data, amount, ma, sd, trading_costs=0, symbol='BTCUSDT'):
-        MeanRevBase.__init__(self)
+        MeanRevBase.__init__(self, ma, sd)
         IterativeBacktester.__init__(
             self,
             data,
@@ -14,11 +14,7 @@ class MeanRevIterBacktester(MeanRevBase, IterativeBacktester):
             trading_costs=trading_costs
         )
 
-        self.ma = ma
-        self.sd = sd
-        self.results = None
-
-        self._update_data()
+        self.data = self.update_data(self.data)
 
     def _get_signal(self, row):
         if self.position == 0: # when neutral
