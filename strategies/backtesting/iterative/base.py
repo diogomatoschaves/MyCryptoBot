@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 from strategies.backtesting.base import BacktestBase
 from trading_automation.trading import Trader
@@ -9,20 +8,17 @@ class IterativeBacktester(BacktestBase, Trader):
 
     def __init__(self, data, amount, symbol='BTCUSDT', trading_costs=0, price_col='close', returns_col='returns'):
         BacktestBase.__init__(self)
+        Trader.__init__(self, amount)
 
         self.data = data.copy()
         self.results = None
-        self.initial_balance = amount
-        self.current_balance = amount
-        self.units = 0
-        self.trades = 0
+
         self.symbol = symbol
 
         self.price_col = price_col
         self.returns_col = returns_col
         self.tc = trading_costs / 100
         
-        self.position = 0
         self.positions = []
 
         self._calculate_returns()
