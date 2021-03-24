@@ -1,5 +1,5 @@
-from strategies.backtesting.iterative.base import IterativeBacktester
-from strategies.strategies import MomentumBase
+from quant_model.backtesting.iterative.base import IterativeBacktester
+from quant_model.strategies import MomentumBase
 
 
 class MomentumIterBacktester(MomentumBase, IterativeBacktester):

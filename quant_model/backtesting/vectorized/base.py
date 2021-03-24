@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import brute
 
-from strategies.backtesting.base import BacktestBase
+from quant_model.backtesting.base import BacktestBase
 
 
 class VectorizedBacktester(BacktestBase):

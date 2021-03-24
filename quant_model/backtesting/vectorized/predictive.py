@@ -2,8 +2,8 @@ import numpy as np
 from sklearn.model_selection import TimeSeriesSplit
 
 from model.modelling.helpers import plot_learning_curve
-from strategies.strategies import MLBase
-from strategies.backtesting.vectorized.base import VectorizedBacktester
+from quant_model.strategies import MLBase
+from quant_model.backtesting.vectorized.base import VectorizedBacktester
 
 
 class MLVectBacktester(MLBase, VectorizedBacktester):
