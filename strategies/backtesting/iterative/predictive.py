@@ -1,8 +1,5 @@
-import pandas as pd
-
-from model.modelling.model_training import train_model
 from strategies.backtesting.iterative.base import IterativeBacktester
-from strategies.backtesting.strategies import MLBase
+from strategies.strategies import MLBase
 
 
 class MLIterBacktester(MLBase, IterativeBacktester):
@@ -43,9 +40,6 @@ class MLIterBacktester(MLBase, IterativeBacktester):
         price = self.data.loc[date][self.price_col]
 
         return price
-
-    def _get_signal(self, row):
-        return self.pipeline.predict(pd.DataFrame(row).T)
 
     def _get_test_title(self):
         return "Testing ML strategy | {} | estimator = {}".format(self.symbol, self.estimator)
