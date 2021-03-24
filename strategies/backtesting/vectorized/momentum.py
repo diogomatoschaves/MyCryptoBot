@@ -1,6 +1,6 @@
 import numpy as np
 
-from strategies.backtesting.strategies import MomentumBase
+from strategies.strategies import MomentumBase
 from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 
@@ -24,4 +24,4 @@ class MomentumVectBacktester(MomentumBase, VectorizedBacktester):
 
         title = self.__repr__()
 
-        return self._assess_strategy(data, data, title, plot_results)
+        return self._assess_strategy(data, title, plot_results)

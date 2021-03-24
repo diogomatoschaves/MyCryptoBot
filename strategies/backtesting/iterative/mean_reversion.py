@@ -1,5 +1,5 @@
 from strategies.backtesting.iterative.base import IterativeBacktester
-from strategies.backtesting.strategies import MeanRevBase
+from strategies.strategies import MeanRevBase
 
 
 class MeanRevIterBacktester(MeanRevBase, IterativeBacktester):
@@ -15,25 +15,6 @@ class MeanRevIterBacktester(MeanRevBase, IterativeBacktester):
         )
 
         self.data = self.update_data(self.data)
-
-    def _get_signal(self, row):
-        if self.position == 0: # when neutral
-            if row[self.price_col] < row["lower"]:  # signal to go long
-                return 1
-            elif row[self.price_col] > row["upper"]:  # signal to go Short
-                return -1
-        elif self.position == 1:  # when long
-            if row[self.price_col] > row["sma"]:
-                if row[self.price_col] > row["upper"]:  # signal to go short
-                    return 1
-                else:
-                    return 0
-        elif self.position == -1: # when short
-            if row[self.price_col] < row["sma"]:
-                if row[self.price_col] < row["lower"]:  # signal to go long
-                    return 1
-                else:
-                    return 0
 
     def _get_test_title(self):
         return "Testing Bollinger Bands Strategy: {} | ma = {} & sd = {}".format(self.symbol, self.ma, self.sd)

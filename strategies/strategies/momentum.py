@@ -26,3 +26,9 @@ class MomentumBase:
             self.window = int(window)
 
         self.data = self.update_data(self.data)
+
+    def _get_signal(self, row):
+        if row["rolling_returns"] >= 0:
+            return 1
+        else:
+            return -1

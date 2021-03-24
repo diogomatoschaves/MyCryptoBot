@@ -1,6 +1,6 @@
 import numpy as np
 
-from strategies.backtesting.strategies import SMABase
+from strategies.strategies import SMABase
 from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 

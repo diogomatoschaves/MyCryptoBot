@@ -2,8 +2,7 @@ import numpy as np
 from sklearn.model_selection import TimeSeriesSplit
 
 from model.modelling.helpers import plot_learning_curve
-from model.modelling.model_training import train_model
-from strategies.backtesting.strategies import MLBase
+from strategies.strategies import MLBase
 from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 
