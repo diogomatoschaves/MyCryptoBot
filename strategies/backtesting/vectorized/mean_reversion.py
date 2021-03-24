@@ -1,6 +1,6 @@
 import numpy as np
 
-from strategies.backtesting.strategies import MeanRevBase
+from strategies.strategies import MeanRevBase
 from strategies.backtesting.vectorized.base import VectorizedBacktester
 
 

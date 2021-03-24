@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from data_processing.transform.feature_engineering import get_lag_features
 from model.modelling.model_training import train_model
@@ -88,3 +89,6 @@ class MLBase:
         self.y_train = y_train
         self.X_test = X_test
         self.y_test = y_test
+
+    def _get_signal(self, row):
+        return self.pipeline.predict(pd.DataFrame(row).T)
