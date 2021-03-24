@@ -1,7 +1,7 @@
 import numpy as np
 
-from strategies.strategies import MomentumBase
-from strategies.backtesting.vectorized.base import VectorizedBacktester
+from quant_model.strategies import MomentumBase
+from quant_model.backtesting.vectorized.base import VectorizedBacktester
 
 
 class MomentumVectBacktester(MomentumBase, VectorizedBacktester):

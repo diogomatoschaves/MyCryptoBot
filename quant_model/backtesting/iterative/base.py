@@ -1,6 +1,6 @@
 import numpy as np
 
-from strategies.backtesting.base import BacktestBase
+from quant_model.backtesting.base import BacktestBase
 from trading_automation.trading import Trader
 
 

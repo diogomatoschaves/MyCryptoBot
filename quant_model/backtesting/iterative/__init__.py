@@ -1,0 +1,4 @@
+from quant_model.backtesting.iterative.sma import SMAIterBacktester
+from quant_model.backtesting.iterative.momentum import MomentumIterBacktester
+from quant_model.backtesting.iterative.predictive import MLIterBacktester
+from quant_model.backtesting.iterative.mean_reversion import MeanRevIterBacktester
