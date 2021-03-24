@@ -1,5 +1,5 @@
-from strategies.backtesting.iterative.base import IterativeBacktester
-from strategies.strategies import MeanRevBase
+from quant_model.backtesting.iterative.base import IterativeBacktester
+from quant_model.strategies import MeanRevBase
 
 
 class MeanRevIterBacktester(MeanRevBase, IterativeBacktester):

@@ -1,0 +1,4 @@
+from quant_model.backtesting.vectorized.sma import SMAVectBacktester
+from quant_model.backtesting.vectorized.momentum import MomentumVectBacktester
+from quant_model.backtesting.vectorized.predictive import MLVectBacktester
+from quant_model.backtesting.vectorized.mean_reversion import MeanRevVectBacktester

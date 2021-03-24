@@ -1,7 +1,7 @@
 import numpy as np
 
-from strategies.strategies import SMABase
-from strategies.backtesting.vectorized.base import VectorizedBacktester
+from quant_model.strategies import SMABase
+from quant_model.backtesting.vectorized.base import VectorizedBacktester
 
 
 class SMAVectBacktester(SMABase, VectorizedBacktester):
