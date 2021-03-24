@@ -66,12 +66,20 @@ def get_historical_data(exchange_name, client, quote, base, interval, start_date
             "interval": interval
         })
 
-        if not ExchangeData.objects.filter(exchange=fields["exchange"], open_time=fields["open_time"]).exists():
-            obj = ExchangeData(**fields)
-            obj.save()
+        try:
+            obj = ExchangeData.objects.create(**fields)
+        except django.db.utils.IntegrityError:
+
+            unique_fields = {"open_time", "exchange", "symbol", "interval"}
+
+            fields_subset = {key: value for key, value in fields.items() if key in unique_fields}
+
+            ExchangeData.objects.filter(**fields_subset).update(**fields)
 
         if i % 1E4 == 0:
             print(fields["open_time"])
+
+    ExchangeData.objects.last().delete()
 
 
 if __name__ == "__main__":

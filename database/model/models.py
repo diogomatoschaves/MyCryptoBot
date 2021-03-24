@@ -77,3 +77,6 @@ class ExchangeData(models.Model):
     trades = models.IntegerField(null=True)
     taker_buy_asset_volume = models.FloatField(null=True)
     taker_buy_quote_volume = models.FloatField(null=True)
+
+    class Meta:
+        unique_together = ("open_time", "exchange", "interval", "symbol")
