@@ -43,17 +43,17 @@ class Trader:
         elif amount:
             if amount == "all":
                 amount = self.current_balance
-            self.sell_instrument(date, row, amount=amount) # go short
+                self.sell_instrument(date, row, amount=amount)  # go short
 
-    def trade(self, signal, date, row, amount="all"):
+    def trade(self, signal, date, row, amount=None, units=None):
 
         if signal == 1:  # signal to go long
             if self.position in [0, -1]:
-                self.go_long(date, row, amount=amount)  # go long with full amount
+                self.go_long(date, row, amount=amount, units=units)  # go long with full amount
                 self.position = 1  # long position
         elif signal == -1:  # signal to go short
             if self.position in [0, 1]:
-                self.go_short(date, row, amount=amount)  # go short with full amount
+                self.go_short(date, row, amount=amount, units=units)  # go short with full amount
                 self.position = -1  # short position
         elif signal == 0:
             if self.position == -1:
