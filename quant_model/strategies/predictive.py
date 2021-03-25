@@ -29,7 +29,7 @@ class MLBase:
         return "{}(symbol = {}, estimator = {})".format(self.__class__.__name__, self.symbol, self.estimator)
 
     # TODO: Refactor this case
-    def update_data(self):
+    def update_data(self, data):
         """ Retrieves and prepares the data.
         """
 
@@ -90,5 +90,5 @@ class MLBase:
         self.X_test = X_test
         self.y_test = y_test
 
-    def _get_signal(self, row):
+    def get_signal(self, row):
         return self.pipeline.predict(pd.DataFrame(row).T)

@@ -45,7 +45,7 @@ class MeanRevBase:
 
         self.data = self.update_data(self.data)
 
-    def _get_signal(self, row):
+    def get_signal(self, row):
         if self.position == 0: # when neutral
             if row[self.price_col] < row["lower"]:  # signal to go long
                 return 1
