@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from os import environ as env
 from datetime import datetime, timedelta
 
@@ -34,7 +35,7 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
         quote='USDT',
         base='BTC',
         candle_size='5m',
-        margin_level=10,
+        margin_level=3,
         price_col='close',
         returns_col='returns'
     ):
@@ -63,10 +64,20 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
         Trader.__init__(self, self._get_symbol_account_total(self.asset_info[self.symbol]))
 
         self._open_orders = []
-        self._filled_orders = []
+        self.filled_orders = []
         self.conn_key = None
 
         self.trading_fees = self.get_trade_fee(symbol=self.symbol)['tradeFee'][0]
+
+    def start_trading(self):
+
+        self._get_gistorical_data()
+
+        self._get_data()
+        self._start_websocket(self.symbol, self.websocket_callback)
+
+    def stop_trading(self):
+        self.stop_socket(self.conn_key)
 
     def _get_api_keys(self):
         self.binance_api_key = env.get(const.BINANCE_API_KEY)
@@ -96,21 +107,29 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
             int(start_date.timestamp() * 1000)
         )
 
-    def _get_data(self):
-
-        print(f"Loading the data...")
+    def _get_query(self, days):
 
         query = str(
             ExchangeData.objects.filter(
                 exchange=f"'{self.exchange}'",
                 symbol=f"'{self.symbol}'",
-                # open_time__gte=f"'{(datetime.utcnow() - timedelta(days=365)).date()}'"
-            ).query
+                open_time__gte=f"{(datetime.utcnow() - timedelta(days=days)).date()}"
+            ).order_by('open_time').query
         )
 
-        min_date = (datetime.utcnow() - timedelta(days=5)).date()
+        pattern = r"\d{4}-\d{2}-\d{2}\s*\d+:\d+:\d+"
+        query = re.sub(pattern, r'"\g<0>"', query)
 
-        self.data = pd.read_sql_query(query, connection, parse_dates=['open_time'], index_col='open_time').loc[min_date:].copy()
+        return query
+
+    def _get_data(self):
+
+        print(f"Loading the data...")
+
+        query = self._get_query(20)
+
+        # TODO: Adjust time based on candle size
+        self.data = pd.read_sql_query(query, connection, parse_dates=['open_time'], index_col='open_time')
 
         self.data = self._resample_data(self.data, const.COLUMNS_AGGREGATION).iloc[:-1]
         self.data_length = len(self.data)
@@ -128,11 +147,10 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
 
         return data
 
-    # TODO: Process incoming data and execute trades
     def websocket_callback(self, row):
 
-        self.stop_trading()
-        print(row)
+        # self.stop_trading()
+        # print(row)
 
         df = pd.DataFrame(
             {
@@ -146,20 +164,83 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
 
         self.data = self._resample_data(self.data, const.COLUMNS_AGGREGATION_WEBSOCKET)
 
+        # TODO: Save last_row in database
         if len(self.data) != self.data_length:
 
             self.data_length = len(self.data)
 
             data = self._prepare_data()[:-1]
 
-            a = 1
+            last_row = data.iloc[-1]
 
-    def start_trading(self):
+            signal = self.strategy.get_signal(last_row)
 
-        self._get_gistorical_data()
+            if signal != self.position:
+                print(f"{last_row.name} | Last close price: {last_row[self.price_col]}")
 
-        self._get_data()
-        self._start_websocket(self.symbol, self.websocket_callback)
+            self.trade(signal, last_row.name, last_row, amount='all')
+
+    def buy_instrument(self, date, row, units=None, amount=None):
+        self._execute_order(
+            self.ORDER_TYPE_MARKET,
+            self.SIDE_BUY,
+            "GOING LONG",
+            units,
+            amount
+        )
+
+    def sell_instrument(self, date, row, units=None, amount=None):
+        self._execute_order(
+            self.ORDER_TYPE_MARKET,
+            self.SIDE_SELL,
+            "GOING SHORT",
+            units,
+            amount
+        )
+
+    def _execute_order(self, order_type, order_side, going, units=None, amount=None):
+
+        kwargs = self._get_order_kwargs(units, amount)
+
+        order = self.create_margin_order(
+            symbol=self.symbol,
+            side=order_side,
+            type=order_type,
+            newOrderRespType='FULL',
+            isIsolated=True,
+            sideEffectType='MARGIN_BUY',
+            **kwargs
+        )
+
+        self.filled_orders.append(order)
+
+        units = float(order["executedQty"])
+        price = self._get_average_order_price(order)
+
+        factor = 1 if order_side == self.SIDE_SELL else -1
+
+        self.current_balance += factor * float(order['cummulativeQuoteQty'])
+        self.units -= factor * units
+        self.trades += 1
+
+        self.report_trade(order, units, price, going)
+
+    @staticmethod
+    def _get_order_kwargs(units, amount):
+        kwargs = {}
+        if units:
+            kwargs["quantity"] = units
+        elif amount:
+            kwargs["quoteOrderQty"] = amount
+
+        return kwargs
+
+    @staticmethod
+    def _get_average_order_price(order):
+
+        s = sum([float(fill["price"]) * float(fill["qty"]) for fill in order["fills"]])
+
+        return s / float(order["executedQty"])
 
     def _start_websocket(self, symbol, callback, option='kline'):
         print(f"Starting websocket...")
@@ -167,73 +248,13 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
         self.conn_key = getattr(self, f'start_{option}_socket')(symbol=symbol, callback=callback, interval=self.candle_size)
         self.start()
 
-    def stop_trading(self):
-        self.stop_socket(self.conn_key)
+    def report_trade(self, order, units, price, going):
 
-    def buy_instrument(self, date, row, units=None, amount=None):
+        date = datetime.fromtimestamp(order["transactTime"] / 1000)
 
-        if units is None:
-            units = amount / price
-
-        self.current_balance -= units * price
-        self.units += units
-        self.trades += 1
-        print(f"{date} |  Buying {round(units, 4)} {self.symbol} for {round(price, 5)}")
-
-    def sell_instrument(self, date, row, units=None, amount=None):
-        raise NotImplementedError
-
-    def execute_trades(self):
-
-        # executing trades
-        if len(self.data) > self.data_length:
-            self.data_length = len(self.data)
-            if self.data["position"].iloc[-1] == 1:
-                if self.position == 0:
-                    order = self.create_order(self.symbol, self.units, suppress = True, ret = True)
-                    self.report_trade(order, "GOING LONG")
-                elif self.position == -1:
-                    order = self.create_order(self.symbol, self.units * 2, suppress = True, ret = True)
-                    self.report_trade(order, "GOING LONG")
-                self.position = 1
-            elif self.data["position"].iloc[-1] == -1:
-                if self.position == 0:
-                    order = self.create_order(self.symbol, -self.units, suppress = True, ret = True)
-                    self.report_trade(order, "GOING SHORT")
-                elif self.position == 1:
-                    order = self.create_order(self.symbol, -self.units * 2, suppress = True, ret = True)
-                    self.report_trade(order, "GOING SHORT")
-                self.position = -1
-
-    @staticmethod
-    def report_trade(order, going):
-        time = datetime.fromtimestamp(order["transactTime"])
-        units = order["origQty"]
-        price = order["price"]
-        type_ = order["type"]
-        side = order["side"]
-
-        # pl = float(order["pl"])
-        # self.profits.append(pl)
-        # cumpl = sum(self.profits)
         print("\n" + 100* "-")
-        print("{} | {}".format(time, going))
-        print("{} | units = {} | price = {} | P&L = {} | Cum P&L = {}".format(time, units, price, pl, cumpl))
+        print("{} | {}".format(date, going))
+        print("{} | units = {} | price = {}".format(date, units, price))
         print(100 * "-" + "\n")
 
-
-
-
-
-
-    # def _get_client(self):
-    #     self.client = Client(self.binance_api_key, self.binance_api_secret)._i
-    #     return self.client
-
-    # def start_client(self):
-    #
-    #     self._get_api_keys()
-    #     client = self._get_client()
-    #
-    #     self._open_orders = client.get_all_margin_orders(symbol=self.symbol, limit=20, isIsolated=True)
-    #
+        self.print_current_nav(date, price)
