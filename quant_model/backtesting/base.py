@@ -37,7 +37,7 @@ class BacktestBase:
         self.results = data
 
         # absolute performance of the strategy
-        perf = data["cstrategy"].iloc[-1]
+        perf = data["cstrategy_tc"].iloc[-1]
 
         # out-/underperformance of strategy
         outperf = perf - data["creturns"].iloc[-1]

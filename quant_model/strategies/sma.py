@@ -43,7 +43,7 @@ class SMABase:
 
         self.data = self.update_data(self.data)
 
-    def _get_signal(self, row):
+    def get_signal(self, row):
         if row["SMA_S"] > row["SMA_L"]:
             return 1
         elif row["SMA_S"] < row["SMA_L"]:

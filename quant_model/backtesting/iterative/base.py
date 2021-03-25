@@ -4,6 +4,7 @@ from quant_model.backtesting.base import BacktestBase
 from trading_automation.trading import Trader
 
 
+# TODO: Improve results presentation
 class IterativeBacktester(BacktestBase, Trader):
 
     def __init__(self, data, amount, symbol='BTCUSDT', trading_costs=0, price_col='close', returns_col='returns'):
@@ -26,7 +27,7 @@ class IterativeBacktester(BacktestBase, Trader):
     def _calculate_returns(self):
         self.data[self.returns_col] = np.log(self.data[self.price_col] / self.data[self.price_col].shift(1))
 
-    def _update_data(self):
+    def update_data(self, data):
         """ Retrieves and prepares the data.
         """
         raise NotImplementedError
@@ -37,13 +38,13 @@ class IterativeBacktester(BacktestBase, Trader):
         self.positions = []
         self.trades = 0  # no trades yet
         self.current_balance = self.initial_balance  # reset initial capital
-        self._update_data()  # reset dataset
+        self.data = self.update_data(self.data)
         
     def _calculate_positions(self, data):
         data["position"] = self.positions
         return data
 
-    def _get_signal(self, row):
+    def get_signal(self, row):
         raise NotImplementedError
 
     def _get_trades(self, data):
@@ -84,7 +85,7 @@ class IterativeBacktester(BacktestBase, Trader):
 
         for bar, (timestamp, row) in enumerate(data.iterrows()):
 
-            signal = self._get_signal(row)
+            signal = self.get_signal(row)
 
             if bar != data.shape[0] - 1:
                 self.trade(signal, timestamp, row, amount="all")
