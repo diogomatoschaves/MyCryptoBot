@@ -4,6 +4,7 @@ import re
 from os import environ as env
 from datetime import datetime, timedelta
 
+import pytz
 from dotenv import load_dotenv, find_dotenv
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
@@ -28,6 +29,8 @@ if ENV_FILE:
 
 
 class BinanceTrader(Client, BinanceSocketManager, Trader):
+
+    AUTO_REPAY = 'AUTO_REPAY'
 
     def __init__(
         self,
@@ -58,8 +61,9 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
 
         self.asset_info = {asset["symbol"]: asset for asset in self.get_isolated_margin_account()["assets"]}
         self.margin_level = margin_level
-        if self.margin_level > int(self.asset_info[self.symbol]["marginRatio"]):
-            self.margin_level = int(self.asset_info[self.symbol]["marginRatio"])
+        self.max_margin_level = int(self.asset_info[self.symbol]["marginRatio"])
+        if self.margin_level > self.max_margin_level:
+            self.margin_level = self.max_margin_level
 
         Trader.__init__(self, self._get_symbol_account_total(self.asset_info[self.symbol]))
 
@@ -79,6 +83,8 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
     def stop_trading(self):
         self.stop_socket(self.conn_key)
 
+        self.close_pos(date=datetime.utcnow(), row=None)
+
     def _get_api_keys(self):
         self.binance_api_key = env.get(const.BINANCE_API_KEY)
         self.binance_api_secret = env.get(const.BINANCE_API_SECRET)
@@ -89,6 +95,11 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
         amount += float(asset_info["baseAsset"]["netAsset"]) * float(asset_info["indexPrice"])
 
         return amount
+
+    def _get_loan_amount(self):
+        details = self.get_max_margin_loan(asset=self.quote, isolatedSymbol=self.symbol)
+
+        return np.ceil(float(details["amount"])) * (self.margin_level / self.max_margin_level)
 
     def _get_gistorical_data(self):
 
@@ -175,30 +186,53 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
 
             signal = self.strategy.get_signal(last_row)
 
-            if signal != self.position:
+            if signal == self.position:
                 print(f"{last_row.name} | Last close price: {last_row[self.price_col]}")
 
-            self.trade(signal, last_row.name, last_row, amount='all')
+            amount = 'all'
+            if self.position == 0:
+                amount = self._get_loan_amount()
 
-    def buy_instrument(self, date, row, units=None, amount=None):
+            self.trade(signal, last_row.name, last_row, amount=amount)
+
+    def buy_instrument(self, date, row, units=None, amount=None, **kwargs):
         self._execute_order(
             self.ORDER_TYPE_MARKET,
             self.SIDE_BUY,
             "GOING LONG",
-            units,
-            amount
+            units=units,
+            amount=amount,
+            **kwargs
         )
 
-    def sell_instrument(self, date, row, units=None, amount=None):
+    def sell_instrument(self, date, row, units=None, amount=None, **kwargs):
         self._execute_order(
             self.ORDER_TYPE_MARKET,
             self.SIDE_SELL,
             "GOING SHORT",
-            units,
-            amount
+            units=units,
+            amount=amount,
+            **kwargs
         )
 
-    def _execute_order(self, order_type, order_side, going, units=None, amount=None):
+    def close_pos(self, date, row):
+
+        if self.units <= 0:
+            self.buy_instrument(date, row, units=-self.units, side_effect=self.AUTO_REPAY)
+        else:
+            self.sell_instrument(date, row, units=self.units, side_effect=self.AUTO_REPAY)
+
+        perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
+
+        self.print_current_balance(date)
+
+        print(100 * "-")
+        print("{} | +++ CLOSED FINAL POSITION +++".format(date))
+        print("{} | net performance (%) = {}".format(date, round(perf, 2)))
+        print("{} | number of trades executed = {}".format(date, self.trades))
+        print(100 * "-")
+
+    def _execute_order(self, order_type, order_side, going, side_effect='MARGIN_BUY', units=None, amount=None):
 
         kwargs = self._get_order_kwargs(units, amount)
 
@@ -208,7 +242,7 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
             type=order_type,
             newOrderRespType='FULL',
             isIsolated=True,
-            sideEffectType='MARGIN_BUY',
+            sideEffectType=side_effect,
             **kwargs
         )
 
@@ -243,18 +277,17 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
         return s / float(order["executedQty"])
 
     def _start_websocket(self, symbol, callback, option='kline'):
-        print(f"Starting websocket...")
+        print(f"Starting data stream...")
 
         self.conn_key = getattr(self, f'start_{option}_socket')(symbol=symbol, callback=callback, interval=self.candle_size)
         self.start()
 
     def report_trade(self, order, units, price, going):
 
-        date = datetime.fromtimestamp(order["transactTime"] / 1000)
+        date = datetime.fromtimestamp(order["transactTime"] / 1000).astimezone(pytz.utc)
 
-        print("\n" + 100* "-")
+        print(100 * "-")
         print("{} | {}".format(date, going))
         print("{} | units = {} | price = {}".format(date, units, price))
-        print(100 * "-" + "\n")
-
         self.print_current_nav(date, price)
+        print(100 * "-")
