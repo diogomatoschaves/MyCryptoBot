@@ -8,6 +8,8 @@ class BacktestBase:
 
         self.tc = None
         self.returns_col = None
+        self.price_col = None
+        self.data = None
 
     def _calculate_positions(self, data):
         raise NotImplementedError
@@ -22,12 +24,12 @@ class BacktestBase:
         data["trades"] = data.position.diff().fillna(0).abs()
 
         data["strategy"] = data.position.shift(1) * data.returns
-        data["strategy_tc"] = data["strategy"] - np.abs(data[self.returns_col]) * data.trades * self.tc
+        data["strategy_tc"] = data["strategy"] - data.trades * self.tc
 
         data.dropna(inplace=True)
 
-        data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
         data["creturns"] = data[self.returns_col].cumsum().apply(np.exp)
+        data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
         data["cstrategy_tc"] = data["strategy_tc"].cumsum().apply(np.exp)
 
         number_trades = self._get_trades(data)
@@ -60,3 +62,6 @@ class BacktestBase:
 
             self.results[plotting_cols].plot(title=title, figsize=(12, 8), secondary_y='position')
             plt.show()
+
+    def _calculate_returns(self):
+        self.data[self.returns_col] = np.log(self.data[self.price_col] / self.data[self.price_col].shift(1))

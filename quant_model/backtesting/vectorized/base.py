@@ -22,9 +22,6 @@ class VectorizedBacktester(BacktestBase):
 
         self._calculate_returns()
 
-    def _calculate_returns(self):
-        self.data[self.returns_col] = np.log(self.data[self.price_col] / self.data[self.price_col].shift(1))
-
     def _set_parameters(self, *args):
         """ Updates parameters.
         """

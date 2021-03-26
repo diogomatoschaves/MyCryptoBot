@@ -20,13 +20,25 @@ class MLVectBacktester(MLBase, VectorizedBacktester):
         self.excluded_features = set(excluded_features).add(self.price_col) \
             if excluded_features is not None else {self.price_col}
 
-        self.update_data()
+        self.update_data(self.data)
+
+    def _calculate_positions(self, data):
+        """
+        Calculates position according to strategy
+
+        :param data:
+        :return: data with position calculated
+        """
+        data["position"] = np.sign(self.pipeline.predict(data))
+
+        return data
 
     def test_strategy(self, estimator=None, params=None, test_size=0.2, degree=1, print_results=True, plot_results=True):
 
         self._set_parameters(estimator)
 
-        self._train_model(estimator, params, test_size, degree, print_results)
+        # TODO: Only train model if parameters are different
+        self._train_model(self.estimator, params, test_size, degree, print_results)
 
         title = self.__repr__()
 
