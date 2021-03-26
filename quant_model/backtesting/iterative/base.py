@@ -1,5 +1,3 @@
-import numpy as np
-
 from quant_model.backtesting.base import BacktestBase
 from trading_automation.trading import Trader
 
@@ -23,9 +21,6 @@ class IterativeBacktester(BacktestBase, Trader):
         self.positions = []
 
         self._calculate_returns()
-
-    def _calculate_returns(self):
-        self.data[self.returns_col] = np.log(self.data[self.price_col] / self.data[self.price_col].shift(1))
 
     def update_data(self, data):
         """ Retrieves and prepares the data.

@@ -42,17 +42,6 @@ class MLBase:
         if estimator is not None:
             self.estimator = estimator
 
-    def _calculate_position(self, data):
-        """
-        Calculates position according to strategy
-
-        :param data:
-        :return: data with position calculated
-        """
-        data["position"] = np.sign(self.pipeline.predict(data))
-
-        return data
-
     def get_rolling_model_df(self):
 
         pass
