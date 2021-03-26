@@ -43,7 +43,7 @@ class Trader:
         elif amount:
             if amount == "all":
                 amount = self.current_balance
-                self.sell_instrument(date, row, amount=amount)  # go short
+            self.sell_instrument(date, row, amount=amount)  # go short
 
     def trade(self, signal, date, row, amount=None, units=None):
 
@@ -64,11 +64,11 @@ class Trader:
 
     def print_current_position_value(self, date, price):
         cpv = self.units * price
-        print(f"{date} |  Current Position Value = {round(cpv, 2)}")
+        print(f"{date} | Current Position Value = {round(cpv, 2)}")
 
     def print_current_nav(self, date, price):
         nav = self.current_balance + self.units * price
-        print(f"{date} |  Net Asset Value = {round(nav, 2)}")
+        print(f"{date} | Net Asset Value = {round(nav, 2)}")
 
     def print_current_balance(self, date):
-        print("{} |  Current Balance: {}".format(date, round(self.current_balance, 2)))
+        print("{} | Current Balance: {}".format(date, round(self.current_balance, 2)))
