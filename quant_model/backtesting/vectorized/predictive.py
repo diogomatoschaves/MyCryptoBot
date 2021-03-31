@@ -2,15 +2,15 @@ import numpy as np
 from sklearn.model_selection import TimeSeriesSplit
 
 from model.modelling.helpers import plot_learning_curve
-from quant_model.strategies import MLBase
+from quant_model.strategies import ML
 from quant_model.backtesting.vectorized.base import VectorizedBacktester
 
 
-class MLVectBacktester(MLBase, VectorizedBacktester):
+class MLVectBacktester(ML, VectorizedBacktester):
 
     def __init__(self, data, estimator, lag_features=None, excluded_features=None, nr_lags=5, trading_costs=0, symbol='BTCUSDT'):
 
-        MLBase.__init__(self)
+        ML.__init__(self)
         VectorizedBacktester.__init__(self, data, symbol=symbol, trading_costs=trading_costs)
 
         self.estimator = estimator
@@ -21,17 +21,6 @@ class MLVectBacktester(MLBase, VectorizedBacktester):
             if excluded_features is not None else {self.price_col}
 
         self.update_data(self.data)
-
-    def _calculate_positions(self, data):
-        """
-        Calculates position according to strategy
-
-        :param data:
-        :return: data with position calculated
-        """
-        data["position"] = np.sign(self.pipeline.predict(data))
-
-        return data
 
     def test_strategy(self, estimator=None, params=None, test_size=0.2, degree=1, print_results=True, plot_results=True):
 

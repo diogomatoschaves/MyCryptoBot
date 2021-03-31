@@ -1,6 +1,7 @@
+import numpy as np
 
 
-class MomentumBase:
+class Momentum:
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
@@ -26,6 +27,11 @@ class MomentumBase:
             self.window = int(window)
 
         self.data = self.update_data(self.data)
+
+    def _calculate_positions(self, data):
+        data["position"] = np.sign(data[self.returns_col].rolling(self.window, min_periods=1).mean())
+
+        return data
 
     def get_signal(self, row):
         if row["rolling_returns"] >= 0:

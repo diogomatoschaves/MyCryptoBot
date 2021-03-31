@@ -1,8 +1,8 @@
 from quant_model.backtesting.iterative.base import IterativeBacktester
-from quant_model.strategies import MLBase
+from quant_model.strategies import ML
 
 
-class MLIterBacktester(MLBase, IterativeBacktester):
+class MLIterBacktester(ML, IterativeBacktester):
 
     def __init__(
         self,
@@ -19,7 +19,7 @@ class MLIterBacktester(MLBase, IterativeBacktester):
         degree=1,
         print_results=True,
     ):
-        MLBase.__init__(self)
+        ML.__init__(self)
         IterativeBacktester.__init__(self, data, amount, symbol=symbol, trading_costs=trading_costs)
 
         self.estimator = estimator

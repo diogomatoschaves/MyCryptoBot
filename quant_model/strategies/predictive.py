@@ -5,7 +5,7 @@ from data_processing.transform.feature_engineering import get_lag_features
 from model.modelling.model_training import train_model
 
 
-class MLBase:
+class ML:
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
@@ -78,6 +78,17 @@ class MLBase:
         self.y_train = y_train
         self.X_test = X_test
         self.y_test = y_test
+
+    def _calculate_positions(self, data):
+        """
+        Calculates position according to strategy
+
+        :param data:
+        :return: data with position calculated
+        """
+        data["position"] = np.sign(self.pipeline.predict(data))
+
+        return data
 
     def get_signal(self, row):
         return self.pipeline.predict(pd.DataFrame(row).T)

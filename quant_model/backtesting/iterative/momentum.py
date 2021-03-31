@@ -1,11 +1,11 @@
 from quant_model.backtesting.iterative.base import IterativeBacktester
-from quant_model.strategies import MomentumBase
+from quant_model.strategies import Momentum
 
 
-class MomentumIterBacktester(MomentumBase, IterativeBacktester):
+class MomentumIterBacktester(Momentum, IterativeBacktester):
 
     def __init__(self, data, amount, window):
-        MomentumBase.__init__(self, window)
+        Momentum.__init__(self, window)
         IterativeBacktester.__init__(self, data, amount)
 
         self.data = self.update_data(self.data)
