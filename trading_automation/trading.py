@@ -2,12 +2,12 @@
 
 class Trader:
 
-    def __init__(self, amount):
+    def __init__(self, amount, units=0):
 
         self.data = None
         self.initial_balance = amount
         self.current_balance = amount
-        self.units = 0
+        self.units = units
         self.trades = 0
 
         self.position = 0
