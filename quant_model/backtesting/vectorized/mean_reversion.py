@@ -24,19 +24,11 @@ class MeanRevVectBacktester(MeanRevBase, VectorizedBacktester):
 
         self.data = self.update_data(self.data)
 
-    def test_strategy(self, ma_sd_pair=None, plot_results=True):
-        """ Backtests the trading strategy.
-        """
-
-        self._set_parameters(ma_sd_pair)
-
-        data = self.data.copy().dropna()
+    def _calculate_positions(self, data):
         data["distance"] = data[self.price_col] - data["sma"]
         data["position"] = np.where(data[self.price_col] > data["upper"], -1, np.nan)
         data["position"] = np.where(data[self.price_col] < data["lower"], 1, data["position"])
         data["position"] = np.where(data["distance"] * data["distance"].shift(1) < 0, 0, data["position"])
         data["position"] = data["position"].ffill().fillna(0)
 
-        title = self.__repr__()
-
-        return self._assess_strategy(data, title, plot_results)
+        return data
