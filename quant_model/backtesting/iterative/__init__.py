@@ -1,3 +1,4 @@
+from quant_model.backtesting.iterative.macd import MACDIterBacktester
 from quant_model.backtesting.iterative.sma import MAIterBacktester
 from quant_model.backtesting.iterative.sma_crossover import MACrossoverIterBacktester
 from quant_model.backtesting.iterative.momentum import MomentumIterBacktester

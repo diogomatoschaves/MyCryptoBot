@@ -1,3 +1,4 @@
+from quant_model.strategies.macd import MACD
 from quant_model.strategies.momentum import Momentum
 from quant_model.strategies.mean_reversion import MeanRev
 from quant_model.strategies.sma_crossover import MACrossover
