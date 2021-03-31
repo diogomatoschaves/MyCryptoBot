@@ -1,15 +1,15 @@
 import numpy as np
 
-from quant_model.strategies import SMABase
+from quant_model.strategies import SMACrossoverBase
 from quant_model.backtesting.vectorized.base import VectorizedBacktester
 
 
-class SMAVectBacktester(SMABase, VectorizedBacktester):
+class SMAVectBacktester(SMACrossoverBase, VectorizedBacktester):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
     def __init__(self, data, SMA_S, SMA_L, trading_costs=0, symbol='BTCUSDT'):
-        SMABase.__init__(self, SMA_S, SMA_L)
+        SMACrossoverBase.__init__(self, SMA_S, SMA_L)
         VectorizedBacktester.__init__(self, data, symbol=symbol, trading_costs=trading_costs)
 
         self.data = self.update_data(self.data)
