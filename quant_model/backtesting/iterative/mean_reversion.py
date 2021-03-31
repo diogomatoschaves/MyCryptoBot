@@ -1,11 +1,11 @@
 from quant_model.backtesting.iterative.base import IterativeBacktester
-from quant_model.strategies import MeanRevBase
+from quant_model.strategies import MeanRev
 
 
-class MeanRevIterBacktester(MeanRevBase, IterativeBacktester):
+class MeanRevIterBacktester(MeanRev, IterativeBacktester):
 
     def __init__(self, data, amount, ma, sd, trading_costs=0, symbol='BTCUSDT'):
-        MeanRevBase.__init__(self, ma, sd)
+        MeanRev.__init__(self, ma, sd)
         IterativeBacktester.__init__(
             self,
             data,

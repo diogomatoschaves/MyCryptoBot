@@ -1,13 +1,17 @@
+import numpy as np
+from ta.trend import sma_indicator, ema_indicator
 
 
-class SMABase:
+class MA:
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, sma):
+    def __init__(self, sma, moving_av='sma', **kwargs):
         self.data = None
         self.sma = sma
         self.symbol = None
+        self.price_col = 'close'
+        self.mav = moving_av
 
     def __repr__(self):
         return "{}(symbol = {}, SMA = {})".format(self.__class__.__name__, self.symbol, self.sma)
@@ -16,7 +20,12 @@ class SMABase:
         """ Retrieves and prepares the data.
         """
 
-        data["SMA"] = data["close"].rolling(self.sma).mean()
+        if self.mav == 'sma':
+            data["SMA"] = sma_indicator(close=data[self.price_col], window=self.sma)
+        elif self.mav == 'ema':
+            data["SMA"] = ema_indicator(close=data[self.price_col], window=self.sma)
+        else:
+            raise('Method not supported')
 
         return data
 
@@ -34,6 +43,12 @@ class SMABase:
         self.sma = int(sma)
 
         self.data = self.update_data(self.data)
+
+    def _calculate_positions(self, data):
+
+        data["position"] = np.where(data["SMA"] > data[self.price_col], 1, -1)
+
+        return data
 
     def get_signal(self, row):
         if row["SMA"] > row[self.price_col]:
