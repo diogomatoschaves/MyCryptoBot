@@ -72,7 +72,7 @@ def build_pipeline(
         if not estimator_params_override:
             estimator_params_override = {}
 
-        params = {**estimator_params[estimator_name], ** estimator_params_override}
+        params = {**estimator_params[estimator_name], **estimator_params_override}
 
         estimator = eval(estimator_name)(**params)
     except NameError:

@@ -79,10 +79,15 @@ def model_evaluation(
 
     if print_results:
 
+        if len(np.unique(y_test)) == 2 and len(np.unique(y_pred)) == 2:
+            average = 'binary'
+        else:
+            average = 'weighted'
+
         if is_clf:
-            f1 = f1_score(y_test, y_pred)
-            recall = recall_score(y_test, y_pred)
-            precision = precision_score(y_test, y_pred)
+            f1 = f1_score(y_test, y_pred, average=average)
+            recall = recall_score(y_test, y_pred, average=average)
+            precision = precision_score(y_test, y_pred, average=average)
 
             logging.info(f"\t\tF1 score: {f1}")
             logging.info(f"\t\tRecall: {recall}")
