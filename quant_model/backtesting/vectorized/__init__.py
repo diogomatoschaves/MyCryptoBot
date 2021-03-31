@@ -1,3 +1,4 @@
+from quant_model.backtesting.vectorized.macd import MACDVectBacktester
 from quant_model.backtesting.vectorized.sma_crossover import MACrossoverVectBacktester
 from quant_model.backtesting.vectorized.momentum import MomentumVectBacktester
 from quant_model.backtesting.vectorized.predictive import MLVectBacktester
