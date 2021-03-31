@@ -1,11 +1,11 @@
 from quant_model.backtesting.iterative.base import IterativeBacktester
-from quant_model.strategies import SMABase
+from quant_model.strategies import SMACrossoverBase
 
 
-class SMAIterBacktester(SMABase, IterativeBacktester):
+class SMAIterBacktester(SMACrossoverBase, IterativeBacktester):
 
     def __init__(self, data, amount, SMA_S, SMA_L, trading_costs=0, symbol='BTCUSDT'):
-        SMABase.__init__(self, SMA_S, SMA_L)
+        SMACrossoverBase.__init__(self, SMA_S, SMA_L)
         IterativeBacktester.__init__(self, data, amount, symbol=symbol, trading_costs=trading_costs)
 
         self.data = self.update_data(self.data)
