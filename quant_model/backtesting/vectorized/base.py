@@ -22,6 +22,20 @@ class VectorizedBacktester(BacktestBase):
 
         self._calculate_returns()
 
+    def test_strategy(self, params=None, plot_results=True):
+        """ Backtests the trading strategy.
+        """
+
+        self._set_parameters(params)
+
+        # data = self.data.dropna().copy()
+
+        # data["position"] = np.where(data["SMA"] > data[self.price_col], 1, -1)
+
+        title = self.__repr__()
+
+        return self._assess_strategy(self.data, title, plot_results)
+
     def _set_parameters(self, *args):
         """ Updates parameters.
         """
@@ -35,11 +49,6 @@ class VectorizedBacktester(BacktestBase):
         :return: data with position calculated
         """
         return data
-
-    def test_strategy(self, *args):
-        """ Backtests the trading strategy.
-        """
-        raise NotImplementedError
 
     def _get_trades(self, data):
         return data.trades.sum()

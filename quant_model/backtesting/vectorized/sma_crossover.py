@@ -14,15 +14,7 @@ class SMACrossoverVectBacktester(SMACrossoverBase, VectorizedBacktester):
 
         self.data = self.update_data(self.data)
 
-    def test_strategy(self, sma=None, plot_results=True):
-        """ Backtests the trading strategy.
-        """
-
-        self._set_parameters(sma)
-
-        data = self.data.dropna().copy()
+    def _calculate_positions(self, data):
         data["position"] = np.where(data["SMA_S"] > data["SMA_L"], 1, -1)
 
-        title = self.__repr__()
-
-        return self._assess_strategy(data, title, plot_results)
+        return data
