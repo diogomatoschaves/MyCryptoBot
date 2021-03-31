@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class SMABase:
+class SMACrossoverBase:
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
