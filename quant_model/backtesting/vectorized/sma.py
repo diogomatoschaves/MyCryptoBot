@@ -14,15 +14,8 @@ class SMAVectBacktester(SMABase, VectorizedBacktester):
 
         self.data = self.update_data(self.data)
 
-    def test_strategy(self, sma=None, plot_results=True):
-        """ Backtests the trading strategy.
-        """
+    def _calculate_positions(self, data):
 
-        self._set_parameters(sma)
-
-        data = self.data.dropna().copy()
         data["position"] = np.where(data["SMA"] > data[self.price_col], 1, -1)
 
-        title = self.__repr__()
-
-        return self._assess_strategy(data, title, plot_results)
+        return data
