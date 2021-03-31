@@ -2,16 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import brute
 
-from quant_model.backtesting.base import BacktestBase
+from quant_model.backtesting.base import BacktestMixin
 
 
-class VectorizedBacktester(BacktestBase):
+class VectorizedBacktester(BacktestMixin):
     """ Class for the vectorized backtesting.
 
     """
 
     def __init__(self, data, symbol, trading_costs=0, price_col='close', returns_col='returns'):
-        BacktestBase.__init__(self)
+        BacktestMixin.__init__(self)
 
         self.data = data.copy()
         self.tc = trading_costs / 100

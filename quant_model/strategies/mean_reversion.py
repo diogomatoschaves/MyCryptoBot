@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class MeanRevBase:
+class MeanRev:
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
@@ -44,6 +44,15 @@ class MeanRevBase:
             self.sd = sd
 
         self.data = self.update_data(self.data)
+
+    def _calculate_positions(self, data):
+        data["distance"] = data[self.price_col] - data["sma"]
+        data["position"] = np.where(data[self.price_col] > data["upper"], -1, np.nan)
+        data["position"] = np.where(data[self.price_col] < data["lower"], 1, data["position"])
+        data["position"] = np.where(data["distance"] * data["distance"].shift(1) < 0, 0, data["position"])
+        data["position"] = data["position"].ffill().fillna(0)
+
+        return data
 
     def get_signal(self, row):
         if self.position == 0: # when neutral

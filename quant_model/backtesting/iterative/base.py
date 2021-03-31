@@ -1,12 +1,12 @@
-from quant_model.backtesting.base import BacktestBase
+from quant_model.backtesting.base import BacktestMixin
 from trading_automation.trading import Trader
 
 
 # TODO: Improve results presentation
-class IterativeBacktester(BacktestBase, Trader):
+class IterativeBacktester(BacktestMixin, Trader):
 
     def __init__(self, data, amount, symbol='BTCUSDT', trading_costs=0, price_col='close', returns_col='returns'):
-        BacktestBase.__init__(self)
+        BacktestMixin.__init__(self)
         Trader.__init__(self, amount)
 
         self.data = data.copy()
