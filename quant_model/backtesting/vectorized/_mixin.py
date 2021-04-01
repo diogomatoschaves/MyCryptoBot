@@ -2,25 +2,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import brute
 
-from quant_model.backtesting.base import BacktestMixin
+from quant_model.backtesting._mixin import BacktestMixin
 
 
-class VectorizedBacktester(BacktestMixin):
-    """ Class for the vectorized backtesting.
+class VectorizedBacktesterMixin(BacktestMixin):
+    """ Class for vectorized backtesting.
 
     """
 
-    def __init__(self, data, symbol, trading_costs=0, price_col='close', returns_col='returns'):
-        BacktestMixin.__init__(self)
+    def __init__(
+        self,
+        symbol='BTCUSDT',
+        trading_costs=0,
+        price_col='close',
+        returns_col='returns'
+    ):
 
-        self.data = data.copy()
-        self.tc = trading_costs / 100
-        self.symbol = symbol
-        self.price_col = price_col
-        self.returns_col = returns_col
-        self.results = None
-
-        self._calculate_returns()
+        BacktestMixin.__init__(self, symbol, trading_costs, price_col, returns_col)
 
     def test_strategy(self, params=None, plot_results=True):
         """ Backtests the trading strategy.
@@ -39,14 +37,14 @@ class VectorizedBacktester(BacktestMixin):
         """
         raise NotImplementedError
 
-    def _calculate_positions(self, data):
-        """
-        Calculates position according to strategy
-
-        :param data:
-        :return: data with position calculated
-        """
-        return data
+    # def _calculate_positions(self, data):
+    #     """
+    #     Calculates position according to strategy
+    #
+    #     :param data:
+    #     :return: data with position calculated
+    #     """
+    #     return data
 
     def _get_trades(self, data):
         return data.trades.sum()

@@ -1,23 +1,32 @@
 import numpy as np
 
+from quant_model.strategies.mixin import StrategyMixin
 
-class MeanRev:
+
+class MeanRev(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, ma, sd):
-        self.data = None
+    def __init__(self, data, ma, sd):
+        self.data = data.copy()
+
         self.price_col = 'close'
         self.ma = ma
         self.sd = sd
         self.symbol = None
 
+        self.data = self.update_data(self.data)
+
     def __repr__(self):
         return "{}(symbol = {}, ma = {}, sd = {})".format(self.__class__.__name__, self.symbol, self.ma, self.sd)
+
+    def _get_test_title(self):
+        return "Testing Bollinger Bands Strategy: {} | ma = {} & sd = {}".format(self.symbol, self.ma, self.sd)
 
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
+        self._calculate_returns()
 
         data["sma"] = data[self.price_col].rolling(self.ma).mean()
         data["upper"] = data["sma"] + data[self.price_col].rolling(self.ma).std() * self.sd
@@ -25,18 +34,18 @@ class MeanRev:
 
         return data
 
-    def _set_parameters(self, ma_sd_pair=None):
+    def _set_parameters(self, params=None):
         """ Updates SMA parameters and resp. time series.
         """
 
-        if ma_sd_pair is None:
+        if params is None:
             return
 
-        if not isinstance(ma_sd_pair, (tuple, list, type(np.array([])))):
-            print(f"Invalid Parameters {ma_sd_pair}")
+        if not isinstance(params, (tuple, list, type(np.array([])))):
+            print(f"Invalid Parameters {params}")
             return
 
-        ma, sd = ma_sd_pair
+        ma, sd = params
 
         if ma is not None:
             self.ma = int(ma)
