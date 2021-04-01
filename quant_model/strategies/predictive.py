@@ -9,15 +9,28 @@ class ML:
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self):
-        self.data = None
-        self.price_col = None
-        self.returns_col = None
-        self.symbol = None
-        self.nr_lags = None
+    def __init__(
+        self,
+        estimator,
+        lag_features=None,
+        excluded_features=None,
+        nr_lags=5,
+        params=None,
+        test_size=0.2,
+        degree=1,
+        print_results=True,
+    ):
 
-        self.lag_features = None
-        self.excluded_features = None
+        self.estimator = estimator
+        self.nr_lags = nr_lags
+        self.params = params
+        self.test_size = test_size
+        self.degree = degree
+        self.print_results = print_results
+        self.lag_features = {*set(lag_features), self.returns_col} \
+            if isinstance(lag_features, list) else {self.returns_col}
+        self.excluded_features = {*set(excluded_features), self.price_col} \
+            if excluded_features is not None else {self.price_col}
 
         self.pipeline = None
         self.X_train = None
@@ -28,27 +41,48 @@ class ML:
     def __repr__(self):
         return "{}(symbol = {}, estimator = {})".format(self.__class__.__name__, self.symbol, self.estimator)
 
-    # TODO: Refactor this case
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
 
-        self._get_lag_model_X_y()
+        self._get_lag_model_X_y(data.copy())
 
-    # TODO: make it possible to update all parameters
-    def _set_parameters(self, estimator = None):
+        self._train_model(self.estimator, self.params, self.test_size, self.degree, self.print_results)
+
+        return data
+
+    def _set_parameters(self, ml_params=None):
         """ Updates SMA parameters and resp. time series.
         """
+
+        if ml_params is None:
+            return
+
+        if not isinstance(ml_params, (tuple, list, type(np.array([])))):
+            print(f"Invalid Parameters {ml_params}")
+            return
+
+        estimator, params, test_size, degree, print_results = ml_params
+
         if estimator is not None:
             self.estimator = estimator
+        if params is not None:
+            self.params = params
+        if test_size is not None:
+            self.test_size = test_size
+        if degree is not None:
+            self.degree = degree
+        if print_results is not None:
+            self.print_results = print_results
+
+        self.data = self.update_data(self.data)
 
     def get_rolling_model_df(self):
 
         pass
 
-    def _get_lag_model_X_y(self):
+    def _get_lag_model_X_y(self, data):
 
-        data = self.data.copy()
         data.drop(columns=self.excluded_features, inplace=True)
 
         data = get_lag_features(data, columns=self.lag_features, n_in=self.nr_lags, n_out=1)
@@ -92,3 +126,6 @@ class ML:
 
     def get_signal(self, row):
         return self.pipeline.predict(pd.DataFrame(row).T)
+
+    def _get_data(self):
+        return self.X_test

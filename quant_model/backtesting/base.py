@@ -17,6 +17,9 @@ class BacktestMixin:
     def _get_trades(self, data):
         raise NotImplementedError
 
+    def _get_data(self):
+        return self.data
+
     def _assess_strategy(self, data, title, plot_results=True):
 
         data = self._calculate_positions(data.copy())
@@ -60,7 +63,8 @@ class BacktestMixin:
             if self.tc != 0:
                 plotting_cols.append("cstrategy_tc")
 
-            self.results[plotting_cols].plot(title=title, figsize=(12, 8), secondary_y='position')
+            ax = self.results[plotting_cols].plot(title=title, figsize=(12, 8), secondary_y='position')
+            ax.right_ax.lines[0].set_alpha(0.4)
             plt.show()
 
     def _calculate_returns(self):
