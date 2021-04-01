@@ -1,16 +1,20 @@
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import TimeSeriesSplit
 
 from data_processing.transform.feature_engineering import get_lag_features
+from model.modelling.helpers import plot_learning_curve
 from model.modelling.model_training import train_model
+from quant_model.strategies.mixin import StrategyMixin
 
 
-class ML:
+class ML(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
     def __init__(
         self,
+        data,
         estimator,
         lag_features=None,
         excluded_features=None,
@@ -20,6 +24,7 @@ class ML:
         degree=1,
         print_results=True,
     ):
+        self.data = data.copy()
 
         self.estimator = estimator
         self.nr_lags = nr_lags
@@ -38,12 +43,19 @@ class ML:
         self.X_test = None
         self.y_test = None
 
+        self.data = self.update_data(self.data)
+
     def __repr__(self):
         return "{}(symbol = {}, estimator = {})".format(self.__class__.__name__, self.symbol, self.estimator)
+
+    def _get_test_title(self):
+        return "Testing ML strategy | {} | estimator = {}".format(self.symbol, self.estimator)
 
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
+
+        self._calculate_returns()
 
         self._get_lag_model_X_y(data.copy())
 
@@ -129,3 +141,25 @@ class ML:
 
     def _get_data(self):
         return self.X_test
+
+    def get_values(self, date, row):
+        price = self.data.loc[date][self.price_col]
+
+        return price
+
+    def learning_curves(self, metric='accuracy'):
+
+        if not getattr(self, 'pipeline'):
+            print("Model hasn't been fitted yet")
+
+        title = "Learning Curves (Gradient Boosting Classifier)"
+
+        tscv = TimeSeriesSplit(n_splits=2)
+
+        training_examples = len(self.X_train)
+
+        train_sizes = [int(n) for n in np.linspace(int(0.05 * training_examples), training_examples, 10)]
+
+        train_sizes, train_scores, test_scores, fit_times = plot_learning_curve(
+            self.pipeline, title, self.X_train, self.y_train, train_sizes=np.linspace(0.1, 1, 10), metric=metric
+        )

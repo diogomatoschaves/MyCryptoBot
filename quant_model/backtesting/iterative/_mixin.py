@@ -1,26 +1,15 @@
-from quant_model.backtesting.base import BacktestMixin
+from quant_model.backtesting._mixin import BacktestMixin
 from trading_automation.trading import Trader
 
 
 # TODO: Improve results presentation
-class IterativeBacktester(BacktestMixin, Trader):
+class IterativeBacktesterMixin(BacktestMixin, Trader):
 
-    def __init__(self, data, amount, symbol='BTCUSDT', trading_costs=0, price_col='close', returns_col='returns'):
-        BacktestMixin.__init__(self)
+    def __init__(self, amount, symbol='BTCUSDT', trading_costs=0, price_col='close', returns_col='returns'):
+        BacktestMixin.__init__(self, symbol, trading_costs, price_col, returns_col)
         Trader.__init__(self, amount)
 
-        self.data = data.copy()
-        self.results = None
-
-        self.symbol = symbol
-
-        self.price_col = price_col
-        self.returns_col = returns_col
-        self.tc = trading_costs / 100
-        
         self.positions = []
-
-        self._calculate_returns()
 
     def update_data(self, data):
         """ Retrieves and prepares the data.
