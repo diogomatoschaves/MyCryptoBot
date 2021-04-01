@@ -1,6 +1,1 @@
-from quant_model.backtesting.iterative.macd import MACDIterBacktester
-from quant_model.backtesting.iterative.sma import MAIterBacktester
-from quant_model.backtesting.iterative.sma_crossover import MACrossoverIterBacktester
-from quant_model.backtesting.iterative.momentum import MomentumIterBacktester
-from quant_model.backtesting.iterative.predictive import MLIterBacktester
-from quant_model.backtesting.iterative.mean_reversion import MeanRevIterBacktester
+from quant_model.backtesting.iterative._iterative import IterativeBacktester

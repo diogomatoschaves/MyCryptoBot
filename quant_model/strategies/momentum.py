@@ -1,22 +1,31 @@
 import numpy as np
 
+from quant_model.strategies.mixin import StrategyMixin
 
-class Momentum:
+
+class Momentum(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, window, returns_col='returns'):
-        self.data = None
+    def __init__(self, data, window, returns_col='returns'):
+        self.data = data.copy()
         self.window = window
         self.symbol = None
         self.returns_col = returns_col
 
+        self.data = self.update_data(self.data)
+
     def __repr__(self):
         return "{}(symbol = {}, window = {})".format(self.__class__.__name__, self.symbol, self.window)
+
+    def _get_test_title(self):
+        return "Testing Momentum strategy | {} | window: {}".format(self.symbol, self.window)
 
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
+        self._calculate_returns()
+
         data["rolling_returns"] = data[self.returns_col].rolling(self.window, min_periods=1).mean()
         return data
 

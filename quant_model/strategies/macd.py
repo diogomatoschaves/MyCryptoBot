@@ -2,13 +2,15 @@ import numpy as np
 import pandas as pd
 from ta.trend import MACD as MACD_TA
 
+from quant_model.strategies.mixin import StrategyMixin
 
-class MACD(MACD_TA):
+
+class MACD(MACD_TA, StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, window_slow, window_fast, window_signal, **kwargs):
-        self.data = None
+    def __init__(self, data, window_slow, window_fast, window_signal, **kwargs):
+        self.data = data.copy()
 
         MACD_TA.__init__(self, pd.Series(), window_slow, window_fast, window_signal)
 
@@ -16,14 +18,24 @@ class MACD(MACD_TA):
         self.price_col = 'close'
         self._close = pd.Series()
 
+        self.data = self.update_data(self.data)
+
     def __repr__(self):
         return "{}(symbol = {}, fast = {}, slow = {}, signal = {})".format(
             self.__class__.__name__, self.symbol, self._window_fast, self._window_slow, self._window_sign
         )
 
+    def _get_test_title(self):
+        return "Testing SMA strategy | {} | fast = {}, slow = {}, signal = {}".format(
+            self.symbol, self._window_fast, self._window_slow, self._window_sign
+        )
+
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
+
+        self._calculate_returns()
+
         self._close = data[self.price_col]
         self._run()
 

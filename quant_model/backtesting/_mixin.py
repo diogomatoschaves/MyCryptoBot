@@ -4,18 +4,18 @@ import matplotlib.pyplot as plt
 
 class BacktestMixin:
 
-    def __init__(self):
+    def __init__(self, symbol, trading_costs, price_col, returns_col):
 
-        self.tc = None
-        self.returns_col = None
-        self.price_col = None
-        self.data = None
+        self.symbol = symbol
+        self.tc = trading_costs / 100
+        self.price_col = price_col
+        self.returns_col = returns_col
 
-    def _calculate_positions(self, data):
-        raise NotImplementedError
-
-    def _get_trades(self, data):
-        raise NotImplementedError
+    # def _calculate_positions(self, data):
+    #     raise NotImplementedError
+    #
+    # def _get_trades(self, data):
+    #     raise NotImplementedError
 
     def _get_data(self):
         return self.data
@@ -66,6 +66,3 @@ class BacktestMixin:
             ax = self.results[plotting_cols].plot(title=title, figsize=(12, 8), secondary_y='position')
             ax.right_ax.lines[0].set_alpha(0.4)
             plt.show()
-
-    def _calculate_returns(self):
-        self.data[self.returns_col] = np.log(self.data[self.price_col] / self.data[self.price_col].shift(1))

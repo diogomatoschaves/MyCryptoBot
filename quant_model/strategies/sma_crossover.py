@@ -1,26 +1,32 @@
 import numpy as np
-import btalib as ta
 from ta.trend import ema_indicator, sma_indicator
 
+from quant_model.strategies.mixin import StrategyMixin
 
-class MACrossover:
+
+class MACrossover(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, SMA_S, SMA_L, moving_av='sma', **kwargs):
-        self.data = None
+    def __init__(self, data, SMA_S, SMA_L, moving_av='sma', **kwargs):
+        self.data = data.copy()
         self.SMA_S = SMA_S
         self.SMA_L = SMA_L
-        self.symbol = None
         self.mav = moving_av
         self.price_col = 'close'
+
+        self.data = self.update_data(self.data)
 
     def __repr__(self):
         return "{}(symbol = {}, SMA_S = {}, SMA_L = {})".format(self.__class__.__name__, self.symbol, self.SMA_S, self.SMA_L)
 
+    def _get_test_title(self):
+        return "Testing SMA strategy | {} | SMA_S = {} & SMA_L = {}".format(self.symbol, self.SMA_S, self.SMA_L)
+
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
+        self._calculate_returns()
 
         if self.mav == 'sma':
             data["SMA_S"] = sma_indicator(close=data[self.price_col], window=self.SMA_S)
