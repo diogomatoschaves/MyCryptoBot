@@ -33,8 +33,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.positions = []
         self.trades = 0  # no trades yet
         self.current_balance = self.initial_balance  # reset initial capital
-        self.data = self.update_data(self.data)
-        
+
     def _calculate_positions(self, data):
         data["position"] = self.positions
         return data
@@ -52,9 +51,6 @@ class IterativeBacktester(BacktestMixin, Trader):
 
     def _get_test_title(self):
         raise NotImplementedError
-
-    def _get_data(self):
-        return self.data
 
     def test_strategy(self, params=None, plot_results=True):
         """ Test a mean-reversion strategy (bollinger) with SMA and dev.

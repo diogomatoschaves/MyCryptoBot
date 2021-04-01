@@ -12,27 +12,15 @@ class MLIterBacktester(ML, IterativeBacktester):
         lag_features=None,
         excluded_features=None,
         nr_lags=5,
-        trading_costs=0,
-        symbol='BTCUSDT',
         params=None,
         test_size=0.2,
         degree=1,
         print_results=True,
+        trading_costs=0,
+        symbol='BTCUSDT',
     ):
-        ML.__init__(self)
         IterativeBacktester.__init__(self, data, amount, symbol=symbol, trading_costs=trading_costs)
-
-        self.estimator = estimator
-        self.params = params
-        self.test_size = test_size
-        self.degree = degree
-        self.print_results = print_results
-
-        self.nr_lags = nr_lags
-        self.lag_features = set(lag_features).add(self.returns_col) \
-            if isinstance(lag_features, list) else {self.returns_col}
-        self.excluded_features = set(excluded_features).add(self.price_col) \
-            if excluded_features is not None else {self.price_col}
+        ML.__init__(self, estimator, lag_features, excluded_features, nr_lags, params, test_size, degree, print_results)
 
         self.data = self.update_data(self.data)
 
@@ -43,17 +31,3 @@ class MLIterBacktester(ML, IterativeBacktester):
 
     def _get_test_title(self):
         return "Testing ML strategy | {} | estimator = {}".format(self.symbol, self.estimator)
-
-    def _get_data(self):
-        return self.X_test
-
-    def _reset_object(self):
-        super(MLIterBacktester, self)._reset_object()
-
-        self._train_model(
-            self.estimator,
-            self.params,
-            self.test_size,
-            self.degree,
-            self.print_results
-        )
