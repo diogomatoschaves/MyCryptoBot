@@ -28,13 +28,11 @@ class VectorizedBacktester(BacktestMixin):
 
         self._set_parameters(params)
 
-        # data = self.data.dropna().copy()
-
-        # data["position"] = np.where(data["SMA"] > data[self.price_col], 1, -1)
-
         title = self.__repr__()
 
-        return self._assess_strategy(self.data, title, plot_results)
+        data = self._get_data().dropna().copy()
+
+        return self._assess_strategy(data, title, plot_results)
 
     def _set_parameters(self, *args):
         """ Updates parameters.

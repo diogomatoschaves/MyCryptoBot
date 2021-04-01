@@ -8,30 +8,25 @@ from quant_model.backtesting.vectorized.base import VectorizedBacktester
 
 class MLVectBacktester(ML, VectorizedBacktester):
 
-    def __init__(self, data, estimator, lag_features=None, excluded_features=None, nr_lags=5, trading_costs=0, symbol='BTCUSDT'):
+    def __init__(
+        self,
+        data,
+        estimator,
+        lag_features=None,
+        excluded_features=None,
+        nr_lags=5,
+        params=None,
+        test_size=0.2,
+        degree=1,
+        print_results=True,
+        trading_costs=0,
+        symbol='BTCUSDT'
+    ):
 
-        ML.__init__(self)
         VectorizedBacktester.__init__(self, data, symbol=symbol, trading_costs=trading_costs)
+        ML.__init__(self, estimator, lag_features, excluded_features, nr_lags, params, test_size, degree, print_results)
 
-        self.estimator = estimator
-        self.nr_lags = nr_lags
-        self.lag_features = set(lag_features).add(self.returns_col) \
-            if isinstance(lag_features, list) else {self.returns_col}
-        self.excluded_features = set(excluded_features).add(self.price_col) \
-            if excluded_features is not None else {self.price_col}
-
-        self.update_data(self.data)
-
-    def test_strategy(self, estimator=None, params=None, test_size=0.2, degree=1, print_results=True, plot_results=True):
-
-        self._set_parameters(estimator)
-
-        # TODO: Only train model if parameters are different
-        self._train_model(self.estimator, params, test_size, degree, print_results)
-
-        title = self.__repr__()
-
-        return self._assess_strategy(self.X_test, title, plot_results)
+        self.data = self.update_data(self.data)
 
     def learning_curves(self, metric='accuracy'):
 
