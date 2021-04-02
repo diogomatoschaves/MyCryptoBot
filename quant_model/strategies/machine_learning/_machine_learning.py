@@ -3,8 +3,8 @@ import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 
 from data_processing.transform.feature_engineering import get_lag_features, get_rolling_features
-from model.modelling.helpers import plot_learning_curve
-from model.modelling.model_training import train_model
+from quant_model.strategies.machine_learning.model.modelling import plot_learning_curve
+from quant_model.strategies.machine_learning.model.modelling import train_model
 from quant_model.strategies._mixin import StrategyMixin
 
 

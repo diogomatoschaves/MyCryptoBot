@@ -3,18 +3,23 @@ import joblib
 
 import numpy as np
 from sklearn.base import is_classifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, FeatureUnion
 
-from model.modelling.helpers import train_test_split_ts
+from quant_model.strategies.machine_learning.model.modelling.helpers import train_test_split_ts
 from utils.logger import configure_logger
-from model.modelling.helpers import FeatureSelector, CustomOneHotEncoder, CustomStandardScaler, CustomPipeline, CustomPolynomialFeatures
-from model.modelling.defaults import (
+from quant_model.strategies.machine_learning.model.modelling.helpers import (
+    FeatureSelector,
+    CustomOneHotEncoder,
+    CustomStandardScaler,
+    CustomPipeline,
+    CustomPolynomialFeatures
+)
+from quant_model.strategies.machine_learning.model.modelling.defaults import (
     estimator_params,
 )
-from model.modelling.model_evaluation import model_evaluation
+from quant_model.strategies.machine_learning.model.modelling.model_evaluation import model_evaluation
 
 grid_search_params_defaults = {
     "reg__n_estimators": [250, 300, 350],
