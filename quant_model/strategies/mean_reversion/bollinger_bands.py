@@ -3,7 +3,7 @@ import numpy as np
 from quant_model.strategies._mixin import StrategyMixin
 
 
-class MeanRev(StrategyMixin):
+class BollingerBands(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
@@ -23,7 +23,7 @@ class MeanRev(StrategyMixin):
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
-        data = super(MeanRev, self).update_data(data)
+        data = super(BollingerBands, self).update_data(data)
 
         data["sma"] = data[self.price_col].rolling(self.ma).mean()
         data["upper"] = data["sma"] + data[self.price_col].rolling(self.ma).std() * self.sd
