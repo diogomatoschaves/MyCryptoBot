@@ -1,21 +1,19 @@
 import numpy as np
 from ta.trend import sma_indicator, ema_indicator
 
-from quant_model.strategies.mixin import StrategyMixin
+from quant_model.strategies._mixin import StrategyMixin
 
 
 class MA(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, data, sma, moving_av='sma', **kwargs):
-        self.data = data.copy()
-        self.sma = sma
-        self.symbol = None
-        self.price_col = 'close'
-        self.mav = moving_av
+    def __init__(self, sma, data=None, moving_av='sma', **kwargs):
 
-        self.data = self.update_data(self.data)
+        StrategyMixin.__init__(self, data, **kwargs)
+
+        self.sma = sma
+        self.mav = moving_av
 
     def __repr__(self):
         return "{}(symbol = {}, SMA = {})".format(self.__class__.__name__, self.symbol, self.sma)
@@ -26,7 +24,7 @@ class MA(StrategyMixin):
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
-        self._calculate_returns()
+        data = super(MA, self).update_data(data)
 
         if self.mav == 'sma':
             data["SMA"] = sma_indicator(close=data[self.price_col], window=self.sma)

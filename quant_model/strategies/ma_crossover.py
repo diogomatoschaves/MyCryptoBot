@@ -1,21 +1,20 @@
 import numpy as np
 from ta.trend import ema_indicator, sma_indicator
 
-from quant_model.strategies.mixin import StrategyMixin
+from quant_model.strategies._mixin import StrategyMixin
 
 
 class MACrossover(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, data, SMA_S, SMA_L, moving_av='sma', **kwargs):
-        self.data = data.copy()
+    def __init__(self, SMA_S, SMA_L, data=None, moving_av='sma', **kwargs):
+
+        StrategyMixin.__init__(self, data, **kwargs)
+
         self.SMA_S = SMA_S
         self.SMA_L = SMA_L
         self.mav = moving_av
-        self.price_col = 'close'
-
-        self.data = self.update_data(self.data)
 
     def __repr__(self):
         return "{}(symbol = {}, SMA_S = {}, SMA_L = {})".format(self.__class__.__name__, self.symbol, self.SMA_S, self.SMA_L)
@@ -26,7 +25,7 @@ class MACrossover(StrategyMixin):
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
-        self._calculate_returns()
+        data = super(MACrossover, self).update_data(data)
 
         if self.mav == 'sma':
             data["SMA_S"] = sma_indicator(close=data[self.price_col], window=self.SMA_S)
