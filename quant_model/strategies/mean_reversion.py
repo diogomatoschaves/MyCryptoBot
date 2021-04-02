@@ -1,21 +1,18 @@
 import numpy as np
 
-from quant_model.strategies.mixin import StrategyMixin
+from quant_model.strategies._mixin import StrategyMixin
 
 
 class MeanRev(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, data, ma, sd):
-        self.data = data.copy()
+    def __init__(self, ma, sd, data=None, **kwargs):
 
-        self.price_col = 'close'
+        StrategyMixin.__init__(self, data, **kwargs)
+
         self.ma = ma
         self.sd = sd
-        self.symbol = None
-
-        self.data = self.update_data(self.data)
 
     def __repr__(self):
         return "{}(symbol = {}, ma = {}, sd = {})".format(self.__class__.__name__, self.symbol, self.ma, self.sd)
@@ -26,7 +23,7 @@ class MeanRev(StrategyMixin):
     def update_data(self, data):
         """ Retrieves and prepares the data.
         """
-        self._calculate_returns()
+        data = super(MeanRev, self).update_data(data)
 
         data["sma"] = data[self.price_col].rolling(self.ma).mean()
         data["upper"] = data["sma"] + data[self.price_col].rolling(self.ma).std() * self.sd

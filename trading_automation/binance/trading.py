@@ -79,9 +79,17 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
 
         self._get_max_borrow_amount()
 
+    def __getattr__(self, attr):
+        method = getattr(self.strategy, attr)
+
+        if not method:
+            return getattr(self, attr)
+        else:
+            return method
+
     def start_trading(self):
 
-        self._get_gistorical_data()
+        self._get_historical_data()
 
         self._get_data()
         self._start_websocket(self.symbol, self.websocket_callback)
@@ -124,6 +132,7 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
             details = self.get_max_margin_loan(asset=asset, isolatedSymbol=self.symbol)
             self.max_borrow_amount[asset] = details["borrowLimit"]
 
+    # TODO: Tidy up this
     def _create_initial_loan(self):
         self.max_margin_level = int(self.asset_info[self.symbol]["marginRatio"])
         if self.margin_level > self.max_margin_level:
@@ -164,13 +173,13 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
 
             self.create_margin_loan(asset=asset_symbol, amount=amount, isIsolated=True, symbol=self.symbol)
 
-    def _get_gistorical_data(self):
+    def _get_historical_data(self):
 
         print(f"Getting historical data up until now ({datetime.utcnow()})...")
 
         start_date = ExchangeData.objects \
                          .filter(exchange=self.exchange, symbol=self.symbol) \
-                         .order_by('open_time').last().open_time - timedelta(hours=5)
+                         .order_by('open_time').last().open_time - timedelta(hours=6)
 
         get_historical_data(
             'binance',
@@ -200,7 +209,7 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
 
         print(f"Loading the data...")
 
-        query = self._get_query(20)
+        query = self._get_query(200)
 
         # TODO: Adjust time based on candle size
         self.data = pd.read_sql_query(query, connection, parse_dates=['open_time'], index_col='open_time')
@@ -214,16 +223,9 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
             .agg(aggregation_method) \
             .ffill()
 
-    def _prepare_data(self):
-        data = self.data.copy()
-        data[self.returns_col] = np.log(data[self.price_col] / data[self.price_col].shift(1))
-        data = self.strategy.update_data(data)
-
-        return data
-
     def websocket_callback(self, row):
 
-        # self.stop_trading()
+        # self.stop_socket(self.conn_key)
         # print(row)
 
         df = pd.DataFrame(
@@ -243,7 +245,7 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
 
             self.data_length = len(self.data)
 
-            data = self._prepare_data()[:-1]
+            data = self._update_data(self.data)[:-1]
 
             last_row = data.iloc[-1]
 
