@@ -26,7 +26,7 @@ class VectorizedBacktester(BacktestMixin):
         """ Backtests the trading strategy.
         """
 
-        self._set_parameters(params)
+        self.set_parameters(params)
 
         title = self.__repr__()
 
