@@ -5,7 +5,7 @@ from sklearn.model_selection import TimeSeriesSplit
 from data_processing.transform.feature_engineering import get_lag_features
 from model.modelling.helpers import plot_learning_curve
 from model.modelling.model_training import train_model
-from quant_model.strategies.mixin import StrategyMixin
+from quant_model.strategies._mixin import StrategyMixin
 
 
 class ML(StrategyMixin):
@@ -14,8 +14,8 @@ class ML(StrategyMixin):
 
     def __init__(
         self,
-        data,
         estimator,
+        data=None,
         lag_features=None,
         excluded_features=None,
         nr_lags=5,
@@ -23,8 +23,9 @@ class ML(StrategyMixin):
         test_size=0.2,
         degree=1,
         print_results=True,
+        **kwargs
     ):
-        self.data = data.copy()
+        StrategyMixin.__init__(self, data, **kwargs)
 
         self.estimator = estimator
         self.nr_lags = nr_lags
@@ -43,8 +44,6 @@ class ML(StrategyMixin):
         self.X_test = None
         self.y_test = None
 
-        self.data = self.update_data(self.data)
-
     def __repr__(self):
         return "{}(symbol = {}, estimator = {})".format(self.__class__.__name__, self.symbol, self.estimator)
 
@@ -55,7 +54,7 @@ class ML(StrategyMixin):
         """ Retrieves and prepares the data.
         """
 
-        self._calculate_returns()
+        data = super(ML, self).update_data(data)
 
         self._get_lag_model_X_y(data.copy())
 

@@ -4,21 +4,10 @@ import matplotlib.pyplot as plt
 
 class BacktestMixin:
 
-    def __init__(self, symbol, trading_costs, price_col, returns_col):
+    def __init__(self, symbol, trading_costs):
 
         self.symbol = symbol
         self.tc = trading_costs / 100
-        self.price_col = price_col
-        self.returns_col = returns_col
-
-    # def _calculate_positions(self, data):
-    #     raise NotImplementedError
-    #
-    # def _get_trades(self, data):
-    #     raise NotImplementedError
-
-    def _get_data(self):
-        return self.data
 
     def _assess_strategy(self, data, title, plot_results=True):
 
