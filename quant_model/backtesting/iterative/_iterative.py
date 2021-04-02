@@ -119,17 +119,6 @@ class IterativeBacktester(BacktestMixin, Trader):
         print("{} |  number of trades executed = {}".format(date, self.trades))
         print(75 * "-")
 
-    def print_current_position_value(self, date, price):
-        cpv = self.units * price
-        print(f"{date} |  Current Position Value = {round(cpv, 2)}")
-
-    def print_current_nav(self, date, price):
-        nav = self.current_balance + self.units * price
-        print(f"{date} |  Net Asset Value = {round(nav, 2)}")
-
-    def print_current_balance(self, date):
-        print("{} |  Current Balance: {}".format(date, round(self.current_balance, 2)))
-
     def plot_data(self, cols = None):
         if cols is None:
             cols = "close"
