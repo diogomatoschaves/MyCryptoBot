@@ -39,7 +39,7 @@ class MACrossover(StrategyMixin):
 
         return data
 
-    def _set_parameters(self, sma=None):
+    def set_parameters(self, sma=None):
         """ Updates SMA parameters and resp. time series.
         """
 

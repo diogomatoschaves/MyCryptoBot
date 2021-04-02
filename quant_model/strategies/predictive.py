@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 
-from data_processing.transform.feature_engineering import get_lag_features
+from data_processing.transform.feature_engineering import get_lag_features, get_rolling_features
 from model.modelling.helpers import plot_learning_curve
 from model.modelling.model_training import train_model
 from quant_model.strategies._mixin import StrategyMixin
@@ -17,32 +17,33 @@ class ML(StrategyMixin):
         estimator,
         data=None,
         lag_features=None,
+        rolling_features=None,
         excluded_features=None,
         nr_lags=5,
+        windows=(),
         params=None,
         test_size=0.2,
         degree=1,
         print_results=True,
         **kwargs
     ):
-        StrategyMixin.__init__(self, data, **kwargs)
+        StrategyMixin.__init__(self, None, **kwargs)
 
         self.estimator = estimator
         self.nr_lags = nr_lags
+        self.windows = windows
         self.params = params
         self.test_size = test_size
         self.degree = degree
         self.print_results = print_results
-        self.lag_features = {*set(lag_features), self.returns_col} \
-            if isinstance(lag_features, list) else {self.returns_col}
-        self.excluded_features = {*set(excluded_features), self.price_col} \
-            if excluded_features is not None else {self.price_col}
+        self.lag_features = set(lag_features) \
+            if lag_features is not None else None
+        self.rolling_features = set(rolling_features) \
+            if rolling_features is not None else None
+        self.excluded_features = set(excluded_features) \
+            if excluded_features is not None else set()
 
-        self.pipeline = None
-        self.X_train = None
-        self.y_train = None
-        self.X_test = None
-        self.y_test = None
+        self.set_data(data)
 
     def __repr__(self):
         return "{}(symbol = {}, estimator = {})".format(self.__class__.__name__, self.symbol, self.estimator)
@@ -55,14 +56,19 @@ class ML(StrategyMixin):
         """
 
         data = super(ML, self).update_data(data)
+        data = data.drop(columns=self.excluded_features)
 
-        self._get_lag_model_X_y(data.copy())
+        X_lag = self.get_lag_model_x(data)
+        X_roll = self.get_rolling_model_x_y(data)
+        y = self.get_labels(data)
+
+        self.X, self.y = self.get_x_y(X_lag, X_roll, y)
 
         self._train_model(self.estimator, self.params, self.test_size, self.degree, self.print_results)
 
         return data
 
-    def _set_parameters(self, ml_params=None):
+    def set_parameters(self, ml_params=None):
         """ Updates SMA parameters and resp. time series.
         """
 
@@ -73,12 +79,10 @@ class ML(StrategyMixin):
             print(f"Invalid Parameters {ml_params}")
             return
 
-        estimator, params, test_size, degree, print_results = ml_params
+        estimator, test_size, degree, print_results = ml_params
 
         if estimator is not None:
             self.estimator = estimator
-        if params is not None:
-            self.params = params
         if test_size is not None:
             self.test_size = test_size
         if degree is not None:
@@ -88,24 +92,46 @@ class ML(StrategyMixin):
 
         self.data = self.update_data(self.data)
 
-    def get_rolling_model_df(self):
+    @staticmethod
+    def get_x_y(X_lag, X_roll, y):
 
-        pass
+        common_cols = set(X_lag.columns).intersection(set(X_roll.columns))
 
-    def _get_lag_model_X_y(self, data):
+        X = X_lag.join(X_roll.drop(columns=common_cols), how='inner')
+        x_y = X.join(y, how='inner')
 
-        data.drop(columns=self.excluded_features, inplace=True)
+        return x_y.iloc[:, :-1].copy(), x_y.iloc[:, -1].copy()
 
-        data = get_lag_features(data, columns=self.lag_features, n_in=self.nr_lags, n_out=1)
-        data.dropna(axis=0, inplace=True)
+    def get_labels(self, data):
+        return data[self.returns_col].shift(-1).dropna().rename('y')
 
-        y = data[self.returns_col].shift(-1).dropna()
-        X = data.iloc[:-1].copy()
+    def get_rolling_model_x_y(self, data):
 
-        self.X = X
-        self.y = y
+        rolling_features = self.rolling_features if self.rolling_features is not None else set(data.columns)
+        rolling_features = rolling_features.difference(self.excluded_features)
 
-    def _train_model(self, estimator, params=None, test_size=0.2, degree=1, print_results=True, plot_results=True):
+        data = get_rolling_features(data, self.windows, columns=rolling_features)
+
+        return data
+
+    def get_lag_model_x(self, data):
+
+        lag_features = self.lag_features if self.lag_features is not None else set(data.columns)
+        lag_features = lag_features.difference(self.excluded_features)
+
+        data = get_lag_features(data, columns=lag_features, n_in=self.nr_lags, n_out=1)
+
+        return data
+
+    def _train_model(
+        self,
+        estimator,
+        params=None,
+        test_size=0.2,
+        degree=1,
+        print_results=True,
+        plot_results=True
+    ):
 
         pipeline, X_train, X_test, y_train, y_test = train_model(
             estimator,

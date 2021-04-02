@@ -43,7 +43,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         """ Test a mean-reversion strategy (bollinger) with SMA and dev.
         """
 
-        self._set_parameters(params)
+        self.set_parameters(params)
         self._reset_object()
 
         # nice printout

@@ -27,7 +27,7 @@ class Momentum(StrategyMixin):
         data["rolling_returns"] = data[self.returns_col].rolling(self.window, min_periods=1).mean()
         return data
 
-    def _set_parameters(self, window):
+    def set_parameters(self, window):
         """ Updates SMA parameters and resp. time series.
         """
         if window is not None:

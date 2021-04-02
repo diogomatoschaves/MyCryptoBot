@@ -1,10 +1,9 @@
 import calendar
 
 import numpy as np
-import pandas as pd
 from pandas import CategoricalDtype
 
-from model.modelling.helpers.ts_differencing import ts_differencing
+from quant_model.strategies.machine_learning.model.modelling.helpers.ts_differencing import ts_differencing
 
 
 def add_returns_features(df):
@@ -84,15 +83,18 @@ def get_lag_features(df, columns=None, n_in=1, n_out=1, dropnan=True):
 
         df = df.join(original_df[columns].shift(i), rsuffix=f"_{'lag' if i > 0 else 'fwd'}{i}", **how)
 
+    if dropnan:
+        df.dropna(axis=0, inplace=True)
+
     return df
 
 
 def get_rolling_features(df, windows, columns=None, statistics='mean', mav='sma', dropnan=True):
 
-    if not isinstance(windows, list):
+    if not isinstance(windows, (list, tuple, type(np.array([])))):
         windows = [windows]
 
-    if not isinstance(statistics, list):
+    if not isinstance(statistics, (list, tuple, type(np.array([])))):
         statistics = [statistics]
 
     if columns is None:
@@ -116,7 +118,7 @@ def get_rolling_features(df, windows, columns=None, statistics='mean', mav='sma'
             )
 
     if dropnan:
-        df.dropna(inplace=True)
+        df.dropna(axis=0, inplace=True)
 
     return df
 

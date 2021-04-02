@@ -31,7 +31,7 @@ class MeanRev(StrategyMixin):
 
         return data
 
-    def _set_parameters(self, params=None):
+    def set_parameters(self, params=None):
         """ Updates SMA parameters and resp. time series.
         """
 
