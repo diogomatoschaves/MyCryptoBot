@@ -56,15 +56,14 @@ def load_model(model_filepath):
 
 
 def build_pipeline(
-    estimator_name,
-    estimator_params_override=None,
+    estimator,
     grid_search=False,
     grid_search_params=None,
     degree=1
 ):
     """
     Builds the pipeline required to fit the features into the model
-    :param estimator_name: regressor name. Default will be Ridge
+    :param estimator: estimator object instance
     :param grid_search: If grid search should be performed
     :param grid_search_params: extra params to be passed to the grid search
     :return: the built model
@@ -72,16 +71,6 @@ def build_pipeline(
 
     if not grid_search_params:
         grid_search_params = {}
-
-    try:
-        if not estimator_params_override:
-            estimator_params_override = {}
-
-        params = {**estimator_params[estimator_name], **estimator_params_override}
-
-        estimator = eval(estimator_name)(**params)
-    except NameError:
-        raise Exception(f"{estimator_name} is not a valid Estimator")
 
     is_clf = is_classifier(estimator)
 
@@ -117,10 +106,9 @@ def build_pipeline(
 
 
 def train_model(
-    estimator_name,
+    estimator,
     X,
     y,
-    estimator_params_override=None,
     grid_search=False,
     evaluation_metric=None,
     print_results=True,
@@ -140,10 +128,7 @@ def train_model(
     logging.info("\tbuilding model...")
 
     model, is_clf = build_pipeline(
-        estimator_name,
-        estimator_params_override=estimator_params_override,
-        # num_features=num_features,
-        # cat_features=cat_features,
+        estimator,
         grid_search=grid_search,
         degree=degree
     )
