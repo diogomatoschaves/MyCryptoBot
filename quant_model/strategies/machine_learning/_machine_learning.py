@@ -3,8 +3,8 @@ import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 
 from data_processing.transform.feature_engineering import get_lag_features, get_rolling_features
-from quant_model.strategies.machine_learning.model.modelling import plot_learning_curve
-from quant_model.strategies.machine_learning.model.modelling import train_model
+from quant_model.strategies.machine_learning.model.modelling.helpers import plot_learning_curve
+from quant_model.strategies.machine_learning.model.modelling.model_training import train_model
 from quant_model.strategies._mixin import StrategyMixin
 
 
@@ -21,7 +21,6 @@ class ML(StrategyMixin):
         excluded_features=None,
         nr_lags=5,
         windows=(),
-        params=None,
         test_size=0.2,
         degree=1,
         print_results=True,
@@ -32,7 +31,6 @@ class ML(StrategyMixin):
         self.estimator = estimator
         self.nr_lags = nr_lags
         self.windows = windows
-        self.params = params
         self.test_size = test_size
         self.degree = degree
         self.print_results = print_results
@@ -64,7 +62,7 @@ class ML(StrategyMixin):
 
         self.X, self.y = self.get_x_y(X_lag, X_roll, y)
 
-        self._train_model(self.estimator, self.params, self.test_size, self.degree, self.print_results)
+        self._train_model(self.estimator, self.test_size, self.degree, self.print_results)
 
         return data
 
@@ -126,7 +124,6 @@ class ML(StrategyMixin):
     def _train_model(
         self,
         estimator,
-        params=None,
         test_size=0.2,
         degree=1,
         print_results=True,
@@ -137,7 +134,6 @@ class ML(StrategyMixin):
             estimator,
             self.X,
             self.y,
-            estimator_params_override=params,
             degree=degree,
             print_results=print_results,
             plot_results=plot_results,
