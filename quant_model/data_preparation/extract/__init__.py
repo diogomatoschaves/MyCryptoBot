@@ -1,0 +1,1 @@
+from quant_model.data_preparation.extract._extract import extract_data
