@@ -10,11 +10,11 @@ class MACrossover(StrategyMixin):
 
     def __init__(self, SMA_S, SMA_L, data=None, moving_av='sma', **kwargs):
 
-        StrategyMixin.__init__(self, data, **kwargs)
-
         self.SMA_S = SMA_S
         self.SMA_L = SMA_L
         self.mav = moving_av
+
+        StrategyMixin.__init__(self, data, **kwargs)
 
     def __repr__(self):
         return "{}(symbol = {}, SMA_S = {}, SMA_L = {})".format(self.__class__.__name__, self.symbol, self.SMA_S, self.SMA_L)

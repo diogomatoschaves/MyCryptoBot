@@ -11,9 +11,8 @@ class MACD(MACD_TA, StrategyMixin):
 
     def __init__(self, window_slow=26, window_fast=12, window_signal=9, data=None, **kwargs):
 
-        StrategyMixin.__init__(self, data, **kwargs)
-
         MACD_TA.__init__(self, pd.Series(), window_slow, window_fast, window_signal)
+        StrategyMixin.__init__(self, data, **kwargs)
 
         self._close = pd.Series()
 

@@ -9,9 +9,9 @@ class Momentum(StrategyMixin):
 
     def __init__(self, window, data, **kwargs):
 
-        StrategyMixin.__init__(self, data, **kwargs)
-
         self.window = window
+
+        StrategyMixin.__init__(self, data, **kwargs)
 
     def __repr__(self):
         return "{}(symbol = {}, window = {})".format(self.__class__.__name__, self.symbol, self.window)
