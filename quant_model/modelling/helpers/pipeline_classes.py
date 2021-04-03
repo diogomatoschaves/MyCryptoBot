@@ -4,7 +4,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, PolynomialFeatures
 
-from quant_model.strategies.machine_learning.model.modelling.helpers import (
+from quant_model.modelling.helpers import (
     feature_mapping,
     get_mean_std,
     normalize_features,

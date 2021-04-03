@@ -2,20 +2,14 @@
 
 import os
 from datetime import datetime, timedelta
-import urllib
 
-import pytz
 import requests
 import django
 
-from data_preparation.extract.scrapers.messari.headers import get_headers
-from data_preparation.extract.scrapers.santiment.headers import headers, query
+from quant_model.data_preparation.extract.scrapers import headers, query
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
-
-from database.model.models import Asset, MessariAPI
-
 
 url = "https://api.santiment.net/graphql"
 

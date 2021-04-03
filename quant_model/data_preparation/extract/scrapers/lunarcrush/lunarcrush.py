@@ -5,8 +5,8 @@ import pytz
 import requests
 import django
 
-from data_preparation.extract.scrapers.lunarcrush.headers import lunarcrush_headers
-from data_preparation.extract.scrapers.lunarcrush.session_key_handler import get_session_key
+from quant_model.data_preparation.extract.scrapers.lunarcrush.headers import lunarcrush_headers
+from quant_model.data_preparation.extract.scrapers import get_session_key
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()

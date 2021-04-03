@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 from os import environ as env
@@ -12,9 +11,8 @@ from binance.websockets import BinanceSocketManager
 from django.db import connection
 import pandas as pd
 import django
-import numpy as np
 
-from data_preparation.extract.scrapers.binance.binance import get_historical_data
+from quant_model.data_preparation.extract.scrapers.binance import get_historical_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()

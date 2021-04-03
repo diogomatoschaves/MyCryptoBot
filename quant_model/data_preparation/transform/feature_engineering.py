@@ -3,7 +3,7 @@ import calendar
 import numpy as np
 from pandas import CategoricalDtype
 
-from quant_model.strategies.machine_learning.model.modelling.helpers.ts_differencing import ts_differencing
+from quant_model.modelling.helpers.ts_differencing import ts_differencing
 
 
 def add_returns_features(df):
