@@ -12,6 +12,9 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.strategy = strategy
         self.positions = []
 
+    def __repr__(self):
+        return self.strategy.__repr__()
+
     def __getattr__(self, attr):
         method = getattr(self.strategy, attr)
 
@@ -115,11 +118,11 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         self.print_current_balance(date)
 
-        print("{} |  net performance (%) = {}".format(date, round(perf, 2) ))
+        print("{} |  net performance (%) = {}".format(date, round(perf, 2)))
         print("{} |  number of trades executed = {}".format(date, self.trades))
         print(75 * "-")
 
-    def plot_data(self, cols = None):
+    def plot_data(self, cols=None):
         if cols is None:
             cols = "close"
         self.data[cols].plot(figsize=(12, 8), title='BTC/USD')

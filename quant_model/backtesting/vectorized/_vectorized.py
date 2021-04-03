@@ -14,6 +14,9 @@ class VectorizedBacktester(BacktestMixin):
 
         self.strategy = strategy
 
+    def __repr__(self):
+        return self.strategy.__repr__()
+
     def __getattr__(self, attr):
         method = getattr(self.strategy, attr)
 
