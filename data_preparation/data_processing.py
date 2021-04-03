@@ -1,6 +1,6 @@
-from data_processing.extract.extract import extract_data
-from data_processing.load import load_data
-from data_processing.transform import transform_data
+from data_preparation.extract.extract import extract_data
+from data_preparation.load import load_data
+from data_preparation.transform import transform_data
 
 
 def etl_pipeline(config):

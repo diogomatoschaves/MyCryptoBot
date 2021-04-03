@@ -8,7 +8,7 @@ import pytz
 import requests
 import django
 
-from data_processing.extract.scrapers.messari.headers import get_headers
+from data_preparation.extract.scrapers.messari.headers import get_headers
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()

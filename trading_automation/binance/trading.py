@@ -14,7 +14,7 @@ import pandas as pd
 import django
 import numpy as np
 
-from data_processing.extract.scrapers.binance.binance import get_historical_data
+from data_preparation.extract.scrapers.binance.binance import get_historical_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
