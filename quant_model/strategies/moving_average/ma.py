@@ -10,10 +10,10 @@ class MA(StrategyMixin):
 
     def __init__(self, sma, data=None, moving_av='sma', **kwargs):
 
-        StrategyMixin.__init__(self, data, **kwargs)
-
         self.sma = sma
         self.mav = moving_av
+
+        StrategyMixin.__init__(self, data, **kwargs)
 
     def __repr__(self):
         return "{}(symbol = {}, SMA = {})".format(self.__class__.__name__, self.symbol, self.sma)

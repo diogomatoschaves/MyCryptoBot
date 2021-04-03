@@ -9,10 +9,10 @@ class BollingerBands(StrategyMixin):
 
     def __init__(self, ma, sd, data=None, **kwargs):
 
-        StrategyMixin.__init__(self, data, **kwargs)
-
         self.ma = ma
         self.sd = sd
+
+        StrategyMixin.__init__(self, data, **kwargs)
 
     def __repr__(self):
         return "{}(symbol = {}, ma = {}, sd = {})".format(self.__class__.__name__, self.symbol, self.ma, self.sd)

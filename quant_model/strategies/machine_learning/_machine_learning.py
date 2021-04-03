@@ -26,8 +26,6 @@ class ML(StrategyMixin):
         print_results=True,
         **kwargs
     ):
-        StrategyMixin.__init__(self, None, **kwargs)
-
         self.estimator = estimator
         self.nr_lags = nr_lags
         self.windows = windows
@@ -41,7 +39,7 @@ class ML(StrategyMixin):
         self.excluded_features = set(excluded_features) \
             if excluded_features is not None else set()
 
-        self.set_data(data)
+        StrategyMixin.__init__(self, data, **kwargs)
 
     def __repr__(self):
         return "{}(symbol = {}, estimator = {})".format(self.__class__.__name__, self.symbol, self.estimator)
