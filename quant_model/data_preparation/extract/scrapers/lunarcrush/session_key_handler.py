@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from data_preparation.extract.scrapers.lunarcrush.headers import google_api_headers, get_headers
+from quant_model.data_preparation.extract.scrapers.lunarcrush.headers import google_api_headers, get_headers
 
 
 def get_google_auth():
