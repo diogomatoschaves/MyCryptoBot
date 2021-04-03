@@ -18,8 +18,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import ExchangeData
-from trading_automation.trading import Trader
-import trading_automation.binance.constants as const
+from trading_bot.trading import Trader
+import trading_bot.binance.constants as const
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
