@@ -7,7 +7,6 @@ DATABASES = {
     'default': {
         # Database driver
         'ENGINE': 'django.db.backends.sqlite3',
-        # Replace below with Database Name if using other database engines
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
