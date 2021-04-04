@@ -1,1 +1,0 @@
-from quant_model.data_preparation.extract.scrapers.binance.binance import get_historical_data

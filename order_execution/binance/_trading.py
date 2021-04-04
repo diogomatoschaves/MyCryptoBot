@@ -12,14 +12,14 @@ from django.db import connection
 import pandas as pd
 import django
 
-from quant_model.data_preparation.extract.scrapers.binance import get_historical_data
+from data.extract.scrapers.binance import get_historical_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import ExchangeData
-from trading_bot.trading import Trader
-import trading_bot.binance.constants as const
+from common.trading import Trader
+import order_execution.binance.constants as const
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -27,6 +27,7 @@ if ENV_FILE:
 
 
 class BinanceTrader(Client, BinanceSocketManager, Trader):
+
     AUTO_REPAY = 'AUTO_REPAY'
 
     def __init__(

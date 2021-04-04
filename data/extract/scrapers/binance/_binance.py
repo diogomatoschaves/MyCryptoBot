@@ -12,7 +12,7 @@ import database
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-import trading_bot.binance.constants as constants
+import order_execution.binance.constants as constants
 from database.model.models import Asset, Symbol, ExchangeData, Exchange
 
 

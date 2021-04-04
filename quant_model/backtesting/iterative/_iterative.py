@@ -1,5 +1,5 @@
 from quant_model.backtesting._mixin import BacktestMixin
-from trading_bot.trading import Trader
+from common.trading import Trader
 
 
 # TODO: Improve results presentation
