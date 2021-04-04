@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "quant_model"
+version = "0.1.0"
+description = "Quant Model Service. Loads data from database and calculates signals. Trains machine learning models. Provides backtesting tools."
+authors = ["Diogo Matos Chaves <diogo_chaves@hotmail.com>"]
+
+[tool.poetry.dependencies]
+python = "~3.8"
+matplotlib = "^3.4.1"
+numpy = "^1.20.2"
+scipy = "^1.6.2"
+pandas = "^1.2.3"
+scikit-learn = "^0.24.1"
+fitfeatures = "^0.0.5"
+seaborn = "^0.11.1"
+Flask = "^1.1.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
