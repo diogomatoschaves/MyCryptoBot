@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "order_execution"
+version = "0.1.0"
+description = "Order Execution Service. Handles connection to the exchanges API's and executes orders."
+authors = ["Diogo Matos Chaves <diogo_chaves@hotmail.com>"]
+
+[tool.poetry.dependencies]
+python = "3.7.3"
+python-binance = "^0.7.9"
+python-dotenv = "^0.17.0"
+Flask = "^1.1.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
