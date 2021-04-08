@@ -30,4 +30,4 @@ RUN useradd -m myuser
 USER myuser
 
 # run entrypoint.sh
-CMD gunicorn --bind 0.0.0.0:$PORT wsgi:app
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
