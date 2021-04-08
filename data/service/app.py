@@ -19,15 +19,13 @@ def start_bot():
     except BadRequest:
         pass
 
-
-
     return jsonify({"response": "success"})
 
 
 @app.route('/stop_bot')
 def stop_bot():
 
-    # Stops the bot
+    # Stops the data collection stream
     # closes any open positions
 
     pass

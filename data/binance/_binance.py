@@ -1,25 +1,26 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
-import pytz
-from binance.websockets import BinanceSocketManager
-from django.db import connection
-import django
 import pandas as pd
+import numpy as np
+import django
+from binance.websockets import BinanceSocketManager
 
-import database
-from shared.exchanges import BinanceHandler
 import shared.exchanges.binance.constants as const
+from data.binance.extract import get_missing_data, get_historical_data
+from data.binance.load import save_new_entry_db
+from data.binance.transform import resample_data
+from shared.exchanges import BinanceHandler
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Asset, Symbol, ExchangeData, Exchange
+from database.model.models import ExchangeData, StructuredData
 
 
 class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
-    def __init__(self, base="BTC", quote="USDT", candle_size='5m'):
+    def __init__(self, base="BTC", quote="USDT", candle_size='1h'):
 
         BinanceHandler.__init__(self)
         BinanceSocketManager.__init__(self, self)
@@ -32,20 +33,29 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         self.conn_key = None
 
+        self.raw_data = pd.DataFrame()
         self.data = pd.DataFrame()
+        self.raw_data_length = 1
         self.data_length = 1
 
     def start_data_ingestion(self):
 
-        self._get_missing_data()
+        print(f"Starting data stream...")
+
+        get_missing_data(
+            self.get_historical_klines_generator,
+            self.base,
+            self.quote,
+            self.base_candle_size,
+            self.exchange
+        )
 
         self._start_websocket(self.symbol, self.websocket_callback)
 
     def stop_data_ingestion(self):
-        pass
+        self._stop_websocket()
 
     def _start_websocket(self, symbol, callback, option='kline'):
-        print(f"Starting data stream...")
 
         self.conn_key = getattr(self, f'start_{option}_socket')(symbol=symbol, callback=callback,
                                                                 interval=self.candle_size)
@@ -54,89 +64,36 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
     def _stop_websocket(self):
         self.stop_socket(self.conn_key)
 
-    def _get_missing_data(self):
+    def process_incoming_data(self, model_class, data, data_length, candle_size):
 
-        print(f"Getting historical data up until now ({datetime.utcnow()})...")
+        new_entries = []
+        if len(data) != data_length:
 
-        start_date = ExchangeData.objects \
-                         .filter(exchange=self.exchange, symbol=self.symbol) \
-                         .order_by('open_time').last().open_time - timedelta(hours=6)
+            data_length = len(data)
 
-        self.get_historical_data(
-            self.KLINE_INTERVAL_1MINUTE,
-            int(start_date.timestamp() * 1000)
-        )
+            rows = data.iloc[:-1].reset_index()
 
-    def _resample_data(self, candle_size, aggregation_method):
-        self.data = self.data \
-            .resample(const.CANDLE_SIZES_MAPPER[candle_size]) \
-            .agg(aggregation_method) \
-            .ffill()[:-1]
+            for index, row in rows.iterrows():
 
-    @staticmethod
-    def get_symbol(symbol, quote, base):
-        try:
-            return Symbol.objects.get(name=symbol)
-        except database.model.models.Symbol.DoesNotExist:
-            quote_asset = Asset.objects.get_or_create(symbol=quote)[0]
-            base_asset = Asset.objects.get_or_create(symbol=base)[0]
+                new_entry = save_new_entry_db(
+                    model_class,
+                    row,
+                    self.quote,
+                    self.base,
+                    self.exchange,
+                    candle_size
+                )
 
-            obj = Symbol(name=symbol, quote=quote_asset, base=base_asset)
-            obj.save()
+                new_entries.append(new_entry)
 
-            return obj
-
-    def save_new_entry_db(self, rows, interval):
-
-        for row in rows:
-
-            fields = {}
-            fields.update(row)
-
-            fields["open_time"] = fields["open_time"].tz_localize(pytz.utc)
-
-            if not pd.isnull(fields["close_time"]):
-                fields["close_time"] = fields["close_time"].tz_localize(pytz.utc)
-            else:
-                fields["close_time"] = None
-
-            fields.update({
-                "exchange": Exchange.objects.get_or_create(name=self.exchange)[0],
-                "symbol": self.get_symbol(self.symbol, self.quote, self.base),
-                "interval": interval
-            })
-
-            try:
-                obj = ExchangeData.objects.create(**fields)
-            except django.db.utils.IntegrityError:
-
-                unique_fields = {"open_time", "exchange", "symbol", "interval"}
-
-                fields_subset = {key: value for key, value in fields.items() if key in unique_fields}
-
-                ExchangeData.objects.filter(**fields_subset).update(**fields)
-
-    def get_historical_data(self, interval, start_date):
-
-        klines = self.get_historical_klines_generator(self.symbol, self.base_candle_size, start_date)
-
-        for i, kline in enumerate(klines):
-
-            fields = {field: get_value(kline) for field, get_value in const.BINANCE_KEY.items()}
-
-            self.save_new_entry_db([fields], interval)
-
-            if i % 1E4 == 0:
-                print(fields["open_time"])
-
-        ExchangeData.objects.last().delete()
+        return data, data_length, np.any(new_entries)
 
     def websocket_callback(self, row):
 
         # self.stop_socket(self.conn_key)
         # print(row)
 
-        df = pd.DataFrame(
+        raw_data = pd.DataFrame(
             {
                 const.NAME_MAPPER[key]: [const.FUNCTION_MAPPER[key](value)]
                 for key, value in row["k"].items()
@@ -144,19 +101,35 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             }
         ).set_index('open_time')
 
-        self.data = self.data.append(df)
+        # Raw data
+        self.raw_data = self.raw_data.append(raw_data)
 
-        self._resample_data(self.base_candle_size, const.COLUMNS_AGGREGATION_WEBSOCKET)
+        self.raw_data = resample_data(
+            self.raw_data,
+            self.base_candle_size,
+            const.COLUMNS_AGGREGATION_WEBSOCKET
+        )
 
-        if len(self.data) != self.data_length:
+        self.raw_data, self.raw_data_length, _ = self.process_incoming_data(
+            ExchangeData, self.raw_data, self.raw_data_length, self.base_candle_size
+        )
 
-            self.data_length = len(self.data)
+        # Structured data
+        self.data = self.data.append(raw_data)
 
-            rows = self.data.iloc[:-1].reset_index()
+        self.data = resample_data(
+            self.data,
+            self.candle_size,
+            const.COLUMNS_AGGREGATION_WEBSOCKET
+        )
 
-            self.save_new_entry_db(rows, self.base_candle_size)
+        self.data, self.data_length, new_entry = self.process_incoming_data(
+            StructuredData, self.data, self.data_length, self.candle_size
+        )
 
-            
+        # Notify quant model service that a new entry is available
+        if new_entry:
+            pass
 
 
 if __name__ == "__main__":
@@ -164,9 +137,19 @@ if __name__ == "__main__":
     quote = "USDT"
     base = "BTC"
 
+    symbol = base + quote
+
+    interval = '5m'
+
     binance_data_handler = BinanceDataHandler(quote, base)
 
-    # start_date = int(datetime(2021, 3, 23, 12, 33).timestamp() * 1000)
     start_date = int(datetime(2020, 12, 21, 8, 0).timestamp() * 1000)
 
-    binance_data_handler.get_historical_data('5m', start_date)
+    get_historical_data(
+        binance_data_handler.get_historical_klines_generator,
+        base,
+        quote,
+        'binance',
+        interval,
+        start_date
+    )
