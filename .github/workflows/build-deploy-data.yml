@@ -1,0 +1,21 @@
+# Your workflow name.
+name: Deploy to heroku.
+
+# Run workflow on every push to master branch.
+on:
+  push:
+    branches: [master]
+
+# Your workflows jobs.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to heroku container registry
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+        run: |
+          heroku login
+          heroku container:login
