@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta
 
+import pytz
 from binance.websockets import BinanceSocketManager
 from django.db import connection
 import django
@@ -32,7 +33,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         self.conn_key = None
 
         self.data = pd.DataFrame()
-        self.data_length = 0
+        self.data_length = 1
 
     def start_data_ingestion(self):
 
@@ -62,19 +63,18 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
                          .order_by('open_time').last().open_time - timedelta(hours=6)
 
         self.get_historical_data(
-            self.quote,
-            self.base,
             self.KLINE_INTERVAL_1MINUTE,
             int(start_date.timestamp() * 1000)
         )
 
-    def _resample_data(self, aggregation_method):
+    def _resample_data(self, candle_size, aggregation_method):
         self.data = self.data \
-            .resample(const.CANDLE_SIZES_MAPPER[self.candle_size]) \
+            .resample(const.CANDLE_SIZES_MAPPER[candle_size]) \
             .agg(aggregation_method) \
             .ffill()[:-1]
 
-    def get_symbol(self, symbol, quote, base):
+    @staticmethod
+    def get_symbol(symbol, quote, base):
         try:
             return Symbol.objects.get(name=symbol)
         except database.model.models.Symbol.DoesNotExist:
@@ -86,19 +86,23 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
             return obj
 
-    def get_historical_data(self, quote, base, interval, start_date):
+    def save_new_entry_db(self, rows, interval):
 
-        symbol = base + quote
+        for row in rows:
 
-        klines = self.get_historical_klines_generator(symbol, interval, start_date)
+            fields = {}
+            fields.update(row)
 
-        for i, kline in enumerate(klines):
+            fields["open_time"] = fields["open_time"].tz_localize(pytz.utc)
 
-            fields = {field: get_value(kline) for field, get_value in const.BINANCE_KEY.items()}
+            if not pd.isnull(fields["close_time"]):
+                fields["close_time"] = fields["close_time"].tz_localize(pytz.utc)
+            else:
+                fields["close_time"] = None
 
             fields.update({
                 "exchange": Exchange.objects.get_or_create(name=self.exchange)[0],
-                "symbol": self.get_symbol(symbol, quote, base),
+                "symbol": self.get_symbol(self.symbol, self.quote, self.base),
                 "interval": interval
             })
 
@@ -111,6 +115,16 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
                 fields_subset = {key: value for key, value in fields.items() if key in unique_fields}
 
                 ExchangeData.objects.filter(**fields_subset).update(**fields)
+
+    def get_historical_data(self, interval, start_date):
+
+        klines = self.get_historical_klines_generator(self.symbol, self.base_candle_size, start_date)
+
+        for i, kline in enumerate(klines):
+
+            fields = {field: get_value(kline) for field, get_value in const.BINANCE_KEY.items()}
+
+            self.save_new_entry_db([fields], interval)
 
             if i % 1E4 == 0:
                 print(fields["open_time"])
@@ -132,15 +146,17 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         self.data = self.data.append(df)
 
-        self._resample_data(const.COLUMNS_AGGREGATION_WEBSOCKET)
+        self._resample_data(self.base_candle_size, const.COLUMNS_AGGREGATION_WEBSOCKET)
 
         if len(self.data) != self.data_length:
 
             self.data_length = len(self.data)
 
-            last_row = self.data.iloc[-1]
+            rows = self.data.iloc[:-1].reset_index()
 
-            # TODO: Append this row to Database
+            self.save_new_entry_db(rows, self.base_candle_size)
+
+            
 
 
 if __name__ == "__main__":
@@ -153,4 +169,4 @@ if __name__ == "__main__":
     # start_date = int(datetime(2021, 3, 23, 12, 33).timestamp() * 1000)
     start_date = int(datetime(2020, 12, 21, 8, 0).timestamp() * 1000)
 
-    binance_data_handler.get_historical_data(quote, base, '5m', start_date)
+    binance_data_handler.get_historical_data('5m', start_date)

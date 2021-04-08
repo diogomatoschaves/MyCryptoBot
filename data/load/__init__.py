@@ -1,1 +1,0 @@
-from data.load._load import load_data
