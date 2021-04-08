@@ -29,7 +29,10 @@ jobs:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
           HEROKU_PROCESS: web
-        run: heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../
+        run: |
+          echo $HEROKU_PROCESS
+          echo $HEROKU_APP_NAME
+          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../
       - name: Release
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
