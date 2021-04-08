@@ -18,6 +18,10 @@ jobs:
           HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
         run: |
           heroku container:login
+      - name: checkout folder
+        env:
+          DIRECTORY: data/
+        run: cd $DIRECTORY
       - name: Build and push
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
