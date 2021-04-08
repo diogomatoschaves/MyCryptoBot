@@ -28,4 +28,4 @@ RUN useradd -m myuser
 USER myuser
 
 # run entrypoint.sh
-ENTRYPOINT ["bash", "/usr/src/app/data/entrypoint.sh"]
+CMD ["bash", "/usr/src/app/data/entrypoint.sh"]
