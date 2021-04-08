@@ -1,0 +1,33 @@
+# Your workflow name.
+name: Build and Deploy crypto-bot-data to heroku.
+
+# Run workflow on every push to master branch.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'database/model/migrations/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Create .netrc for Heroku Auth"
+        shell: bash
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+        run: |
+          `cat >~/.netrc <<EOF
+          machine api.heroku.com
+              login $HEROKU_EMAIL
+              password $HEROKU_API_KEY
+          machine git.heroku.com
+              login $HEROKU_EMAIL
+              password $HEROKU_API_KEY
+          EOF`
+      - name: "Run Database migrations"
+          shell: bash
+          env:
+            HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
+          run: heroku run python database/manage.py migrate --app $HEROKU_APP_NAME
