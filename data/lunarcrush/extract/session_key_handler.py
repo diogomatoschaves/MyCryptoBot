@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from data.extract.lunarcrush.headers import google_api_headers, get_headers
+from data.lunarcrush.extract.headers import google_api_headers, get_headers
 
 
 def get_google_auth():
