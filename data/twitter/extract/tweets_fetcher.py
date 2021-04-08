@@ -1,7 +1,7 @@
 import requests
 from requests.exceptions import ConnectionError
 
-from data.extract import get_twitter_headers
+from data.twitter.extract.headers import get_twitter_headers
 
 
 def get_tweets(words, hashtags, from_date, until_date, min_favs=None):
