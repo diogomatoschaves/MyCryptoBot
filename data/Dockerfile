@@ -24,10 +24,8 @@ COPY ./database/ ./database/
 COPY ./data/ ./data/
 COPY ./shared/ ./shared/
 
-#WORKDIR /usr/src/app/data/service
-
-#RUN useradd -m myuser
-#USER myuser
+RUN useradd -m myuser
+USER myuser
 
 # run entrypoint.sh
 ENTRYPOINT ["bash", "/usr/src/app/data/entrypoint.sh"]
