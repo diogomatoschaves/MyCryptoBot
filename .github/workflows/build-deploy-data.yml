@@ -1,12 +1,15 @@
 # Your workflow name.
-name: Deploy to heroku.
+name: Build and Deploy crypto-bot-data to heroku.
 
 # Run workflow on every push to master branch.
 on:
   push:
     branches: [master]
+    paths:
+      - 'data/**'
+      - 'database/**'
+      - 'shared/**'
 
-# Your workflows jobs.
 jobs:
   build:
     runs-on: ubuntu-latest
