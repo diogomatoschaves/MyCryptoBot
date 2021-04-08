@@ -11,6 +11,8 @@ then
     echo "PostgreSQL started"
 fi
 
-python manage.py migrate
+python database/manage.py migrate
+
+cd data/service/
 
 exec gunicorn --bind 0.0.0.0:"$PORT" wsgi:app
