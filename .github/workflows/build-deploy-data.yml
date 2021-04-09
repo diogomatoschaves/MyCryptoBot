@@ -7,6 +7,7 @@ on:
     branches: [master]
     paths:
       - 'data/**'
+      - 'database/model/migrations/**'
       - 'shared/**'
       - '.github/workflows/build-deploy-data.yml'
 
@@ -36,3 +37,14 @@ jobs:
           HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
           HEROKU_PROCESS: web
         run: heroku container:release $HEROKU_PROCESS --app $HEROKU_APP_NAME
+      - uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: ${{ secrets.HEROKU_DATA_APP_NAME }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          justlogin: true
+      - name: Run database migrations
+        env:
+          HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
+        run: |
+          heroku run python database/manage.py migrate --app $HEROKU_APP_NAME
