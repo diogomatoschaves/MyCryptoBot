@@ -54,14 +54,14 @@ class Hashtag(models.Model):
 class LunarCrushTimeEntries(models.Model):
 
     id = models.IntegerField(primary_key=True)
-    asset = models.TextField(unique_for_date='time')
-    time = models.DateTimeField(null=True)
+    asset = models.ForeignKey('Asset', on_delete=models.SET_NULL, null=True)
+    open_time = models.DateTimeField(null=True)
     open = models.FloatField(null=True)
     close = models.FloatField(null=True)
     high = models.FloatField(null=True)
     low = models.FloatField(null=True)
-    volume = models.IntegerField(null=True)
-    market_cap = models.IntegerField(null=True)
+    volume = models.BigIntegerField(null=True)
+    market_cap = models.BigIntegerField(null=True)
     url_shares = models.IntegerField(null=True)
     unique_url_shares = models.IntegerField(null=True)
     reddit_posts = models.IntegerField(null=True)
@@ -85,7 +85,7 @@ class LunarCrushTimeEntries(models.Model):
     tweet_sentiment_impact3 = models.IntegerField(null=True)
     tweet_sentiment_impact4 = models.IntegerField(null=True)
     tweet_sentiment_impact5 = models.IntegerField(null=True)
-    social_score = models.IntegerField(null=True)
+    social_score = models.BigIntegerField(null=True)
     average_sentiment = models.FloatField(null=True)
     sentiment_absolute = models.IntegerField(null=True)
     sentiment_relative = models.IntegerField(null=True)
@@ -110,9 +110,12 @@ class LunarCrushTimeEntries(models.Model):
     price_btc = models.FloatField(null=True)
     social_volume_global = models.IntegerField(null=True)
     social_dominance = models.FloatField(null=True)
-    market_cap_global = models.IntegerField(null=True)
+    market_cap_global = models.BigIntegerField(null=True)
     market_dominance = models.FloatField(null=True)
     percent_change_24h = models.FloatField(null=True)
+
+    class Meta:
+        unique_together = ("open_time", "asset")
 
 
 class LunarCrushInfluencer(models.Model):
@@ -174,7 +177,7 @@ class MessariAPI(models.Model):
 
     id = models.IntegerField(primary_key=True)
     asset = models.ForeignKey('Asset', on_delete=models.SET_NULL, null=True)
-    time = models.DateTimeField(null=True)
+    open_time = models.DateTimeField(null=True)
     interval = models.FloatField(null=True, default=3600)
     open = models.FloatField(null=True)
     close = models.FloatField(null=True)
