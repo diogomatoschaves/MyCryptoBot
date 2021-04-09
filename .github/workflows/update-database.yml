@@ -20,8 +20,8 @@ jobs:
           heroku_app_name: ${{ secrets.HEROKU_DATA_APP_NAME }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
           justlogin: true
-      - run: heroku auth:whoami
       - name: Run database migrations
         env:
           HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
-      - run: heroku run python database/manage.py migrate --app $HEROKU_APP_NAME
+        run: |
+          heroku run python database/manage.py migrate --app $HEROKU_APP_NAME
