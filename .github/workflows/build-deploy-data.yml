@@ -7,8 +7,8 @@ on:
     branches: [master]
     paths:
       - 'data/**'
-      - 'database/**'
       - 'shared/**'
+      - '.github/workflows/build-deploy-data.yml'
 
 jobs:
   build:
