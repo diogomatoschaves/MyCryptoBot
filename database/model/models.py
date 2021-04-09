@@ -325,6 +325,15 @@ class StructuredData(models.Model):
         unique_together = ("open_time", "exchange", "interval", "symbol")
 
 
+class Jobs(models.Model):
+
+    job_id = models.TextField()
+    app = models.TextField()
+
+    class Meta:
+        unique_together = ("job_id", "app")
+
+
 # class BotStatus(models.Model):
 #
 #     id = models.IntegerField(primary_key=True)
