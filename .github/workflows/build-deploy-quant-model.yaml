@@ -1,0 +1,38 @@
+# Your workflow name.
+name: Build and Deploy crypto-bot-data to heroku.
+
+# Run workflow on every push to master branch.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'quant_model/**'
+      - 'database/**'
+      - 'shared/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to heroku container registry
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+        run: |
+          heroku container:login
+      - name: Build and push
+        env:
+          DIRECTORY: quant_model/
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_APP_NAME: ${{ secrets.HEROKU_MODEL_APP_NAME }}
+          HEROKU_PROCESS: web
+        run: |
+          cd $DIRECTORY
+          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../
+      - name: Release
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
+          HEROKU_PROCESS: web
+        run: heroku container:release $HEROKU_PROCESS --app $HEROKU_APP_NAME
