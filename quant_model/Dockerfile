@@ -29,7 +29,5 @@ COPY ./shared/ ./shared/
 RUN useradd -m myuser
 USER myuser
 
-RUN echo "/usr/src/app/${DIRECTORY}/entrypoint.sh"
-
 # run entrypoint.sh
-CMD ["bash", "/usr/src/app/quant_model/entrypoint.sh"]
+CMD bash /usr/src/app/$DIRECTORY/entrypoint.sh
