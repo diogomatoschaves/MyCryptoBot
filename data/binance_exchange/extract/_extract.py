@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime, timedelta
 
@@ -13,7 +14,7 @@ from database.model.models import ExchangeData
 
 
 def get_missing_data(klines_generator, base, quote, interval, exchange='binance'):
-    print(f"Getting historical data up until now ({datetime.utcnow()})...")
+    logging.info(f"Getting historical data up until now ({datetime.utcnow()})...")
 
     symbol = base + quote
 
@@ -37,13 +38,27 @@ def get_historical_data(klines_generator, base, quote, exchange, interval, start
 
     klines = klines_generator(symbol, interval, start_date)
 
+    new_rows = 0
+
     for i, kline in enumerate(klines):
 
         fields = {field: get_value(kline) for field, get_value in const.BINANCE_KEY.items()}
 
-        save_new_entry_db(fields, quote, base, exchange, interval)
+        new_entry = save_new_entry_db(
+            ExchangeData,
+            fields,
+            quote,
+            base,
+            exchange,
+            interval
+        )
+
+        if new_entry:
+            new_rows += 1
 
         if i % 1E4 == 0:
-            print(fields["open_time"])
+            logging.info(fields["open_time"])
 
-    ExchangeData.objects.last().delete()
+    logging.info(f"Added {new_rows - 1} new rows.")
+
+    # ExchangeData.objects.last().delete()

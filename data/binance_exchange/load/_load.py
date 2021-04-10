@@ -33,13 +33,6 @@ def save_new_entry_db(model_class, row, quote, base, exchange, interval):
     fields = {}
     fields.update(row)
 
-    fields["open_time"] = fields["open_time"].tz_localize(pytz.utc)
-
-    if not pd.isnull(fields["close_time"]):
-        fields["close_time"] = fields["close_time"].tz_localize(pytz.utc)
-    else:
-        fields["close_time"] = None
-
     fields.update({
         "exchange": Exchange.objects.get_or_create(name=exchange)[0],
         "symbol": get_symbol(quote, base),
@@ -48,7 +41,7 @@ def save_new_entry_db(model_class, row, quote, base, exchange, interval):
 
     new_entry = True
     try:
-        obj = model_class.objects.create(**fields)
+        model_class.objects.create(**fields)
     except django.db.utils.IntegrityError:
 
         new_entry = False

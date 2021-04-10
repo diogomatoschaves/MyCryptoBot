@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime
 
@@ -31,7 +32,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         self.exchange = 'binance'
         self.candle_size = candle_size
 
-        self.conn_key = None
+        self.conn_key = {}
 
         self.raw_data = pd.DataFrame()
         self.data = pd.DataFrame()
@@ -40,7 +41,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
     def start_data_ingestion(self):
 
-        print(f"Starting data stream...")
+        logging.info(f"Starting data stream...")
 
         get_missing_data(
             self.get_historical_klines_generator,
@@ -50,28 +51,36 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             self.exchange
         )
 
-        self._start_websocket(self.symbol, self.websocket_callback)
+        self._start_kline_websockets(self.symbol, self.websocket_callback)
 
     def stop_data_ingestion(self):
+        logging.info(f"Stopping data stream...")
+
         self._stop_websocket()
 
-    def _start_websocket(self, symbol, callback, option='kline'):
+    def _start_kline_websockets(self, symbol, callback):
 
-        self.conn_key = getattr(self, f'start_{option}_socket')(symbol=symbol, callback=callback,
-                                                                interval=self.candle_size)
+        streams = [f"{symbol.lower()}@kline_{self.base_candle_size}", f"{symbol.lower()}@kline_{self.candle_size}"]
+
+        self.streams = streams
+
+        self.conn_key = self.start_multiplex_socket(streams, callback)
+
         self.start()
 
     def _stop_websocket(self):
-        self.stop_socket(self.conn_key)
+        self.close()
 
-    def process_incoming_data(self, model_class, data, data_length, candle_size):
+    def process_new_data(self, model_class, data, data_length, candle_size):
 
         new_entries = []
         if len(data) != data_length:
 
+            rows = data.iloc[data_length-1:-1].reset_index()
+
             data_length = len(data)
 
-            rows = data.iloc[:-1].reset_index()
+            logging.info(f"Added {len(rows)} new rows onto {model_class}")
 
             for index, row in rows.iterrows():
 
@@ -88,48 +97,59 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         return data, data_length, np.any(new_entries)
 
-    def websocket_callback(self, row):
+    def process_stream(self, model_class, row, data, data_length, candle_size):
 
-        # self.stop_socket(self.conn_key)
-        # print(row)
-
-        raw_data = pd.DataFrame(
+        new_data = pd.DataFrame(
             {
                 const.NAME_MAPPER[key]: [const.FUNCTION_MAPPER[key](value)]
-                for key, value in row["k"].items()
+                for key, value in row.items()
                 if key in const.NAME_MAPPER
             }
         ).set_index('open_time')
 
         # Raw data
-        self.raw_data = self.raw_data.append(raw_data)
+        data = data.append(new_data)
 
-        self.raw_data = resample_data(
-            self.raw_data,
-            self.base_candle_size,
+        data = resample_data(
+            data,
+            candle_size,
             const.COLUMNS_AGGREGATION_WEBSOCKET
         )
 
-        self.raw_data, self.raw_data_length, _ = self.process_incoming_data(
-            ExchangeData, self.raw_data, self.raw_data_length, self.base_candle_size
+        return self.process_new_data(
+            model_class, data, data_length, candle_size
         )
 
-        # Structured data
-        self.data = self.data.append(raw_data)
+    def websocket_callback(self, row):
 
-        self.data = resample_data(
-            self.data,
-            self.candle_size,
-            const.COLUMNS_AGGREGATION_WEBSOCKET
-        )
+        # self.stop_socket(self.conn_key)
+        print(row)
 
-        self.data, self.data_length, new_entry = self.process_incoming_data(
-            StructuredData, self.data, self.data_length, self.candle_size
-        )
+        kline_size = row["stream"].split('_')[-1]
 
-        # Notify quant model service that a new entry is available
-        if new_entry:
-            pass
+        if kline_size == self.base_candle_size:
+
+            self.raw_data, self.raw_data_length, _ = self.process_stream(
+                ExchangeData,
+                row["data"]["k"],
+                self.raw_data,
+                self.raw_data_length,
+                self.base_candle_size
+            )
+
+        elif kline_size == self.candle_size:
+
+            self.data, self.data_length, new_entry = self.process_stream(
+                StructuredData,
+                row["data"]["k"],
+                self.data,
+                self.data_length,
+                self.candle_size
+            )
+
+            if new_entry:
+                # TODO: Notify quant model service that there is new data
+                pass
 
 
 if __name__ == "__main__":
