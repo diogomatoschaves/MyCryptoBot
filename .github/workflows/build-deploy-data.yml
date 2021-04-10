@@ -25,12 +25,15 @@ jobs:
       - name: Build and push
         env:
           DIRECTORY: data/
+          HEROKU_PROCESS: web
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
-          HEROKU_PROCESS: web
+          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
         run: |
           cd $DIRECTORY
-          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../
+          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../ \
+            --arg BINANCE_API_KEY=$BINANCE_API_KEY BINANCE_API_SECRET=$BINANCE_API_SECRET
       - name: Release
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
