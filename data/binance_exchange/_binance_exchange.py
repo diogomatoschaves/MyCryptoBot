@@ -8,9 +8,9 @@ import django
 from binance.websockets import BinanceSocketManager
 
 import shared.exchanges.binance.constants as const
-from data.binance.extract import get_missing_data, get_historical_data
-from data.binance.load import save_new_entry_db
-from data.binance.transform import resample_data
+from data.binance_exchange.extract import get_missing_data, get_historical_data
+from data.binance_exchange.load import save_new_entry_db
+from data.binance_exchange.transform import resample_data
 from shared.exchanges import BinanceHandler
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
