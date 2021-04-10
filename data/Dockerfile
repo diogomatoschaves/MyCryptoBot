@@ -27,5 +27,8 @@ COPY ./shared/ ./shared/
 RUN useradd -m myuser
 USER myuser
 
+WORKDIR /usr/src/app/data/service
+
 # run entrypoint.sh
 CMD ["bash", "/usr/src/app/data/entrypoint.sh"]
+#CMD [ "gunicorn", "-w", "4", "--bind", "0.0.0.0:5000", "wsgi:app"]
