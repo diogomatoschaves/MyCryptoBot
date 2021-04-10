@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import django
 
 import shared.exchanges.binance.constants as const
-from data.binance.load import save_new_entry_db
+from data.binance_exchange.load import save_new_entry_db
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
