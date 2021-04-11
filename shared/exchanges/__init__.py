@@ -1,1 +1,1 @@
-from shared.exchanges.binance._binance import BinanceHandler
+from shared.exchanges.binance import BinanceHandler
