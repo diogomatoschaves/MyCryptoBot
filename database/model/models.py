@@ -217,7 +217,6 @@ class Exchange(models.Model):
 
 class ExchangeData(models.Model):
 
-    id = models.IntegerField(primary_key=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     open_time = models.DateTimeField(null=True, db_index=True)
     close_time = models.DateTimeField(null=True)
@@ -236,6 +235,9 @@ class ExchangeData(models.Model):
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")
 
+    def __str__(self):
+        return self.__name__
+
 
 class StructuredData(models.Model):
 
@@ -253,6 +255,9 @@ class StructuredData(models.Model):
     trades = models.IntegerField(null=True)
     taker_buy_asset_volume = models.FloatField(null=True)
     taker_buy_quote_volume = models.FloatField(null=True)
+
+    def __str__(self):
+        return self.__name__
 
     # 'url_shares',
     # 'unique_url_shares', 'reddit_posts', 'reddit_posts_score',
@@ -327,7 +332,7 @@ class StructuredData(models.Model):
 
 class Jobs(models.Model):
 
-    job_id = models.TextField()
+    job_id = models.TextField(null=True)
     app = models.TextField()
 
     class Meta:
