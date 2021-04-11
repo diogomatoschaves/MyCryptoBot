@@ -1,1 +1,1 @@
-from common.trading._trading import Trader
+from shared.trading._trading import Trader

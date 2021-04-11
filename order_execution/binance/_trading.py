@@ -1,32 +1,23 @@
-import os
-import re
 from os import environ as env
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytz
 from binance.exceptions import BinanceAPIException
 from dotenv import load_dotenv, find_dotenv
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
-from django.db import connection
-import pandas as pd
-import django
 
-from data.extract.scrapers.binance import get_historical_data
+from shared.exchanges import BinanceHandler
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
-django.setup()
-
-from database.model.models import ExchangeData
-from common.trading import Trader
-import order_execution.binance.constants as const
+from shared.trading import Trader
+import shared.exchanges.binance.constants as const
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
 
-class BinanceTrader(Client, BinanceSocketManager, Trader):
+class BinanceTrader(BinanceHandler, Trader):
 
     AUTO_REPAY = 'AUTO_REPAY'
 
@@ -86,18 +77,9 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
         else:
             return method
 
-    def start_trading(self):
-
-        self._get_historical_data()
-
-        self._get_data()
-        self._start_websocket(self.symbol, self.websocket_callback)
-
     def stop_trading(self):
 
-        print("Stopping data stream")
-
-        self.stop_socket(self.conn_key)
+        print("Closing positions and repaying loans")
 
         self.close_pos(date=datetime.utcnow(), row=None)
 
@@ -171,92 +153,6 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
                 continue
 
             self.create_margin_loan(asset=asset_symbol, amount=amount, isIsolated=True, symbol=self.symbol)
-
-    def _get_historical_data(self):
-
-        print(f"Getting historical data up until now ({datetime.utcnow()})...")
-
-        start_date = ExchangeData.objects \
-                         .filter(exchange=self.exchange, symbol=self.symbol) \
-                         .order_by('open_time').last().open_time - timedelta(hours=6)
-
-        get_historical_data(
-            'binance',
-            self,
-            self.base,
-            self.quote,
-            self.KLINE_INTERVAL_1MINUTE,
-            int(start_date.timestamp() * 1000)
-        )
-
-    def _get_query(self, days):
-
-        query = str(
-            ExchangeData.objects.filter(
-                exchange=f"'{self.exchange}'",
-                symbol=f"'{self.symbol}'",
-                open_time__gte=f"{(datetime.utcnow() - timedelta(days=days)).date()}"
-            ).order_by('open_time').query
-        )
-
-        pattern = r"\d{4}-\d{2}-\d{2}\s*\d+:\d+:\d+"
-        query = re.sub(pattern, r'"\g<0>"', query)
-
-        return query
-
-    def _get_data(self):
-
-        print(f"Loading the data...")
-
-        query = self._get_query(200)
-
-        # TODO: Adjust time based on candle size
-        self.data = pd.read_sql_query(query, connection, parse_dates=['open_time'], index_col='open_time')
-
-        self.data = self._resample_data(self.data, const.COLUMNS_AGGREGATION).iloc[:-1]
-        self.data_length = len(self.data)
-
-    def _resample_data(self, data, aggregation_method):
-        return data \
-            .resample(const.CANDLE_SIZES_MAPPER[self.candle_size]) \
-            .agg(aggregation_method) \
-            .ffill()
-
-    def websocket_callback(self, row):
-
-        # self.stop_socket(self.conn_key)
-        # print(row)
-
-        df = pd.DataFrame(
-            {
-                const.NAME_MAPPER[key]: [const.FUNCTION_MAPPER[key](value)]
-                for key, value in row["k"].items()
-                if key in const.NAME_MAPPER
-            }
-        ).set_index('open_time')
-
-        self.data = self.data.append(df)
-
-        self.data = self._resample_data(self.data, const.COLUMNS_AGGREGATION_WEBSOCKET)
-
-        # TODO: Save last_row in database
-        if len(self.data) != self.data_length:
-
-            self.data_length = len(self.data)
-
-            data = self._update_data(self.data)[:-1]
-
-            last_row = data.iloc[-1]
-
-            signal = self.strategy.get_signal(last_row)
-
-            if signal == self.position:
-                print(f"{last_row.name} | Last close price: {last_row[self.price_col]}")
-
-            # self._update_account_status()
-            amount = 'all'
-
-            self.trade(signal, last_row.name, last_row, amount=amount)
 
     def buy_instrument(self, date, row, units=None, amount=None, **kwargs):
         self._execute_order(
@@ -350,13 +246,6 @@ class BinanceTrader(Client, BinanceSocketManager, Trader):
     def _get_average_order_price(order):
         s = sum([float(fill["price"]) * float(fill["qty"]) for fill in order["fills"]])
         return s / float(order["executedQty"])
-
-    def _start_websocket(self, symbol, callback, option='kline'):
-        print(f"Starting data stream...")
-
-        self.conn_key = getattr(self, f'start_{option}_socket')(symbol=symbol, callback=callback,
-                                                                interval=self.candle_size)
-        self.start()
 
     def repay_loans(self):
         for asset in [self.base, self.quote]:

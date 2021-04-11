@@ -11,8 +11,11 @@ BINANCE_API_SECRET = "BINANCE_API_SECRET"
 CANDLE_SIZES_MAPPER = {
     '1m': '1T',
     '5m': '5T',
+    '10m': '10T',
     '15m': '15T',
-    '1h': '1H'
+    '30m': '30T',
+    '1h': '1H',
+    '1d': '1D',
 }
 
 COLUMNS_AGGREGATION = {
@@ -56,8 +59,8 @@ NAME_MAPPER = {
 }
 
 FUNCTION_MAPPER = {
-    "t": lambda x: datetime.fromtimestamp(x / 1000).astimezone(pytz.utc).replace(tzinfo=None),
-    "T": lambda x: datetime.fromtimestamp(x / 1000).astimezone(pytz.utc).replace(tzinfo=None),
+    "t": lambda x: datetime.fromtimestamp(x / 1000).astimezone(pytz.utc),
+    "T": lambda x: datetime.fromtimestamp(x / 1000).astimezone(pytz.utc),
     "o": lambda x: float(x),
     "c": lambda x: float(x),
     "h": lambda x: float(x),
