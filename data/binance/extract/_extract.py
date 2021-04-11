@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import django
 
 import shared.exchanges.binance.constants as const
-from data.binance_exchange.load import save_new_entry_db
+from data.binance.load import save_new_entry_db
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -59,6 +59,4 @@ def get_historical_data(klines_generator, base, quote, exchange, interval, start
         if i % 1E4 == 0:
             logging.info(fields["open_time"])
 
-    logging.info(f"Added {new_rows - 1} new rows.")
-
-    # ExchangeData.objects.last().delete()
+    logging.info(f"Added {new_rows} new rows.")

@@ -8,10 +8,10 @@ import django
 from binance.websockets import BinanceSocketManager
 
 import shared.exchanges.binance.constants as const
-from data.binance_exchange.extract import get_missing_data, get_historical_data
-from data.binance_exchange.load import save_new_entry_db
-from data.binance_exchange.transform import resample_data
-from shared.exchanges import BinanceHandler
+from data.binance.extract import get_missing_data, get_historical_data
+from data.binance.load import save_new_entry_db
+from data.binance.transform import resample_data
+from shared.exchanges.binance import BinanceHandler
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -32,16 +32,19 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         self.exchange = 'binance'
         self.candle_size = candle_size
 
-        self.conn_key = {}
+        self.conn_key = ''
 
         self.raw_data = pd.DataFrame()
         self.data = pd.DataFrame()
         self.raw_data_length = 1
         self.data_length = 1
 
-    def start_data_ingestion(self):
+        self.started = False
 
-        logging.info(f"Starting data stream...")
+    def __str__(self):
+        return self.__name__
+
+    def start_data_ingestion(self):
 
         get_missing_data(
             self.get_historical_klines_generator,
@@ -54,7 +57,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         self._start_kline_websockets(self.symbol, self.websocket_callback)
 
     def stop_data_ingestion(self):
-        logging.info(f"Stopping data stream...")
+        logging.info(f"Stopping {', '.join(self.streams)} data stream(s).")
 
         self._stop_websocket()
 
@@ -62,13 +65,22 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         streams = [f"{symbol.lower()}@kline_{self.base_candle_size}", f"{symbol.lower()}@kline_{self.candle_size}"]
 
+        logging.info(f"Starting {', '.join(streams)} data stream(s).")
+
         self.streams = streams
 
         self.conn_key = self.start_multiplex_socket(streams, callback)
 
-        self.start()
+        if not self.started:
+            self.start()
+            self.started = True
 
+    # TODO: Wrap this in AttributeError exception handling
     def _stop_websocket(self):
+        ExchangeData.objects.last().delete()
+
+        self.stop_socket(self.conn_key)
+
         self.close()
 
     def process_new_data(self, model_class, data, data_length, candle_size):
@@ -80,7 +92,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
             data_length = len(data)
 
-            logging.info(f"Added {len(rows)} new rows onto {model_class}")
+            logging.info(f"Added {len(rows)} new rows onto {model_class}.")
 
             for index, row in rows.iterrows():
 
@@ -120,6 +132,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             model_class, data, data_length, candle_size
         )
 
+    # TODO: Add timer to check if it's below 24h
     def websocket_callback(self, row):
 
         # self.stop_socket(self.conn_key)
