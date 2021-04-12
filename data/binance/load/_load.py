@@ -44,8 +44,6 @@ def save_new_entry_db(model_class, row, quote, base, exchange, interval):
     try:
         model_class.objects.create(**fields)
     except django.db.utils.IntegrityError as e:
-        logging.info(e)
-        logging.info(f"Alredy exists: {fields}")
 
         new_entry = False
 
