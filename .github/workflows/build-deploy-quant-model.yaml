@@ -32,7 +32,7 @@ jobs:
       - name: Release
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
+          HEROKU_APP_NAME: ${{ secrets.HEROKU_MODEL_APP_NAME }}
           HEROKU_WEB_PROCESS: web
           HEROKU_WORKER_PROCESS: worker
-        run: heroku container:release $HEROKU_WEB_PROCESS $HEROKU_WORKER_PROCESS  --app $HEROKU_APP_NAME
+        run: heroku container:release $HEROKU_WEB_PROCESS $HEROKU_WORKER_PROCESS --app $HEROKU_APP_NAME
