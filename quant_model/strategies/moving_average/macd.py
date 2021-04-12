@@ -26,18 +26,16 @@ class MACD(MACD_TA, StrategyMixin):
             self.symbol, self._window_fast, self._window_slow, self._window_sign
         )
 
-    def update_data(self, data):
+    def update_data(self):
         """ Retrieves and prepares the data.
         """
 
-        data = super(MACD, self).update_data(data)
+        super(MACD, self).update_data()
 
-        self._close = data[self.price_col]
+        self._close = self.data[self.price_col]
         self._run()
 
-        data["macd_diff"] = self.macd_diff()
-
-        return data
+        self.data["macd_diff"] = self.macd_diff()
 
     def set_parameters(self, params=None):
         """ Updates SMA parameters and resp. time series.
@@ -63,14 +61,18 @@ class MACD(MACD_TA, StrategyMixin):
         if window_signal is not None:
             self._window_sign = window_signal
 
-        self.data = self.update_data(self.data)
+        self.update_data()
 
     def _calculate_positions(self, data):
         data["position"] = np.where(data["macd_diff"] > 0, 1, -1)
 
         return data
 
-    def get_signal(self, row):
+    def get_signal(self, row=None):
+
+        if row is None:
+            row = self.data.iloc[-1]
+
         if row["macd_diff"] > 0:
             return 1
         elif row["macd_diff"] < 0:

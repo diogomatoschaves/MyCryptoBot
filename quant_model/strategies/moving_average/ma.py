@@ -21,19 +21,17 @@ class MA(StrategyMixin):
     def _get_test_title(self):
         return "Testing SMA strategy | {} | SMA_S = {}".format(self.symbol, self.sma)
 
-    def update_data(self, data):
+    def update_data(self):
         """ Retrieves and prepares the data.
         """
-        data = super(MA, self).update_data(data)
+        super(MA, self).update_data()
 
         if self.mav == 'sma':
-            data["SMA"] = sma_indicator(close=data[self.price_col], window=self.sma)
+            self.data["SMA"] = sma_indicator(close=self.data[self.price_col], window=self.sma)
         elif self.mav == 'ema':
-            data["SMA"] = ema_indicator(close=data[self.price_col], window=self.sma)
+            self.data["SMA"] = ema_indicator(close=self.data[self.price_col], window=self.sma)
         else:
             raise('Method not supported')
-
-        return data
 
     def set_parameters(self, sma=None):
         """ Updates SMA parameters and resp. time series.
@@ -48,7 +46,7 @@ class MA(StrategyMixin):
 
         self.sma = int(sma)
 
-        self.data = self.update_data(self.data)
+        self.update_data()
 
     def _calculate_positions(self, data):
 
@@ -56,7 +54,11 @@ class MA(StrategyMixin):
 
         return data
 
-    def get_signal(self, row):
+    def get_signal(self, row=None):
+
+        if row is None:
+            row = self.data.iloc[-1]
+
         if row["SMA"] > row[self.price_col]:
             return 1
         elif row["SMA"] < row[self.price_col]:

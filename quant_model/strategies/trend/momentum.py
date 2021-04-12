@@ -19,13 +19,12 @@ class Momentum(StrategyMixin):
     def _get_test_title(self):
         return "Testing Momentum strategy | {} | window: {}".format(self.symbol, self.window)
 
-    def update_data(self, data):
+    def update_data(self):
         """ Retrieves and prepares the data.
         """
-        data = super(Momentum, self).update_data(data)
+        super(Momentum, self).update_data()
 
-        data["rolling_returns"] = data[self.returns_col].rolling(self.window, min_periods=1).mean()
-        return data
+        self.data["rolling_returns"] = self.data[self.returns_col].rolling(self.window, min_periods=1).mean()
 
     def set_parameters(self, window):
         """ Updates SMA parameters and resp. time series.
@@ -33,14 +32,18 @@ class Momentum(StrategyMixin):
         if window is not None:
             self.window = int(window)
 
-        self.data = self.update_data(self.data)
+        self.update_data()
 
     def _calculate_positions(self, data):
         data["position"] = np.sign(data[self.returns_col].rolling(self.window, min_periods=1).mean())
 
         return data
 
-    def get_signal(self, row):
+    def get_signal(self, row=None):
+
+        if row is None:
+            row = self.data.iloc[-1]
+
         if row["rolling_returns"] >= 0:
             return 1
         else:
