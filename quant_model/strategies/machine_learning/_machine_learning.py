@@ -8,7 +8,7 @@ from quant_model.modelling.model_training import train_model
 from quant_model.strategies._mixin import StrategyMixin
 
 
-class ML(StrategyMixin):
+class MachineLearning(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
@@ -51,7 +51,7 @@ class ML(StrategyMixin):
         """ Retrieves and prepares the data.
         """
 
-        super(ML, self).update_data()
+        super(MachineLearning, self).update_data()
 
         data = self.data
 

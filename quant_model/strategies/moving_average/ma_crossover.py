@@ -4,7 +4,7 @@ from ta.trend import ema_indicator, sma_indicator
 from quant_model.strategies._mixin import StrategyMixin
 
 
-class MACrossover(StrategyMixin):
+class MovingAverageCrossover(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
@@ -25,7 +25,7 @@ class MACrossover(StrategyMixin):
     def update_data(self):
         """ Retrieves and prepares the data.
         """
-        super(MACrossover, self).update_data()
+        super(MovingAverageCrossover, self).update_data()
 
         data = self.data
 
