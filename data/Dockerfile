@@ -5,6 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE 1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED 1
 
+ENV DIRECTORY data
+
 # Install and setup poetry
 RUN pip install -U pip \
     && apt-get update \
@@ -14,21 +16,18 @@ RUN pip install -U pip \
     && pip install psycopg2-binary==2.8.6
 ENV PATH="${PATH}:/root/.poetry/bin"
 
-COPY data/poetry.lock data/pyproject.toml /
+COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /
 
 RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi
 
 WORKDIR /usr/src/app
+
 COPY ./database/ ./database/
-COPY ./data/ ./data/
+COPY ./$DIRECTORY/ ./$DIRECTORY/
 COPY ./shared/ ./shared/
 
 RUN useradd -m myuser
 USER myuser
 
-WORKDIR /usr/src/app/data/service
-
-# run entrypoint.sh
-CMD ["bash", "/usr/src/app/data/entrypoint.sh"]
-#CMD [ "gunicorn", "-w", "4", "--bind", "0.0.0.0:5000", "wsgi:app"]
+CMD bash /usr/src/app/$DIRECTORY/entrypoint.sh
