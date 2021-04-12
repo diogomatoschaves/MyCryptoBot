@@ -22,10 +22,12 @@ class MACrossover(StrategyMixin):
     def _get_test_title(self):
         return "Testing SMA strategy | {} | SMA_S = {} & SMA_L = {}".format(self.symbol, self.SMA_S, self.SMA_L)
 
-    def update_data(self, data):
+    def update_data(self):
         """ Retrieves and prepares the data.
         """
-        data = super(MACrossover, self).update_data(data)
+        super(MACrossover, self).update_data()
+
+        data = self.data
 
         if self.mav == 'sma':
             data["SMA_S"] = sma_indicator(close=data[self.price_col], window=self.SMA_S)
@@ -37,7 +39,7 @@ class MACrossover(StrategyMixin):
         else:
             raise('Method not supported')
 
-        return data
+        self.data = data
 
     def set_parameters(self, sma=None):
         """ Updates SMA parameters and resp. time series.
@@ -57,14 +59,18 @@ class MACrossover(StrategyMixin):
         if SMA_L is not None:
             self.SMA_L = int(SMA_L)
 
-        self.data = self.update_data(self.data)
+        self.update_data()
 
     def _calculate_positions(self, data):
         data["position"] = np.where(data["SMA_S"] > data["SMA_L"], 1, -1)
 
         return data
 
-    def get_signal(self, row):
+    def get_signal(self, row=None):
+
+        if row is None:
+            row = self.data.iloc[-1]
+
         if row["SMA_S"] > row["SMA_L"]:
             return 1
         elif row["SMA_S"] < row["SMA_L"]:

@@ -47,11 +47,14 @@ class ML(StrategyMixin):
     def _get_test_title(self):
         return "Testing ML strategy | {} | estimator = {}".format(self.symbol, self.estimator)
 
-    def update_data(self, data):
+    def update_data(self):
         """ Retrieves and prepares the data.
         """
 
-        data = super(ML, self).update_data(data)
+        super(ML, self).update_data()
+
+        data = self.data
+
         data = data.drop(columns=self.excluded_features)
 
         X_lag = self.get_lag_model_x(data)
@@ -61,8 +64,6 @@ class ML(StrategyMixin):
         self.X, self.y = self.get_x_y(X_lag, X_roll, y)
 
         self._train_model(self.estimator, self.test_size, self.degree, self.print_results)
-
-        return data
 
     def set_parameters(self, ml_params=None):
         """ Updates SMA parameters and resp. time series.
@@ -86,7 +87,7 @@ class ML(StrategyMixin):
         if print_results is not None:
             self.print_results = print_results
 
-        self.data = self.update_data(self.data)
+        self.update_data()
 
     @staticmethod
     def get_x_y(X_lag, X_roll, y):
@@ -155,7 +156,11 @@ class ML(StrategyMixin):
 
         return data
 
-    def get_signal(self, row):
+    def get_signal(self, row=None):
+
+        if row is None:
+            row = self.data.iloc[-1]
+
         return self.pipeline.predict(pd.DataFrame(row).T)
 
     def _get_data(self):

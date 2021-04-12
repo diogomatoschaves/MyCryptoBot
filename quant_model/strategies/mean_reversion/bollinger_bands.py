@@ -20,16 +20,18 @@ class BollingerBands(StrategyMixin):
     def _get_test_title(self):
         return "Testing Bollinger Bands Strategy: {} | ma = {} & sd = {}".format(self.symbol, self.ma, self.sd)
 
-    def update_data(self, data):
+    def update_data(self):
         """ Retrieves and prepares the data.
         """
-        data = super(BollingerBands, self).update_data(data)
+        super(BollingerBands, self).update_data()
+
+        data = self.data
 
         data["sma"] = data[self.price_col].rolling(self.ma).mean()
         data["upper"] = data["sma"] + data[self.price_col].rolling(self.ma).std() * self.sd
         data["lower"] = data["sma"] - data[self.price_col].rolling(self.ma).std() * self.sd
 
-        return data
+        self.data = data
 
     def set_parameters(self, params=None):
         """ Updates SMA parameters and resp. time series.
@@ -49,7 +51,7 @@ class BollingerBands(StrategyMixin):
         if sd is not None:
             self.sd = sd
 
-        self.data = self.update_data(self.data)
+        self.update_data()
 
     def _calculate_positions(self, data):
         data["distance"] = data[self.price_col] - data["sma"]
@@ -60,7 +62,11 @@ class BollingerBands(StrategyMixin):
 
         return data
 
-    def get_signal(self, row):
+    def get_signal(self, row=None):
+
+        if row is None:
+            row = self.data.iloc[-1]
+
         if self.position == 0: # when neutral
             if row[self.price_col] < row["lower"]:  # signal to go long
                 return 1

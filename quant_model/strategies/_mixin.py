@@ -10,7 +10,8 @@ class StrategyMixin:
         self.symbol = None
 
         if data is not None:
-            self.data = self.update_data(data.copy())
+            self.data = data.copy()
+            self.update_data()
 
     def _get_data(self):
         return self.data
@@ -18,12 +19,15 @@ class StrategyMixin:
     def set_data(self, data):
         if data is not None:
             self.data = data
-            self.data = self.update_data(self.data)
+            self.data = self.update_data()
 
-    def _calculate_returns(self, data):
+    def _calculate_returns(self):
+
+        data = self.data
+
         data[self.returns_col] = np.log(data[self.price_col] / data[self.price_col].shift(1))
 
-        return data
+        self.data = data
 
-    def update_data(self, data):
-        return self._calculate_returns(data)
+    def update_data(self):
+        self._calculate_returns()
