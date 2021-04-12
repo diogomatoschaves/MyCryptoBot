@@ -15,7 +15,6 @@ class ML(StrategyMixin):
     def __init__(
         self,
         estimator,
-        data=None,
         lag_features=None,
         rolling_features=None,
         excluded_features=None,
@@ -24,6 +23,7 @@ class ML(StrategyMixin):
         test_size=0.2,
         degree=1,
         print_results=True,
+        data=None,
         **kwargs
     ):
         self.estimator = estimator
