@@ -1,17 +1,17 @@
 import numpy as np
 import pandas as pd
-from ta.trend import MACD as MACD_TA
+from ta.trend import MACD
 
 from quant_model.strategies._mixin import StrategyMixin
 
 
-class MACD(MACD_TA, StrategyMixin):
+class MovingAverageConvergenceDivergence(MACD, StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
     def __init__(self, window_slow=26, window_fast=12, window_signal=9, data=None, **kwargs):
 
-        MACD_TA.__init__(self, pd.Series(), window_slow, window_fast, window_signal)
+        MACD.__init__(self, pd.Series(), window_slow, window_fast, window_signal)
         StrategyMixin.__init__(self, data, **kwargs)
 
         self._close = pd.Series()
@@ -30,7 +30,7 @@ class MACD(MACD_TA, StrategyMixin):
         """ Retrieves and prepares the data.
         """
 
-        super(MACD, self).update_data()
+        super(MovingAverageConvergenceDivergence, self).update_data()
 
         self._close = self.data[self.price_col]
         self._run()

@@ -4,7 +4,7 @@ from ta.trend import sma_indicator, ema_indicator
 from quant_model.strategies._mixin import StrategyMixin
 
 
-class MA(StrategyMixin):
+class MovingAverage(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
@@ -24,7 +24,7 @@ class MA(StrategyMixin):
     def update_data(self):
         """ Retrieves and prepares the data.
         """
-        super(MA, self).update_data()
+        super(MovingAverage, self).update_data()
 
         if self.mav == 'sma':
             self.data["SMA"] = sma_indicator(close=self.data[self.price_col], window=self.sma)
