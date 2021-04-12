@@ -26,13 +26,13 @@ jobs:
           DIRECTORY: quant_model/
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_MODEL_APP_NAME }}
-          HEROKU_PROCESS: web
         run: |
           cd $DIRECTORY
-          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../
+          heroku container:push --recursive --app $HEROKU_APP_NAME --context-path=../ --arg APP_NAME=$HEROKU_APP_NAME
       - name: Release
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
-          HEROKU_PROCESS: web
-        run: heroku container:release $HEROKU_PROCESS --app $HEROKU_APP_NAME
+          HEROKU_WEB_PROCESS: web
+          HEROKU_WORKER_PROCESS: worker
+        run: heroku container:release $HEROKU_WEB_PROCESS $HEROKU_WORKER_PROCESS  --app $HEROKU_APP_NAME

@@ -81,7 +81,7 @@ class ExchangeData(models.Model):
         unique_together = ("open_time", "exchange", "interval", "symbol")
 
     def __str__(self):
-        return self.__name__
+        return "ExchangeData"
 
 
 class StructuredData(models.Model):
