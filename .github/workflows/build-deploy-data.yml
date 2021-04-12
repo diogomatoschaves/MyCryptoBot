@@ -50,4 +50,4 @@ jobs:
         env:
           HEROKU_APP_NAME: ${{ secrets.HEROKU_DATA_APP_NAME }}
         run: |
-          heroku run python database/manage.py migrate --app $HEROKU_APP_NAME
+          heroku run cd ../.. & python database/manage.py migrate --app $HEROKU_APP_NAME
