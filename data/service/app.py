@@ -47,7 +47,6 @@ def stop_instance(instance_symbol):
     for instance in binance_instances:
 
         if instance_symbol == instance.symbol:
-            logging.info(f"Stopping {instance.symbol} data pipeline.")
             instance.stop_data_ingestion()
         else:
             new_binance_instances.append(instance)

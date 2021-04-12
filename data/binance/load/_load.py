@@ -1,3 +1,4 @@
+import logging
 import os
 
 import pytz
@@ -42,7 +43,9 @@ def save_new_entry_db(model_class, row, quote, base, exchange, interval):
     new_entry = True
     try:
         model_class.objects.create(**fields)
-    except django.db.utils.IntegrityError:
+    except django.db.utils.IntegrityError as e:
+        logging.info(e)
+        logging.info(f"Alredy exists: {fields}")
 
         new_entry = False
 
