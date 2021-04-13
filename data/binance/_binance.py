@@ -3,32 +3,38 @@ import os
 from datetime import datetime
 
 import pandas as pd
-import numpy as np
 import django
+import requests
 from binance.websockets import BinanceSocketManager
 
 import shared.exchanges.binance.constants as const
-from data.binance.extract import get_missing_data, get_historical_data
-from data.binance.load import save_new_entry_db
-from data.binance.transform import resample_data
+from data.binance.extract import fetch_missing_data, get_historical_data
+from data.binance.load import save_rows_db
+from data.binance.transform import resample_data, transform_data
+from data.service.helpers import STRATEGIES
 from shared.exchanges.binance import BinanceHandler
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import ExchangeData, StructuredData
+from database.model.models import ExchangeData, StructuredData, Symbol
 
 
 class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
-    def __init__(self, base="BTC", quote="USDT", candle_size='1h'):
+    """
+    Class that handles realtime / incoming data from the Binance API, and
+    triggers signal generation whenever a new step has been surpassed (currently
+    only time based steps).
+    """
+
+    def __init__(self, strategy, params, symbol='BTCUSDT', candle_size='1h'):
 
         BinanceHandler.__init__(self)
         BinanceSocketManager.__init__(self, self)
 
-        self.base = base
-        self.quote = quote
-        self.symbol = base + quote
+        self._check_symbol(symbol)
+        self._check_strategy(strategy, params)
         self.exchange = 'binance'
         self.candle_size = candle_size
 
@@ -44,28 +50,87 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
     def __str__(self):
         return self.__name__
 
-    def start_data_ingestion(self):
+    def _check_symbol(self, symbol):
+        """
+        Checks if requested symbol exists.
 
-        get_missing_data(
-            self.get_historical_klines_generator,
-            self.base,
-            self.quote,
-            self.base_candle_size,
-            self.exchange
+        Parameters
+        ----------
+        symbol : str
+                 initialized symbol to check validity of.
+
+        Returns
+        -------
+        sets instance parameters: symbol, quote, base
+
+        """
+        try:
+            symbol_obj = Symbol.objects.get(name=symbol)
+        except Symbol.DoesNotExist:
+            logging.info(f"{symbol} is not valid.")
+            raise Exception(f"{symbol} is not a valid symbol.")
+
+        self.symbol = symbol
+        self.base = symbol_obj.base.symbol,
+        self.quote = symbol_obj.quote.symbol,
+
+    def _check_strategy(self, strategy, params):
+        if strategy in STRATEGIES:
+            self.strategy = strategy
+
+            for key in params:
+                if key not in STRATEGIES[strategy]["params"]:
+                    raise Exception(f"Provided {key} in params is not valid.")
+
+            self.params = params
+        else:
+            raise Exception(f"{strategy} is not a valid strategy.")
+
+    def start_data_ingestion(self):
+        """
+        Public method which sets in motion the data pipeline for a given symbol.
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Get missing raw data
+        self._etl_pipeline(ExchangeData, self.base_candle_size, count_updates=False)
+
+        # Get missing structured data
+        self._etl_pipeline(
+            StructuredData,
+            self.candle_size,
+            remove_zeros=True,
+            remove_rows=True,
+            count_updates=False
         )
 
-        self._start_kline_websockets(self.symbol, self.websocket_callback)
+        self._start_kline_websockets(self.symbol, self._websocket_callback)
 
     def stop_data_ingestion(self):
-        logging.info(f"Stopping {', '.join(self.streams)} data stream(s).")
+        """
+        Public method which stops the data pipeline for the symbol.
+
+        Returns
+        -------
+        None
+
+        """
+        logging.info(f"{self.symbol}: Stopping {', '.join(self.streams)} data stream(s).")
 
         self._stop_websocket()
 
     def _start_kline_websockets(self, symbol, callback):
 
-        streams = [f"{symbol.lower()}@kline_{self.base_candle_size}", f"{symbol.lower()}@kline_{self.candle_size}"]
+        streams = [
+            f"{symbol.lower()}@kline_{self.base_candle_size}",
+            f"{symbol.lower()}@kline_{self.candle_size}"
+        ]
 
-        logging.info(f"Starting {', '.join(streams)} data stream(s).")
+        logging.info(f"{self.symbol}: Starting {', '.join(streams)} data stream(s).")
 
         self.streams = streams
 
@@ -83,33 +148,90 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         self.close()
 
-    def process_new_data(self, model_class, data, data_length, candle_size):
+    def _etl_pipeline(
+        self,
+        model_class,
+        candle_size,
+        data=None,
+        remove_zeros=False,
+        remove_rows=False,
+        columns_aggregation=const.COLUMNS_AGGREGATION,
+        count_updates=True
+    ):
 
-        new_entries = []
-        if len(data) != data_length:
+        # Extract
+        if data is None:
+            data = fetch_missing_data(
+                model_class,
+                self.get_historical_klines_generator,
+                self.symbol,
+                self.base_candle_size,
+                candle_size,
+                self.exchange
+            )
 
-            rows = data.iloc[data_length-1:-1].reset_index()
+        # Transform
+        data = transform_data(
+            data,
+            candle_size,
+            self.exchange,
+            self.symbol,
+            columns_aggregation=columns_aggregation,
+            is_removing_zeros=remove_zeros,
+            is_removing_rows=remove_rows
+        )
 
-            data_length = len(data)
+        # Load
+        new_entries = save_rows_db(model_class, data, count_updates=count_updates)
 
-            logging.info(f"Added {len(rows)} new rows onto {model_class}.")
+        logging.info(f"{self.symbol}: Added {new_entries} new rows into {model_class}.")
 
-            for index, row in rows.iterrows():
+        return new_entries
 
-                new_entry = save_new_entry_db(
-                    model_class,
-                    row,
-                    self.quote,
-                    self.base,
-                    self.exchange,
-                    candle_size
-                )
+    # TODO: Add timer to check if it's below 24h
+    def _websocket_callback(self, row):
 
-                new_entries.append(new_entry)
+        logging.debug(row)
 
-        return data, data_length, np.any(new_entries)
+        kline_size = row["stream"].split('_')[-1]
 
-    def process_stream(self, model_class, row, data, data_length, candle_size):
+        if kline_size == self.base_candle_size:
+
+            self.raw_data, self.raw_data_length, _ = self._process_stream(
+                ExchangeData,
+                row["data"]["k"],
+                self.raw_data,
+                self.raw_data_length,
+                self.base_candle_size
+            )
+
+        if kline_size == self.candle_size:
+
+            self.data, self.data_length, new_entry = self._process_stream(
+                StructuredData,
+                row["data"]["k"],
+                self.data,
+                self.data_length,
+                self.candle_size,
+                remove_zeros=True,
+                remove_rows=True,
+            )
+
+            # TODO: Implement logic to send this request
+            #  only if all data sources have updated the row.
+            if new_entry:
+                self.trigger_signal()
+
+    def _process_stream(
+        self,
+        model_class,
+        row,
+        data,
+        data_length,
+        candle_size,
+        remove_zeros=False,
+        remove_rows=False,
+    ):
 
         new_data = pd.DataFrame(
             {
@@ -119,7 +241,6 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             }
         ).set_index('open_time')
 
-        # Raw data
         data = data.append(new_data)
 
         data = resample_data(
@@ -128,61 +249,77 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             const.COLUMNS_AGGREGATION_WEBSOCKET
         )
 
-        return self.process_new_data(
-            model_class, data, data_length, candle_size
+        return self._process_new_data(
+            model_class,
+            data,
+            data_length,
+            candle_size,
+            remove_zeros=remove_zeros,
+            remove_rows=remove_rows
         )
 
-    # TODO: Add timer to check if it's below 24h
-    def websocket_callback(self, row):
+    def _process_new_data(
+        self,
+        model_class,
+        data,
+        data_length,
+        candle_size,
+        remove_zeros=False,
+        remove_rows=False
+    ):
+        new_entries = 0
+        if len(data) != data_length:
 
-        # self.stop_socket(self.conn_key)
-        print(row)
+            rows = data.iloc[data_length-1:-1].reset_index()
 
-        kline_size = row["stream"].split('_')[-1]
+            data_length = len(data)
 
-        if kline_size == self.base_candle_size:
-
-            self.raw_data, self.raw_data_length, _ = self.process_stream(
-                ExchangeData,
-                row["data"]["k"],
-                self.raw_data,
-                self.raw_data_length,
-                self.base_candle_size
+            new_entries = self._etl_pipeline(
+                model_class,
+                candle_size,
+                data=rows,
+                remove_zeros=remove_zeros,
+                remove_rows=remove_rows,
+                columns_aggregation=const.COLUMNS_AGGREGATION
             )
 
-        elif kline_size == self.candle_size:
+        return data, data_length, new_entries > 0
 
-            self.data, self.data_length, new_entry = self.process_stream(
-                StructuredData,
-                row["data"]["k"],
-                self.data,
-                self.data_length,
-                self.candle_size
-            )
+    def trigger_signal(self):
 
-            if new_entry:
-                # TODO: Notify quant model service that there is new data
-                pass
+        url = os.getenv("MODEL_APP_URL") + "/generate_signal"
+
+        payload = {
+            "symbol": self.symbol,
+            "strategy": self.strategy,
+            "params": self.params,
+            "candle_size": self.candle_size,
+            "exchange": self.exchange,
+        }
+
+        logging.info(
+            f"{self.symbol}: Sending signal: " +
+            ", ".join([f"{key}: {value}" for key, value in payload.items()])
+        )
+
+        r = requests.post(url, json=payload)
+
+        logging.debug(r.text)
 
 
 if __name__ == "__main__":
 
-    quote = "USDT"
-    base = "BTC"
-
-    symbol = base + quote
+    symbol = 'BTCUSDT'
 
     interval = '5m'
 
-    binance_data_handler = BinanceDataHandler(quote, base)
-
     start_date = int(datetime(2020, 12, 21, 8, 0).timestamp() * 1000)
 
+    binance_data_handler = BinanceHandler()
+
     get_historical_data(
+        ExchangeData,
         binance_data_handler.get_historical_klines_generator,
-        base,
-        quote,
         'binance',
-        interval,
-        start_date
+        interval
     )

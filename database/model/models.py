@@ -235,8 +235,8 @@ class ExchangeData(models.Model):
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")
 
-    def __str__(self):
-        return "ExchangeData"
+    def __repr__(self):
+        return self.__class__.__name__
 
 
 class StructuredData(models.Model):
@@ -256,8 +256,8 @@ class StructuredData(models.Model):
     taker_buy_asset_volume = models.FloatField(null=True)
     taker_buy_quote_volume = models.FloatField(null=True)
 
-    def __str__(self):
-        return self.__name__
+    def __repr__(self):
+        return self.__class__.__name__
 
     # 'url_shares',
     # 'unique_url_shares', 'reddit_posts', 'reddit_posts_score',
@@ -272,59 +272,6 @@ class StructuredData(models.Model):
     # 'correlation_rank', 'galaxy_score', 'volatility', 'alt_rank',
     # 'volume_24h_rank', 'social_volume', 'price_btc', 'social_volume_global',
     # 'social_dominance', 'market_dominance', 'tweet_replies'
-    #
-    # market_cap = models.IntegerField(null=True)
-    # url_shares = models.IntegerField(null=True)
-    # unique_url_shares = models.IntegerField(null=True)
-    # reddit_posts = models.IntegerField(null=True)
-    # reddit_posts_score = models.IntegerField(null=True)
-    # reddit_comments = models.IntegerField(null=True)
-    # reddit_comments_score = models.IntegerField(null=True)
-    # tweets = models.IntegerField(null=True)
-    # tweet_spam = models.IntegerField(null=True)
-    # tweet_followers = models.IntegerField(null=True)
-    # tweet_quotes = models.IntegerField(null=True)
-    # tweet_retweets = models.IntegerField(null=True)
-    # tweet_replies = models.IntegerField(null=True)
-    # tweet_favorites = models.IntegerField(null=True)
-    # tweet_sentiment1 = models.IntegerField(null=True)
-    # tweet_sentiment2 = models.IntegerField(null=True)
-    # tweet_sentiment3 = models.IntegerField(null=True)
-    # tweet_sentiment4 = models.IntegerField(null=True)
-    # tweet_sentiment5 = models.IntegerField(null=True)
-    # tweet_sentiment_impact1 = models.IntegerField(null=True)
-    # tweet_sentiment_impact2 = models.IntegerField(null=True)
-    # tweet_sentiment_impact3 = models.IntegerField(null=True)
-    # tweet_sentiment_impact4 = models.IntegerField(null=True)
-    # tweet_sentiment_impact5 = models.IntegerField(null=True)
-    # social_score = models.IntegerField(null=True)
-    # average_sentiment = models.FloatField(null=True)
-    # sentiment_absolute = models.IntegerField(null=True)
-    # sentiment_relative = models.IntegerField(null=True)
-    # search_average = models.FloatField(null=True)
-    # news = models.IntegerField(null=True)
-    # medium = models.IntegerField(null=True)
-    # youtube = models.IntegerField(null=True)
-    # price_score = models.FloatField(null=True)
-    # social_impact_score = models.FloatField(null=True)
-    # correlation_rank = models.FloatField(null=True)
-    # galaxy_score = models.FloatField(null=True)
-    # volatility = models.FloatField(null=True)
-    # alt_rank = models.IntegerField(null=True)
-    # alt_rank_30d = models.IntegerField(null=True)
-    # market_cap_rank = models.IntegerField(null=True)
-    # percent_change_24h_rank = models.IntegerField(null=True)
-    # volume_24h_rank = models.IntegerField(null=True)
-    # social_volume_24h_rank = models.IntegerField(null=True)
-    # social_score_24h_rank = models.IntegerField(null=True)
-    # social_contributors = models.IntegerField(null=True)
-    # social_volume = models.IntegerField(null=True)
-    # price_btc = models.FloatField(null=True)
-    # social_volume_global = models.IntegerField(null=True)
-    # social_dominance = models.FloatField(null=True)
-    # market_cap_global = models.IntegerField(null=True)
-    # market_dominance = models.FloatField(null=True)
-    # percent_change_24h = models.FloatField(null=True)
 
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")
@@ -337,9 +284,3 @@ class Jobs(models.Model):
 
     class Meta:
         unique_together = ("job_id", "app")
-
-
-# class BotStatus(models.Model):
-#
-#     id = models.IntegerField(primary_key=True)
-#     # status
