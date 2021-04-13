@@ -21,7 +21,7 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-configure_logger()
+configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
 app_name = os.getenv("APP_NAME")
 
@@ -55,7 +55,7 @@ def generate_signal():
 
     request_data = request.get_json(force=True)
 
-    logging.info(request_data)
+    logging.debug(request_data)
 
     symbol = request_data.get("symbol", None)
     strategy = request_data.get("strategy", None)
