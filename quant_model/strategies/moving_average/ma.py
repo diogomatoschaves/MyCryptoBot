@@ -8,7 +8,7 @@ class MovingAverage(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, sma, data=None, moving_av='sma', **kwargs):
+    def __init__(self, sma, moving_av='sma', data=None, **kwargs):
 
         self.sma = sma
         self.mav = moving_av

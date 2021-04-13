@@ -8,7 +8,7 @@ class MovingAverageCrossover(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, SMA_S, SMA_L, data=None, moving_av='sma', **kwargs):
+    def __init__(self, SMA_S, SMA_L, moving_av='sma', data=None, **kwargs):
 
         self.SMA_S = SMA_S
         self.SMA_L = SMA_L
