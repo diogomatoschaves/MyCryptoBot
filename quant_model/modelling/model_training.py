@@ -8,7 +8,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, FeatureUnion
 
 from quant_model.modelling.helpers import train_test_split_ts
-from common.utils.logger import configure_logger
+from shared.utils.logger import configure_logger
 from quant_model.modelling.helpers import (
     FeatureSelector,
     CustomOneHotEncoder,
