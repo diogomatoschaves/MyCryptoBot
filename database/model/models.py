@@ -80,8 +80,8 @@ class ExchangeData(models.Model):
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")
 
-    def __str__(self):
-        return "ExchangeData"
+    def __repr__(self):
+        return self.__class__.__name__
 
 
 class StructuredData(models.Model):
@@ -101,8 +101,8 @@ class StructuredData(models.Model):
     taker_buy_asset_volume = models.FloatField(null=True)
     taker_buy_quote_volume = models.FloatField(null=True)
 
-    def __str__(self):
-        return self.__name__
+    def __repr__(self):
+        return self.__class__.__name__
 
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")

@@ -18,6 +18,15 @@ CANDLE_SIZES_MAPPER = {
     '1d': '1D',
 }
 
+COUNT_MAPPER = {
+    '5m': 1,
+    '10m': 2,
+    '15m': 3,
+    '30m': 6,
+    '1h': 12,
+    '1d': 288,
+}
+
 COLUMNS_AGGREGATION = {
     "close_time": 'last',
     "open": "first",
@@ -76,13 +85,13 @@ FUNCTION_MAPPER = {
 BINANCE_KEY = {
     "open_time": lambda x: datetime.fromtimestamp(x[0] / 1000).astimezone(pytz.timezone('UTC')),
     "close_time": lambda x: datetime.fromtimestamp(x[6] / 1000).astimezone(pytz.timezone('UTC')),
-    "open": lambda x: x[1],
-    "high": lambda x: x[2],
-    "low": lambda x: x[3],
-    "close": lambda x: x[4],
-    "volume": lambda x: x[5],
-    "quote_volume": lambda x: x[7],
-    "trades": lambda x: x[8],
-    "taker_buy_asset_volume": lambda x: x[9],
-    "taker_buy_quote_volume": lambda x: x[10],
+    "open": lambda x: float(x[1]),
+    "high": lambda x: float(x[2]),
+    "low": lambda x: float(x[3]),
+    "close": lambda x: float(x[4]),
+    "volume": lambda x: float(x[5]),
+    "quote_volume": lambda x: float(x[7]),
+    "trades": lambda x: int(x[8]),
+    "taker_buy_asset_volume": lambda x: float(x[9]),
+    "taker_buy_quote_volume": lambda x: float(x[10]),
 }
