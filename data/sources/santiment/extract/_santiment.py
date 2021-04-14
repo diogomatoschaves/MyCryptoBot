@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import requests
 import django
 
-from data.santiment.extract.headers import headers, query
+from data.sources.santiment.extract.headers import headers, query
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()

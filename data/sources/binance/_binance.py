@@ -8,9 +8,9 @@ import requests
 from binance.websockets import BinanceSocketManager
 
 import shared.exchanges.binance.constants as const
-from data.binance.extract import fetch_missing_data, get_historical_data
-from data.binance.load import save_rows_db
-from data.binance.transform import resample_data, transform_data
+from data.sources.binance.extract import fetch_missing_data, get_historical_data
+from data.sources.binance.load import save_rows_db
+from data.sources.binance.transform import resample_data, transform_data
 from data.service.helpers import STRATEGIES
 from shared.exchanges.binance import BinanceHandler
 

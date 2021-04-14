@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 
 import django
 from dateutil.parser import parse
-from data.twitter.extract import get_tweets
+from data.sources.twitter.extract import get_tweets
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()

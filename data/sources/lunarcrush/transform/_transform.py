@@ -1,4 +1,4 @@
-from data.lunarcrush.transform.cleaning import clean_df
+from data.sources.lunarcrush.transform.cleaning import clean_df
 
 
 def transform_data(df):

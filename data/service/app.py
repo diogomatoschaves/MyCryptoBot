@@ -16,7 +16,7 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from data.binance import BinanceDataHandler
+from data.sources.binance import BinanceDataHandler
 from database.model.models import Jobs, Symbol
 from shared.utils.logger import configure_logger
 

@@ -1,6 +1,3 @@
-
-
-
 import os
 from datetime import datetime
 from dateutil.parser import parse
@@ -9,7 +6,7 @@ import pytz
 import requests
 import django
 
-from data.messari.extract.headers import get_headers
+from data.sources.messari.extract.headers import get_headers
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
