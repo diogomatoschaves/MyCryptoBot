@@ -37,6 +37,8 @@ jobs:
         run: |
           cd $DIRECTORY
           poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+          python -m pip install --upgrade pip
+          pip install psycopg2-binary==2.8.6
       - name: Test with pytest
         run: |
           python -m pytest $DIRECTORY --verbose --cov=./
