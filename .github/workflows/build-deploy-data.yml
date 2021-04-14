@@ -28,12 +28,13 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.8
-      - name: Install Poetry and dependencies
-        env:
-          POETRY_URL: https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1.1.2
+        with:
+          version: 1.1.5
+          virtualenvs-create: false
+      - name: Install dependencies
         run: |
-          curl -sSL $POETRY_URL | python
-          export PATH="${PATH}:/root/.poetry/bin"
           cd $DIRECTORY
           poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
       - name: Test with pytest
