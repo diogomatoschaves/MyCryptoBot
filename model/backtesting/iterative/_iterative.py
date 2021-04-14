@@ -1,4 +1,4 @@
-from quant_model.backtesting._mixin import BacktestMixin
+from model.backtesting._mixin import BacktestMixin
 from shared.trading import Trader
 
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from quant_model.strategies._mixin import StrategyMixin
+from model.strategies._mixin import StrategyMixin
 
 
 class BollingerBands(StrategyMixin):

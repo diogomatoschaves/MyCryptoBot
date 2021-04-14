@@ -5,8 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED 1
 
-ENV DIRECTORY quant_model
-ENV APP_NAME crypto-bot-model
+ENV DIRECTORY model
 
 # Install and setup poetry
 RUN pip install -U pip \
@@ -32,4 +31,4 @@ USER myuser
 
 ENV PYTHONPATH="${PYTHONPATH}:/usr/src/app/"
 
-CMD bash /usr/src/app/$DIRECTORY/entrypoint.sh
+CMD python $DIRECTORY/worker.py

@@ -8,14 +8,12 @@ from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
-from quant_model.model import gen_signal
-from quant_model.worker import conn
+from model.model import gen_signal
+from model.worker import conn
 from shared.utils.logger import configure_logger
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
-
-from database.model.models import Jobs
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:

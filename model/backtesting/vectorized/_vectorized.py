@@ -1,6 +1,6 @@
 from scipy.optimize import brute
 
-from quant_model.backtesting._mixin import BacktestMixin
+from model.backtesting._mixin import BacktestMixin
 
 
 class VectorizedBacktester(BacktestMixin):

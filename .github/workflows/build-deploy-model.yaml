@@ -6,9 +6,9 @@ on:
   push:
     branches: [master]
     paths:
-      - 'quant_model/**'
+      - 'model/**'
       - 'shared/**'
-      - '.github/workflows/build-deploy-quant-model.yml'
+      - '.github/workflows/build-deploy-model.yml'
 
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
           heroku container:login
       - name: Build and push
         env:
-          DIRECTORY: quant_model/
+          DIRECTORY: model/
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_MODEL_APP_NAME }}
         run: |

@@ -5,7 +5,7 @@ import django
 
 from shared.utils.logger import configure_logger
 from shared.data.queries import get_data
-from quant_model.strategies import (
+from model.strategies import (
     MovingAverageConvergenceDivergence,
     MovingAverage,
     MovingAverageCrossover,

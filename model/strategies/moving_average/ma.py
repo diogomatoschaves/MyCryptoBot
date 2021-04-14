@@ -1,7 +1,7 @@
 import numpy as np
 from ta.trend import sma_indicator, ema_indicator
 
-from quant_model.strategies._mixin import StrategyMixin
+from model.strategies._mixin import StrategyMixin
 
 
 class MovingAverage(StrategyMixin):

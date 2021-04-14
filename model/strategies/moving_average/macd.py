@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from ta.trend import MACD
 
-from quant_model.strategies._mixin import StrategyMixin
+from model.strategies._mixin import StrategyMixin
 
 
 class MovingAverageConvergenceDivergence(MACD, StrategyMixin):

@@ -1,1 +1,0 @@
-from quant_model.backtesting.vectorized._vectorized import VectorizedBacktester
