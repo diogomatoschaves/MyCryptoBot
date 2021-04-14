@@ -2,9 +2,9 @@ from os import environ as env
 from datetime import datetime
 
 import pytz
-from binance.exceptions import BinanceAPIException
 from dotenv import load_dotenv, find_dotenv
 from binance.client import Client
+from binance.exceptions import BinanceAPIException
 from binance.websockets import BinanceSocketManager
 
 from shared.exchanges import BinanceHandler
