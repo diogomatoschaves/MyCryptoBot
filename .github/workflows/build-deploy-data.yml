@@ -1,5 +1,5 @@
 # Your workflow name.
-name: Build and Deploy crypto-bot-data to heroku.
+name: crypto-bot-data - Build and Deploy to heroku.
 
 # Run workflow on every push to master branch.
 on:
@@ -7,8 +7,8 @@ on:
     branches: [master]
     paths:
       - 'data/**'
-      - 'database/model/migrations/**'
       - 'shared/**'
+      - 'database/model/migrations/**'
       - '.github/workflows/build-deploy-data.yml'
 
 jobs:
