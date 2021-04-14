@@ -19,7 +19,7 @@ ENV PATH="${PATH}:/root/.poetry/bin"
 COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /
 
 RUN poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi
+  && poetry install --no-interaction --no-ansi --no-dev
 
 WORKDIR /usr/src/app
 
