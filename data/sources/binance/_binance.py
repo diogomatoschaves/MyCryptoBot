@@ -13,6 +13,7 @@ from data.sources.binance.load import save_rows_db
 from data.sources.binance.transform import resample_data, transform_data
 from data.service.helpers import STRATEGIES
 from shared.exchanges.binance import BinanceHandler
+from shared.utils.exceptions import InvalidInput
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -68,7 +69,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             symbol_obj = Symbol.objects.get(name=symbol)
         except Symbol.DoesNotExist:
             logging.info(f"{symbol} is not valid.")
-            raise Exception(f"{symbol} is not a valid symbol.")
+            raise InvalidInput(f"{symbol} is not a valid symbol.")
 
         self.symbol = symbol
         self.base = symbol_obj.base.symbol,
@@ -80,11 +81,11 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
             for key in params:
                 if key not in STRATEGIES[strategy]["params"]:
-                    raise Exception(f"Provided {key} in params is not valid.")
+                    raise InvalidInput(f"Provided {key} in params is not valid.")
 
             self.params = params
         else:
-            raise Exception(f"{strategy} is not a valid strategy.")
+            raise InvalidInput(f"{strategy} is not a valid strategy.")
 
     def start_data_ingestion(self):
         """
@@ -161,14 +162,8 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         # Extract
         if data is None:
-            data = fetch_missing_data(
-                model_class,
-                self.get_historical_klines_generator,
-                self.symbol,
-                self.base_candle_size,
-                candle_size,
-                self.exchange
-            )
+            data = fetch_missing_data(model_class, self.get_historical_klines_generator, self.symbol,
+                                      self.base_candle_size, candle_size)
 
         # Transform
         data = transform_data(
