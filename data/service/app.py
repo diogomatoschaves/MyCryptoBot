@@ -7,7 +7,7 @@ from django.db import IntegrityError
 from flask import Flask, jsonify, request
 import django
 
-from data.service.helpers import STRATEGIES
+from data.service.external_requests import start_stop_symbol_trading
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -16,15 +16,15 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
+from data.service.helpers import check_input, APP_NAME
 from data.sources.binance import BinanceDataHandler
-from database.model.models import Jobs, Symbol
+from database.model.models import Jobs
 from shared.utils.logger import configure_logger
 
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
 executor = ThreadPoolExecutor(16)
 
-app_name = os.getenv("APP_NAME")
 
 app = Flask(__name__)
 
@@ -55,33 +55,6 @@ def stop_instance(instance_symbol):
     binance_instances = new_binance_instances
 
 
-def check_input(symbol, strategy, params, candle_size):
-
-    if not symbol:
-        return jsonify({"response": "A symbol must be included in the request."})
-
-    try:
-        Symbol.objects.get(name=symbol)
-    except Symbol.DoesNotExist:
-        return jsonify({"response": f"{symbol} is not a valid symbol."})
-
-    try:
-        Jobs.objects.create(job_id=f"{symbol}", app=app_name)
-        logging.info(f"Starting {symbol} Data pipeline.")
-    except IntegrityError:
-        logging.info(f"Requested {symbol} data pipeline already exists.")
-        return jsonify({"response": f"{symbol} data pipeline already ongoing."})
-
-    if strategy in STRATEGIES:
-        for key in params:
-            if key not in STRATEGIES[strategy]["params"]:
-                return jsonify({"response": f"Provided {key} in params is not valid."})
-    else:
-        return jsonify({"response": f"{strategy} is not a valid strategy."})
-
-    return None
-
-
 @app.route('/')
 def hello_world():
     return "I'm up!"
@@ -96,11 +69,35 @@ def start_bot():
     strategy = data.get("strategy", None)
     params = data.get("params", {})
     candle_size = data.get("candle_size", "1h")
+    exchange = data.get("exchange", None)
 
-    response = check_input(symbol, strategy, params, candle_size)
+    response = check_input(
+        symbol=symbol,
+        strategy=strategy,
+        params=params,
+        candle_size=candle_size,
+        exchange=exchange
+    )
 
     if response is not None:
+        logging.debug(response)
         return response
+
+    exchange = exchange.lower()
+    candle_size = candle_size.lower()
+
+    try:
+        Jobs.objects.create(job_id=symbol, exchange_id=exchange.lower(), app=APP_NAME)
+        logging.info(f"Starting {symbol} Data pipeline.")
+    except IntegrityError as e:
+        logging.debug(e)
+        return jsonify({"response": f"{symbol} data pipeline already ongoing."})
+
+    response = start_stop_symbol_trading(symbol, exchange, 'start')
+
+    if not response["success"]:
+        logging.warning(response["response"])
+        return jsonify({"response": response["response"]})
 
     executor.submit(
         initialize_data_collection,
@@ -119,23 +116,30 @@ def stop_bot():
     # Stops the data collection stream
     # closes any open positions
     data = request.get_json(force=True)
+
     symbol = data.get("symbol", None)
+    exchange = data.get("exchange", None)
 
-    if not symbol:
-        return jsonify({"response": "A symbol must be included in the request."})
+    response = check_input(symbol=symbol, exchange=exchange)
 
-    if Jobs.objects.filter(job_id=symbol, app=app_name).exists():
+    if response is not None:
+        return response
+
+    try:
+        job = Jobs.objects.get(job_id=symbol, exchange_id=exchange.lower(), app=APP_NAME)
+
         logging.info(f"Stopping {symbol} data pipeline.")
 
-        job = Jobs.objects.get(app=app_name)
-
         stop_instance(job.job_id)
+
+        response = start_stop_symbol_trading(symbol, exchange, 'stop')
+
+        logging.debug(response["response"])
 
         job.delete()
 
         return jsonify({"response": f"{symbol} data pipeline stopped."})
-
-    else:
+    except Jobs.DoesNotExist:
         return jsonify({"response": f"There is no {symbol} active data pipeline."})
 
 
