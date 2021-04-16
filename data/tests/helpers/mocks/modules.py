@@ -2,7 +2,9 @@ import pytest
 
 from binance.client import Client
 
+from data.tests.helpers.mocks.models import exchange_data
 from data.tests.helpers.sample_data import binance_api_historical_data
+from database.model.models import ExchangeData
 from shared.exchanges.binance import BinanceHandler
 
 
@@ -41,4 +43,9 @@ def mock_binance_client_init(mocker):
 @pytest.fixture
 def mock_binance_client_ping(mocker):
     mocker.patch.object(Client, "ping", lambda self: None)
+
+
+@pytest.fixture
+def mock_exchange_data_model(mocker):
+    mocker.patch.object(ExchangeData, exchange_data)
 

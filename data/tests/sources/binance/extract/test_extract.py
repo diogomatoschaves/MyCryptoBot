@@ -1,17 +1,27 @@
 import pytest
 import os
 
+from data.tests.helpers.mocks.models import *
 from shared.utils.test_setup import get_fixtures
 from data.sources.binance.extract import fetch_missing_data
-from data.tests.helpers.mocks import mock_get_historical_klines_generator
+from data.tests.helpers.mocks.modules import mock_get_historical_klines_generator
 
 current_path = os.path.dirname(os.path.realpath(__file__))
 
 fixtures = get_fixtures(current_path)
 
 
+from database.model.models import Exchange
+
+
+def test_should_create_user_with_username(db) -> None:
+    exchange = Exchange.objects.create(name='foo')
+    assert exchange.name == 'foo'
+
+
 class TestBinanceExtract:
 
+    # @pytest.mark.django_db
     @pytest.mark.parametrize(
         "fixture",
         [
@@ -19,7 +29,7 @@ class TestBinanceExtract:
             for fixture_name, fixture in fixtures.items()
         ],
     )
-    def test_fetch_missing_data(self, fixture):
+    def test_fetch_missing_data(self, fixture, exchange_data):
 
         model_class = fixture["in"]["model_class"]
         symbol = fixture["in"]["symbol"]
