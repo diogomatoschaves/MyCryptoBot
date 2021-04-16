@@ -4,11 +4,11 @@ from datetime import datetime
 
 import pandas as pd
 import django
-import requests
 from binance.websockets import BinanceSocketManager
 
 import shared.exchanges.binance.constants as const
-from data.sources.binance.extract import fetch_missing_data, get_historical_data
+from data.sources import trigger_signal
+from data.sources.binance.extract import fetch_missing_data
 from data.sources.binance.load import save_rows_db
 from data.sources.binance.transform import resample_data, transform_data
 from data.service.helpers import STRATEGIES
@@ -201,7 +201,6 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             )
 
         if kline_size == self.candle_size:
-
             self.data, self.data_length, new_entry = self._process_stream(
                 StructuredData,
                 row["data"]["k"],
@@ -212,10 +211,21 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
                 remove_rows=True,
             )
 
-            # TODO: Implement logic to send this request
-            #  only if all data sources have updated the row.
             if new_entry:
-                self.trigger_signal()
+                success = trigger_signal(
+                    self.symbol,
+                    self.strategy,
+                    self.params,
+                    self.candle_size,
+                    self.exchange
+                )
+
+                if not success:
+                    logging.warning(
+                        f"{self.symbol}: There was an error processing the "
+                        f"signal generation request. Stopping data pipeline"
+                    )
+                    self.stop_data_ingestion()
 
     def _process_stream(
         self,
@@ -280,41 +290,22 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         return data, data_length, new_entries > 0
 
-    def trigger_signal(self):
-
-        url = os.getenv("MODEL_APP_URL") + "/generate_signal"
-
-        payload = {
-            "symbol": self.symbol,
-            "strategy": self.strategy,
-            "params": self.params,
-            "candle_size": self.candle_size,
-            "exchange": self.exchange,
-        }
-
-        logging.info(
-            f"{self.symbol}: Sending signal: " +
-            ", ".join([f"{key}: {value}" for key, value in payload.items()])
-        )
-
-        r = requests.post(url, json=payload)
-
-        logging.debug(r.text)
-
 
 if __name__ == "__main__":
 
     symbol = 'BTCUSDT'
 
+    base_candle_size = '5m'
     interval = '5m'
 
     start_date = int(datetime(2020, 12, 21, 8, 0).timestamp() * 1000)
 
     binance_data_handler = BinanceHandler()
 
-    get_historical_data(
+    fetch_missing_data(
         ExchangeData,
         binance_data_handler.get_historical_klines_generator,
-        'binance',
+        symbol,
+        base_candle_size,
         interval
     )

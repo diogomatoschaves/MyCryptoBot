@@ -7,7 +7,8 @@ from shared.exchanges.binance import BinanceHandler
 
 
 def mock_get_historical_klines_generator(symbol, candle_size, start_date):
-    return binance_api_historical_data
+    for kline in binance_api_historical_data:
+        yield kline
 
 
 def mock_start_multiplex_socket(self, streams, callback):
