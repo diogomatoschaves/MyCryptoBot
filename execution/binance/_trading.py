@@ -1,20 +1,20 @@
-from os import environ as env
-from datetime import datetime
+import logging
 
 import pytz
-from dotenv import load_dotenv, find_dotenv
-from binance.client import Client
+import os
+from datetime import datetime
+
+import django
 from binance.exceptions import BinanceAPIException
-from binance.websockets import BinanceSocketManager
 
 from shared.exchanges import BinanceHandler
-
 from shared.trading import Trader
-import shared.exchanges.binance.constants as const
+from shared.utils.decorators.failed_connection import retry_failed_connection
 
-ENV_FILE = find_dotenv()
-if ENV_FILE:
-    load_dotenv(ENV_FILE)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
+django.setup()
+
+from database.model.models import Symbol, Orders
 
 
 class BinanceTrader(BinanceHandler, Trader):
@@ -22,140 +22,76 @@ class BinanceTrader(BinanceHandler, Trader):
     AUTO_REPAY = 'AUTO_REPAY'
 
     def __init__(
-            self,
-            strategy,
-            quote='USDT',
-            base='BTC',
-            candle_size='5m',
-            margin_level=3,
-            price_col='close',
-            returns_col='returns'
+        self,
+        margin_level=3,
+        paper_trading=False
     ):
-        # self.API_KEY = 'https://testnet.binance.vision/api'
+        BinanceHandler.__init__(self, paper_trading)
+        Trader.__init__(self, 0)
 
-        self._get_api_keys()
-
-        Client.__init__(self, self.binance_api_key, self.binance_api_secret)
-        BinanceSocketManager.__init__(self, self)
-
-        self.strategy = strategy
-        self.returns_col = returns_col
-        self.price_col = price_col
-
-        self.quote = quote
-        self.base = base
-        self.symbol = base + quote
-        self.exchange = 'binance'
-        self.candle_size = candle_size
+        self.paper_trading = paper_trading
         self.margin_level = margin_level
         self.account_equity = {}
+        self.assets_info = {}
+        self.trading_fees = {}
+        self.max_borrow_amount = {}
+        self.symbols = {}
+        self.positions = {}
 
-        self._open_orders = []
+        self.open_orders = []
         self.filled_orders = []
         self.conn_key = None
 
-        Trader.__init__(self, 0)
+    def start_symbol_trading(self, symbol):
 
-        self._get_asset_info()
-        self._update_account_status()
-        self._get_symbol_net_equity(self.symbol)
-
-        self._create_initial_loan()
-        self._update_account_status()
-
-        self._get_asset_info()
-
-        self.trading_fees = self.get_trade_fee(symbol=self.symbol)['tradeFee'][0]
-
-        self._get_max_borrow_amount()
-
-    def __getattr__(self, attr):
-        method = getattr(self.strategy, attr)
-
-        if not method:
-            return getattr(self, attr)
-        else:
-            return method
-
-    def stop_trading(self):
-
-        print("Closing positions and repaying loans")
-
-        self.close_pos(date=datetime.utcnow(), row=None)
-
-        self.repay_loans()
-
-    def _get_asset_info(self):
-        self.asset_info = {asset["symbol"]: asset for asset in self.get_isolated_margin_account()["assets"]}
-
-    def _get_api_keys(self):
-        self.binance_api_key = env.get(const.BINANCE_API_KEY)
-        self.binance_api_secret = env.get(const.BINANCE_API_SECRET)
-
-    def _get_symbol_net_equity(self, symbol):
-        quote_amount = float(self.asset_info[symbol]["quoteAsset"]["netAsset"])
-        quote_amount += float(self.asset_info[symbol]["baseAsset"]["netAsset"]) * \
-            float(self.asset_info[symbol]["indexPrice"])
-
-        base_amount = float(self.asset_info[symbol]["baseAsset"]["netAsset"])
-        base_amount += float(self.asset_info[symbol]["quoteAsset"]["netAsset"]) / \
-            float(self.asset_info[symbol]["indexPrice"])
-
-        self.account_equity[symbol] = {
-            self.quote: quote_amount,
-            self.base: base_amount,
-        }
-
-    def _get_max_borrow_amount(self):
-        self.max_borrow_amount = {}
-
-        for asset in [self.quote, self.base]:
-            details = self.get_max_margin_loan(asset=asset, isolatedSymbol=self.symbol)
-            self.max_borrow_amount[asset] = details["borrowLimit"]
-
-    # TODO: Tidy up this
-    def _create_initial_loan(self):
-        self.max_margin_level = int(self.asset_info[self.symbol]["marginRatio"])
-        if self.margin_level > self.max_margin_level:
-            self.margin_level = self.max_margin_level
+        if symbol in self.symbols:
+            return True
 
         try:
-            # TODO: Suppress message
-            self.sell_instrument(None, None, units=float(self.asset_info[self.symbol]["baseAsset"]["free"]))
-        except BinanceAPIException as e:
-            pass
+            symbol_obj = Symbol.objects.get(name=symbol)
+            self.symbols[symbol] = {"base": symbol_obj.base.symbol, "quote": symbol_obj.quote.symbol}
+        except Symbol.DoesNotExist:
+            return False
 
-        asset_details = [
-            {
-                "asset": self.quote,
-                # "max_amount": self.get_max_margin_loan(asset=self.quote, isolatedSymbol=self.symbol),
-                "free_amount": float(self.asset_info[self.symbol]["quoteAsset"]["free"]),
-                "net_amount": float(self.asset_info[self.symbol]["quoteAsset"]["netAsset"]),
-                "borrowed_amount": float(self.asset_info[self.symbol]["quoteAsset"]["borrowed"])
-            },
-            # {
-            #     "asset": self.base,
-            #     # "max_amount": self.get_max_margin_loan(asset=self.base, isolatedSymbol=self.symbol),
-            #     "free_amount": float(self.asset_info[self.symbol]["baseAsset"]["free"]),
-            #     "net_amount": float(self.asset_info[self.symbol]["baseAsset"]["netAsset"]),
-            #     "borrowed_amount": float(self.asset_info[self.symbol]["baseAsset"]["borrowed"])
-            # }
-        ]
+        trading_account_exists = self._get_assets_info(symbol)
 
-        for asset in asset_details:
-            asset_symbol = asset["asset"]
+        if not trading_account_exists:
+            return False
 
-            total_amount = self.margin_level * self.account_equity[self.symbol][asset_symbol]
+        self._set_initial_position(symbol)
 
-            amount = total_amount / 2 - (asset["net_amount"] + asset["borrowed_amount"])
+        self._update_account_status(symbol)
 
-            if amount <= 0:
-                continue
+        self._get_symbol_net_equity(symbol)
 
-            self.create_margin_loan(asset=asset_symbol, amount=amount, isIsolated=True, symbol=self.symbol)
+        self._create_initial_loan(symbol)
 
-    def buy_instrument(self, date, row, units=None, amount=None, **kwargs):
+        self._get_assets_info(symbol)
+        self._update_account_status(symbol)
+        self._get_assets_info(symbol)
+
+        self._get_trading_fees(symbol)
+
+        self._get_max_borrow_amount(symbol)
+
+        return True
+
+    def stop_symbol_trading(self, symbol):
+
+        if symbol not in self.symbols:
+            return False
+
+        logging.info(f"{symbol}: Closing positions and repaying loans.")
+
+        self.close_pos(symbol, date=datetime.utcnow())
+
+        self.repay_loans(symbol)
+
+        return True
+
+    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, **kwargs):
         self._execute_order(
+            symbol,
             self.ORDER_TYPE_MARKET,
             self.SIDE_BUY,
             "GOING LONG",
@@ -164,8 +100,9 @@ class BinanceTrader(BinanceHandler, Trader):
             **kwargs
         )
 
-    def sell_instrument(self, date, row, units=None, amount=None, **kwargs):
+    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, **kwargs):
         self._execute_order(
+            symbol,
             self.ORDER_TYPE_MARKET,
             self.SIDE_SELL,
             "GOING SHORT",
@@ -174,27 +111,37 @@ class BinanceTrader(BinanceHandler, Trader):
             **kwargs
         )
 
-    def close_pos(self, date, row):
+    def close_pos(self, symbol, date=None, row=None):
 
         if self.units == 0:
             return
 
         if self.units < 0:
-            self.buy_instrument(date, row, units=-self.units, side_effect=self.AUTO_REPAY)
+            self.buy_instrument(symbol, date, row, units=-self.units)
         else:
-            self.sell_instrument(date, row, units=self.units, side_effect=self.AUTO_REPAY)
+            self.sell_instrument(symbol, date, row, units=self.units)
 
         perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
 
-        self.print_current_balance(date)
+        self.print_current_balance(symbol, date)
 
-        print(100 * "-")
-        print("{} | +++ CLOSED FINAL POSITION +++".format(date))
-        print("{} | net performance (%) = {}".format(date, round(perf, 2)))
-        print("{} | number of trades executed = {}".format(date, self.trades))
-        print(100 * "-")
+        logging.info(f"{symbol}: " + 100 * "-")
+        logging.info(f"{symbol}: {date} | +++ CLOSED FINAL POSITION +++")
+        logging.info(f"{symbol}: {date} | net performance (%) = {round(perf, 2)}")
+        logging.info(f"{symbol}: {date} | number of trades executed = {self.trades}")
+        logging.info(f"{symbol}: " + 100 * "-")
 
-    def _execute_order(self, order_type, order_side, going, side_effect='MARGIN_BUY', units=None, amount=None):
+    @retry_failed_connection(num_times=3)
+    def _execute_order(
+        self,
+        symbol,
+        order_type,
+        order_side,
+        going,
+        side_effect='MARGIN_BUY',
+        units=None,
+        amount=None
+    ):
 
         kwargs = self._get_order_kwargs(units, amount)
 
@@ -202,7 +149,7 @@ class BinanceTrader(BinanceHandler, Trader):
             return
 
         order = self.create_margin_order(
-            symbol=self.symbol,
+            symbol=symbol,
             side=order_side,
             type=order_type,
             newOrderRespType='FULL',
@@ -211,7 +158,9 @@ class BinanceTrader(BinanceHandler, Trader):
             **kwargs
         )
 
-        self.filled_orders.append(order)
+        order["price"] = self._get_average_order_price(order)
+
+        self._process_order(order)
 
         # factor = -1 if order_side == self.SIDE_SELL and amount else 1
         factor = 1 if order_side == self.SIDE_SELL else -1
@@ -224,13 +173,132 @@ class BinanceTrader(BinanceHandler, Trader):
 
         self.trades += 1
 
-        self.report_trade(order, units, going)
+        self.report_trade(order, symbol, units, going)
+
+    def _process_order(self, order):
+
+        self.filled_orders.append(order)
+
+        logging.debug(order)
+
+        Orders.objects.create(
+            order_id=order["orderId"],
+            client_order_id=order["clientOrderId"],
+            symbol=order["symbol"],
+            transact_time=order["symbol"],
+            price=order["price"],
+            original_qty=order["origQty"],
+            executed_qty=order["executedQty"],
+            cummulative_quote_qty=order["cummulativeQuoteQty"],
+            status=order["status"],
+            type=order["type"],
+            side=order["side"],
+            is_isolated=order["isIsolated"],
+            mock=self.paper_trading,
+        )
+
+    def _set_initial_position(self, symbol):
+        # TODO: Get this value from database?
+        logging.debug(f"{symbol}: Setting initial position NEUTRAL.")
+        self._set_position(symbol, 0)
+
+    def _set_position(self, symbol, value):
+        self.positions[symbol] = value
+
+    def _get_position(self, symbol):
+        return self.positions[symbol]
+
+    @retry_failed_connection(num_times=3)
+    def _get_trading_fees(self, symbol):
+        logging.debug(f"{symbol}: Getting trading fees.")
+        self.trading_fees[symbol] = self.get_trade_fee(symbol=symbol)['tradeFee'][0]
+
+    @retry_failed_connection(num_times=3)
+    def _get_assets_info(self, symbol):
+        logging.debug(f"{symbol}: Setting asset info.")
+        isolated_margin_account_details = self.get_isolated_margin_account()["assets"]
+
+        self.assets_info.update(
+            {asset["symbol"]: asset for asset in isolated_margin_account_details if asset["symbol"] == symbol}
+        )
+
+        if symbol not in self.assets_info:
+            logging.debug(self.assets_info)
+            return False
+
+        return True
+
+    def _get_symbol_net_equity(self, symbol):
+
+        logging.debug(f"{symbol}: Getting symbol net equity.")
+
+        quote_amount = float(self.assets_info[symbol]["quoteAsset"]["netAsset"])
+        quote_amount += float(self.assets_info[symbol]["baseAsset"]["netAsset"]) * \
+                        float(self.assets_info[symbol]["indexPrice"])
+
+        base_amount = float(self.assets_info[symbol]["baseAsset"]["netAsset"])
+        base_amount += float(self.assets_info[symbol]["quoteAsset"]["netAsset"]) / \
+                       float(self.assets_info[symbol]["indexPrice"])
+
+        self.account_equity[symbol] = {
+            self.symbols[symbol]["quote"]: quote_amount,
+            self.symbols[symbol]["base"]: base_amount,
+        }
+
+    @retry_failed_connection(num_times=3)
+    def _get_max_borrow_amount(self, symbol):
+        logging.debug(f"{symbol}: Getting maximum borrow amount.")
+        max_borrow_amount = {}
+
+        for key, asset in self.symbols[symbol].items():
+            details = self.get_max_margin_loan(asset=asset, isolatedSymbol=symbol)
+            max_borrow_amount[asset] = details["borrowLimit"]
+
+        self.max_borrow_amount[symbol] = max_borrow_amount
+
+    @retry_failed_connection(num_times=3)
+    def _create_initial_loan(self, symbol):
+
+        logging.debug(f"{symbol}: Creating intial loan.")
+
+        self.max_margin_level = int(self.assets_info[symbol]["marginRatio"])
+        if self.margin_level > self.max_margin_level:
+            self.margin_level = self.max_margin_level
+
+        # TODO: Suppress message
+        try:
+            self.sell_instrument(symbol, units=float(self.assets_info[symbol]["baseAsset"]["free"]))
+        except BinanceAPIException:
+            pass
+
+        asset_details = [
+            {
+                "asset": self.symbols[symbol]["quote"],
+                "free_amount": float(self.assets_info[symbol]["quoteAsset"]["free"]),
+                "net_amount": float(self.assets_info[symbol]["quoteAsset"]["netAsset"]),
+                "borrowed_amount": float(self.assets_info[symbol]["quoteAsset"]["borrowed"])
+            }
+        ]
+
+        for asset in asset_details:
+            asset_symbol = asset["asset"]
+
+            total_amount = self.margin_level * self.account_equity[symbol][asset_symbol]
+
+            amount = total_amount / 2 - (asset["net_amount"] + asset["borrowed_amount"])
+
+            if amount <= 0:
+                continue
+
+            self.create_margin_loan(asset=asset_symbol, amount=amount, isIsolated=True, symbol=symbol)
+
+            logging.debug(f"{symbol}: Borrowed {amount} of {asset_symbol}.")
 
     # TODO: Add last order position
-    def _update_account_status(self, factor=1):
-        self._get_asset_info()
-        self.current_balance = float(self.asset_info[self.symbol]["quoteAsset"]["free"])
-        self.units = float(self.asset_info[self.symbol]["baseAsset"]["free"]) * factor
+    def _update_account_status(self, symbol, factor=1):
+        logging.debug(f"{symbol}: Updating isolated account status.")
+        self.current_balance = float(self.assets_info[symbol]["quoteAsset"]["free"])
+        self.units = float(self.assets_info[symbol]["baseAsset"]["free"]) * factor
 
     @staticmethod
     def _get_order_kwargs(units, amount):
@@ -247,26 +315,28 @@ class BinanceTrader(BinanceHandler, Trader):
         s = sum([float(fill["price"]) * float(fill["qty"]) for fill in order["fills"]])
         return s / float(order["executedQty"])
 
-    def repay_loans(self):
-        for asset in [self.base, self.quote]:
+    @retry_failed_connection(num_times=3)
+    def repay_loans(self, symbol):
+        for key, asset in self.symbols[symbol].items():
             try:
                 self.repay_margin_loan(
                     asset=asset,
-                    amount=self.max_borrow_amount[asset],
+                    amount=self.max_borrow_amount[symbol][asset],
                     isIsolated='TRUE',
-                    symbol=self.symbol
+                    symbol=symbol
                 )
             except BinanceAPIException:
                 pass
 
-    def report_trade(self, order, units, going):
+    def report_trade(self, order, symbol, units, going):
+        logging.debug(order)
 
         price = self._get_average_order_price(order)
 
         date = datetime.fromtimestamp(order["transactTime"] / 1000).astimezone(pytz.utc)
 
-        print(100 * "-")
-        print("{} | {}".format(date, going))
-        print("{} | units = {} | price = {}".format(date, units, price))
-        self.print_current_nav(date, price)
-        print(100 * "-")
+        logging.info(f"{symbol}: " + 100 * "-")
+        logging.info(f"{symbol}: {date} | {going}")
+        logging.info(f"{symbol} | units = {units} | price = {price}")
+        self.print_current_nav(symbol, date, price)
+        logging.info(f"{symbol}: " + 100 * "-")
