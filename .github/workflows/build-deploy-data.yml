@@ -19,8 +19,9 @@ env:
   BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
   BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
   MODEL_APP_URL: ${{ secrets.MODEL_APP_URL }}
+
 jobs:
-  build:
+  testing:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -37,11 +38,16 @@ jobs:
         run: |
           cd $DIRECTORY
           poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
-          python -m pip install --upgrade pip
-          pip install psycopg2-binary==2.8.6
       - name: Test with pytest
+        env:
+          TEST: true
         run: |
-          python -m pytest $DIRECTORY --verbose --cov=./
+          python -m pytest $DIRECTORY --ds=database.settings --verbose --cov=./
+  build:
+    runs-on: ubuntu-latest
+    needs: testing
+    steps:
+      - uses: actions/checkout@v2
       - name: Login to heroku container registry
         run: |
           heroku container:login

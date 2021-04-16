@@ -22,6 +22,8 @@ pytest-cov = "^2.11.1"
 pytest = "^6.2.3"
 pytest-mock = "^3.5.1"
 ipython = "^7.22.0"
+pytest-responsemock = "^1.0.1"
+pytest-django = "^4.2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
