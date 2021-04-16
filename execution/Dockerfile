@@ -26,7 +26,6 @@ WORKDIR /usr/src/app
 COPY ./database/ ./database/
 COPY ./$DIRECTORY/ ./$DIRECTORY/
 COPY ./shared/ ./shared/
-COPY ./.env ./
 
 RUN useradd -m myuser
 USER myuser
