@@ -12,12 +12,13 @@ services:
       - REDISTOGO_URL=redis://redis:6379
       - APP_NAME=crypto-bot-data
       - MODEL_APP_URL=http://host.docker.internal:5001
+      - EXECUTION_APP_URL=http://host.docker.internal:5002
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
   model-service:
     build:
       context: .
-      dockerfile: quant_model/Dockerfile.web
+      dockerfile: model/Dockerfile.web
     image: model-server
     ports:
       - "5001:5000"
@@ -30,12 +31,26 @@ services:
   model-worker:
     build:
       context: .
-      dockerfile: quant_model/Dockerfile.worker
+      dockerfile: model/Dockerfile.worker
     image: model-worker
     environment:
       - DATABASE_URL=postgres://postgres:6730@host.docker.internal:5432/crypto_bot
       - REDISTOGO_URL=redis://redis:6379
+      - EXECUTION_APP_URL=http://host.docker.internal:5002
     depends_on:
       - redis
+  execution-service:
+    build:
+      context: .
+      dockerfile: execution/Dockerfile
+    image: execution-server
+    ports:
+      - "5002:5000"
+    environment:
+      - DATABASE_URL=postgres://postgres:6730@host.docker.internal:5432/crypto_bot
+      - REDISTOGO_URL=redis://redis:6379
+      - APP_NAME=crypto-bot-execution
+      - PORT=5000
+      - LOGGER_LEVEL=DEBUG
   redis:
     image: redis

@@ -1,1 +1,1 @@
-from trading_bot.binance._trading import BinanceTrader
+from execution.binance._trading import BinanceTrader
