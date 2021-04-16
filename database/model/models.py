@@ -32,7 +32,7 @@ class Asset(models.Model):
     token_type = models.TextField(null=True)
     token_launch_style = models.TextField(null=True)
     token_initial_supply = models.TextField(null=True)
-    token_is_treasury_decentralized = models.NullBooleanField(null=True)
+    token_is_treasury_decentralized = models.BooleanField(null=True)
     token_mining_algorithm = models.TextField(null=True)
     token_next_halving_date = models.TextField(null=True)
     token_emission_type_general = models.TextField(null=True)
@@ -111,7 +111,25 @@ class StructuredData(models.Model):
 class Jobs(models.Model):
 
     job_id = models.TextField(null=True)
+    exchange = models.ForeignKey('Exchange', on_delete=models.CASCADE)
     app = models.TextField()
 
     class Meta:
-        unique_together = ("job_id", "app")
+        unique_together = ("job_id", "exchange", "app")
+
+
+class Orders(models.Model):
+
+    order_id = models.IntegerField(null=True)
+    client_order_id = models.TextField(null=True)
+    symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
+    transact_time = models.DateTimeField()
+    price = models.FloatField()
+    original_qty = models.FloatField()
+    executed_qty = models.FloatField()
+    cummulative_quote_qty = models.FloatField()
+    status = models.TextField()
+    type = models.TextField()
+    side = models.TextField()
+    is_isolated = models.BooleanField(default=False)
+    mock = models.BooleanField(null=True, default=False)

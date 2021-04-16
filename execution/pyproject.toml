@@ -5,11 +5,14 @@ description = "Order Execution Service. Handles connection to the exchanges API'
 authors = ["Diogo Matos Chaves <diogo_chaves@hotmail.com>"]
 
 [tool.poetry.dependencies]
-python = "3.7.3"
+python = "3.8.9"
 python-binance = "^0.7.9"
 python-dotenv = "^0.17.0"
 Flask = "^1.1.2"
 Django = "^3.1.7"
+gunicorn = "^20.1.0"
+dj-database-url = "^0.5.0"
+requests = "^2.25.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
