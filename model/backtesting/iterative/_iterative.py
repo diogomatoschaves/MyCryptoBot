@@ -10,7 +10,10 @@ class IterativeBacktester(BacktestMixin, Trader):
         Trader.__init__(self, amount)
 
         self.strategy = strategy
-        self.positions = []
+        self.positions_lst = []
+        self.positions = {
+            symbol: 0
+        }
 
     def __repr__(self):
         return self.strategy.__repr__()
@@ -23,21 +26,27 @@ class IterativeBacktester(BacktestMixin, Trader):
         else:
             return method
 
+    def _set_position(self, symbol, value):
+        self.positions[symbol] = value
+
+    def _get_position(self, symbol):
+        return self.positions[symbol]
+
     def _reset_object(self):
         # reset
-        self.position = 0  # initial neutral position
-        self.positions = []
+        self._set_position(self.symbol, 0)  # initial neutral position
+        self.positions_lst = []
         self.trades = 0  # no trades yet
         self.current_balance = self.initial_balance  # reset initial capital
 
     def _calculate_positions(self, data):
-        data["position"] = self.positions
+        data["position"] = self.positions_lst
         return data
 
-    def _get_trades(self, data):
+    def _get_trades(self, _):
         return self.trades
 
-    def get_values(self, date, row):
+    def get_values(self, _, row):
         price = row[self.price_col]
 
         return price
@@ -69,14 +78,14 @@ class IterativeBacktester(BacktestMixin, Trader):
             signal = self.get_signal(row)
 
             if bar != data.shape[0] - 1:
-                self.trade(signal, timestamp, row, amount="all")
+                self.trade(self.symbol, signal, timestamp, row, amount="all")
             else:
-                self.close_pos(timestamp, row)  # close position at the last bar
-                self.position = 0
+                self.close_pos(self.symbol, timestamp, row)  # close position at the last bar
+                self._set_position(self.symbol, 0)
 
-            self.positions.append(self.position)
+            self.positions_lst.append(self._get_position(self.symbol))
 
-    def buy_instrument(self, date, row, units=None, amount=None):
+    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None):
 
         price = self.get_values(date, row)
 
@@ -90,7 +99,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.trades += 1
         print(f"{date} |  Buying {round(units, 4)} {self.symbol} for {round(price, 5)}")
 
-    def sell_instrument(self, date, row, units=None, amount=None):
+    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None):
 
         price = self.get_values(date, row)
 
@@ -104,19 +113,19 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.trades += 1
         print(f"{date} |  Selling {round(units, 4)} {self.symbol} for {round(price, 5)}")
 
-    def close_pos(self, date, row):
+    def close_pos(self, symbol, date=None, row=None):
 
         print(75 * "-")
         print("{} |  +++ CLOSING FINAL POSITION +++".format(date))
 
         if self.units <= 0:
-            self.buy_instrument(date, row, units=-self.units)
+            self.buy_instrument(symbol, date, row, units=-self.units)
         else:
-            self.sell_instrument(date, row, units=self.units)
+            self.sell_instrument(symbol, date, row, units=self.units)
 
         perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
 
-        self.print_current_balance(date)
+        self.print_current_balance(symbol, date)
 
         print("{} |  net performance (%) = {}".format(date, round(perf, 2)))
         print("{} |  number of trades executed = {}".format(date, self.trades))
