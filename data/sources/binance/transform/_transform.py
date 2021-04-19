@@ -81,6 +81,6 @@ def transform_data(
     resampled_data = resample_data(data, candle_size, aggregation_method)
 
     if is_removing_rows:
-        data = remove_incomplete_rows(data, resampled_data, candle_size)
+        resampled_data = remove_incomplete_rows(data, resampled_data, candle_size)
 
-    return data
+    return resampled_data
