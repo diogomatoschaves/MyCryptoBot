@@ -10,7 +10,7 @@ django.setup()
 unique_fields = {"open_time", "exchange", "symbol", "interval"}
 
 
-def save_rows_db(model_class, data, count_updates=True):
+def load_data(model_class, data, count_updates=True):
 
     if data.index.name == 'open_time':
         data = data.reset_index()
