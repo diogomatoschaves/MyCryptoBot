@@ -1,1 +1,1 @@
-from data.sources.binance.load._load import save_rows_db
+from data.sources.binance.load._load import load_data

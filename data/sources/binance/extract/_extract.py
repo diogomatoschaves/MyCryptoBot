@@ -30,7 +30,7 @@ def yield_kline(kline_generator):
     return next(kline_generator)
 
 
-def fetch_missing_data(
+def extract_data(
     model_class,
     klines_generator,
     symbol,

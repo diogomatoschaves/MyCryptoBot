@@ -3,7 +3,7 @@ import os
 
 from data.tests.helpers.mocks.models import *
 from shared.utils.test_setup import get_fixtures
-from data.sources.binance.extract import fetch_missing_data
+from data.sources.binance.extract import extract_data
 from data.tests.helpers.mocks.modules import mock_get_historical_klines_generator
 
 current_path = os.path.dirname(os.path.realpath(__file__))
@@ -20,7 +20,7 @@ class TestBinanceExtract:
             for fixture_name, fixture in fixtures.items()
         ],
     )
-    def test_fetch_missing_data(self, fixture, exchange_data):
+    def test_extract_data(self, fixture, exchange_data):
 
         model_class = fixture["in"]["model_class"]
         symbol = fixture["in"]["symbol"]
@@ -35,4 +35,4 @@ class TestBinanceExtract:
             candle_size=candle_size
         )
 
-        assert fetch_missing_data(**params_dict).equals(fixture["out"]["expected_value"])
+        assert extract_data(**params_dict).equals(fixture["out"]["expected_value"])

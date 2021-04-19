@@ -8,8 +8,8 @@ from binance.websockets import BinanceSocketManager
 
 import shared.exchanges.binance.constants as const
 from data.sources import trigger_signal
-from data.sources.binance.extract import fetch_missing_data
-from data.sources.binance.load import save_rows_db
+from data.sources.binance.extract import extract_data
+from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from data.service.helpers import STRATEGIES
 from shared.exchanges.binance import BinanceHandler
@@ -162,8 +162,8 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         # Extract
         if data is None:
-            data = fetch_missing_data(model_class, self.get_historical_klines_generator, self.symbol,
-                                      self.base_candle_size, candle_size)
+            data = extract_data(model_class, self.get_historical_klines_generator, self.symbol,
+                                self.base_candle_size, candle_size)
 
         # Transform
         data = transform_data(
@@ -177,7 +177,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         )
 
         # Load
-        new_entries = save_rows_db(model_class, data, count_updates=count_updates)
+        new_entries = load_data(model_class, data, count_updates=count_updates)
 
         logging.info(f"{self.symbol}: Added {new_entries} new rows into {model_class}.")
 
@@ -302,7 +302,7 @@ if __name__ == "__main__":
 
     binance_data_handler = BinanceHandler()
 
-    fetch_missing_data(
+    extract_data(
         ExchangeData,
         binance_data_handler.get_historical_klines_generator,
         symbol,
