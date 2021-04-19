@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from data.sources.binance.load import save_rows_db
+from data.sources.binance.load import load_data
 from data.tests.helpers.mocks.models import *
 from shared.utils.test_setup import get_fixtures
 
@@ -19,7 +19,7 @@ class TestBinanceLoad:
             for fixture_name, fixture in fixtures.items()
         ],
     )
-    def test_save_rows_db(self, fixture, exchange_data):
+    def test_load_data(self, fixture, exchange_data):
 
         params_dict = dict(
             model_class=fixture["in"]["model_class"],
@@ -27,4 +27,4 @@ class TestBinanceLoad:
             count_updates=fixture["in"]["count_updates"]
         )
 
-        assert save_rows_db(**params_dict) == fixture["out"]["expected_value"]
+        assert load_data(**params_dict) == fixture["out"]["expected_value"]
