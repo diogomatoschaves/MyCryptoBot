@@ -11,17 +11,8 @@ current_path = os.path.dirname(os.path.realpath(__file__))
 fixtures = get_fixtures(current_path)
 
 
-from database.model.models import Exchange
-
-
-def test_should_create_user_with_username(db) -> None:
-    exchange = Exchange.objects.create(name='foo')
-    assert exchange.name == 'foo'
-
-
 class TestBinanceExtract:
 
-    # @pytest.mark.django_db
     @pytest.mark.parametrize(
         "fixture",
         [

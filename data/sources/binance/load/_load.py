@@ -1,16 +1,19 @@
 import os
 
-from django.db import connection
+from django.db import connection, transaction
 import django
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
+unique_fields = {"open_time", "exchange", "symbol", "interval"}
+
 
 def save_rows_db(model_class, data, count_updates=True):
 
-    data = data.reset_index()
+    if data.index.name == 'open_time':
+        data = data.reset_index()
 
     new_entries = 0
     for index, row in data.iterrows():
@@ -26,10 +29,9 @@ def save_new_entry_db(model_class, fields, count_updates=True):
 
     new_entry = True
     try:
-        model_class.objects.create(**fields)
+        with transaction.atomic():
+            model_class.objects.create(**fields)
     except django.db.utils.IntegrityError as e:
-
-        unique_fields = {"open_time", "exchange", "symbol", "interval"}
 
         fields_subset = {key: value for key, value in fields.items() if key in unique_fields}
 
