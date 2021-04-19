@@ -119,3 +119,37 @@ processed_historical_data = [
         'taker_buy_quote_volume': 11288645.41188546
     }
 ]
+
+exchange_data_1 = dict(
+    exchange_id='binance',
+    symbol_id='BTCUSDT',
+    open_time=datetime(2019, 9, 2, 10, tzinfo=pytz.utc),
+    close_time=datetime(2019, 9, 1, 11, tzinfo=pytz.utc),
+    interval='1h',
+    open=1,
+    high=1,
+    low=1,
+    close=1,
+    volume=1,
+    quote_volume=1,
+    trades=1,
+    taker_buy_asset_volume=1,
+    taker_buy_quote_volume=1
+)
+
+exchange_data_2 = dict(
+    exchange_id='binance',
+    symbol_id='BTCUSDT',
+    open_time=datetime(2020, 3, 1, 10, tzinfo=pytz.utc),  # different open_time
+    close_time=datetime(2020, 3, 1, 11, tzinfo=pytz.utc),  # different close_time
+    interval='1h',
+    open=1,
+    high=1,
+    low=1,
+    close=1,
+    volume=1,
+    quote_volume=1,
+    trades=1,
+    taker_buy_asset_volume=1,
+    taker_buy_quote_volume=1
+)
