@@ -26,11 +26,11 @@ class TestBinanceTransform:
             candle_size=fixture["in"]["candle_size"],
             exchange=fixture["in"]["exchange"],
             symbol=fixture["in"]["symbol"],
-            columns_aggregation=fixture["in"]["columns_aggregation"],
+            aggregation_method=fixture["in"]["aggregation_method"],
             is_removing_zeros=fixture["in"]["is_removing_zeros"],
             is_removing_rows=fixture["in"]["is_removing_rows"]
         )
 
-        result = transform_data(**params_dict).to_dict(orient='index')
+        result = transform_data(**params_dict).reset_index().to_dict(orient='records')
 
         assert result == fixture["out"]["expected_value"]

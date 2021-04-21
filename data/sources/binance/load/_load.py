@@ -3,7 +3,6 @@ import os
 from django.db import connection, transaction
 import django
 
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
@@ -29,6 +28,10 @@ def save_new_entry_db(model_class, fields, count_updates=True):
 
     new_entry = True
     try:
+        with transaction.atomic():
+            model_class.objects.create(**fields)
+    except ValueError:
+        fields["close_time"] = None
         with transaction.atomic():
             model_class.objects.create(**fields)
     except django.db.utils.IntegrityError as e:

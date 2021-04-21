@@ -1,3 +1,3 @@
-data = {}
+data = []
 
 expected_value = data

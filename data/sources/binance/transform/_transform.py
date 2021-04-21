@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+import pandas as pd
 
 import shared.exchanges.binance.constants as const
 
@@ -13,7 +14,6 @@ def add_extra_columns(data, exchange, symbol, candle_size):
 
 
 def remove_columns(data, columns=('id',)):
-
     try:
         data = data.drop(columns=columns)
     except KeyError:
@@ -41,11 +41,15 @@ def set_index(data, index='open_time'):
     return data
 
 
-def remove_incomplete_rows(data, resampled_data, candle_size):
+def replace_nat_values(data):
+    return data.fillna(np.nan)
+
+
+def remove_incomplete_rows(data, resampled_data, candle_size, reference_candle_size):
 
     counts = data.resample(const.CANDLE_SIZES_MAPPER[candle_size]).count()
 
-    rows = counts[(counts != const.COUNT_MAPPER[candle_size]).any(axis=1)].min(axis=1)
+    rows = counts[(counts != const.COUNT_MAPPER[candle_size][reference_candle_size]).any(axis=1)].min(axis=1)
 
     logging.debug(f"Removing {len(rows)} from resampled data.")
 
@@ -57,30 +61,24 @@ def transform_data(
     candle_size,
     exchange,
     symbol,
-    columns_aggregation=const.COLUMNS_AGGREGATION,
+    reference_candle_size='5m',
+    aggregation_method=const.COLUMNS_AGGREGATION,
     is_removing_zeros=False,
     is_removing_rows=False
 ):
 
     data = remove_columns(data, ['id'])
 
-    data = add_extra_columns(data, exchange, symbol, candle_size)
-
     data = set_index(data, "open_time")
 
     if is_removing_zeros:
         data = remove_zeros(data)
 
-    aggregation_method = {
-        **columns_aggregation,
-        "exchange_id": "last",
-        "symbol_id": "last",
-        "interval": "last"
-    }
-
     resampled_data = resample_data(data, candle_size, aggregation_method)
 
     if is_removing_rows:
-        resampled_data = remove_incomplete_rows(data, resampled_data, candle_size)
+        resampled_data = remove_incomplete_rows(data, resampled_data, candle_size, reference_candle_size)
 
-    return resampled_data
+    data = add_extra_columns(resampled_data, exchange, symbol, candle_size)
+
+    return data
