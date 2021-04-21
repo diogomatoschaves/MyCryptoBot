@@ -11,14 +11,14 @@ from data.sources import trigger_signal
 from data.sources.binance.extract import extract_data
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
-from data.service.helpers import STRATEGIES
+from data.service.helpers import STRATEGIES, APP_NAME
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.exceptions import InvalidInput
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import ExchangeData, StructuredData, Symbol
+from database.model.models import ExchangeData, StructuredData, Symbol, Jobs
 
 
 class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
@@ -124,6 +124,9 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         self._stop_websocket()
 
+        ExchangeData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
+        StructuredData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
+
     def _start_kline_websockets(self, symbol, callback):
 
         streams = [
@@ -137,13 +140,14 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         self.conn_key = self.start_multiplex_socket(streams, callback)
 
+        print(self.conn_key)
+
         if not self.started:
             self.start()
             self.started = True
 
     # TODO: Wrap this in AttributeError exception handling
     def _stop_websocket(self):
-        ExchangeData.objects.last().delete()
 
         self.stop_socket(self.conn_key)
 
@@ -153,6 +157,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         self,
         model_class,
         candle_size,
+        reference_candle_size='5m',
         data=None,
         remove_zeros=False,
         remove_rows=False,
@@ -165,13 +170,16 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             data = extract_data(model_class, self.get_historical_klines_generator, self.symbol,
                                 self.base_candle_size, candle_size)
 
+        print(f"candle_size: {candle_size}, len: {len (data)}")
+
         # Transform
         data = transform_data(
             data,
             candle_size,
             self.exchange,
             self.symbol,
-            columns_aggregation=columns_aggregation,
+            reference_candle_size=reference_candle_size,
+            aggregation_method=columns_aggregation,
             is_removing_zeros=remove_zeros,
             is_removing_rows=remove_rows
         )
@@ -191,7 +199,6 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         kline_size = row["stream"].split('_')[-1]
 
         if kline_size == self.base_candle_size:
-
             self.raw_data, self.raw_data_length, _ = self._process_stream(
                 ExchangeData,
                 row["data"]["k"],
@@ -223,9 +230,11 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
                 if not success:
                     logging.warning(
                         f"{self.symbol}: There was an error processing the "
-                        f"signal generation request. Stopping data pipeline"
+                        f"signal generation request. Stopping data pipeline."
                     )
                     self.stop_data_ingestion()
+                    deleted = Jobs.objects.filter(job_id=symbol, exchange_id=self.exchange, app=APP_NAME).delete()
+                    logging.debug(f"Deleted corresponding job: {deleted == 1}")
 
     def _process_stream(
         self,
@@ -282,6 +291,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             new_entries = self._etl_pipeline(
                 model_class,
                 candle_size,
+                reference_candle_size=candle_size,
                 data=rows,
                 remove_zeros=remove_zeros,
                 remove_rows=remove_rows,

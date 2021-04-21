@@ -45,5 +45,5 @@ def wait_for_job_conclusion(job_id, symbol, strategy, params, candle_size, excha
 
             retries += 1
 
-        if retries > 10:
+        if retries > 40:
             return False

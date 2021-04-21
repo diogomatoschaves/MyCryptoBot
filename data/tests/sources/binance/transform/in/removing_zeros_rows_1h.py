@@ -12,6 +12,6 @@ data.iloc[3, data.columns.get_loc("trades")] = 0
 candle_size = '1h'
 exchange = 'binance'
 symbol = 'BTCUSDT'
-columns_aggregation = const.COLUMNS_AGGREGATION
+aggregation_method = const.COLUMNS_AGGREGATION
 is_removing_zeros = True
 is_removing_rows = True
