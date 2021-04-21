@@ -42,7 +42,15 @@ jobs:
         env:
           TEST: true
         run: |
-          python -m pytest $DIRECTORY --ds=database.settings --verbose --cov=./
+          python -m pytest $DIRECTORY --ds=database.settings --verbose --cov=data --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
   build:
     runs-on: ubuntu-latest
     needs: testing
