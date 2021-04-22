@@ -1,6 +1,6 @@
 import pandas as pd
 
-from data.tests.helpers.sample_data import exchange_data_2
+from data.tests.helpers.test_data.sample_data import exchange_data_2
 from database.model.models import ExchangeData
 
 model_class = ExchangeData
