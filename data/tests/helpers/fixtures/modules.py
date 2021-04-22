@@ -4,9 +4,9 @@ from binance.client import Client
 
 import data
 from data.sources.binance import BinanceDataHandler
-from data.tests.helpers.sample_data import mock_websocket_raw_data_1h, \
+from data.tests.helpers.test_data.sample_data import mock_websocket_raw_data_1h, \
     mock_websocket_raw_data_5m, binance_api_historical_data
-from data.tests.helpers.mocks.models import *
+from data.tests.helpers.fixtures.models import *
 from shared.exchanges.binance import BinanceHandler
 
 
