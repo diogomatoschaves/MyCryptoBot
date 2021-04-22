@@ -8,6 +8,7 @@ from flask import Flask, jsonify, request
 import django
 
 from data.service.external_requests import start_stop_symbol_trading
+from data.service.helpers.responses import RESPONSES
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -16,7 +17,7 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from data.service.helpers import check_input, APP_NAME
+from data.service.helpers import check_input
 from data.sources.binance import BinanceDataHandler
 from database.model.models import Jobs
 from shared.utils.logger import configure_logger
@@ -68,7 +69,7 @@ def start_bot():
     symbol = data.get("symbol", None)
     strategy = data.get("strategy", None)
     params = data.get("params", {})
-    candle_size = data.get("candle_size", "1h")
+    candle_size = data.get("candle_size", None)
     exchange = data.get("exchange", None)
 
     response = check_input(
@@ -87,11 +88,11 @@ def start_bot():
     candle_size = candle_size.lower()
 
     try:
-        Jobs.objects.create(job_id=symbol, exchange_id=exchange.lower(), app=APP_NAME)
+        Jobs.objects.create(job_id=symbol, exchange_id=exchange.lower(), app=os.getenv("APP_NAME"))
         logging.info(f"Starting {symbol} Data pipeline.")
     except IntegrityError as e:
         logging.debug(e)
-        return jsonify({"response": f"{symbol} data pipeline already ongoing."})
+        return jsonify(RESPONSES["DATA_PIPELINE_ONGOING"](symbol))
 
     response = start_stop_symbol_trading(symbol, exchange, 'start')
 
@@ -107,7 +108,7 @@ def start_bot():
         candle_size
     )
 
-    return jsonify({"response": f"{symbol} data pipeline successfully started."})
+    return jsonify(RESPONSES["DATA_PIPELINE_START_OK"](symbol))
 
 
 @app.route('/stop_bot', methods=['PUT'])
@@ -126,7 +127,7 @@ def stop_bot():
         return response
 
     try:
-        job = Jobs.objects.get(job_id=symbol, exchange_id=exchange.lower(), app=APP_NAME)
+        job = Jobs.objects.get(job_id=symbol, exchange_id=exchange.lower(), app=os.getenv("APP_NAME"))
 
         logging.info(f"Stopping {symbol} data pipeline.")
 

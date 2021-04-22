@@ -11,7 +11,7 @@ from data.sources import trigger_signal
 from data.sources.binance.extract import extract_data
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
-from data.service.helpers import STRATEGIES, APP_NAME
+from data.service.helpers import STRATEGIES
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.exceptions import InvalidInput
 
@@ -233,7 +233,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
                         f"signal generation request. Stopping data pipeline."
                     )
                     self.stop_data_ingestion()
-                    deleted = Jobs.objects.filter(job_id=symbol, exchange_id=self.exchange, app=APP_NAME).delete()
+                    deleted = Jobs.objects.filter(job_id=symbol, exchange_id=self.exchange, app=os.getenv("APP_NAME")).delete()
                     logging.debug(f"Deleted corresponding job: {deleted == 1}")
 
     def _process_stream(
