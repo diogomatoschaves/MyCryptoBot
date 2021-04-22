@@ -1,10 +1,10 @@
 import pytest
 import os
 
-from data.tests.helpers.mocks.models import *
+from data.tests.helpers.fixtures.models import *
 from shared.utils.test_setup import get_fixtures
 from data.sources.binance.extract import extract_data
-from data.tests.helpers.mocks.modules import mock_get_historical_klines_generator
+from data.tests.helpers.fixtures.modules import mock_get_historical_klines_generator
 
 current_path = os.path.dirname(os.path.realpath(__file__))
 

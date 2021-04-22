@@ -4,9 +4,9 @@ import pytest
 import os
 
 from data.sources.binance import BinanceDataHandler
-from data.tests.helpers.mocks.modules import *
-from data.tests.helpers.mocks.models import *
-from data.tests.helpers.sample_data import processed_historical_data
+from data.tests.helpers.fixtures.modules import *
+from data.tests.helpers.fixtures.models import *
+from data.tests.helpers.test_data.sample_data import processed_historical_data
 from shared.utils.exceptions import InvalidInput
 from shared.utils.test_setup import get_fixtures
 from database.model.models import ExchangeData, StructuredData
@@ -60,6 +60,11 @@ class TestBinanceDataHandler:
             'binance'
         )
 
+        binance_data_handler.stop_data_ingestion()
+
+        assert ExchangeData.objects.all().count() == fixture["out"]["expected_number_objs_exchange"] - 1
+        assert StructuredData.objects.all().count() == fixture["out"]["expected_number_objs_structured"] - 1
+
     @pytest.mark.parametrize(
         "input_value",
         [
@@ -71,6 +76,24 @@ class TestBinanceDataHandler:
                     "candle_size": "5m"
                 },
                 id="InvalidStrategyParams",
+            ),
+            pytest.param(
+                {
+                    "strategy": "MovingAvera",
+                    "params": {"sma": 30},
+                    "symbol": "BTCUSDT",
+                    "candle_size": "5m"
+                },
+                id="InvalidStrategy",
+            ),
+            pytest.param(
+                {
+                    "strategy": "MovingAverage",
+                    "params": {"sma": 30},
+                    "symbol": "BTCUSD",
+                    "candle_size": "5m"
+                },
+                id="InvalidSymbol",
             ),
         ],
     )

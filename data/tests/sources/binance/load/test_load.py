@@ -2,7 +2,7 @@ import pytest
 import os
 
 from data.sources.binance.load import load_data
-from data.tests.helpers.mocks.models import *
+from data.tests.helpers.fixtures.models import *
 from shared.utils.test_setup import get_fixtures
 
 current_path = os.path.dirname(os.path.realpath(__file__))

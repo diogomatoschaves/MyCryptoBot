@@ -1,9 +1,6 @@
-from datetime import datetime
-
-import pytz
 import pytest
 
-from data.tests.helpers.sample_data import exchange_data_1
+from data.tests.helpers.test_data.sample_data import exchange_data_1
 from database.model.models import Exchange, Symbol, ExchangeData, Asset
 
 
@@ -19,6 +16,7 @@ def create_assets(db):
 
     return [obj1, obj2]
 
+
 @pytest.fixture
 def create_symbol(db):
     return Symbol.objects.create(name='BTCUSDT', base_id='BTC', quote_id='USDT')
@@ -26,7 +24,6 @@ def create_symbol(db):
 
 @pytest.fixture
 def exchange_data_factory(db, create_exchange, create_assets, create_symbol):
-    # Closure
     def create_exchange_data(**kwargs):
         return ExchangeData.objects.create(**exchange_data_1, **kwargs)
     return create_exchange_data
