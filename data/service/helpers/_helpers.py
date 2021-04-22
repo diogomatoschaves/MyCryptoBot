@@ -103,7 +103,7 @@ def check_input(**kwargs):
                 for key in params:
                     if key not in STRATEGIES[strategy]["params"]:
                         logging.debug(key)
-                        return jsonify(RESPONSES["STRATEGY_INVALID"](key))
+                        return jsonify(RESPONSES["PARAMS_INVALID"](key))
         else:
             logging.debug(strategy)
             return jsonify(RESPONSES["STRATEGY_INVALID"](strategy))

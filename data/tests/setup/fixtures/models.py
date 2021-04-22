@@ -1,6 +1,6 @@
 import pytest
 
-from data.tests.helpers.test_data.sample_data import exchange_data_1
+from data.tests.setup.test_data.sample_data import exchange_data_1
 from database.model.models import Exchange, Symbol, ExchangeData, Asset
 
 

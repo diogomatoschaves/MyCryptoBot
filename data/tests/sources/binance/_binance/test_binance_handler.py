@@ -4,9 +4,9 @@ import pytest
 import os
 
 from data.sources.binance import BinanceDataHandler
-from data.tests.helpers.fixtures.modules import *
-from data.tests.helpers.fixtures.models import *
-from data.tests.helpers.test_data.sample_data import processed_historical_data
+from data.tests.setup.fixtures.modules import *
+from data.tests.setup.fixtures.models import *
+from data.tests.setup.test_data.sample_data import processed_historical_data
 from shared.utils.exceptions import InvalidInput
 from shared.utils.test_setup import get_fixtures
 from database.model.models import ExchangeData, StructuredData

@@ -2,6 +2,7 @@ import os
 import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from functools import reduce
 
 from django.db import IntegrityError
 from flask import Flask, jsonify, request
@@ -33,27 +34,32 @@ binance_instances = []
 
 
 def initialize_data_collection(strategy, params, symbol, candle_size):
-    global binance_instances
 
     binance_handler = BinanceDataHandler(strategy, params, symbol, candle_size)
 
     binance_handler.start_data_ingestion()
 
+    global binance_instances
     binance_instances.append(binance_handler)
 
 
-def stop_instance(instance_symbol):
+def reduce_instances(instances, instance, symbol):
+    if symbol == instance.symbol:
+        instance.stop_data_ingestion()
+        return instances
+    else:
+        return [*instances, instance]
+
+
+def stop_instance(symbol):
+
     global binance_instances
 
-    new_binance_instances = []
-    for instance in binance_instances:
-
-        if instance_symbol == instance.symbol:
-            instance.stop_data_ingestion()
-        else:
-            new_binance_instances.append(instance)
-
-    binance_instances = new_binance_instances
+    binance_instances = reduce(
+        lambda instances, instance: reduce_instances(instances, instance, symbol),
+        binance_instances,
+        []
+    )
 
 
 @app.route('/')
@@ -139,9 +145,9 @@ def stop_bot():
 
         job.delete()
 
-        return jsonify({"response": f"{symbol} data pipeline stopped."})
+        return jsonify(RESPONSES["DATA_PIPELINE_STOPPED"](symbol))
     except Jobs.DoesNotExist:
-        return jsonify({"response": f"There is no {symbol} active data pipeline."})
+        return jsonify(RESPONSES["DATA_PIPELINE_INEXISTENT"](symbol))
 
 
 if __name__ == "__main__":
