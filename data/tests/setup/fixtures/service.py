@@ -34,26 +34,6 @@ def mock_start_stop_symbol_trading_success_false(mocker):
     )
 
 
-# @pytest.fixture
-# def app_success_external_call(mock_settings_env_vars, mock_start_stop_symbol_trading_success_true):
-#     return create_app(testing=True)
-#
-#
-# @pytest.fixture
-# def app_fail_external_call(mock_start_stop_symbol_trading_success_false):
-#     return create_app(testing=True)
-
-
-# @pytest.fixture
-# def app_factory(mock_settings_env_vars):
-#     def create_app_fixture(success):
-#         if success:
-#             def app_success_external_call(mock_start_stop_symbol_trading_success_true):
-#                 return create_app(testing=True)
-#             return app_success_external_call
-#     return create_app_fixture
-
-
 @pytest.fixture
 def app(mock_settings_env_vars):
     app = create_app(testing=True)
@@ -102,5 +82,50 @@ def mock_binance_handler_start_data_ingestion(mocker):
     mocker.patch.object(
         BinanceDataHandler,
         "start_data_ingestion",
-        lambda: None
+        lambda self: None
     )
+
+
+@pytest.fixture
+def mock_binance_handler_stop_data_ingestion(mocker):
+    return mocker.patch.object(
+        BinanceDataHandler,
+        "stop_data_ingestion",
+        lambda self: None
+    )
+
+
+@pytest.fixture
+def binance_handler_stop_data_ingestion_spy(mocker):
+    return mocker.spy(BinanceDataHandler, 'stop_data_ingestion')
+
+
+@pytest.fixture
+def binance_handler_instances_spy_start_bot(mocker):
+    return mocker.patch('data.service.app.binance_instances', new_callable=list)
+
+
+def immediate_execution(initialize_data_collection, strategy, params, symbol, candle_size):
+    return initialize_data_collection(strategy, params, symbol, candle_size)
+
+
+@pytest.fixture
+def mock_executor_submit(mocker):
+    mocker.patch.object(
+        data.service.app.executor,
+        "submit",
+        immediate_execution
+    )
+
+
+@pytest.fixture
+def binance_handler_instances_spy_stop_bot(db, create_symbol, create_assets, create_exchange, mocker):
+    return mocker.patch(
+        'data.service.app.binance_instances',
+        [BinanceDataHandler("MovingAverageCrossover", symbol='BTCUSDT')]
+    )
+
+
+@pytest.fixture
+def binance_handler_instances_spy(mocker):
+    return mocker.spy(data.service.app, 'binance_instances')
