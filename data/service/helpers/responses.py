@@ -3,6 +3,8 @@
 RESPONSES = {
     "DATA_PIPELINE_START_OK": lambda symbol: {"response": f"{symbol} data pipeline successfully started."},
     "DATA_PIPELINE_ONGOING": lambda symbol: {"response": f"{symbol} data pipeline already ongoing."},
+    "DATA_PIPELINE_STOPPED": lambda symbol: {"response": f"{symbol} data pipeline stopped."},
+    "DATA_PIPELINE_INEXISTENT": lambda symbol: {"response": f"There is no {symbol} active data pipeline."},
     "SYMBOL_REQUIRED": {"response": "A symbol must be included in the request."},
     "SYMBOL_INVALID": lambda symbol: {"response": f"{symbol} is not a valid symbol."},
     "EXCHANGE_REQUIRED": {"response": "An exchange must be included in the request."},

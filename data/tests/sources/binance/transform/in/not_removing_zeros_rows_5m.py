@@ -2,7 +2,7 @@ import shared.exchanges.binance.constants as const
 
 import pandas as pd
 
-from data.tests.helpers.test_data.sample_data import processed_historical_data
+from data.tests.setup.test_data.sample_data import processed_historical_data
 
 data = pd.DataFrame(processed_historical_data).set_index('open_time')
 

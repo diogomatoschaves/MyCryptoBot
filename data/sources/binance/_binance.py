@@ -29,7 +29,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
     only time based steps).
     """
 
-    def __init__(self, strategy, params, symbol='BTCUSDT', candle_size='1h'):
+    def __init__(self, strategy, params=None, symbol='BTCUSDT', candle_size='1h'):
 
         BinanceHandler.__init__(self)
         BinanceSocketManager.__init__(self, self)
@@ -79,9 +79,10 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         if strategy in STRATEGIES:
             self.strategy = strategy
 
-            for key in params:
-                if key not in STRATEGIES[strategy]["params"]:
-                    raise InvalidInput(f"Provided {key} in params is not valid.")
+            if isinstance(params, dict):
+                for key in params:
+                    if key not in STRATEGIES[strategy]["params"]:
+                        raise InvalidInput(f"Provided {key} in params is not valid.")
 
             self.params = params
         else:
