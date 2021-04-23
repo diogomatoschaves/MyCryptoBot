@@ -4,7 +4,7 @@ import os
 from data.tests.setup.fixtures.models import *
 from shared.utils.test_setup import get_fixtures
 from data.sources.binance.extract import extract_data
-from data.tests.setup.fixtures.modules import mock_get_historical_klines_generator
+from data.tests.setup.fixtures.external_modules import mock_get_historical_klines_generator
 
 current_path = os.path.dirname(os.path.realpath(__file__))
 

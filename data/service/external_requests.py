@@ -24,7 +24,7 @@ def check_job_status(job_id):
     return response
 
 
-@retry_failed_connection(num_times=3)
+@retry_failed_connection(num_times=2)
 def generate_signal(symbol, strategy, params, candle_size, exchange):
 
     url = MODEL_APP_ENDPOINTS["GENERATE_SIGNAL"](os.getenv("MODEL_APP_URL"))

@@ -234,7 +234,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
                         f"signal generation request. Stopping data pipeline."
                     )
                     self.stop_data_ingestion()
-                    deleted = Jobs.objects.filter(job_id=symbol, exchange_id=self.exchange, app=os.getenv("APP_NAME")).delete()
+                    deleted = Jobs.objects.filter(job_id=self.symbol, exchange_id=self.exchange, app=os.getenv("APP_NAME")).delete()
                     logging.debug(f"Deleted corresponding job: {deleted == 1}")
 
     def _process_stream(
@@ -300,23 +300,3 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             )
 
         return data, data_length, new_entries > 0
-
-
-if __name__ == "__main__":
-
-    symbol = 'BTCUSDT'
-
-    base_candle_size = '5m'
-    interval = '5m'
-
-    start_date = int(datetime(2020, 12, 21, 8, 0).timestamp() * 1000)
-
-    binance_data_handler = BinanceHandler()
-
-    extract_data(
-        ExchangeData,
-        binance_data_handler.get_historical_klines_generator,
-        symbol,
-        base_candle_size,
-        interval
-    )
