@@ -1,4 +1,5 @@
 from data.tests.setup.fixtures.internal_modules import *
+from data.tests.setup.fixtures.external_modules import *
 from data.tests.setup.fixtures.app import mock_client_env_vars
 from data.tests.setup.test_data.sample_data import processed_historical_data
 from shared.utils.exceptions import InvalidInput
