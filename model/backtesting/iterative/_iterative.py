@@ -2,7 +2,6 @@ from model.backtesting._mixin import BacktestMixin
 from shared.trading import Trader
 
 
-# TODO: Improve results presentation
 class IterativeBacktester(BacktestMixin, Trader):
 
     def __init__(self, strategy, amount=1000, symbol='BTCUSDT', trading_costs=0):

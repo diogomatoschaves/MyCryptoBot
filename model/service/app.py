@@ -8,10 +8,12 @@ from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
+from model.service.helpers.responses import Responses
 from model.strategies import get_signal
 from model.service.helpers import APP_NAME
 from model.worker import conn
 from shared.utils.logger import configure_logger
+
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -59,17 +61,15 @@ def generate_signal():
     exchange = request_data.get("exchange", "binance").lower()
 
     if strategy not in strategies:
-        return jsonify({"response": f"Invalid {strategy} strategy.", "success": False})
+        return jsonify(Responses.STRATEGY_INVALID(strategy))
 
     job = q.enqueue_call(get_signal, (symbol, candle_size, exchange, strategy, params))
 
     job_id = job.get_id()
 
-    Jobs.objects.create(job_id=job_id, exchange_id=exchange, app=APP_NAME)
+    Jobs.objects.create(job_id=job_id, exchange_id=exchange, app=os.getenv("APP_NAME"))
 
-    return jsonify(
-        {"response": f"Signal generation process started.", "success": True, "job_id": job_id}
-    )
+    return jsonify(Responses.SIGNAL_GENERATION_INPROGRESS(job_id))
 
 
 @app.route('/check_job/<job_id>', methods=['GET'])
@@ -77,19 +77,19 @@ def check_job(job_id):
     try:
         job = Job.fetch(job_id, connection=conn)
     except NoSuchJobError:
-        return jsonify({"status": 'job not found'})
+        return jsonify(Responses.JOB_NOT_FOUND)
 
     if job.is_finished:
-        return jsonify({"status": 'finished', "success": job.result})
+        return jsonify(Responses.FINISHED(job.result))
 
     elif job.is_queued:
-        return jsonify({"status": 'in-queue'})
+        return jsonify(Responses.IN_QUEUE)
 
     elif job.is_started:
-        return jsonify({"status": 'waiting'})
+        return jsonify(Responses.WAITING)
 
     elif job.is_failed:
-        return jsonify({"status": 'failed'})
+        return jsonify(Responses.FAILED)
 
 
 if __name__ == "__main__":
