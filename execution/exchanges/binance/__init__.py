@@ -1,1 +1,1 @@
-from execution.binance._trading import BinanceTrader
+from execution.exchanges.binance._trading import BinanceTrader

@@ -4,7 +4,7 @@ import sys
 
 from flask import Flask, jsonify, request
 
-from execution.binance import BinanceTrader
+from execution.exchanges.binance import BinanceTrader
 from shared.utils.logger import configure_logger
 
 module_path = os.path.abspath(os.path.join('..'))
