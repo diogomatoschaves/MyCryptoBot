@@ -1,0 +1,87 @@
+import time
+
+import pytest
+import requests
+from binance.client import Client
+
+from data.tests.setup.test_data.sample_data import binance_api_historical_data
+from data.tests.setup.fixtures.models import *
+from shared.exchanges.binance import BinanceHandler
+
+
+response = {"response": "Something", "success": True}
+
+
+def mock_get_historical_klines_generator(symbol, candle_size, start_date):
+    for kline in binance_api_historical_data:
+        yield kline
+
+
+def double_callback(callback, mock_row):
+    callback(mock_row[0])
+    callback(mock_row[1])
+
+
+def mock_client_init_session(self):
+    return None
+
+
+@pytest.fixture
+def mock_binance_handler_klines(mocker):
+    mocker.patch.object(
+        BinanceHandler,
+        "get_historical_klines_generator",
+        lambda self, symbol, candle_size, stat_date: mock_get_historical_klines_generator(symbol, candle_size, stat_date)
+    )
+
+
+@pytest.fixture
+def mock_binance_client_init(mocker):
+    mocker.patch.object(Client, "_init_session", lambda self: None)
+
+
+@pytest.fixture
+def mock_binance_client_ping(mocker):
+    mocker.patch.object(Client, "ping", lambda self: None)
+
+
+def mock_response(*args, **kwargs):
+    class MockResponse:
+        def __init__(self, json_data, status_code):
+            self.json_data = json_data
+            self.status_code = status_code
+            self.ok = True
+
+        def json(self):
+            return self.json_data
+
+        @property
+        def text(self):
+            return response["response"]
+
+    return MockResponse(response, 200)
+
+
+@pytest.fixture
+def mock_requests_post(mocker):
+    return mocker.patch.object(requests, "post", mock_response)
+
+
+@pytest.fixture
+def requests_post_spy(mocker):
+    return mocker.spy(requests, "post")
+
+
+@pytest.fixture
+def mock_requests_get(mocker):
+    return mocker.patch.object(requests, "get", mock_response)
+
+
+@pytest.fixture
+def requests_get_spy(mocker):
+    return mocker.spy(requests, "get")
+
+
+@pytest.fixture
+def mock_time_sleep(mocker):
+    return mocker.patch.object(time, "sleep", lambda seconds: None)
