@@ -34,16 +34,15 @@ def wait_for_job_conclusion(job_id, symbol, strategy, params, candle_size, excha
 
         if "status" in response:
             if response["status"] == "job not found":
-                return generate_signal(symbol, strategy, params, candle_size, exchange, retry=retry+1)
+                return trigger_signal(symbol, strategy, params, candle_size, exchange, retry=retry+1)
             elif response["status"] == "finished":
                 logging.debug(f"{symbol}: Job {job_id} finished successfully.")
                 return True
             elif response["status"] in ["in-queue", "waiting"]:
                 time.sleep(5)
+                retries += 1
             elif response["status"] == "failed":
                 return False
-
-            retries += 1
 
         if retries > 40:
             return False
