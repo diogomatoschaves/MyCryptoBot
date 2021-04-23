@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from data.service.helpers.responses import RESPONSES
+from data.service.helpers.responses import Responses
 from data.tests.setup.fixtures.service import *
 
 
@@ -113,7 +113,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=input_params)
 
-        assert res.json == RESPONSES[response]
+        assert res.json == getattr(Responses, response)
 
     @pytest.mark.parametrize(
         "input_params,response,param",
@@ -187,7 +187,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=input_params)
 
-        assert res.json == RESPONSES[response](input_params[param])
+        assert res.json == getattr(Responses, response)(input_params[param])
 
     @pytest.mark.parametrize(
         "params,response",
@@ -224,7 +224,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        assert res.json == RESPONSES[response](params["symbol"])
+        assert res.json == getattr(Responses, response)(params["symbol"])
 
     @pytest.mark.parametrize(
         "params,response",
@@ -264,7 +264,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        assert res.json == RESPONSES[response](params["symbol"])
+        assert res.json == getattr(Responses, response)(params["symbol"])
         assert len(binance_handler_instances_spy_start_bot) == 1
 
     @pytest.mark.parametrize(
@@ -340,7 +340,7 @@ class TestDataService:
 
         res = client.put('/stop_bot', json=input_params)
 
-        assert res.json == RESPONSES[response]
+        assert res.json == getattr(Responses, response)
 
     @pytest.mark.parametrize(
         "input_params,response,param",
@@ -384,7 +384,7 @@ class TestDataService:
 
         res = client.put('/stop_bot', json=input_params)
 
-        assert res.json == RESPONSES[response](input_params[param])
+        assert res.json == getattr(Responses, response)(input_params[param])
 
     @pytest.mark.parametrize(
         "params,response",
@@ -424,7 +424,7 @@ class TestDataService:
 
         res = client.put('/stop_bot', json=params)
 
-        assert res.json == RESPONSES[response](params["symbol"])
+        assert res.json == getattr(Responses, response)(params["symbol"])
         assert Jobs.objects.count() == 0
 
         binance_handler_stop_data_ingestion_spy.assert_called()
@@ -460,4 +460,4 @@ class TestDataService:
 
         res = client.put('/stop_bot', json=params)
 
-        assert res.json == RESPONSES[response](params["symbol"])
+        assert res.json == getattr(Responses, response)(params["symbol"])

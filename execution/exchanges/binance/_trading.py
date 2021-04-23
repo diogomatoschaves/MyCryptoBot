@@ -184,8 +184,8 @@ class BinanceTrader(BinanceHandler, Trader):
         Orders.objects.create(
             order_id=order["orderId"],
             client_order_id=order["clientOrderId"],
-            symbol=order["symbol"],
-            transact_time=order["symbol"],
+            symbol_id=order["symbol"],
+            transact_time=order["transactTime"],
             price=order["price"],
             original_qty=order["origQty"],
             executed_qty=order["executedQty"],

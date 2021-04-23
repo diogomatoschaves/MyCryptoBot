@@ -9,7 +9,7 @@ from flask import Flask, jsonify, request
 import django
 
 from data.service.external_requests import start_stop_symbol_trading
-from data.service.helpers.responses import RESPONSES
+from data.service.helpers.responses import Responses
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -98,7 +98,7 @@ def start_bot():
         logging.info(f"Starting {symbol} Data pipeline.")
     except IntegrityError as e:
         logging.debug(e)
-        return jsonify(RESPONSES["DATA_PIPELINE_ONGOING"](symbol))
+        return jsonify(Responses.DATA_PIPELINE_ONGOING(symbol))
 
     response = start_stop_symbol_trading(symbol, exchange, 'start')
 
@@ -114,7 +114,7 @@ def start_bot():
         candle_size
     )
 
-    return jsonify(RESPONSES["DATA_PIPELINE_START_OK"](symbol))
+    return jsonify(Responses.DATA_PIPELINE_START_OK(symbol))
 
 
 @app.route('/stop_bot', methods=['PUT'])
@@ -145,9 +145,9 @@ def stop_bot():
 
         job.delete()
 
-        return jsonify(RESPONSES["DATA_PIPELINE_STOPPED"](symbol))
+        return jsonify(Responses.DATA_PIPELINE_STOPPED(symbol))
     except Jobs.DoesNotExist:
-        return jsonify(RESPONSES["DATA_PIPELINE_INEXISTENT"](symbol))
+        return jsonify(Responses.DATA_PIPELINE_INEXISTENT(symbol))
 
 
 if __name__ == "__main__":
