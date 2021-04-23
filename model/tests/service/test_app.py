@@ -1,7 +1,7 @@
 from model.service.helpers.responses import Responses
 from model.tests.setup.fixtures.app import *
-from model.tests.setup.fixtures.internal_modules import *
-from shared.utils.tests.fixtures.external_modules import *
+from model.tests.setup.fixtures.internal_modules import mock_settings_env_vars
+from model.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
 
 
