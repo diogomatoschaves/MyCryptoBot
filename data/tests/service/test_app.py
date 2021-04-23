@@ -34,6 +34,21 @@ class TestDataService:
                 'delete',
                 id="start_bot_delete",
             ),
+            pytest.param(
+                'stop_bot',
+                'get',
+                id="start_bot_delete",
+            ),
+            pytest.param(
+                'stop_bot',
+                'post',
+                id="start_bot_delete",
+            ),
+            pytest.param(
+                'stop_bot',
+                'delete',
+                id="start_bot_delete",
+            ),
         ],
     )
     def test_routes_disallowed_methods(self, route, method, client):
@@ -171,14 +186,14 @@ class TestDataService:
         ],
     )
     def test_start_bot_invalid_input_response(
-            self,
-            input_params,
-            response,
-            param,
-            client,
-            create_exchange,
-            create_assets,
-            create_symbol
+        self,
+        input_params,
+        response,
+        param,
+        client,
+        create_exchange,
+        create_assets,
+        create_symbol
     ):
         """
         GIVEN some input params
