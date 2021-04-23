@@ -4,7 +4,7 @@ from sklearn.model_selection import TimeSeriesSplit
 
 from model.data_preparation.feature_engineering import get_lag_features, get_rolling_features
 from model.modelling.helpers import plot_learning_curve
-from model.modelling.model_training import train_model
+from model.modelling.training import train_model
 from model.strategies._mixin import StrategyMixin
 
 

@@ -16,7 +16,7 @@ from model.modelling.helpers import (
     CustomPipeline,
     CustomPolynomialFeatures
 )
-from model.modelling import model_evaluation
+from model.modelling.evaluation._evaluation import model_evaluation
 
 grid_search_params_defaults = {
     "reg__n_estimators": [250, 300, 350],
