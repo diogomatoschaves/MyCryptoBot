@@ -54,6 +54,7 @@ jobs:
           fail_ci_if_error: false
   build:
     runs-on: ubuntu-latest
+    needs: testing
     steps:
       - uses: actions/checkout@v2
       - name: Login to heroku container registry
