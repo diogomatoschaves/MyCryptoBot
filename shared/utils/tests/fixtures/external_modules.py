@@ -3,11 +3,11 @@ import time
 import pytest
 import requests
 from binance.client import Client
+from rq.exceptions import NoSuchJobError
 
+import model
 from data.tests.setup.test_data.sample_data import binance_api_historical_data
-from data.tests.setup.fixtures.models import *
-from shared.exchanges.binance import BinanceHandler
-
+from shared.exchanges import BinanceHandler
 
 response = {"response": "Something", "success": True}
 
@@ -15,11 +15,6 @@ response = {"response": "Something", "success": True}
 def mock_get_historical_klines_generator(symbol, candle_size, start_date):
     for kline in binance_api_historical_data:
         yield kline
-
-
-def double_callback(callback, mock_row):
-    callback(mock_row[0])
-    callback(mock_row[1])
 
 
 def mock_client_init_session(self):
@@ -85,3 +80,36 @@ def requests_get_spy(mocker):
 @pytest.fixture
 def mock_time_sleep(mocker):
     return mocker.patch.object(time, "sleep", lambda seconds: None)
+
+
+def mock_rq_job(*args, **kwargs):
+    class MockJob:
+        def __init__(self):
+            for kwarg, value in kwargs.items():
+                setattr(self, kwarg, value)
+
+            if "raise_error" in kwargs:
+                raise NoSuchJobError
+
+    return MockJob()
+
+
+@pytest.fixture
+def mocked_rq_job(mocker):
+    return mocker.patch('rq.job.Job.fetch')
+
+
+def mock_enqueue_call(get_signal, params):
+    class MockJob:
+        def __init__(self):
+            pass
+
+        def get_id(self):
+            return 'abcde'
+
+    return MockJob()
+
+
+@pytest.fixture
+def mocked_rq_enqueue_call(mocker):
+    return mocker.patch.object(model.service.app.q, 'enqueue_call', mock_enqueue_call)

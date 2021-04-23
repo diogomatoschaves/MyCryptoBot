@@ -1,7 +1,7 @@
 from data.service.external_requests import generate_signal
 from data.service.helpers import MODEL_APP_ENDPOINTS
 from data.sources._sources import wait_for_job_conclusion, trigger_signal
-from data.tests.setup.fixtures.external_modules import mock_time_sleep
+from shared.utils.tests.fixtures.external_modules import mock_time_sleep
 from data.tests.setup.fixtures.internal_modules import *
 from shared.utils.exceptions import FailedSignalGeneration
 
