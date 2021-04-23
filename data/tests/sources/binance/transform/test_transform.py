@@ -1,9 +1,8 @@
-import pytest
 import os
 
 from data.sources.binance.transform import transform_data
-from data.tests.setup.fixtures.models import *
-from shared.utils.test_setup import get_fixtures
+from shared.utils.tests.fixtures.models import *
+from shared.utils.tests.test_setup import get_fixtures
 
 current_path = os.path.dirname(os.path.realpath(__file__))
 

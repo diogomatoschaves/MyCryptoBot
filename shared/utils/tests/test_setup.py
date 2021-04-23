@@ -33,6 +33,6 @@ def get_fixtures(current_path, fixtures=None, keys=None):
 
 if __name__ == "__main__":
 
-    fixtures = get_fixtures("/Users/diogomatoschaves/PycharmProjects/crypto/data/tests/sources/binance/extract")
+    fixtures = get_fixtures("/data/tests/sources/binance/extract")
 
     print(fixtures)
