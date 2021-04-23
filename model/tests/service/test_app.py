@@ -1,13 +1,8 @@
-import os
-
-import pytest
-
-from database.model.models import Jobs
 from model.service.helpers.responses import Responses
 from model.tests.setup.fixtures.app import *
-from model.tests.setup.fixtures.external_modules import *
 from model.tests.setup.fixtures.internal_modules import *
-from model.tests.setup.fixtures.models import *
+from shared.utils.tests.fixtures.external_modules import *
+from shared.utils.tests.fixtures.models import *
 
 
 class TestModelService:

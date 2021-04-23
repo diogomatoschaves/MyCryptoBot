@@ -23,7 +23,10 @@ from database.model.models import StructuredData
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
 
-def get_signal(symbol, candle_size, exchange, strategy, params):
+def get_signal(symbol, candle_size, exchange, strategy, params=None):
+
+    if params is None:
+        params = {}
 
     data = get_data(StructuredData, None, symbol, candle_size, exchange)
 
