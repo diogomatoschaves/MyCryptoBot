@@ -14,7 +14,7 @@ def execute_order(symbol, signal, exchange):
 
     payload = {
         "symbol": symbol,
-        "signal": signal
+        "signal": signal,
     }
 
     position = "GO LONG" if signal == 1 else "GO SHORT" if signal == -1 else "GO NEUTRAL"
