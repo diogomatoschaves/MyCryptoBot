@@ -11,29 +11,58 @@ on:
       - 'database/model/migrations/**'
       - '.github/workflows/build-deploy-model.yml'
 
+env:
+  DIRECTORY: model/
+  HEROKU_WEB_PROCESS: web
+  HEROKU_WORKER_PROCESS: worker
+  HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+  HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+  HEROKU_APP_NAME: ${{ secrets.HEROKU_MODEL_APP_NAME }}
+  EXECUTION_APP_URL: ${{ secrets.EXECUTION_APP_URL }}
+
 jobs:
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1.1.2
+        with:
+          version: 1.1.5
+          virtualenvs-create: false
+      - name: Install dependencies
+        run: |
+          cd $DIRECTORY
+          poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+      - name: Test with pytest
+        env:
+          TEST: true
+        run: |
+          python -m pytest $DIRECTORY --ds=database.settings --verbose --cov=model/strategies \
+          --cov=model/service --cov=model/backtesting --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Login to heroku container registry
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
         run: |
           heroku container:login
       - name: Build and push
-        env:
-          DIRECTORY: model/
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_APP_NAME: ${{ secrets.HEROKU_MODEL_APP_NAME }}
         run: |
           cd $DIRECTORY
-          heroku container:push --recursive --app $HEROKU_APP_NAME --context-path=../ --arg APP_NAME=$HEROKU_APP_NAME
+          heroku container:push --recursive --app $HEROKU_APP_NAME --context-path=../ --arg APP_NAME=$HEROKU_APP_NAME,\
+          EXECUTION_APP_URL=$EXECUTION_APP_URL
       - name: Release
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_APP_NAME: ${{ secrets.HEROKU_MODEL_APP_NAME }}
-          HEROKU_WEB_PROCESS: web
-          HEROKU_WORKER_PROCESS: worker
         run: heroku container:release $HEROKU_WEB_PROCESS $HEROKU_WORKER_PROCESS --app $HEROKU_APP_NAME
