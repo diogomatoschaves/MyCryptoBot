@@ -20,6 +20,7 @@ endpoint_options = {
     2: {"data": "influencers", "method": "influencers", "dataset": lambda x: x["data"]},
     3: {"data": "global", "method": "assets", "dataset": lambda x: x["data"]["timeSeries"]},
     4: {"data": "meta", "method": "meta", "dataset": lambda x: x["data"]},
+    5: {"data": "assets", "method": "temp", "dataset": lambda x: x["data"][0]["timeSeries"]},
 }
 
 
@@ -99,7 +100,7 @@ influencers_attributes = {
 
 def get_query_params(endpoint_option, symbol, data_points, interval, key, start, end):
 
-    if endpoint_option == 1:
+    if endpoint_option == 1 or endpoint_option == 5:
         return {
             "data": endpoint_options[endpoint_option]["data"],
             "symbol": symbol,
@@ -133,6 +134,18 @@ def get_query_params(endpoint_option, symbol, data_points, interval, key, start,
             "data": endpoint_options[endpoint_option]["data"],
             "key": key,
         }
+
+
+def process_temp(time_series, symbol):
+
+    time_entry = time_series[-1]
+
+    time = datetime.fromtimestamp(time_entry["time"]).astimezone(pytz.timezone('UTC'))
+
+    result = {attr: time_entry[attr] for attr in assets_attributes if attr in time_entry}
+    result["time"] = time
+
+    return result
 
 
 def process_assets(time_series, symbol):
@@ -190,16 +203,19 @@ def get_lunarcrush_data(symbol, key, start=None, end=None, data_points=500, inte
 
     dataset = endpoint_options[endpoint_option]["dataset"](response)
 
-    eval(f"process_{endpoint_options[endpoint_option]['method']}")(dataset, symbol)
+    result = eval(f"process_{endpoint_options[endpoint_option]['method']}")(dataset, symbol)
 
     if endpoint_option in [1, 3]:
         return datetime.fromtimestamp(dataset[0]["time"])
 
+    if endpoint_option == 5:
+        return result
+
 
 if __name__ == "__main__":
 
-    endpoint_option = 3
-    symbol = "global"
+    endpoint_option = 5
+    symbol = "btc"
 
     key = get_session_key()
 

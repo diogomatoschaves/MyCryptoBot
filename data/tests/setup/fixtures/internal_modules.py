@@ -4,7 +4,6 @@ import pytest
 
 import data
 from data.sources.binance import BinanceDataHandler
-from data.tests.setup.fixtures.external_modules import double_callback
 from data.tests.setup.test_data.sample_data import mock_websocket_raw_data_5m, mock_websocket_raw_data_1h
 
 MODEL_APP_URL = 'https://example.com'
@@ -150,3 +149,8 @@ def mock_wait_for_job_conclusion(mocker):
     return mocker.patch(
         'data.sources._sources.wait_for_job_conclusion',
     )
+
+
+def double_callback(callback, mock_row):
+    callback(mock_row[0])
+    callback(mock_row[1])

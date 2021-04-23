@@ -1,10 +1,12 @@
 from data.service.external_requests import generate_signal, start_stop_symbol_trading, check_job_status
 from data.service.helpers import MODEL_APP_ENDPOINTS, EXECUTION_APP_ENDPOINTS
-from data.tests.setup.fixtures.external_modules import *
 from data.tests.setup.fixtures.internal_modules import *
+from data.tests.setup.fixtures.app import *
+from shared.utils.tests.fixtures.external_modules import *
+from shared.utils.tests.fixtures.models import *
 
 
-class TestExternalRequests:
+class TestDataExternalRequests:
 
     def test_generate_signal(
         self,

@@ -1,11 +1,7 @@
-import os
-
-import pytest
-
 from data.service.helpers.responses import Responses
-from data.tests.setup.fixtures.app import *
-from data.tests.setup.fixtures.models import *
 from data.tests.setup.fixtures.internal_modules import *
+from data.tests.setup.fixtures.app import *
+from shared.utils.tests.fixtures.models import *
 
 
 class TestDataService:

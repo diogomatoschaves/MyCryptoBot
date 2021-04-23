@@ -1,8 +1,7 @@
 import pytest
 
 from data.tests.setup.test_data.sample_data import exchange_data_1
-from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs
-
+from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData
 
 TEST_APP_NAME = 'test_app'
 
@@ -40,3 +39,15 @@ def exchange_data_factory(db, create_exchange, create_assets, create_symbol):
 @pytest.fixture
 def exchange_data(db, exchange_data_factory):
     return exchange_data_factory()
+
+
+@pytest.fixture
+def structured_data_factory(db, create_exchange, create_assets, create_symbol):
+    def create_structured_data(**kwargs):
+        return StructuredData.objects.create(**exchange_data_1, **kwargs)
+    return create_structured_data
+
+
+@pytest.fixture
+def structured_data(db, exchange_data_factory):
+    return structured_data_factory()
