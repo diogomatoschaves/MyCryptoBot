@@ -7,7 +7,7 @@ from flask import jsonify
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from data.service.helpers.responses import RESPONSES
+from data.service.helpers.responses import Responses
 from database.model.models import Symbol, Exchange
 import shared.exchanges.binance.constants as const
 
@@ -59,43 +59,43 @@ def check_input(**kwargs):
         symbol = kwargs["symbol"]
 
         if symbol is None:
-            return jsonify(RESPONSES["SYMBOL_REQUIRED"])
+            return jsonify(Responses.SYMBOL_REQUIRED)
 
         try:
             Symbol.objects.get(name=symbol)
         except Symbol.DoesNotExist as e:
             logging.debug(symbol)
             logging.debug(e)
-            return jsonify(RESPONSES["SYMBOL_INVALID"](symbol))
+            return jsonify(Responses.SYMBOL_INVALID(symbol))
 
     if "exchange" in kwargs:
         exchange = kwargs["exchange"]
 
         if exchange is None:
-            return jsonify(RESPONSES["EXCHANGE_REQUIRED"])
+            return jsonify(Responses.EXCHANGE_REQUIRED)
 
         try:
             Exchange.objects.get(name=exchange.lower())
         except (Exchange.DoesNotExist, AttributeError) as e:
             logging.debug(exchange)
             logging.debug(e)
-            return jsonify(RESPONSES["EXCHANGE_INVALID"](exchange))
+            return jsonify(Responses.EXCHANGE_INVALID(exchange))
 
     if "candle_size" in kwargs:
         candle_size = kwargs["candle_size"]
 
         if candle_size is None:
-            return jsonify(RESPONSES["CANDLE_SIZE_REQUIRED"])
+            return jsonify(Responses.CANDLE_SIZE_REQUIRED)
 
         if candle_size not in const.CANDLE_SIZES_MAPPER:
             logging.debug(candle_size)
-            return jsonify(RESPONSES["CANDLE_SIZE_INVALID"](candle_size))
+            return jsonify(Responses.CANDLE_SIZE_INVALID(candle_size))
 
     if "strategy" in kwargs:
         strategy = kwargs["strategy"]
 
         if strategy is None:
-            return jsonify(RESPONSES["STRATEGY_REQUIRED"])
+            return jsonify(Responses.STRATEGY_REQUIRED)
 
         if strategy in STRATEGIES:
             if "params" in kwargs:
@@ -103,9 +103,9 @@ def check_input(**kwargs):
                 for key in params:
                     if key not in STRATEGIES[strategy]["params"]:
                         logging.debug(key)
-                        return jsonify(RESPONSES["PARAMS_INVALID"](key))
+                        return jsonify(Responses.PARAMS_INVALID(key))
         else:
             logging.debug(strategy)
-            return jsonify(RESPONSES["STRATEGY_INVALID"](strategy))
+            return jsonify(Responses.STRATEGY_INVALID(strategy))
 
     return None
