@@ -18,7 +18,7 @@ def mock_rq_job(*args, **kwargs):
 
 @pytest.fixture
 def mocked_rq_job(mocker):
-    return mocker.patch('rq.job.Job.fetch')
+    return mocker.patch("rq.job.Job.fetch")
 
 
 def mock_enqueue_call(get_signal, params):
@@ -27,11 +27,11 @@ def mock_enqueue_call(get_signal, params):
             pass
 
         def get_id(self):
-            return 'abcde'
+            return "abcde"
 
     return MockJob()
 
 
 @pytest.fixture
 def mocked_rq_enqueue_call(mocker):
-    return mocker.patch.object(model.service.app.q, 'enqueue_call', mock_enqueue_call)
+    return mocker.patch.object(model.service.app.q, "enqueue_call", mock_enqueue_call)

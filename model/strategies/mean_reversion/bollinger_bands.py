@@ -9,16 +9,16 @@ class BollingerBands(StrategyMixin):
 
     def __init__(self, ma, sd, data=None, **kwargs):
 
-        self.ma = ma
-        self.sd = sd
+        self._ma = ma
+        self._sd = sd
 
         StrategyMixin.__init__(self, data, **kwargs)
 
     def __repr__(self):
-        return "{}(symbol = {}, ma = {}, sd = {})".format(self.__class__.__name__, self.symbol, self.ma, self.sd)
+        return "{}(symbol = {}, ma = {}, sd = {})".format(self.__class__.__name__, self.symbol, self._ma, self._sd)
 
     def _get_test_title(self):
-        return "Testing Bollinger Bands Strategy: {} | ma = {} & sd = {}".format(self.symbol, self.ma, self.sd)
+        return "Testing Bollinger Bands Strategy: {} | ma = {} & sd = {}".format(self.symbol, self._ma, self._sd)
 
     def update_data(self):
         """ Retrieves and prepares the data.
@@ -27,31 +27,11 @@ class BollingerBands(StrategyMixin):
 
         data = self.data
 
-        data["sma"] = data[self.price_col].rolling(self.ma).mean()
-        data["upper"] = data["sma"] + data[self.price_col].rolling(self.ma).std() * self.sd
-        data["lower"] = data["sma"] - data[self.price_col].rolling(self.ma).std() * self.sd
+        data["sma"] = data[self.price_col].rolling(self._ma).mean()
+        data["upper"] = data["sma"] + data[self.price_col].rolling(self._ma).std() * self._sd
+        data["lower"] = data["sma"] - data[self.price_col].rolling(self._ma).std() * self._sd
 
         self.data = data
-
-    def set_parameters(self, params=None):
-        """ Updates SMA parameters and resp. time series.
-        """
-
-        if params is None:
-            return
-
-        if not isinstance(params, (tuple, list, type(np.array([])))):
-            print(f"Invalid Parameters {params}")
-            return
-
-        ma, sd = params
-
-        if ma is not None:
-            self.ma = int(ma)
-        if sd is not None:
-            self.sd = sd
-
-        self.update_data()
 
     def _calculate_positions(self, data):
         data["distance"] = data[self.price_col] - data["sma"]
@@ -62,23 +42,28 @@ class BollingerBands(StrategyMixin):
 
         return data
 
+    def _get_position(self, symbol):
+        return None
+
     def get_signal(self, row=None):
 
         if row is None:
             row = self.data.iloc[-1]
 
-        if self.position == 0: # when neutral
+        position = self._get_position(self.symbol)
+
+        if position == 0: # when neutral
             if row[self.price_col] < row["lower"]:  # signal to go long
                 return 1
             elif row[self.price_col] > row["upper"]:  # signal to go Short
                 return -1
-        elif self.position == 1:  # when long
+        elif position == 1:  # when long
             if row[self.price_col] > row["sma"]:
                 if row[self.price_col] > row["upper"]:  # signal to go short
-                    return 1
+                    return -1
                 else:
                     return 0
-        elif self.position == -1: # when short
+        elif position == -1: # when short
             if row[self.price_col] < row["sma"]:
                 if row[self.price_col] < row["lower"]:  # signal to go long
                     return 1

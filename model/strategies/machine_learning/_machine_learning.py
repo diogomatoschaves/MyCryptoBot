@@ -57,40 +57,16 @@ class MachineLearning(StrategyMixin):
 
         data = data.drop(columns=self.excluded_features)
 
-        X_lag = self.get_lag_model_x(data)
-        X_roll = self.get_rolling_model_x_y(data)
+        X_lag = self._get_lag_model_x(data)
+        X_roll = self._get_rolling_model_x_y(data)
         y = self.get_labels(data)
 
-        self.X, self.y = self.get_x_y(X_lag, X_roll, y)
+        self.X, self.y = self._get_x_y(X_lag, X_roll, y)
 
         self._train_model(self.estimator, self.test_size, self.degree, self.print_results)
 
-    def set_parameters(self, ml_params=None):
-        """ Updates SMA parameters and resp. time series.
-        """
-
-        if ml_params is None:
-            return
-
-        if not isinstance(ml_params, (tuple, list, type(np.array([])))):
-            print(f"Invalid Parameters {ml_params}")
-            return
-
-        estimator, test_size, degree, print_results = ml_params
-
-        if estimator is not None:
-            self.estimator = estimator
-        if test_size is not None:
-            self.test_size = test_size
-        if degree is not None:
-            self.degree = degree
-        if print_results is not None:
-            self.print_results = print_results
-
-        self.update_data()
-
     @staticmethod
-    def get_x_y(X_lag, X_roll, y):
+    def _get_x_y(X_lag, X_roll, y):
 
         common_cols = set(X_lag.columns).intersection(set(X_roll.columns))
 
@@ -102,7 +78,7 @@ class MachineLearning(StrategyMixin):
     def get_labels(self, data):
         return data[self.returns_col].shift(-1).dropna().rename('y')
 
-    def get_rolling_model_x_y(self, data):
+    def _get_rolling_model_x_y(self, data):
 
         rolling_features = self.rolling_features if self.rolling_features is not None else set(data.columns)
         rolling_features = rolling_features.difference(self.excluded_features)
@@ -111,7 +87,7 @@ class MachineLearning(StrategyMixin):
 
         return data
 
-    def get_lag_model_x(self, data):
+    def _get_lag_model_x(self, data):
 
         lag_features = self.lag_features if self.lag_features is not None else set(data.columns)
         lag_features = lag_features.difference(self.excluded_features)

@@ -37,32 +37,6 @@ class MovingAverageConvergenceDivergence(MACD, StrategyMixin):
 
         self.data["macd_diff"] = self.macd_diff()
 
-    def set_parameters(self, params=None):
-        """ Updates SMA parameters and resp. time series.
-        """
-
-        if params is None:
-            return
-
-        if not isinstance(params, (tuple, list, type(np.array([])))):
-            print(f"Invalid Parameters: {params}")
-            return
-
-        window_slow, window_fast, window_signal = params
-
-        self._window_slow = window_slow
-        self._window_fast = window_fast
-        self._window_sign = window_signal
-
-        if window_fast is not None:
-            self._window_fast = window_fast
-        if window_slow is not None:
-            self._window_slow = window_slow
-        if window_signal is not None:
-            self._window_sign = window_signal
-
-        self.update_data()
-
     def _calculate_positions(self, data):
         data["position"] = np.where(data["macd_diff"] > 0, 1, -1)
 

@@ -26,14 +26,6 @@ class Momentum(StrategyMixin):
 
         self.data["rolling_returns"] = self.data[self.returns_col].rolling(self.window, min_periods=1).mean()
 
-    def set_parameters(self, window):
-        """ Updates SMA parameters and resp. time series.
-        """
-        if window is not None:
-            self.window = int(window)
-
-        self.update_data()
-
     def _calculate_positions(self, data):
         data["position"] = np.sign(data[self.returns_col].rolling(self.window, min_periods=1).mean())
 
