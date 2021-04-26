@@ -6,10 +6,9 @@ from shared.utils.tests.fixtures.models import *
 
 
 class TestModelService:
-
     def test_index_route(self, client):
 
-        res = client.get('/')
+        res = client.get("/")
 
         assert res.data.decode(res.charset) == "It's up!"
 
@@ -17,33 +16,33 @@ class TestModelService:
         "route,method",
         [
             pytest.param(
-                'generate_signal',
-                'get',
+                "generate_signal",
+                "get",
                 id="start_bot_get",
             ),
             pytest.param(
-                'generate_signal',
-                'put',
+                "generate_signal",
+                "put",
                 id="start_bot_post",
             ),
             pytest.param(
-                'generate_signal',
-                'delete',
+                "generate_signal",
+                "delete",
                 id="start_bot_delete",
             ),
             pytest.param(
-                'check_job/123',
-                'put',
+                "check_job/123",
+                "put",
                 id="start_bot_delete",
             ),
             pytest.param(
-                'check_job/123',
-                'post',
+                "check_job/123",
+                "post",
                 id="start_bot_delete",
             ),
             pytest.param(
-                'check_job/123',
-                'delete',
+                "check_job/123",
+                "delete",
                 id="start_bot_delete",
             ),
         ],
@@ -85,35 +84,31 @@ class TestModelService:
                 id="IS_STARTED",
             ),
             pytest.param(
-                mock_rq_job(is_finished=False, is_queued=False, is_started=False, is_failed=True),
+                mock_rq_job(
+                    is_finished=False, is_queued=False, is_started=False, is_failed=True
+                ),
                 Responses.FAILED,
                 id="IS_FAILED",
             ),
         ],
     )
     def test_check_job_status(
-        self,
-        return_value,
-        expected_value,
-        client,
-        mocked_rq_job
+        self, return_value, expected_value, client, mocked_rq_job
     ):
 
         mocked_rq_job.return_value = return_value
 
-        res = client.get('/check_job/123')
+        res = client.get("/check_job/123")
 
         assert res.json == expected_value
 
-    def test_check_job_status_no_such_job_error(
-        self,
-        client,
-        mocked_rq_job
-    ):
+    def test_check_job_status_no_such_job_error(self, client, mocked_rq_job):
 
-        mocked_rq_job.side_effect = lambda job_id, connection: mock_rq_job(raise_error=True)
+        mocked_rq_job.side_effect = lambda job_id, connection: mock_rq_job(
+            raise_error=True
+        )
 
-        res = client.get('/check_job/123')
+        res = client.get("/check_job/123")
 
         assert res.json == Responses.JOB_NOT_FOUND
 
@@ -125,7 +120,7 @@ class TestModelService:
                     "symbol": "BTCUSDT",
                     "strategy": "InvalidStrategy",
                     "candle_size": "1h",
-                    "exchange": "Binance"
+                    "exchange": "Binance",
                 },
                 0,
                 Responses.STRATEGY_INVALID("InvalidStrategy"),
@@ -136,7 +131,7 @@ class TestModelService:
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "candle_size": "1h",
-                    "exchange": "Binance"
+                    "exchange": "Binance",
                 },
                 1,
                 Responses.SIGNAL_GENERATION_INPROGRESS("abcde"),
@@ -154,8 +149,8 @@ class TestModelService:
         mocked_rq_enqueue_call,
         create_exchange,
     ):
-        res = client.post('/generate_signal', json=params)
+        res = client.post("/generate_signal", json=params)
 
         assert res.json == expected_value
 
-        assert Jobs.objects.filter(job_id='abcde').count() == nr_jobs
+        assert Jobs.objects.filter(job_id="abcde").count() == nr_jobs

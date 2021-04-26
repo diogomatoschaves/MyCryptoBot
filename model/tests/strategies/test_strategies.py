@@ -1,96 +1,24 @@
-from model.strategies import get_signal, trigger_order
-from model.tests.setup.fixtures.internal_modules import *
-from model.tests.setup.test_data.sample_data import sample_structured_data
-from shared.utils.tests.fixtures.models import *
+import os
+
+import pytest
+
+from model.tests.setup.test_data.sample_data import data
+from shared.utils.tests.test_setup import get_fixtures
+
+current_path = os.path.dirname(os.path.realpath(__file__))
+
+fixtures = get_fixtures(current_path)
 
 
-def inject_fixture(strategy):
-    globals()[strategy] = mock_strategy_factory(strategy)
-
-
-STRATEGIES = [
-    "MovingAverageConvergenceDivergence",
-    "MovingAverage",
-    "MovingAverageCrossover",
-    "BollingerBands",
-    "Momentum",
-    "MachineLearning"
-]
-
-for strategy in STRATEGIES:
-    inject_fixture(strategy)
-
-
-class TestStrategies:
-
+class TestStrategy:
     @pytest.mark.parametrize(
-        "strategy,side_effect,expected_value",
+        "fixture",
         [
-            pytest.param(
-                "MovingAverageConvergenceDivergence",
-                sample_structured_data,
-                True,
-                id="MovingAverageConvergenceDivergence",
-            ),
-            pytest.param(
-                "MovingAverage",
-                sample_structured_data,
-                True,
-                id="MovingAverage",
-            ),
-            pytest.param(
-                "MovingAverageCrossover",
-                sample_structured_data,
-                True,
-                id="MovingAverageCrossover",
-            ),
-            pytest.param(
-                "BollingerBands",
-                sample_structured_data,
-                True,
-                id="BollingerBands",
-            ),
-            pytest.param(
-                "Momentum",
-                sample_structured_data,
-                True,
-                id="Momentum",
-            ),
-            pytest.param(
-                "MachineLearning",
-                sample_structured_data,
-                True,
-                id="MachineLearning",
-            ),
-            pytest.param(
-                "InvalidStrategy",
-                sample_structured_data,
-                False,
-                id="InvalidStrategy",
-            ),
-            pytest.param(
-                "EmptyDataFrame",
-                [],
-                False,
-                id="EmptyDataFrame",
-            ),
+            pytest.param(fixture, id=fixture_name)
+            for fixture_name, fixture in fixtures.items()
         ],
     )
-    def test_get_signal(
-        self,
-        strategy,
-        side_effect,
-        expected_value,
-        mock_settings_env_vars,
-        MovingAverageConvergenceDivergence,
-        MovingAverage,
-        MovingAverageCrossover,
-        BollingerBands,
-        Momentum,
-        MachineLearning,
-        mock_get_data,
-        mock_trigger_order
-    ):
+    def test_strategy_data(self, fixture):
         """
         GIVEN some params
         WHEN the method get_signal is called
@@ -98,56 +26,66 @@ class TestStrategies:
 
         """
 
-        mock_get_data.return_value = side_effect
-        mock_trigger_order.return_value = True
+        params = fixture["in"]["params"]
 
-        params = {
-            "symbol": "BTC",
-            "strategy": strategy,
-            "candle_size": "1h",
-            "exchange": "Binance"
-        }
+        strategy = fixture["in"]["strategy"]
 
-        res = get_signal(**params)
+        instance = strategy(**params, data=data)
 
-        assert res == expected_value
+        print(instance.data.to_dict(orient="records"))
+
+        assert instance.data.equals(fixture["out"]["expected_data"])
 
     @pytest.mark.parametrize(
-        "side_effect,expected_value",
+        "fixture",
         [
-            pytest.param(
-                {"success": True, "response": "Success"},
-                True,
-                id="EXECUTE_ORDER_SUCCESS",
-            ),
-            pytest.param(
-                {"success": False, "response": "Fail"},
-                False,
-                id="EXECUTE_ORDER_FAIL",
-            ),
-        ]
+            pytest.param(fixture, id=fixture_name)
+            for fixture_name, fixture in fixtures.items()
+        ],
     )
-    def test_trigger_order(
-        self,
-        side_effect,
-        expected_value,
-        mock_execute_order
-    ):
+    def test_strategy_set_parameters(self, fixture):
         """
         GIVEN some params
-        WHEN the method trigger_order is called
+        WHEN the method get_signal is called
         THEN the return value is equal to the expected response
 
         """
 
-        mock_execute_order.return_value = side_effect
+        params = fixture["in"]["params"]
 
-        params = {
-            "symbol": "BTC",
-            "signal": 1,
-            "exchange": "Binance"
-        }
+        strategy = fixture["in"]["strategy"]
+        new_parameters = fixture["in"]["new_parameters"]
 
-        res = trigger_order(**params)
+        instance = strategy(**params, data=data)
 
-        assert res == expected_value
+        instance.set_parameters(new_parameters)
+
+        print(instance.data.to_dict(orient="records"))
+
+        assert instance.data.equals(fixture["out"]["expected_data_set_parameters"])
+
+        for param, value in new_parameters.items():
+            assert getattr(instance, f"_{param}") == value
+
+    @pytest.mark.parametrize(
+        "fixture",
+        [
+            pytest.param(fixture, id=fixture_name)
+            for fixture_name, fixture in fixtures.items()
+        ],
+    )
+    def test_strategy_get_signal(self, fixture):
+        """
+        GIVEN some params
+        WHEN the method get_signal is called
+        THEN the return value is equal to the expected response
+
+        """
+
+        params = fixture["in"]["params"]
+
+        strategy = fixture["in"]["strategy"]
+
+        instance = strategy(**params, data=data)
+
+        assert instance.get_signal() == fixture["out"]["expected_signal"]

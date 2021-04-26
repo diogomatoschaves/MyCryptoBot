@@ -6,14 +6,10 @@ import django
 from model.service.external_requests import execute_order
 from shared.utils.logger import configure_logger
 from shared.data.queries import get_data
-from model.strategies import (
-    MovingAverageConvergenceDivergence,
-    MovingAverage,
-    MovingAverageCrossover,
-    BollingerBands,
-    Momentum,
-    MachineLearning
-)
+from model.strategies.trend import Momentum
+from model.strategies.moving_average import MovingAverageConvergenceDivergence, MovingAverageCrossover, MovingAverage
+from model.strategies.mean_reversion import BollingerBands
+from model.strategies.machine_learning import MachineLearning
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()

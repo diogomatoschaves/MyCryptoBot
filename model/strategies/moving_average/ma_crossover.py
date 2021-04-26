@@ -8,19 +8,19 @@ class MovingAverageCrossover(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, SMA_S, SMA_L, moving_av='sma', data=None, **kwargs):
+    def __init__(self, sma_s, sma_l, moving_av='sma', data=None, **kwargs):
 
-        self.SMA_S = SMA_S
-        self.SMA_L = SMA_L
-        self.mav = moving_av
+        self._sma_s = sma_s
+        self._sma_l = sma_l
+        self._moving_av = moving_av
 
         StrategyMixin.__init__(self, data, **kwargs)
 
     def __repr__(self):
-        return "{}(symbol = {}, SMA_S = {}, SMA_L = {})".format(self.__class__.__name__, self.symbol, self.SMA_S, self.SMA_L)
+        return "{}(symbol = {}, SMA_S = {}, SMA_L = {})".format(self.__class__.__name__, self.symbol, self._sma_s, self._sma_l)
 
     def _get_test_title(self):
-        return "Testing SMA strategy | {} | SMA_S = {} & SMA_L = {}".format(self.symbol, self.SMA_S, self.SMA_L)
+        return "Testing SMA strategy | {} | SMA_S = {} & SMA_L = {}".format(self.symbol, self._sma_s, self._sma_l)
 
     def update_data(self):
         """ Retrieves and prepares the data.
@@ -29,37 +29,17 @@ class MovingAverageCrossover(StrategyMixin):
 
         data = self.data
 
-        if self.mav == 'sma':
-            data["SMA_S"] = sma_indicator(close=data[self.price_col], window=self.SMA_S)
-            data["SMA_L"] = sma_indicator(close=data[self.price_col], window=self.SMA_L)
+        if self._moving_av == 'sma':
+            data["SMA_S"] = sma_indicator(close=data[self.price_col], window=self._sma_s)
+            data["SMA_L"] = sma_indicator(close=data[self.price_col], window=self._sma_l)
 
-        elif self.mav == 'ema':
-            data["SMA_S"] = ema_indicator(close=data[self.price_col], window=self.SMA_S)
-            data["SMA_L"] = ema_indicator(close=data[self.price_col], window=self.SMA_L)
+        elif self._moving_av == 'ema':
+            data["SMA_S"] = ema_indicator(close=data[self.price_col], window=self._sma_s)
+            data["SMA_L"] = ema_indicator(close=data[self.price_col], window=self._sma_l)
         else:
             raise('Method not supported')
 
         self.data = data
-
-    def set_parameters(self, sma=None):
-        """ Updates SMA parameters and resp. time series.
-        """
-
-        if sma is None:
-            return
-
-        if not isinstance(sma, (tuple, list, type(np.array([])))):
-            print(f"Invalid Parameters {sma}")
-            return
-
-        SMA_S, SMA_L = sma
-
-        if SMA_S is not None:
-            self.SMA_S = int(SMA_S)
-        if SMA_L is not None:
-            self.SMA_L = int(SMA_L)
-
-        self.update_data()
 
     def _calculate_positions(self, data):
         data["position"] = np.where(data["SMA_S"] > data["SMA_L"], 1, -1)

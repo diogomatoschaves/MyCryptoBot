@@ -21,6 +21,18 @@ class StrategyMixin:
             self.data = data
             self.data = self.update_data()
 
+    def set_parameters(self, params=None):
+        """ Updates SMA parameters and resp. time series.
+        """
+
+        if params is None:
+            return
+
+        for param, new_value in params.items():
+            setattr(self, f"_{param}", new_value)
+
+        self.update_data()
+
     def _calculate_returns(self):
 
         data = self.data

@@ -8,45 +8,30 @@ class MovingAverage(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, sma, moving_av='sma', data=None, **kwargs):
+    def __init__(self, ma, moving_av='sma', data=None, **kwargs):
 
-        self.sma = sma
-        self.mav = moving_av
+        self._ma = ma
+        self._moving_av = moving_av
 
         StrategyMixin.__init__(self, data, **kwargs)
 
     def __repr__(self):
-        return "{}(symbol = {}, SMA = {})".format(self.__class__.__name__, self.symbol, self.sma)
+        return "{}(symbol = {}, SMA = {})".format(self.__class__.__name__, self.symbol, self._ma)
 
     def _get_test_title(self):
-        return "Testing SMA strategy | {} | SMA_S = {}".format(self.symbol, self.sma)
+        return "Testing SMA strategy | {} | SMA_S = {}".format(self.symbol, self._ma)
 
     def update_data(self):
         """ Retrieves and prepares the data.
         """
         super(MovingAverage, self).update_data()
 
-        if self.mav == 'sma':
-            self.data["SMA"] = sma_indicator(close=self.data[self.price_col], window=self.sma)
-        elif self.mav == 'ema':
-            self.data["SMA"] = ema_indicator(close=self.data[self.price_col], window=self.sma)
+        if self._moving_av == 'sma':
+            self.data["SMA"] = sma_indicator(close=self.data[self.price_col], window=self._ma)
+        elif self._moving_av == 'ema':
+            self.data["SMA"] = ema_indicator(close=self.data[self.price_col], window=self._ma)
         else:
             raise('Method not supported')
-
-    def set_parameters(self, sma=None):
-        """ Updates SMA parameters and resp. time series.
-        """
-
-        if sma is None:
-            return
-
-        if not isinstance(sma, (int, float)):
-            print(f"Invalid Parameters {sma}")
-            return
-
-        self.sma = int(sma)
-
-        self.update_data()
 
     def _calculate_positions(self, data):
 
@@ -63,3 +48,6 @@ class MovingAverage(StrategyMixin):
             return 1
         elif row["SMA"] < row[self.price_col]:
             return -1
+
+        elif row["SMA"] == row[self.price_col]:
+            return 0
