@@ -9,8 +9,7 @@ from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
 from model.service.helpers.responses import Responses
-from model.strategies import get_signal
-from model.service.helpers import APP_NAME
+from model.strategies.signal_generator import get_signal
 from model.worker import conn
 from shared.utils.logger import configure_logger
 
