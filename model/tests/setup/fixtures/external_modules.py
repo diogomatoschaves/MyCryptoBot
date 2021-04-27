@@ -1,3 +1,4 @@
+import matplotlib
 import pytest
 from rq.exceptions import NoSuchJobError
 
@@ -35,3 +36,8 @@ def mock_enqueue_call(get_signal, params):
 @pytest.fixture
 def mocked_rq_enqueue_call(mocker):
     return mocker.patch.object(model.service.app.q, "enqueue_call", mock_enqueue_call)
+
+
+@pytest.fixture
+def mocked_matplotlib_show(mocker):
+    mocker.patch.object(matplotlib.pyplot, "show", lambda: None)

@@ -337,7 +337,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 178.075904,
             "taker_buy_quote_volume": 10007121.78892216,
             "returns": -0.00170962942015996,
-            "rolling_returns": 0.0019973575359916057,
+            "rolling_returns": 0.0017476878439926548,
         },
         {
             "open_time": Timestamp("2021-04-21 14:45:00+0000", tz="UTC"),
@@ -352,7 +352,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 145.064381,
             "taker_buy_quote_volume": 8146012.47892439,
             "returns": 0.0003967606653441501,
-            "rolling_returns": 0.0020540376310407694,
+            "rolling_returns": 0.0015975848241428208,
         },
         {
             "open_time": Timestamp("2021-04-21 14:50:00+0000", tz="UTC"),
@@ -367,7 +367,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 134.1124,
             "taker_buy_quote_volume": 7529521.30623853,
             "returns": -0.0008209293091875578,
-            "rolling_returns": 0.001936762015442547,
+            "rolling_returns": 0.001355733410809783,
         },
         {
             "open_time": Timestamp("2021-04-21 14:55:00+0000", tz="UTC"),
@@ -382,7 +382,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 168.231118,
             "taker_buy_quote_volume": 9447425.0774598,
             "returns": 0.0006607487960858385,
-            "rolling_returns": 0.002031154700597667,
+            "rolling_returns": 0.0012925529912894244,
         },
         {
             "open_time": Timestamp("2021-04-21 15:00:00+0000", tz="UTC"),
@@ -397,7 +397,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 139.83665,
             "taker_buy_quote_volume": 7864202.02549528,
             "returns": 0.0019165664875115606,
-            "rolling_returns": 0.0018840322621868732,
+            "rolling_returns": 0.0013445541159746025,
         },
     ]
 )
