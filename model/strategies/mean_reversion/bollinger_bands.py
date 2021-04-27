@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import numpy as np
 
 from model.strategies._mixin import StrategyMixin
@@ -13,6 +15,11 @@ class BollingerBands(StrategyMixin):
         self._sd = sd
 
         StrategyMixin.__init__(self, data, **kwargs)
+
+        self.params = OrderedDict(
+            ma=lambda x: int(x),
+            sd=lambda x: float(x),
+        )
 
     def __repr__(self):
         return "{}(symbol = {}, ma = {}, sd = {})".format(self.__class__.__name__, self.symbol, self._ma, self._sd)

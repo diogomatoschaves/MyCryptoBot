@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import numpy as np
 import pandas as pd
 from ta.trend import MACD
@@ -16,13 +18,19 @@ class MovingAverageConvergenceDivergence(MACD, StrategyMixin):
 
         self._close = pd.Series()
 
+        self.params = OrderedDict(
+            window_slow=lambda x: int(x),
+            window_fast=lambda x: int(x),
+            window_signal=lambda x: int(x)
+        )
+
     def __repr__(self):
         return "{}(symbol = {}, fast = {}, slow = {}, signal = {})".format(
             self.__class__.__name__, self.symbol, self._window_fast, self._window_slow, self._window_sign
         )
 
     def _get_test_title(self):
-        return "Testing SMA strategy | {} | fast = {}, slow = {}, signal = {}".format(
+        return "Testing MACD strategy | {} | fast = {}, slow = {}, signal = {}".format(
             self.symbol, self._window_fast, self._window_slow, self._window_sign
         )
 

@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import numpy as np
 from ta.trend import ema_indicator, sma_indicator
 
@@ -13,6 +15,9 @@ class MovingAverageCrossover(StrategyMixin):
         self._sma_s = sma_s
         self._sma_l = sma_l
         self._moving_av = moving_av
+
+        self.params = ["sma_s", "sma_l"]
+        self.params = OrderedDict(sma_s=lambda x: int(x), sma_l=lambda x: int(x), moving_av=lambda x: x)
 
         StrategyMixin.__init__(self, data, **kwargs)
 

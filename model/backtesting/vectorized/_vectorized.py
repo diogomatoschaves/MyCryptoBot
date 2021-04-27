@@ -1,3 +1,4 @@
+import numpy as np
 from scipy.optimize import brute
 
 from model.backtesting._mixin import BacktestMixin
@@ -5,7 +6,6 @@ from model.backtesting._mixin import BacktestMixin
 
 class VectorizedBacktester(BacktestMixin):
     """ Class for vectorized backtesting.
-
     """
 
     def __init__(self, strategy, symbol='BTCUSDT', trading_costs=0):
@@ -40,26 +40,28 @@ class VectorizedBacktester(BacktestMixin):
     def _get_trades(self, data):
         return data.trades.sum()
 
-    def _update_and_run(self, *args, plot_results=False):
-        """ Updates SMA parameters and returns the negative absolute performance (for minimization algorithm).
+    def _update_and_run(self, args, plot_results=False):
 
-        Parameters
-        ==========
-        SMA: tuple
-            SMA parameter tuple
-        """
-        return -self.test_strategy(*args, plot_results)[0]
+        params = {}
+        for i, arg in enumerate(args):
+            params[list(self.params.items())[i][0]] = arg
 
-    def optimize_parameters(self, *opt_params, **kwargs):
-        ''' Finds global maximum given the SMA parameter ranges.
+        return -self.test_strategy(params, plot_results=plot_results)[0]
 
-        Parameters
-        ==========
-        SMA1_range, SMA2_range: tuple
-            tuples of the form (start, end, step size)
-        '''
+    def optimize_parameters(self, params, **kwargs):
+
+        opt_params = []
+        for param in self.params:
+            if param in params:
+                opt_params.append(params[param])
+            else:
+                param_value = getattr(self, f"_{param}")
+                if isinstance(param_value, (float, int)):
+                    opt_params.append((param_value, param_value + 1, 1))
 
         opt = brute(self._update_and_run, opt_params, finish=None)
 
-        return opt, -self._update_and_run(opt, plot_results=True)
+        if not isinstance(opt, (list, tuple, type(np.array([])))):
+            opt = np.array([opt])
 
+        return opt, -self._update_and_run(opt, plot_results=True)

@@ -26,9 +26,12 @@ class BacktestMixin:
 
         number_trades = self._get_trades(data)
 
-        print(f"Numer of trades: {number_trades}")
+        print(f"Number of trades: {number_trades}")
 
         self.results = data
+
+        if len(data) == 0:
+            return 0, None
 
         # absolute performance of the strategy
         perf = data["cstrategy_tc"].iloc[-1]
@@ -63,7 +66,7 @@ class BacktestMixin:
             self.results['color'] = self.results['position'].apply(lambda label: label2color[label])
 
             # Add px_last lines
-            for color, start, end in self.gen_repeating(self.results['color']):
+            for color, start, end in self._gen_repeating(self.results['color']):
                 if start > 0: # make sure lines connect
                     start -= 1
                 idx = self.results.index[start:end+1]
@@ -92,7 +95,7 @@ class BacktestMixin:
             plt.show()
 
     @staticmethod
-    def gen_repeating(s):
+    def _gen_repeating(s):
         """Generator: groups repeated elements in an iterable
         E.g.
             'abbccc' -> [('a', 0, 0), ('b', 1, 2), ('c', 3, 5)]
@@ -100,9 +103,9 @@ class BacktestMixin:
         i = 0
         while i < len(s):
             j = i
-            while j < len(s) and s[j] == s[i]:
+            while j < len(s) and s.iloc[j] == s.iloc[i]:
                 j += 1
-            yield (s[i], i, j-1)
+            yield (s.iloc[i], i, j-1)
             i = j
 
     @staticmethod

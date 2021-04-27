@@ -32,8 +32,6 @@ class TestStrategy:
 
         instance = strategy(**params, data=data)
 
-        print(instance.data.to_dict(orient="records"))
-
         assert instance.data.equals(fixture["out"]["expected_data"])
 
     @pytest.mark.parametrize(
@@ -59,8 +57,6 @@ class TestStrategy:
         instance = strategy(**params, data=data)
 
         instance.set_parameters(new_parameters)
-
-        print(instance.data.to_dict(orient="records"))
 
         assert instance.data.equals(fixture["out"]["expected_data_set_parameters"])
 

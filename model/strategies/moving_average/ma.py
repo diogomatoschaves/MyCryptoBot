@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import numpy as np
 from ta.trend import sma_indicator, ema_indicator
 
@@ -12,6 +14,8 @@ class MovingAverage(StrategyMixin):
 
         self._ma = ma
         self._moving_av = moving_av
+
+        self.params = OrderedDict(ma=lambda x: int(x))
 
         StrategyMixin.__init__(self, data, **kwargs)
 
