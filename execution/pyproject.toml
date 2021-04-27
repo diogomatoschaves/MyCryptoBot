@@ -16,6 +16,11 @@ requests = "^2.25.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
+pytest-cov = "^2.11.1"
+pytest-mock = "^3.6.0"
+pytest-django = "^4.2.0"
+pytest-flask = "^1.2.0"
+ipython = "^7.22.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
