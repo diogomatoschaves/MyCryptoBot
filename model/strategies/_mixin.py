@@ -29,7 +29,7 @@ class StrategyMixin:
             return
 
         for param, new_value in params.items():
-            setattr(self, f"_{param}", new_value)
+            setattr(self, f"_{param}", self.params[param](new_value))
 
         self.update_data()
 
