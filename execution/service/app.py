@@ -5,6 +5,8 @@ import sys
 from flask import Flask, jsonify, request
 
 from execution.exchanges.binance import BinanceTrader
+from execution.service.helpers import validate_input
+from execution.service.helpers.responses import Responses
 from shared.utils.logger import configure_logger
 
 module_path = os.path.abspath(os.path.join('..'))
@@ -13,11 +15,26 @@ if module_path not in sys.path:
 
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
-app_name = os.getenv("APP_NAME")
-
 binance_trader = BinanceTrader()
 
+
 app = Flask(__name__)
+
+
+def extract_and_validate():
+    request_data = request.get_json(force=True)
+
+    logging.debug(request_data)
+
+    symbol = request_data.get("symbol", None)
+    exchange = request_data.get("exchange", None)
+
+    response = validate_input(
+        symbol=symbol,
+        exchange=exchange
+    )
+
+    return symbol, exchange, response
 
 
 @app.route('/')
@@ -27,73 +44,74 @@ def hello_world():
 
 @app.route('/start_symbol_trading', methods=['POST'])
 def start_symbol_trading():
-    request_data = request.get_json(force=True)
 
-    logging.debug(request_data)
+    symbol, exchange, response = extract_and_validate()
 
-    symbol = request_data.get("symbol", None)
-    exchange = request_data.get("exchange", 'binance')
+    if response is not None:
+        logging.debug(response)
+        return response
 
     if exchange.lower() == 'binance':
 
         success = binance_trader.start_symbol_trading(symbol)
 
         if success:
-            return jsonify({"success": success, "response": f"{symbol}: Trading symbol successfully started."})
+            return jsonify(Responses.TRADING_SYMBOL_START(success, symbol))
         else:
-            return jsonify({"success": success, "response": f"{symbol}: Trading symbol does not exist."})
+            return jsonify(Responses.TRADING_SYMBOL_NO_ACCOUNT(symbol))
     else:
-        return jsonify({"response": f"Invalid {exchange} exchange.", "success": False})
+        return jsonify(Responses.EXCHANGE_INVALID(exchange))
 
 
 @app.route('/stop_symbol_trading', methods=['POST'])
 def stop_symbol_trading():
-    request_data = request.get_json(force=True)
+    symbol, exchange, response = extract_and_validate()
 
-    logging.debug(request_data)
-
-    symbol = request_data.get("symbol", None)
-    exchange = request_data.get("exchange", 'binance')
+    if response is not None:
+        logging.debug(response)
+        return response
 
     if exchange.lower() == 'binance':
 
         success = binance_trader.stop_symbol_trading(symbol)
 
         if success:
-            return jsonify({"success": success, "response": f"{symbol}: Trading symbol successfully stopped."})
+            return jsonify(Responses.TRADING_SYMBOL_STOP(success, symbol))
         else:
-            return jsonify(
-                {"success": success, "response": f"{symbol}: Trading symbol does not exist or was not being traded."}
-            )
+            return jsonify(Responses.TRADING_SYMBOL_NOT_ACTIVE(symbol))
     else:
-        return jsonify({"response": f"Invalid {exchange} exchange.", "success": False})
+        return jsonify(Responses.EXCHANGE_INVALID(exchange))
 
 
 @app.route('/execute_order/<exchange>', methods=['POST'])
 def execute_order(exchange):
 
+    request_data = request.get_json(force=True)
+
+    logging.debug(request_data)
+
+    symbol = request_data.get("symbol", None)
+    signal = request_data.get("signal", None)
+    amount = "all"
+
+    response = validate_input(
+        symbol=symbol,
+        signal=signal,
+        exchange=exchange
+    )
+
+    if response is not None:
+        logging.debug(response)
+        return response
+
     if exchange.lower() == 'binance':
-
-        request_data = request.get_json(force=True)
-
-        logging.debug(request_data)
-
-        symbol = request_data.get("symbol", None)
-        signal = request_data.get("signal", None)
-        amount = request_data.get("amount", 'all')
-
-        if symbol is None:
-            return jsonify({"response": f"{symbol}: Invalid symbol.", "success": False})
-
-        if signal is None:
-            return jsonify({"response": f"{symbol}: Invalid {signal} signal.", "success": False})
 
         binance_trader.trade(symbol, signal, amount=amount)
 
-        return jsonify({"response": f"{symbol}: Order was sent successfully.", "success": True})
+        return jsonify(Responses.ORDER_EXECUTION_SUCCESS(symbol))
 
     else:
-        return jsonify({"response": f"Invalid {exchange} exchange.", "success": False})
+        return jsonify(Responses.EXCHANGE_INVALID(exchange))
 
 
 if __name__ == "__main__":
