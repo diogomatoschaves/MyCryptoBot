@@ -12,7 +12,10 @@ class TestExecutionService:
 
         assert res.data.decode(res.charset) == "I'm up!"
 
-    @pytest.mark.parametrize("route", ["start_symbol_trading", "stop_symbol_trading", "execute_order/binance"])
+    @pytest.mark.parametrize(
+        "route",
+        ["start_symbol_trading", "stop_symbol_trading", "execute_order/binance"],
+    )
     @pytest.mark.parametrize("method", ["get", "put", "delete"])
     def test_routes_disallowed_methods(self, route, method, client):
         """
@@ -87,7 +90,6 @@ class TestExecutionService:
         "params,route,expected_value",
         [
             pytest.param(
-
                 {
                     "symbol": "BTCUSDT",
                     "exchange": "Binance",
@@ -97,7 +99,6 @@ class TestExecutionService:
                 id="TRADING_SYMBOL_NO_ACCOUNT",
             ),
             pytest.param(
-
                 {
                     "symbol": "BTCUSDT",
                     "exchange": "Binance",
@@ -125,7 +126,6 @@ class TestExecutionService:
         "params,exchange,expected_value",
         [
             pytest.param(
-
                 {
                     "signal": 1,
                 },
@@ -134,7 +134,6 @@ class TestExecutionService:
                 id="SYMBOL_REQUIRED",
             ),
             pytest.param(
-
                 {
                     "symbol": "BTC",
                     "signal": 10,
@@ -144,7 +143,6 @@ class TestExecutionService:
                 id="SYMBOL_INVALID",
             ),
             pytest.param(
-
                 {
                     "symbol": "BTCUSDT",
                 },
@@ -153,7 +151,6 @@ class TestExecutionService:
                 id="SIGNAL_REQUIRED",
             ),
             pytest.param(
-
                 {
                     "symbol": "BTCUSDT",
                     "signal": 10,
@@ -163,21 +160,13 @@ class TestExecutionService:
                 id="SIGNAL_INVALID",
             ),
             pytest.param(
-
-                {
-                    "symbol": "BTCUSDT",
-                    "signal": 1
-                },
+                {"symbol": "BTCUSDT", "signal": 1},
                 "coinbase",
                 Responses.EXCHANGE_INVALID("coinbase"),
                 id="EXCHANGE_INVALID",
             ),
             pytest.param(
-
-                {
-                    "symbol": "BTCUSDT",
-                    "signal": 1
-                },
+                {"symbol": "BTCUSDT", "signal": 1},
                 "binance",
                 Responses.ORDER_EXECUTION_SUCCESS("BTCUSDT"),
                 id="ORDER_EXECUTION_SUCCESS",
@@ -193,6 +182,6 @@ class TestExecutionService:
         client,
         exchange_data,
     ):
-        res = client.post(f'/execute_order/{exchange}', json=params)
+        res = client.post(f"/execute_order/{exchange}", json=params)
 
         assert res.json == expected_value

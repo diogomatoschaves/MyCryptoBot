@@ -4,7 +4,6 @@ import pytest
 
 
 class MockBinanceTrader:
-
     def __init__(self, success=True):
         self._success = success
 
@@ -20,9 +19,11 @@ class MockBinanceTrader:
 
 @pytest.fixture
 def mock_binance_trader_success(mocker):
-    return mocker.patch('execution.service.app.binance_trader', MockBinanceTrader())
+    return mocker.patch("execution.service.app.binance_trader", MockBinanceTrader())
 
 
 @pytest.fixture
 def mock_binance_trader_fail(mocker):
-    return mocker.patch('execution.service.app.binance_trader', MockBinanceTrader(success=False))
+    return mocker.patch(
+        "execution.service.app.binance_trader", MockBinanceTrader(success=False)
+    )

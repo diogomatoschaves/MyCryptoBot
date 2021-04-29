@@ -175,27 +175,32 @@ class BinanceTrader(BinanceHandler, Trader):
 
         self.report_trade(order, symbol, units, going)
 
-    def _process_order(self, order):
-
-        self.filled_orders.append(order)
-
-        logging.debug(order)
-
-        Orders.objects.create(
+    def _format_order(self, order):
+        return dict(
             order_id=order["orderId"],
             client_order_id=order["clientOrderId"],
             symbol_id=order["symbol"],
-            transact_time=order["transactTime"],
-            price=order["price"],
-            original_qty=order["origQty"],
-            executed_qty=order["executedQty"],
-            cummulative_quote_qty=order["cummulativeQuoteQty"],
+            transact_time=datetime.fromtimestamp(order["transactTime"] / 1000).astimezone(pytz.utc),
+            price=float(order["price"]),
+            original_qty=float(order["origQty"]),
+            executed_qty=float(order["executedQty"]),
+            cummulative_quote_qty=float(order["cummulativeQuoteQty"]),
             status=order["status"],
             type=order["type"],
             side=order["side"],
             is_isolated=order["isIsolated"],
             mock=self.paper_trading,
         )
+
+    def _process_order(self, order):
+
+        self.filled_orders.append(order)
+
+        logging.debug(order)
+
+        formatted_order = self._format_order(order)
+
+        Orders.objects.create(**formatted_order)
 
     def _set_initial_position(self, symbol):
         # TODO: Get this value from database?
@@ -261,7 +266,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
         logging.debug(f"{symbol}: Creating intial loan.")
 
-        self.max_margin_level = int(self.assets_info[symbol]["marginRatio"])
+        self.max_margin_level = int(float(self.assets_info[symbol]["marginRatio"]))
         if self.margin_level > self.max_margin_level:
             self.margin_level = self.max_margin_level
 

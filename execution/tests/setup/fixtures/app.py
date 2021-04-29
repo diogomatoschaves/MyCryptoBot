@@ -5,7 +5,7 @@ import pytest
 from execution.service import create_app
 
 
-TEST_APP_NAME = 'test_app'
+TEST_APP_NAME = "test_app"
 
 
 @pytest.fixture()
