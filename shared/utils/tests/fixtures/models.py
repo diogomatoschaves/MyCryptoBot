@@ -20,7 +20,7 @@ def create_assets(db):
 
 
 @pytest.fixture
-def create_symbol(db):
+def create_symbol(db, create_assets):
     return Symbol.objects.create(name='BTCUSDT', base_id='BTC', quote_id='USDT')
 
 
@@ -30,7 +30,7 @@ def create_job(db):
 
 
 @pytest.fixture
-def exchange_data_factory(db, create_exchange, create_assets, create_symbol):
+def exchange_data_factory(db, create_exchange, create_symbol):
     def create_exchange_data(**kwargs):
         return ExchangeData.objects.create(**exchange_data_1, **kwargs)
     return create_exchange_data
