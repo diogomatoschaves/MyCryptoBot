@@ -45,8 +45,6 @@ def binance_client_mock_factory(method, type_='mock'):
         ):
             if newOrderRespType == "FULL":
                 return order_creation
-            else:
-                return {}
 
     @pytest.fixture
     def mock_binance_client(mocker):

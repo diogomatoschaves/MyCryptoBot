@@ -123,6 +123,42 @@ class TestExecutionService:
         assert res.json == expected_value
 
     @pytest.mark.parametrize(
+        "route,params,expected_value",
+        [
+            pytest.param(
+                "start_symbol_trading",
+                {
+                    "symbol": "BTCUSDT",
+                    "exchange": "Binance",
+                },
+                Responses.TRADING_SYMBOL_START("BTCUSDT"),
+                id="SYMBOL_REQUIRED",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "symbol": "BTCUSDT",
+                    "exchange": "Binance",
+                },
+                Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
+                id="SYMBOL_INVALID",
+            ),
+        ],
+    )
+    def test_valid_input(
+        self,
+        route,
+        params,
+        expected_value,
+        mock_binance_trader_success,
+        client,
+        exchange_data,
+    ):
+        res = client.post(route, json=params)
+
+        assert res.json == expected_value
+
+    @pytest.mark.parametrize(
         "params,exchange,expected_value",
         [
             pytest.param(
