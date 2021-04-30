@@ -13,7 +13,7 @@ on:
 
 env:
   DIRECTORY: execution/
-  HEROKU_WEB_PROCESS: web
+  HEROKU_PROCESS: web
   HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
   HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
   HEROKU_APP_NAME: ${{ secrets.HEROKU_EXECUTION_APP_NAME }}
@@ -60,6 +60,6 @@ jobs:
       - name: Build and push
         run: |
           cd $DIRECTORY
-          heroku container:push --recursive --app $HEROKU_APP_NAME --context-path=../
+          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../
       - name: Release
-        run: heroku container:release $HEROKU_WEB_PROCESS --app $HEROKU_APP_NAME
+        run: heroku container:release $HEROKU_PROCESS --app $HEROKU_APP_NAME
