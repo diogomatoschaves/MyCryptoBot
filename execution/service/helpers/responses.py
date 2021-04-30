@@ -20,16 +20,16 @@ RESPONSES = namedtuple(
 
 
 Responses = RESPONSES(
-    TRADING_SYMBOL_START=lambda success, symbol: {
-        "success": success,
+    TRADING_SYMBOL_START=lambda symbol: {
+        "success": True,
         "response": f"{symbol}: Trading symbol successfully started."
     },
     TRADING_SYMBOL_NO_ACCOUNT=lambda symbol: {
         "success": False,
         "response":  f"{symbol}: Trading account does not exist."
     },
-    TRADING_SYMBOL_STOP=lambda success, symbol: {
-        "success": success,
+    TRADING_SYMBOL_STOP=lambda symbol: {
+        "success": True,
         "response": f"{symbol}: Trading symbol successfully stopped."
     },
     TRADING_SYMBOL_NOT_ACTIVE=lambda symbol: {

@@ -55,6 +55,8 @@ class BinanceTrader(BinanceHandler, Trader):
 
         trading_account_exists = self._get_assets_info(symbol)
 
+        print(self.assets_info)
+
         if not trading_account_exists:
             return False
 
@@ -83,11 +85,11 @@ class BinanceTrader(BinanceHandler, Trader):
 
         logging.info(f"{symbol}: Closing positions and repaying loans.")
 
-        self.close_pos(symbol, date=datetime.utcnow())
+        position_closed = self.close_pos(symbol, date=datetime.utcnow())
 
         self.repay_loans(symbol)
 
-        return True
+        return position_closed
 
     def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, **kwargs):
         self._execute_order(
@@ -114,7 +116,7 @@ class BinanceTrader(BinanceHandler, Trader):
     def close_pos(self, symbol, date=None, row=None):
 
         if self.units == 0:
-            return
+            return False
 
         if self.units < 0:
             self.buy_instrument(symbol, date, row, units=-self.units)
@@ -131,7 +133,9 @@ class BinanceTrader(BinanceHandler, Trader):
         logging.info(f"{symbol}: {date} | number of trades executed = {self.trades}")
         logging.info(f"{symbol}: " + 100 * "-")
 
-    @retry_failed_connection(num_times=3)
+        return True
+
+    @retry_failed_connection(num_times=2)
     def _execute_order(
         self,
         symbol,

@@ -15,13 +15,16 @@ def create_exchange(db):
 def create_assets(db):
     obj1 = Asset.objects.create(symbol='BTC')
     obj2 = Asset.objects.create(symbol='USDT')
+    obj3 = Asset.objects.create(symbol='BNB')
 
-    return [obj1, obj2]
+    return obj1, obj2, obj3
 
 
 @pytest.fixture
 def create_symbol(db, create_assets):
-    return Symbol.objects.create(name='BTCUSDT', base_id='BTC', quote_id='USDT')
+    obj1 = Symbol.objects.create(name='BTCUSDT', base_id='BTC', quote_id='USDT')
+    obj2 = Symbol.objects.create(name='BNBBTC', base_id='BNB', quote_id='BTC')
+    return obj1, obj2
 
 
 @pytest.fixture
