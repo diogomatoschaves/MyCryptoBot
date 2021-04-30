@@ -56,11 +56,9 @@ def start_symbol_trading():
         success = binance_trader.start_symbol_trading(symbol)
 
         if success:
-            return jsonify(Responses.TRADING_SYMBOL_START(success, symbol))
+            return jsonify(Responses.TRADING_SYMBOL_START(symbol))
         else:
             return jsonify(Responses.TRADING_SYMBOL_NO_ACCOUNT(symbol))
-    else:
-        return jsonify(Responses.EXCHANGE_INVALID(exchange))
 
 
 @app.route('/stop_symbol_trading', methods=['POST'])
@@ -76,11 +74,9 @@ def stop_symbol_trading():
         success = binance_trader.stop_symbol_trading(symbol)
 
         if success:
-            return jsonify(Responses.TRADING_SYMBOL_STOP(success, symbol))
+            return jsonify(Responses.TRADING_SYMBOL_STOP(symbol))
         else:
             return jsonify(Responses.TRADING_SYMBOL_NOT_ACTIVE(symbol))
-    else:
-        return jsonify(Responses.EXCHANGE_INVALID(exchange))
 
 
 @app.route('/execute_order/<exchange>', methods=['POST'])
@@ -110,8 +106,6 @@ def execute_order(exchange):
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(symbol))
 
-    else:
-        return jsonify(Responses.EXCHANGE_INVALID(exchange))
 
 
 if __name__ == "__main__":
