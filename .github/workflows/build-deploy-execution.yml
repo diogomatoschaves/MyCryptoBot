@@ -11,39 +11,55 @@ on:
       - 'database/model/migrations/**'
       - '.github/workflows/build-deploy-execution.yml'
 
+env:
+  DIRECTORY: execution/
+  HEROKU_WEB_PROCESS: web
+  HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+  HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+  HEROKU_APP_NAME: ${{ secrets.HEROKU_EXECUTION_APP_NAME }}
+
 jobs:
-  build:
+  testing:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Login to heroku container registry
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1.1.2
+        with:
+          version: 1.1.5
+          virtualenvs-create: false
+      - name: Install dependencies
+        run: |
+          cd $DIRECTORY
+          poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+      - name: Test with pytest
         env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
+          TEST: true
+        run: |
+          python -m pytest $DIRECTORY --ds=database.settings --verbose --cov=execution --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+  build:
+    runs-on: ubuntu-latest
+    needs: testing
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to heroku container registry
         run: |
           heroku container:login
       - name: Build and push
-        env:
-          DIRECTORY: execution/
-          HEROKU_PROCESS: web
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_APP_NAME: ${{ secrets.HEROKU_EXECUTION_APP_NAME }}
-          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
-          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
         run: |
           cd $DIRECTORY
-          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../ \
-            --arg BINANCE_API_KEY=$BINANCE_API_KEY,BINANCE_API_SECRET=$BINANCE_API_SECRET,\
-          APP_NAME=$HEROKU_APP_NAME
+          heroku container:push --recursive --app $HEROKU_APP_NAME --context-path=../
       - name: Release
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_APP_NAME: ${{ secrets.HEROKU_EXECUTION_APP_NAME }}
-          HEROKU_PROCESS: web
-        run: heroku container:release $HEROKU_PROCESS --app $HEROKU_APP_NAME
-      - uses: akhileshns/heroku-deploy@v3.12.12
-        with:
-          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: ${{ secrets.HEROKU_DATA_APP_NAME }}
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
-          justlogin: true
+        run: heroku container:release $HEROKU_WEB_PROCESS --app $HEROKU_APP_NAME
