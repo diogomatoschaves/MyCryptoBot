@@ -1,10 +1,10 @@
-
+const apiHost = process.env.REACT_APP_API_HOST
 
 export const getResources = async (resources) => {
 
   const resourcesString = resources.join()
 
-  const url = `http://localhost:5000/resources/${resourcesString}`
+  const url = `${apiHost}/resources/${resourcesString}`
 
   return await fetch(url, {
     method: 'GET',
@@ -24,7 +24,7 @@ export const getResources = async (resources) => {
 
 export const getOrders = async (page) => {
 
-  const url = `http://localhost:5000/orders${page ? '/' + page : ''}`
+  const url = `${apiHost}/orders${page ? '/' + page : ''}`
 
   return await fetch(url, {
     method: 'GET',
