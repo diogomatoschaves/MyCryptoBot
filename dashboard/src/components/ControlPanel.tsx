@@ -8,13 +8,15 @@ import styled from "styled-components";
 interface Props {
     symbolsOptions: DropdownOptions[];
     strategiesOptions: DropdownOptions[];
+    candleSizeOptions: DropdownOptions[];
+    exchangeOptions: DropdownOptions[];
     orders: Order[];
     activePipelines: ActivePipeline[]
 }
 
 
 const Wrapper = styled.div`
-    height: 100%;
+    height: calc(100% - 50px);
     width: 100%;
 `
 
@@ -26,7 +28,14 @@ const Column = styled.div`
 
 function ControlPanel(props: Props) {
 
-    const { symbolsOptions, strategiesOptions, orders, activePipelines } = props
+    const {
+        symbolsOptions,
+        strategiesOptions,
+        candleSizeOptions,
+        exchangeOptions,
+        orders,
+        activePipelines
+    } = props
 
     return (
         <Wrapper className="flex-row">
@@ -34,6 +43,8 @@ function ControlPanel(props: Props) {
                 <PipelinePanel
                     symbolsOptions={symbolsOptions}
                     strategiesOptions={strategiesOptions}
+                    candleSizeOptions={candleSizeOptions}
+                    exchangeOptions={exchangeOptions}
                     activePipelines={activePipelines}
                 />
             </Column>
