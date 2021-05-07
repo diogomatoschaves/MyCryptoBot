@@ -7,3 +7,11 @@ export const VIOLET = '#6435C9'
 export const PINK = '#E03997'
 export const BLUE = '#2185D0'
 export const TEAL = '#00B5AD'
+
+
+export const RESOURCES_MAPPING: any = {
+    symbols: 'symbolsOptions',
+    strategies: 'strategiesOptions',
+    candleSizes: 'candleSizeOptions',
+    exchanges: 'exchangeOptions',
+}
