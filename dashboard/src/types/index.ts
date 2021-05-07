@@ -1,9 +1,9 @@
 
 
 export type DropdownOptions = {
-    key: string,
+    key: number,
     text: string,
-    value: number
+    value?: number | undefined
 }
 
 export type Order = {

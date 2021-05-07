@@ -4,7 +4,8 @@ import styled from 'styled-components'
 import {Header} from "semantic-ui-react";
 import ControlPanel from "./ControlPanel";
 import {ActivePipeline, DropdownOptions, Order} from "../types";
-import OrderCard from "./Order";
+import {getOrders, getResources} from "../apiCalls";
+import {RESOURCES_MAPPING} from "../utils/constants";
 
 
 const AppDiv = styled.div`
@@ -19,6 +20,8 @@ const AppDiv = styled.div`
 interface State {
     symbolsOptions: DropdownOptions[];
     strategiesOptions: DropdownOptions[];
+    candleSizeOptions: DropdownOptions[];
+    exchangeOptions: DropdownOptions[];
     orders: Order[];
     activePipelines: ActivePipeline[]
 }
@@ -29,38 +32,66 @@ class App extends Component<any, State> {
     state = {
         symbolsOptions: [],
         strategiesOptions: [],
+        candleSizeOptions: [],
+        exchangeOptions: [],
         orders: [],
         activePipelines: []
     }
 
     componentDidMount() {
-        let orders = require('../apiCalls/mock_orders.json')
+        getResources(Object.keys(RESOURCES_MAPPING))
+            .then(resources => {
+                const options = Object.keys(resources).reduce((accum: any, resource: any) => {
+                    return {
+                        ...accum,
+                        [RESOURCES_MAPPING[resource]]: resources[resource].map((item: any, index: number) => ({
+                            key: index,
+                            text: item.name,
+                            value: index
+                        }))
+                    }
+                }, {})
 
-        orders = [0, 1, 2, 3, 4].reduce((accum: Order[], item: Number) => {
-            return [...accum, orders[0]]
-        }, [])
+                this.setState(state => {
+                    return {
+                        ...state,
+                        ...resources,
+                        ...options
+                    }
+                })
+            })
+            .catch()
 
-        const activePipelines = [{
-            symbol: 'BTCUSDT',
-            strategy: 'MovingAverageCrossover',
-            params: {"sma_s": 12, "sma_l": 30},
-            candleSize: '1h',
-            exchange: 'Binance'
-        }] as any
-
-        this.setState({orders, activePipelines})
+        getOrders()
+            .then(orders => {
+                this.setState(state => {
+                    return {
+                        ...state,
+                        ...orders
+                    }
+                })
+            })
     }
 
     render(){
 
-        const { symbolsOptions, strategiesOptions, orders, activePipelines } = this.state
+        const {
+            symbolsOptions,
+            strategiesOptions,
+            candleSizeOptions,
+            exchangeOptions,
+            orders,
+            activePipelines
+        } = this.state
 
         return (
             <AppDiv className="flex-column">
-                <Header size='huge' style={{marginBottom: '20px'}}>Crypto Bot Dashboard</Header>
+                <Header size='huge' style={{height: '50px'}}>Crypto Bot Dashboard</Header>
                 <ControlPanel
                     symbolsOptions={symbolsOptions}
                     strategiesOptions={strategiesOptions}
+                    candleSizeOptions={candleSizeOptions}
+                    exchangeOptions={exchangeOptions}
                     orders={orders}
                     activePipelines={activePipelines}
                 />
