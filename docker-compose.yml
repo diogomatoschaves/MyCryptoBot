@@ -7,6 +7,8 @@ services:
     image: data-server
     ports:
       - "5000:5000"
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgres://postgres:6730@host.docker.internal:5432/crypto_bot
       - REDISTOGO_URL=redis://redis:6379
@@ -46,6 +48,8 @@ services:
     image: execution-server
     ports:
       - "5002:5000"
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgres://postgres:6730@host.docker.internal:5432/crypto_bot
       - REDISTOGO_URL=redis://redis:6379
@@ -54,3 +58,14 @@ services:
       - LOGGER_LEVEL=DEBUG
   redis:
     image: redis
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    image: dashboard-server
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_HOST=http://localhost:5000
+    volumes:
+      - ./dashboard:/app

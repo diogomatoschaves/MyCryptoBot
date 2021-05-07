@@ -1,3 +1,4 @@
 .git
 database/db.sqlite3
 database/datasets
+dashboard/node_modules
