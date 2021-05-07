@@ -7,7 +7,9 @@ from functools import reduce
 from django.db import IntegrityError
 from flask import Flask, jsonify, request
 import django
+from flask_cors import CORS
 
+from data.service.blueprints.dashboard import dashboard
 from data.service.external_requests import start_stop_symbol_trading
 from data.service.helpers.responses import Responses
 
@@ -29,6 +31,9 @@ executor = ThreadPoolExecutor(16)
 
 
 app = Flask(__name__)
+app.register_blueprint(dashboard)
+
+CORS(app)
 
 binance_instances = []
 

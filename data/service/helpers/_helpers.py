@@ -23,10 +23,10 @@ EXECUTION_APP_ENDPOINTS = {
 
 STRATEGIES = {
     'BollingerBands': {
-        "params": {"ma", "sd"}
+        "params": ["ma", "sd"]
     },
     'MachineLearning': {
-        "params": {
+        "params": [
             "estimator",
             "lag_features",
             "rolling_features",
@@ -36,19 +36,19 @@ STRATEGIES = {
             "test_size",
             "degree",
             "print_results"
-        }
+        ]
     },
     'Momentum': {
-        "params": {"window"}
+        "params": ["window"]
     },
     'MovingAverageConvergenceDivergence': {
-        "params": {"window_slow", "window_fast", "window_signal"}
+        "params": ["window_slow", "window_fast", "window_signal"]
     },
     'MovingAverage': {
-        "params": {"sma", "moving_av"}
+        "params": ["sma", "moving_av"]
     },
     'MovingAverageCrossover': {
-        "params": {"SMA_S", "SMA_L", "moving_av"}
+        "params": ["SMA_S", "SMA_L", "moving_av"]
     },
 }
 
