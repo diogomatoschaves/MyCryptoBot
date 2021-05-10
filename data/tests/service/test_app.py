@@ -70,8 +70,8 @@ class TestDataService:
                 {
                     "strategy": "MovingAverage",
                     "params": {"sma": 30},
-                    "candle_size": "1h",
-                    "exchange": "Binance"
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
                 },
                 "SYMBOL_REQUIRED",
                 id="SYMBOL_REQUIRED",
@@ -81,7 +81,7 @@ class TestDataService:
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"sma": 30},
-                    "candle_size": "1h",
+                    "candleSize": "1h",
                 },
                 "EXCHANGE_REQUIRED",
                 id="EXCHANGE_REQUIRED",
@@ -91,7 +91,7 @@ class TestDataService:
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"sma": 30},
-                    "exchange": "Binance"
+                    "exchanges": "Binance"
                 },
                 "CANDLE_SIZE_REQUIRED",
                 id="CANDLE_SIZE_REQUIRED",
@@ -100,8 +100,8 @@ class TestDataService:
                 {
                     "symbol": "BTCUSDT",
                     "params": {"sma": 30},
-                    "candle_size": "1h",
-                    "exchange": "Binance"
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
                 },
                 "STRATEGY_REQUIRED",
                 id="STRATEGY_REQUIRED",
@@ -136,8 +136,8 @@ class TestDataService:
                     "symbol": "BTC",
                     "strategy": "MovingAverage",
                     "params": {"sma": 30},
-                    "candle_size": "1h",
-                    "exchange": "Binance"
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
                 },
                 "SYMBOL_INVALID",
                 "symbol",
@@ -148,11 +148,11 @@ class TestDataService:
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"sma": 30},
-                    "candle_size": "1h",
-                    "exchange": "Coinbase"
+                    "candleSize": "1h",
+                    "exchanges": "Coinbase"
                 },
                 "EXCHANGE_INVALID",
-                "exchange",
+                "exchanges",
                 id="EXCHANGE_INVALID",
             ),
             pytest.param(
@@ -160,11 +160,11 @@ class TestDataService:
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"sma": 30},
-                    "candle_size": "efrefg",
-                    "exchange": "Binance"
+                    "candleSize": "efrefg",
+                    "exchanges": "Binance"
                 },
                 "CANDLE_SIZE_INVALID",
-                "candle_size",
+                "candleSize",
                 id="CANDLE_SIZE_INVALID",
             ),
             pytest.param(
@@ -172,8 +172,8 @@ class TestDataService:
                     "symbol": "BTCUSDT",
                     "strategy": "Average",
                     "params": {"sma": 30},
-                    "candle_size": "1h",
-                    "exchange": "Binance"
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
                 },
                 "STRATEGY_INVALID",
                 "strategy",
@@ -210,8 +210,8 @@ class TestDataService:
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"sma": 30},
-                    "candle_size": "1h",
-                    "exchange": "Binance"
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
                 },
                 "DATA_PIPELINE_ONGOING",
                 id="DATA_PIPELINE_ONGOING",
@@ -247,8 +247,8 @@ class TestDataService:
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"sma": 30},
-                    "candle_size": "1h",
-                    "exchange": "Binance"
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
                 },
                 "DATA_PIPELINE_START_OK",
                 id="DATA_PIPELINE_START_OK",
@@ -288,8 +288,8 @@ class TestDataService:
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"sma": 30},
-                    "candle_size": "1h",
-                    "exchange": "Binance"
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
                 },
                 id="DATA_PIPELINE_FAIL_EXTERNAL_CALL",
             ),

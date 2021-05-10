@@ -22,17 +22,17 @@ def mock_settings_env_vars(mocker):
 
 @pytest.fixture()
 def mock_get_data(mocker):
-    return mocker.patch("model.strategies.signal_generator.get_data")
+    return mocker.patch("model.service.helpers.signal_generator.get_data")
 
 
 @pytest.fixture()
 def mock_trigger_order(mocker):
-    return mocker.patch("model.strategies.signal_generator.trigger_order")
+    return mocker.patch("model.service.helpers.signal_generator.trigger_order")
 
 
 @pytest.fixture()
 def mock_execute_order(mocker):
-    return mocker.patch("model.strategies.signal_generator.execute_order")
+    return mocker.patch("model.service.helpers.signal_generator.execute_order")
 
 
 def mock_strategy(*args, **kwargs):
@@ -59,6 +59,6 @@ def mock_strategy_factory(strategy):
 
     @pytest.fixture()
     def mocked_strategy(mocker):
-        mocker.patch.object(model.strategies.signal_generator, strategy, mock_strategy)
+        mocker.patch.object(model.service.helpers.signal_generator, strategy, mock_strategy)
 
     return mocked_strategy
