@@ -27,7 +27,17 @@ export type Order = {
 export type ActivePipeline = {
     symbol: string
     strategy: string
-    params: any
+    params?: any
     candleSize: string
     exchange: string
 }
+
+export type PipelineParams = {
+    symbol: string
+    strategy: string
+    candleSize: string
+    exchanges: string
+}
+
+export type StartPipeline = (pipelineParams: PipelineParams) => void
+export type StopPipeline = ({symbol, exchange}: {symbol: string, exchange: string}) => void

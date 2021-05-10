@@ -1,6 +1,6 @@
 import {Button, Dropdown, Grid, Divider, TextArea, Form} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
-import {ActivePipeline, DropdownOptions} from "../types";
+import {ActivePipeline, DropdownOptions, StartPipeline, StopPipeline} from "../types";
 import Pipeline from './Pipeline'
 import {useState} from "react";
 
@@ -10,8 +10,51 @@ interface Props {
     strategiesOptions: DropdownOptions[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
-    activePipelines: ActivePipeline[]
+    activePipelines: ActivePipeline[];
+    startPipeline: StartPipeline;
+    stopPipeline: StopPipeline
 }
+
+
+const validatePipelineCreation = ({
+    symbol,
+    symbolsOptions,
+    strategy,
+    strategiesOptions,
+    candleSize,
+    candleSizeOptions,
+    exchanges,
+    exchangeOptions,
+    startPipeline
+}: {
+    symbol: number | undefined,
+    symbolsOptions: DropdownOptions[],
+    strategy: number | undefined,
+    strategiesOptions: DropdownOptions[],
+    candleSize: number | undefined,
+    candleSizeOptions: DropdownOptions[],
+    exchanges: Array<number>,
+    exchangeOptions: DropdownOptions[],
+    startPipeline: StartPipeline
+}) => {
+    if (!symbol || !strategy || !candleSize || exchanges.length == 0) {
+        console.log("All parameters must be specified")
+        return
+    }
+
+    startPipeline({
+        // @ts-ignore
+        symbol: symbolsOptions.find(option => symbol === option.value).text,
+        // @ts-ignore
+        strategy: strategiesOptions.find(option => strategy === option.value).text,
+        // @ts-ignore
+        candleSize: candleSizeOptions.find(option => candleSize === option.value).text,
+        // @ts-ignore
+        exchanges: exchangeOptions.find(option => exchanges[0] === option.value).text, // TODO: Generalize this for any number of exchanges
+    })
+
+}
+
 
 function PipelinePanel(props: Props) {
 
@@ -20,13 +63,15 @@ function PipelinePanel(props: Props) {
         strategiesOptions,
         activePipelines,
         candleSizeOptions,
-        exchangeOptions
+        exchangeOptions,
+        startPipeline,
+        stopPipeline
     } = props
 
     const [symbol, setSymbol] = useState()
     const [strategy, setStrategy] = useState()
     const [candleSize, setCandleSize] = useState()
-    const [exchange, setExchange] = useState([])
+    const [exchanges, setExchange] = useState([])
 
     return (
         <StyledSegment basic className="flex-column">
@@ -68,7 +113,7 @@ function PipelinePanel(props: Props) {
                     <Grid.Column>
                         <Dropdown
                             placeholder='Exchange'
-                            value={exchange}
+                            value={exchanges}
                             onChange={(e: any, {value}: {value?: any}) => setExchange(value)}
                             multiple
                             search
@@ -84,12 +129,29 @@ function PipelinePanel(props: Props) {
                         {/*</Form>*/}
                     </Grid.Column>
                     <Grid.Column style={{alignSelf: 'center'}}>
-                        <Button color='green'>Start Pipeline</Button>
+                        <Button
+                            onClick={() =>
+                                validatePipelineCreation({
+                                    symbol,
+                                    strategy,
+                                    candleSize,
+                                    exchanges,
+                                    symbolsOptions,
+                                    strategiesOptions,
+                                    candleSizeOptions,
+                                    exchangeOptions,
+                                    startPipeline
+                                })
+                            }
+                            color='green'
+                        >
+                            Start Pipeline
+                        </Button>
                     </Grid.Column>
                 </Grid.Row>
             </Grid>
             <Divider horizontal style={{marginTop: '30px'}}>Active Pipelines</Divider>
-            {activePipelines.map(pipeline => <Pipeline pipeline={pipeline}/>)}
+            {activePipelines.map((pipeline: ActivePipeline) => <Pipeline stopPipeline={stopPipeline} {...pipeline}/>)}
         </StyledSegment>
     );
 }
