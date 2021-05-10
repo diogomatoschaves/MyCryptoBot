@@ -4,7 +4,7 @@ import os
 import requests
 
 from data.service.helpers import MODEL_APP_ENDPOINTS, EXECUTION_APP_ENDPOINTS
-from shared.utils.decorators.failed_connection import retry_failed_connection
+from shared.utils.decorators import retry_failed_connection, json_error_handler
 
 
 def prepare_payload(**kwargs):
@@ -25,6 +25,7 @@ def check_job_status(job_id):
 
 
 @retry_failed_connection(num_times=2)
+@json_error_handler
 def generate_signal(symbol, strategy, params, candle_size, exchange):
 
     url = MODEL_APP_ENDPOINTS["GENERATE_SIGNAL"](os.getenv("MODEL_APP_URL"))
@@ -52,6 +53,7 @@ def generate_signal(symbol, strategy, params, candle_size, exchange):
 
 
 @retry_failed_connection(num_times=2)
+@json_error_handler
 def start_stop_symbol_trading(symbol, exchange, start_or_stop):
 
     endpoint = f"{start_or_stop.upper()}_SYMBOL_TRADING"
