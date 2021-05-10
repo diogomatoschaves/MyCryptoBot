@@ -1,4 +1,4 @@
-from model.strategies.signal_generator import get_signal, trigger_order
+from model.service.helpers.signal_generator import get_signal, trigger_order
 from model.tests.setup.fixtures.internal_modules import *
 from model.tests.setup.test_data.sample_data import sample_structured_data
 from shared.utils.tests.fixtures.models import *

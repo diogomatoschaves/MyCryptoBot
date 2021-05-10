@@ -80,8 +80,8 @@ def start_bot():
     symbol = data.get("symbol", None)
     strategy = data.get("strategy", None)
     params = data.get("params", {})
-    candle_size = data.get("candle_size", None)
-    exchange = data.get("exchange", None)
+    candle_size = data.get("candleSize", None)
+    exchange = data.get("exchanges", None)
 
     response = check_input(
         symbol=symbol,
