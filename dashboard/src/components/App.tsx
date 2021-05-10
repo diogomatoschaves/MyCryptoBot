@@ -3,8 +3,8 @@ import {Component} from 'react'
 import styled from 'styled-components'
 import {Header} from "semantic-ui-react";
 import ControlPanel from "./ControlPanel";
-import {ActivePipeline, DropdownOptions, Order} from "../types";
-import {getOrders, getResources} from "../apiCalls";
+import {ActivePipeline, DropdownOptions, Order, PipelineParams, StartPipeline, StopPipeline} from "../types";
+import {getOrders, getResources, startBot, stopBot} from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
 
 
@@ -23,7 +23,8 @@ interface State {
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
     orders: Order[];
-    activePipelines: ActivePipeline[]
+    activePipelines: ActivePipeline[];
+    message: string
 }
 
 
@@ -35,7 +36,8 @@ class App extends Component<any, State> {
         candleSizeOptions: [],
         exchangeOptions: [],
         orders: [],
-        activePipelines: []
+        activePipelines: [],
+        message: ''
     }
 
     componentDidMount() {
@@ -45,9 +47,9 @@ class App extends Component<any, State> {
                     return {
                         ...accum,
                         [RESOURCES_MAPPING[resource]]: resources[resource].map((item: any, index: number) => ({
-                            key: index,
+                            key: index + 1,
                             text: item.name,
-                            value: index
+                            value: index + 1
                         }))
                     }
                 }, {})
@@ -73,6 +75,38 @@ class App extends Component<any, State> {
             })
     }
 
+    startPipeline: StartPipeline = (pipelineParams: PipelineParams) => {
+        startBot(pipelineParams)
+            .then(message => {
+                this.setState(state => ({
+                    message: message.response,
+                    activePipelines: message.success ? [...state.activePipelines, {
+                        symbol: pipelineParams.symbol,
+                        strategy: pipelineParams.strategy,
+                        exchange: pipelineParams.exchanges,
+                        candleSize: pipelineParams.candleSize
+                    }] : state.activePipelines
+                }))
+            })
+    }
+
+    stopPipeline: StopPipeline = ({symbol, exchange}) => {
+        stopBot({symbol, exchange})
+            .then(message => {
+                this.setState(state => ({
+                    message: message.response,
+                    activePipelines: message.success ? state.activePipelines.reduce(
+                        (newArray: ActivePipeline[], pipeline: ActivePipeline) => {
+                            if (symbol === pipeline.symbol && exchange === pipeline.exchange) {
+                                return newArray
+                            } else return [...newArray, pipeline]
+                        },
+                        []
+                    ) : state.activePipelines
+                }))
+            })
+    }
+
     render(){
 
         const {
@@ -94,6 +128,8 @@ class App extends Component<any, State> {
                     exchangeOptions={exchangeOptions}
                     orders={orders}
                     activePipelines={activePipelines}
+                    startPipeline={this.startPipeline}
+                    stopPipeline={this.stopPipeline}
                 />
             </AppDiv>
         );

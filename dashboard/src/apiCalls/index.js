@@ -40,3 +40,29 @@ export const getOrders = async (page) => {
       }
     })
 }
+
+
+export const startBot = async (requestData) => {
+
+  const url = `${apiHost}/start_bot`
+
+  const response = await fetch(url, {
+    body: JSON.stringify(requestData),
+    method: 'PUT'
+  })
+
+  return await response.json()
+}
+
+
+export const stopBot = async (requestData) => {
+
+  const url = `${apiHost}/stop_bot`
+
+  const response = await fetch(url, {
+    body: JSON.stringify(requestData),
+    method: 'PUT'
+  })
+
+  return await response.json()
+}
