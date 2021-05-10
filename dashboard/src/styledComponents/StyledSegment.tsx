@@ -9,7 +9,7 @@ const StyledSegment = styled(Segment)`
     align-items: center;
     
     &.ui.segment {
-        padding: 30px;
+        padding: 25px;
         padding-top: 0;
     }
 `

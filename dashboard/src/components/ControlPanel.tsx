@@ -1,7 +1,7 @@
 import {Divider, Grid} from "semantic-ui-react";
 import PipelinePanel from "./PipelinePanel";
 import OrdersPanel from "./OrdersPanel";
-import {ActivePipeline, DropdownOptions, Order} from "../types";
+import {ActivePipeline, DropdownOptions, Order, StartPipeline, StopPipeline} from "../types";
 import styled from "styled-components";
 
 
@@ -12,6 +12,8 @@ interface Props {
     exchangeOptions: DropdownOptions[];
     orders: Order[];
     activePipelines: ActivePipeline[]
+    startPipeline: StartPipeline
+    stopPipeline: StopPipeline
 }
 
 
@@ -34,7 +36,9 @@ function ControlPanel(props: Props) {
         candleSizeOptions,
         exchangeOptions,
         orders,
-        activePipelines
+        activePipelines,
+        startPipeline,
+        stopPipeline
     } = props
 
     return (
@@ -46,6 +50,8 @@ function ControlPanel(props: Props) {
                     candleSizeOptions={candleSizeOptions}
                     exchangeOptions={exchangeOptions}
                     activePipelines={activePipelines}
+                    startPipeline={startPipeline}
+                    stopPipeline={stopPipeline}
                 />
             </Column>
             <Column style={{overflowY: 'scroll'}}>
@@ -56,18 +62,3 @@ function ControlPanel(props: Props) {
 }
 
 export default ControlPanel;
-
-
-const styles = {
-    gridStyle: {
-        width: '100%',
-        height: '100%',
-        marginTop: '5px'
-    },
-    leftColumn: {
-        borderRight: '1px solid #d2d2d2',
-    },
-    rightColumn: {
-        overflowY: 'scroll'
-    }
-}
