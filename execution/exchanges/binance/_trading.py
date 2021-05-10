@@ -9,6 +9,7 @@ from binance.exceptions import BinanceAPIException
 
 from shared.exchanges import BinanceHandler
 from shared.trading import Trader
+from shared.utils.decorators.binance_error_handler import binance_error_handler
 from shared.utils.decorators.failed_connection import retry_failed_connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -123,7 +124,10 @@ class BinanceTrader(BinanceHandler, Trader):
         else:
             self.sell_instrument(symbol, date, row, units=self.units)
 
-        perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
+        try:
+            perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
+        except ZeroDivisionError:
+            perf = 0
 
         self.print_current_balance(symbol, date)
 
@@ -136,6 +140,7 @@ class BinanceTrader(BinanceHandler, Trader):
         return True
 
     @retry_failed_connection(num_times=2)
+    @binance_error_handler
     def _execute_order(
         self,
         symbol,
