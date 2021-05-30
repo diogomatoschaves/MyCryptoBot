@@ -33,7 +33,7 @@ def get_resources(resources):
             response["exchanges"] = list(exchanges)
 
         elif resource == 'strategies':
-            response["strategies"] = [{"name": key, **value} for key, value in STRATEGIES.items()]
+            response["strategies"] = [value for key, value in STRATEGIES.items()]
 
         elif resource == 'candleSizes':
             response["candleSizes"] = [{"name": key} for key in CANDLE_SIZES_MAPPER.keys()]
