@@ -1,3 +1,2 @@
 from shared.utils.decorators.failed_connection import retry_failed_connection
 from shared.utils.decorators.decoding_error_handler import json_error_handler
-from shared.utils.decorators.binance_error_handler import binance_error_handler
