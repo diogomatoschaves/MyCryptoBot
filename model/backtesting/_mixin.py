@@ -9,7 +9,7 @@ class BacktestMixin:
         self.symbol = symbol
         self.tc = trading_costs / 100
 
-    def _assess_strategy(self, data, title, plot_results=True):
+    def _assess_strategy(self, data, title, plot_results=True, plot_positions=True):
 
         data = self._calculate_positions(data.copy())
 
@@ -40,11 +40,11 @@ class BacktestMixin:
         outperf = perf - data["creturns"].iloc[-1]
 
         if plot_results:
-            self.plot_results(title)
+            self.plot_results(title, plot_positions)
 
         return round(perf, 6), round(outperf, 6)
 
-    def plot_results(self, title):
+    def plot_results(self, title, plot_positions=True):
         """ Plots the cumulative performance of the trading strategy
         compared to buy and hold.
         """
@@ -57,40 +57,45 @@ class BacktestMixin:
 
             ax = self.results[plotting_cols].plot(title=title, figsize=(20, 12))
 
-            # Convert labels to colors
-            label2color = {
-                1: 'green',
-                0: 'brown',
-                -1: 'red',
-            }
-            self.results['color'] = self.results['position'].apply(lambda label: label2color[label])
+            if plot_positions:
 
-            # Add px_last lines
-            for color, start, end in self._gen_repeating(self.results['color']):
-                if start > 0: # make sure lines connect
-                    start -= 1
-                idx = self.results.index[start:end+1]
-                self.results.loc[idx, 'cstrategy_tc'].plot(ax=ax, color=color, label='')
-                self.results.loc[idx, ['position']].plot(ax=ax, color=color, label='', secondary_y='position', alpha=0.3)
+                # Convert labels to colors
+                label2color = {
+                    1: 'green',
+                    0: 'brown',
+                    -1: 'red',
+                }
+                self.results['color'] = self.results['position'].apply(lambda label: label2color[label])
 
-            # Get artists and labels for legend and chose which ones to display
-            handles, labels = ax.get_legend_handles_labels()
+                # Add px_last lines
+                for color, start, end in self._gen_repeating(self.results['color']):
+                    if start > 0: # make sure lines connect
+                        start -= 1
+                    idx = self.results.index[start:end+1]
+                    self.results.loc[idx, 'cstrategy_tc'].plot(ax=ax, color=color, label='')
+                    self.results.loc[idx, ['position']].plot(ax=ax, color=color, label='', secondary_y='position', alpha=0.3)
 
-            # Create custom artists
-            g_line = plt.Line2D((0, 1), (0, 0), color='green')
-            y_line = plt.Line2D((0, 1), (0, 0), color='brown')
-            r_line = plt.Line2D((0, 1), (0, 0), color='red')
+                # Get artists and labels for legend and chose which ones to display
+                handles, labels = ax.get_legend_handles_labels()
 
-            # Create legend from custom artist/label lists
-            ax.legend(
-                handles + [g_line, y_line, r_line],
-                labels + [
-                    'long position',
-                    'neutral_position',
-                    'short position',
-                ],
-                loc='best',
-            )
+                # Create custom artists
+                g_line = plt.Line2D((0, 1), (0, 0), color='green')
+                y_line = plt.Line2D((0, 1), (0, 0), color='brown')
+                r_line = plt.Line2D((0, 1), (0, 0), color='red')
+
+                # Create legend from custom artist/label lists
+                ax.legend(
+                    handles + [g_line, y_line, r_line],
+                    labels + [
+                        'long position',
+                        'neutral_position',
+                        'short position',
+                    ],
+                    loc='best',
+                )
+
+            else:
+                ax.plot(self.results.index, self.results["cstrategy_tc"], c='g')
 
             plt.show()
 
