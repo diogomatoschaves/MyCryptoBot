@@ -25,7 +25,7 @@ class VectorizedBacktester(BacktestMixin):
         else:
             return method
 
-    def test_strategy(self, params=None, plot_results=True):
+    def test_strategy(self, params=None, plot_results=True, plot_positions=True):
         """ Backtests the trading strategy.
         """
 
@@ -35,7 +35,7 @@ class VectorizedBacktester(BacktestMixin):
 
         data = self._get_data().dropna().copy()
 
-        return self._assess_strategy(data, title, plot_results)
+        return self._assess_strategy(data, title, plot_results, plot_positions)
 
     def _get_trades(self, data):
         return data.trades.sum()
