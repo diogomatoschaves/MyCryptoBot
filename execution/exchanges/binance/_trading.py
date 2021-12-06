@@ -9,7 +9,7 @@ from binance.exceptions import BinanceAPIException
 
 from shared.exchanges import BinanceHandler
 from shared.trading import Trader
-from shared.utils.decorators.binance_error_handler import binance_error_handler
+from execution.exchanges.binance.helpers import binance_error_handler
 from shared.utils.decorators.failed_connection import retry_failed_connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
