@@ -117,25 +117,17 @@ class TestModelService:
         [
             pytest.param(
                 {
-                    "symbol": "BTCUSDT",
-                    "strategy": "InvalidStrategy",
-                    "candle_size": "1h",
-                    "exchange": "Binance",
-                },
-                0,
-                Responses.STRATEGY_INVALID("InvalidStrategy"),
-                id="INVALID_STRATEGY",
-            ),
-            pytest.param(
-                {
-                    "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "candle_size": "1h",
-                    "exchange": "Binance",
+                    "pipeline_id": 1
                 },
                 1,
                 Responses.SIGNAL_GENERATION_INPROGRESS("abcde"),
                 id="SIGNAL_GENERATION_INPROGRESS",
+            ),
+            pytest.param(
+                {},
+                0,
+                Responses.NO_SUCH_PIPELINE(None),
+                id="NO_SUCH_PIPELINE",
             ),
         ],
     )
@@ -148,6 +140,7 @@ class TestModelService:
         mock_settings_env_vars,
         mocked_rq_enqueue_call,
         create_exchange,
+        create_pipeline
     ):
         res = client.post("/generate_signal", json=params)
 

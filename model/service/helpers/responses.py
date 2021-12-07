@@ -6,6 +6,7 @@ RESPONSES = namedtuple(
     [
         "STRATEGY_INVALID",
         "SIGNAL_GENERATION_INPROGRESS",
+        "NO_SUCH_PIPELINE",
         "JOB_NOT_FOUND",
         "FINISHED",
         "IN_QUEUE",
@@ -20,6 +21,7 @@ Responses = RESPONSES(
     SIGNAL_GENERATION_INPROGRESS=lambda job_id: {
         "response": f"Signal generation process started.", "success": True, "job_id": job_id
     },
+    NO_SUCH_PIPELINE=lambda pipeline_id: {"response": f"Pipeline {pipeline_id} was not found.", "success": False},
     FINISHED=lambda result: {"status": 'finished', "success": result},
     JOB_NOT_FOUND={"status": 'job not found'},
     IN_QUEUE={"status": 'job not found'},

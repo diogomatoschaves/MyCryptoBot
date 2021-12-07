@@ -1,17 +1,21 @@
+import json
 import os
 import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from functools import reduce
 
-from django.db import IntegrityError
 from flask import Flask, jsonify, request
 import django
 from flask_cors import CORS
 
+import redis
+
 from data.service.blueprints.dashboard import dashboard
 from data.service.external_requests import start_stop_symbol_trading
 from data.service.helpers.responses import Responses
+from data.sources._sources import DataHandler
+from shared.utils.helpers import get_logging_row_header, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -21,8 +25,7 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 from data.service.helpers import check_input
-from data.sources.binance import BinanceDataHandler
-from database.model.models import Jobs
+from database.model.models import Pipeline
 from shared.utils.logger import configure_logger
 
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
@@ -37,31 +40,31 @@ CORS(app)
 
 binance_instances = []
 
+cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
-def initialize_data_collection(strategy, params, symbol, candle_size):
 
-    binance_handler = BinanceDataHandler(strategy, params, symbol, candle_size)
+def initialize_data_collection(pipeline):
 
-    binance_handler.start_data_ingestion()
+    data_handler = DataHandler(pipeline)
 
     global binance_instances
-    binance_instances.append(binance_handler)
+    binance_instances.append(data_handler.binance_handler)
 
 
-def reduce_instances(instances, instance, symbol):
-    if symbol == instance.symbol:
+def reduce_instances(instances, instance, pipeline_id):
+    if pipeline_id == instance.pipeline_id:
         instance.stop_data_ingestion()
         return instances
     else:
         return [*instances, instance]
 
 
-def stop_instance(symbol):
+def stop_instance(pipeline_id):
 
     global binance_instances
 
     binance_instances = reduce(
-        lambda instances, instance: reduce_instances(instances, instance, symbol),
+        lambda instances, instance: reduce_instances(instances, instance, pipeline_id),
         binance_instances,
         []
     )
@@ -98,28 +101,58 @@ def start_bot():
     exchange = exchange.lower()
     candle_size = candle_size.lower()
 
+    print(f"count {Pipeline.objects.all().count()}")
+
     try:
-        Jobs.objects.create(job_id=symbol, exchange_id=exchange.lower(), app=os.getenv("APP_NAME"))
-        logging.info(f"Starting {symbol} Data pipeline.")
-    except IntegrityError as e:
-        logging.debug(e)
-        return jsonify(Responses.DATA_PIPELINE_ONGOING(symbol))
+        pipeline = Pipeline.objects.get(
+            symbol_id=symbol,
+            interval=candle_size,
+            strategy=strategy,
+            exchange_id=exchange,
+            params=json.dumps(params)
+        )
+
+        if pipeline.active:
+            return jsonify(Responses.DATA_PIPELINE_ONGOING)
+
+        else:
+            pipeline.active = True
+            pipeline.save()
+
+    except Pipeline.DoesNotExist:
+
+        pipeline = Pipeline.objects.create(
+            symbol_id=symbol,
+            interval=candle_size,
+            strategy=strategy,
+            exchange_id=exchange,
+            params=json.dumps(params)
+        )
+
+    cache.set(
+        f"pipeline {pipeline.id}",
+        json.dumps(get_logging_row_header(symbol, strategy, params, candle_size, exchange))
+    )
 
     response = start_stop_symbol_trading(symbol, exchange, 'start')
 
     if not response["success"]:
         logging.warning(response["response"])
+
+        pipeline.active = False
+        pipeline.save()
+
         return jsonify({"response": response["response"]})
+
+    logging.info(json.loads(get_item_from_cache(cache, pipeline.id)) +
+                 f"Starting data pipeline.")
 
     executor.submit(
         initialize_data_collection,
-        strategy,
-        params,
-        symbol,
-        candle_size
+        pipeline
     )
 
-    return jsonify(Responses.DATA_PIPELINE_START_OK(symbol))
+    return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline.id))
 
 
 @app.route('/stop_bot', methods=['PUT'])
@@ -129,30 +162,28 @@ def stop_bot():
     # closes any open positions
     data = request.get_json(force=True)
 
-    symbol = data.get("symbol", None)
-    exchange = data.get("exchange", None)
-
-    response = check_input(symbol=symbol, exchange=exchange)
-
-    if response is not None:
-        return response
+    pipeline_id = data.get("pipeline_id", None)
 
     try:
-        job = Jobs.objects.get(job_id=symbol, exchange_id=exchange.lower(), app=os.getenv("APP_NAME"))
+        pipeline = Pipeline.objects.get(id=pipeline_id)
 
-        logging.info(f"Stopping {symbol} data pipeline.")
+        symbol = pipeline.symbol.name
+        exchange = pipeline.exchange.name
 
-        stop_instance(job.job_id)
+        logging.info(json.loads(get_item_from_cache(cache, pipeline_id)) + f"Stopping data pipeline.")
+
+        stop_instance(pipeline_id)
 
         response = start_stop_symbol_trading(symbol, exchange, 'stop')
 
         logging.debug(response["response"])
 
-        job.delete()
+        pipeline.active = False
+        pipeline.save()
 
-        return jsonify(Responses.DATA_PIPELINE_STOPPED(symbol))
-    except Jobs.DoesNotExist:
-        return jsonify(Responses.DATA_PIPELINE_INEXISTENT(symbol))
+        return jsonify(Responses.DATA_PIPELINE_STOPPED)
+    except Pipeline.DoesNotExist:
+        return jsonify(Responses.DATA_PIPELINE_INEXISTENT)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import pytest
+import redis
 from binance.client import Client
 
 from data.tests.setup.test_data.sample_data import binance_api_historical_data

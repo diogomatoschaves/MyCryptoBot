@@ -1,4 +1,5 @@
 import sys
+from database.model.helpers import STRATEGIES
 
 try:
     from django.db import models
@@ -120,7 +121,7 @@ class Jobs(models.Model):
 
 class Orders(models.Model):
 
-    order_id = models.IntegerField(null=True)
+    order_id = models.IntegerField(primary_key=True)
     client_order_id = models.TextField(null=True)
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     transact_time = models.DateTimeField()
@@ -132,4 +133,20 @@ class Orders(models.Model):
     type = models.TextField()
     side = models.TextField()
     is_isolated = models.BooleanField(default=False)
+    exchange = models.ForeignKey(Exchange, default='binance', on_delete=models.SET_DEFAULT)
     mock = models.BooleanField(null=True, default=False)
+
+
+class Pipeline(models.Model):
+
+    STRATEGY_CHOICES = [(strategy_key, strategy_value["name"]) for strategy_key, strategy_value in STRATEGIES.items()]
+
+    symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
+    interval = models.TextField()
+    strategy = models.TextField(choices=STRATEGY_CHOICES)
+    params = models.TextField(blank=True, default="{}")
+    exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
+    active = models.BooleanField(default=True, blank=True)
+
+    class Meta:
+        unique_together = ("symbol", "interval", "strategy", "params", "exchange")

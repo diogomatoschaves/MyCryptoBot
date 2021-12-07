@@ -1,7 +1,7 @@
 import pytest
 
 from data.tests.setup.test_data.sample_data import exchange_data_1
-from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData
+from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData, Pipeline
 
 TEST_APP_NAME = 'test_app'
 
@@ -30,6 +30,19 @@ def create_symbol(db, create_assets):
 @pytest.fixture
 def create_job(db):
     return Jobs.objects.create(job_id='BTCUSDT', app=TEST_APP_NAME, exchange_id='binance')
+
+
+@pytest.fixture
+def create_pipeline(db, create_exchange, create_symbol):
+    return Pipeline.objects.create(
+        id=1,
+        symbol_id='BTCUSDT',
+        strategy='BollingerBands',
+        params="{}",
+        exchange_id='binance',
+        interval="1h",
+        active=True
+    )
 
 
 @pytest.fixture
