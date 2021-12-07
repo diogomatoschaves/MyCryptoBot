@@ -61,7 +61,7 @@ def extract_data(
     if start_date is None:
         start_date = get_start_date(model_class, symbol, candle_size)
 
-    logging.info(f"{symbol}: Fetching missing historical data.")
+    logging.info(f"{symbol}|{candle_size}: Fetching missing historical data.")
 
     klines = klines_generator(symbol, base_candle_size, start_date)
 

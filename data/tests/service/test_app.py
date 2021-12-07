@@ -1,6 +1,10 @@
+import json
+
 from data.service.helpers.responses import Responses
 from data.tests.setup.fixtures.internal_modules import *
+from data.tests.setup.fixtures.external_modules import *
 from data.tests.setup.fixtures.app import *
+from database.model.models import Pipeline
 from shared.utils.tests.fixtures.models import *
 
 
@@ -113,6 +117,8 @@ class TestDataService:
         input_params,
         response,
         client,
+        mock_redis_connection_1,
+        mock_redis_connection_2,
         create_exchange,
         create_assets,
         create_symbol
@@ -187,6 +193,8 @@ class TestDataService:
         response,
         param,
         client,
+        mock_redis_connection_1,
+        mock_redis_connection_2,
         create_exchange,
         create_assets,
         create_symbol
@@ -208,10 +216,9 @@ class TestDataService:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"sma": 30},
+                    "strategy": "BollingerBands",
                     "candleSize": "1h",
-                    "exchanges": "Binance"
+                    "exchanges": "Binance",
                 },
                 "DATA_PIPELINE_ONGOING",
                 id="DATA_PIPELINE_ONGOING",
@@ -223,10 +230,12 @@ class TestDataService:
         params,
         response,
         client,
+        mock_redis_connection_1,
+        mock_redis_connection_2,
         create_exchange,
         create_assets,
         create_symbol,
-        create_job,
+        create_pipeline,
     ):
         """
         GIVEN some input params
@@ -237,7 +246,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        assert res.json == getattr(Responses, response)(params["symbol"])
+        assert res.json == getattr(Responses, response)
 
     @pytest.mark.parametrize(
         "params,response",
@@ -261,6 +270,8 @@ class TestDataService:
         response,
         mock_start_stop_symbol_trading_success_true,
         client,
+        mock_redis_connection_1,
+        mock_redis_connection_2,
         mock_binance_handler_start_data_ingestion,
         mock_executor_submit,
         binance_handler_instances_spy_start_bot,
@@ -277,8 +288,19 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        assert res.json == getattr(Responses, response)(params["symbol"])
+        print(Pipeline.objects.all().count())
+
+        assert res.json["response"] == getattr(Responses, response)(1)["response"]
+        assert type(res.json["pipeline_id"]) == int
         assert len(binance_handler_instances_spy_start_bot) == 1
+
+        pipeline = Pipeline.objects.last()
+
+        assert pipeline.symbol.name == params["symbol"]
+        assert pipeline.exchange.name == params["exchanges"].lower()
+        assert pipeline.strategy == params["strategy"]
+        assert pipeline.params == json.dumps(params["params"])
+        assert pipeline.interval == params["candleSize"]
 
     @pytest.mark.parametrize(
         "params",
@@ -301,6 +323,8 @@ class TestDataService:
         mock_start_stop_symbol_trading_success_false,
         client,
         mock_binance_handler_start_data_ingestion,
+        mock_redis_connection_1,
+        mock_redis_connection_2,
         create_exchange,
         create_assets,
         create_symbol,
@@ -317,95 +341,11 @@ class TestDataService:
         assert res.json["response"] == 'Failed'
 
     @pytest.mark.parametrize(
-        "input_params,response",
-        [
-            pytest.param(
-                {
-                    "exchange": "Binance"
-                },
-                "SYMBOL_REQUIRED",
-                id="SYMBOL_REQUIRED",
-            ),
-            pytest.param(
-                {
-                    "symbol": "BTCUSDT",
-                },
-                "EXCHANGE_REQUIRED",
-                id="EXCHANGE_REQUIRED",
-            ),
-        ],
-    )
-    def test_stop_bot_required_input_response(
-            self,
-            input_params,
-            response,
-            client,
-            create_exchange,
-            create_assets,
-            create_symbol
-    ):
-        """
-        GIVEN some input params
-        WHEN one input_parameter is missing
-        THEN the corresponding response will be sent
-
-        """
-
-        res = client.put('/stop_bot', json=input_params)
-
-        assert res.json == getattr(Responses, response)
-
-    @pytest.mark.parametrize(
-        "input_params,response,param",
-        [
-            pytest.param(
-                {
-                    "symbol": "BTC",
-                    "exchange": "Binance"
-                },
-                "SYMBOL_INVALID",
-                "symbol",
-                id="SYMBOL_INVALID",
-            ),
-            pytest.param(
-                {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Coinbase"
-                },
-                "EXCHANGE_INVALID",
-                "exchange",
-                id="EXCHANGE_INVALID",
-            ),
-        ],
-    )
-    def test_stop_bot_invalid_input_response(
-            self,
-            input_params,
-            response,
-            param,
-            client,
-            create_exchange,
-            create_assets,
-            create_symbol
-    ):
-        """
-        GIVEN some input params
-        WHEN one input_parameter is invalid
-        THEN the corresponding response will be sent
-
-        """
-
-        res = client.put('/stop_bot', json=input_params)
-
-        assert res.json == getattr(Responses, response)(input_params[param])
-
-    @pytest.mark.parametrize(
         "params,response",
         [
             pytest.param(
                 {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Binance"
+                    "pipeline_id": 1
                 },
                 "DATA_PIPELINE_STOPPED",
                 id="DATA_PIPELINE_STOPPED",
@@ -418,13 +358,15 @@ class TestDataService:
         response,
         client,
         mock_binance_handler_stop_data_ingestion,
+        mock_redis_connection_1,
+        mock_redis_connection_2,
         binance_handler_stop_data_ingestion_spy,
         mock_start_stop_symbol_trading_success_true,
         binance_handler_instances_spy_stop_bot,
         create_exchange,
         create_assets,
         create_symbol,
-        create_job
+        create_pipeline
     ):
         """
         GIVEN some input params
@@ -437,7 +379,7 @@ class TestDataService:
 
         res = client.put('/stop_bot', json=params)
 
-        assert res.json == getattr(Responses, response)(params["symbol"])
+        assert res.json == getattr(Responses, response)
         assert Jobs.objects.count() == 0
 
         binance_handler_stop_data_ingestion_spy.assert_called()
@@ -447,8 +389,7 @@ class TestDataService:
         [
             pytest.param(
                 {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Binance"
+                    "pipeline_id": 1
                 },
                 "DATA_PIPELINE_INEXISTENT",
                 id="DATA_PIPELINE_INEXISTENT",
@@ -460,6 +401,8 @@ class TestDataService:
         params,
         response,
         client,
+        mock_redis_connection_1,
+        mock_redis_connection_2,
         create_exchange,
         create_assets,
         create_symbol,
@@ -473,4 +416,4 @@ class TestDataService:
 
         res = client.put('/stop_bot', json=params)
 
-        assert res.json == getattr(Responses, response)(params["symbol"])
+        assert res.json == getattr(Responses, response)

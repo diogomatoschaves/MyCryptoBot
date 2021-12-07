@@ -81,6 +81,7 @@ class TestSignalGeneration:
         side_effect,
         expected_value,
         mock_settings_env_vars,
+        mock_redis_connection,
         MovingAverageConvergenceDivergence,
         MovingAverage,
         MovingAverageCrossover,
@@ -101,6 +102,7 @@ class TestSignalGeneration:
         mock_trigger_order.return_value = True
 
         params = {
+            "pipeline_id": 1,
             "symbol": "BTC",
             "strategy": strategy,
             "candle_size": "1h",
@@ -126,7 +128,7 @@ class TestSignalGeneration:
             ),
         ],
     )
-    def test_trigger_order(self, side_effect, expected_value, mock_execute_order):
+    def test_trigger_order(self, side_effect, expected_value, mock_execute_order, mock_redis_connection):
         """
         GIVEN some params
         WHEN the method trigger_order is called
@@ -136,7 +138,7 @@ class TestSignalGeneration:
 
         mock_execute_order.return_value = side_effect
 
-        params = {"symbol": "BTCUSDT", "signal": 1, "exchange": "Binance"}
+        params = {"symbol": "BTCUSDT", "signal": 1, "exchange": "Binance", "pipeline_id": 1}
 
         res = trigger_order(**params)
 
