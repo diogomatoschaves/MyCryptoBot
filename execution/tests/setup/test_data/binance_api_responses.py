@@ -1,3 +1,5 @@
+from random import randint
+
 isolated_account_info = {
     "assets": [
         {
@@ -51,7 +53,6 @@ trading_fees = {
 
 order_creation = {
     "symbol": "BTCUSDT",
-    "orderId": 28,
     "clientOrderId": "6gCrw2kRUAF9CvJDGP16IP",
     "transactTime": 1507725176595,
     "price": "1.00000000",

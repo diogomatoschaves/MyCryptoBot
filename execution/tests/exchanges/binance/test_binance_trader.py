@@ -69,6 +69,7 @@ class TestBinanceTrader:
         times_called,
         expected_value,
         create_symbol,
+        create_exchange,
         ping,
         init_session,
         get_isolated_margin_account,
@@ -135,6 +136,7 @@ class TestBinanceTrader:
         times_called,
         expected_value,
         create_symbol,
+        create_exchange,
         ping,
         init_session,
         create_margin_order,
@@ -168,6 +170,7 @@ class TestBinanceTrader:
         ping,
         init_session,
         create_symbol,
+        create_exchange,
         create_margin_order,
         create_margin_order_spy,
     ):

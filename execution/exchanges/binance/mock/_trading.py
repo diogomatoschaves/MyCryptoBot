@@ -1,45 +1,53 @@
 import shared.exchanges.binance.constants as const
 from execution.exchanges.binance._trading import BinanceTrader
+from execution.tests.setup.test_data.binance_api_responses import order_creation, trading_fees, isolated_account_info
 
 
 class BinanceMockTrader(BinanceTrader):
 
     def __init__(
         self,
-        symbol='BTCUSDT',
         margin_level=3,
-        paper_trading=False
     ):
         BinanceTrader.__init__(
             self,
-            account=const.BINANCE_SPOT_TRADING,
-            symbol=symbol,
             margin_level=margin_level,
-            paper_trading=paper_trading
+            paper_trading=True
         )
 
         self.create_test_order()
 
+    def _init_session(self):
+        pass
+
+    def ping(self):
+        pass
+
+    def get_isolated_margin_account(self):
+        return isolated_account_info
+
+    def create_margin_loan(self, asset, amount, isIsolated, symbol):
+        return {"tranId": 100000001}
+
+    def get_trade_fee(self, symbol):
+        return trading_fees
+
+    def get_max_margin_loan(self, asset, isolatedSymbol):
+        return {"amount": "1.69248805", "borrowLimit": "60"}
+
+    def repay_margin_loan(self, asset, amount, isIsolated, symbol):
+        return {"tranId": 100000001}
+
     def create_margin_order(
-        self,
-        symbol,
-        side,
-        type,
-        newOrderRespType,
-        isIsolated,
-        sideEffectType,
-        **kwargs
+            self,
+            symbol,
+            side,
+            type,
+            newOrderRespType,
+            isIsolated,
+            sideEffectType,
+            quantity=None,
+            quoteOrderQty=None,
     ):
-        pass
-
-    def _get_assets_info(self):
-        pass
-
-    # def _get_symbol_net_equity(self, symbol):
-    #     pass
-    #
-    # def _get_max_borrow_amount(self):
-    #     pass
-    #
-    # def _create_initial_loan(self):
-    #     pass
+        if newOrderRespType == "FULL":
+            return order_creation
