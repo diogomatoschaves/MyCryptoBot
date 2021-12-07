@@ -8,70 +8,135 @@ from shared.utils.tests.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
 from database.model.models import ExchangeData, StructuredData, Jobs
 
-current_path = os.path.dirname(os.path.realpath(__file__))
-
-fixtures = get_fixtures(current_path)
-
 
 class TestBinanceDataHandler:
 
     @pytest.mark.parametrize(
-        "fixture",
+        "input_params,output",
         [
-            pytest.param(fixture, id=fixture_name)
-            for fixture_name, fixture in fixtures.items()
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "candle_size": "1h",
+                },
+                {
+                    "expected_number_objs_structured": 1,
+                    "expected_number_objs_exchange": 15,
+                    "expected_value": 2
+                },
+                id="1hNoPipelineID",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "candle_size": "1h",
+                    "pipeline_id": 1
+                },
+                {
+                    "expected_number_objs_structured": 1,
+                    "expected_number_objs_exchange": 15,
+                    "expected_value": 2
+                },
+                id="1hWithPipelineID",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "candle_size": "5m",
+                },
+                {
+                    "expected_number_objs_structured": 14,
+                    "expected_number_objs_exchange": 15,
+                    "expected_value": 2
+                },
+                id="5mNoPipelineID",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "candle_size": "5m",
+                    "pipeline_id": 1
+                },
+                {
+                    "expected_number_objs_structured": 14,
+                    "expected_number_objs_exchange": 15,
+                    "expected_value": 2
+                },
+                id="5mWithPipelineID",
+            ),
         ],
     )
     def test_binance_data_handler(
         self,
-        fixture,
+        input_params,
+        output,
         mock_binance_handler_klines,
         mock_binance_client_init,
         mock_binance_client_ping,
         mock_binance_handler_websocket,
         mock_binance_websocket_start,
         mock_trigger_signal_successfully,
+        mock_redis_connection_3,
         trigger_signal_spy,
         exchange_data
     ):
 
-        params_dict = dict(
-            strategy=fixture["in"]["strategy"],
-            params=fixture["in"]["params"],
-            symbol=fixture["in"]["symbol"],
-            candle_size=fixture["in"]["candle_size"],
-        )
-
-        binance_data_handler = BinanceDataHandler(**params_dict)
+        binance_data_handler = BinanceDataHandler(**input_params)
         binance_data_handler.start_data_ingestion()
 
-        assert ExchangeData.objects.all().count() == fixture["out"]["expected_number_objs_exchange"]
-        assert StructuredData.objects.all().count() == fixture["out"]["expected_number_objs_structured"]
+        assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"]
+        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
         assert StructuredData.objects.first().open_time.date() == processed_historical_data[0]["open_time"].date()
 
+        if "pipeline_id" in input_params:
+            pipeline_id = input_params["pipeline_id"]
+        else:
+            pipeline_id = None
+
         trigger_signal_spy.assert_called_with(
-            params_dict["symbol"],
-            params_dict["strategy"],
-            params_dict["params"],
-            params_dict["candle_size"],
-            'binance'
+            pipeline_id,
         )
 
         binance_data_handler.stop_data_ingestion()
 
-        assert ExchangeData.objects.all().count() == fixture["out"]["expected_number_objs_exchange"] - 1
-        assert StructuredData.objects.all().count() == fixture["out"]["expected_number_objs_structured"] - 1
+        assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
+        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
 
     @pytest.mark.parametrize(
-        "fixture",
+        "input_params,output",
         [
-            pytest.param(fixture, id=fixture_name)
-            for fixture_name, fixture in fixtures.items()
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "candle_size": "1h",
+                },
+                {
+                    "expected_number_objs_structured": 1,
+                    "expected_number_objs_exchange": 15,
+                    "expected_value": 2
+                },
+                id="BaseCaseNoPipelineID",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "candle_size": "1h",
+                    "pipeline_id": 1
+                },
+                {
+                    "expected_number_objs_structured": 1,
+                    "expected_number_objs_exchange": 15,
+                    "expected_value": 2
+                },
+                id="BaseCaseWithPipelineID",
+            ),
         ],
     )
     def test_binance_data_handler_failed_trigger_signal(
         self,
-        fixture,
+        input_params,
+        output,
+        mock_redis_connection_3,
         mock_binance_handler_klines,
         mock_binance_client_init,
         mock_client_env_vars,
@@ -84,54 +149,27 @@ class TestBinanceDataHandler:
         create_job
     ):
 
-        params_dict = dict(
-            strategy=fixture["in"]["strategy"],
-            params=fixture["in"]["params"],
-            symbol=fixture["in"]["symbol"],
-            candle_size=fixture["in"]["candle_size"],
-        )
-
-        binance_data_handler = BinanceDataHandler(**params_dict)
+        binance_data_handler = BinanceDataHandler(**input_params)
         binance_data_handler.start_data_ingestion()
 
+        if "pipeline_id" in input_params:
+            pipeline_id = input_params["pipeline_id"]
+        else:
+            pipeline_id = None
+
         trigger_signal_spy.assert_called_with(
-            params_dict["symbol"],
-            params_dict["strategy"],
-            params_dict["params"],
-            params_dict["candle_size"],
-            'binance'
+            pipeline_id,
         )
 
-        assert ExchangeData.objects.all().count() == fixture["out"]["expected_number_objs_exchange"] - 1
-        assert StructuredData.objects.all().count() == fixture["out"]["expected_number_objs_structured"] - 1
+        assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
+        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
         assert Jobs.objects.all().count() == 0
-
 
     @pytest.mark.parametrize(
         "input_value",
         [
             pytest.param(
                 {
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
-                    "symbol": "BTCUSDT",
-                    "candle_size": "5m"
-                },
-                id="InvalidStrategyParams",
-            ),
-            pytest.param(
-                {
-                    "strategy": "MovingAvera",
-                    "params": {"sma": 30},
-                    "symbol": "BTCUSDT",
-                    "candle_size": "5m"
-                },
-                id="InvalidStrategy",
-            ),
-            pytest.param(
-                {
-                    "strategy": "MovingAverage",
-                    "params": {"sma": 30},
                     "symbol": "BTCUSD",
                     "candle_size": "5m"
                 },
@@ -145,6 +183,7 @@ class TestBinanceDataHandler:
         mock_binance_client_init,
         mock_binance_client_ping,
         mock_binance_handler_websocket,
+        mock_redis_connection_3,
         exchange_data
     ):
 

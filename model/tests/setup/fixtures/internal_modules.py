@@ -62,3 +62,26 @@ def mock_strategy_factory(strategy):
         mocker.patch.object(model.service.helpers.signal_generator, strategy, mock_strategy)
 
     return mocked_strategy
+
+
+def mock_redis():
+    class RedisCache:
+
+        def __init__(self):
+            print("Redis initialized")
+
+        def set(self, object_name, object_value):
+            setattr(self, object_name, object_value)
+
+        def get(self, object_name):
+            try:
+                return getattr(self, object_name)
+            except AttributeError:
+                '""'
+
+    return RedisCache()
+
+
+@pytest.fixture
+def mock_redis_connection(mocker):
+    return mocker.patch("model.service.helpers.signal_generator.cache", mock_redis())

@@ -22,10 +22,11 @@ RESPONSES = namedtuple(
 
 
 Responses = RESPONSES(
-    DATA_PIPELINE_START_OK=lambda symbol: {"response": f"{symbol} data pipeline successfully started.", "success": True},
-    DATA_PIPELINE_ONGOING=lambda symbol: {"response": f"{symbol} data pipeline already ongoing.", "success": False},
-    DATA_PIPELINE_STOPPED=lambda symbol: {"response": f"{symbol} data pipeline stopped.", "success": True},
-    DATA_PIPELINE_INEXISTENT=lambda symbol: {"response": f"There is no {symbol} active data pipeline.", "success": False},
+    DATA_PIPELINE_START_OK=lambda pipeline_id: {"response": f"Data pipeline successfully started.",
+                                                "success": True, "pipeline_id": pipeline_id},
+    DATA_PIPELINE_ONGOING={"response": f"Data pipeline already ongoing.", "success": False},
+    DATA_PIPELINE_STOPPED={"response": f"Data pipeline stopped.", "success": True},
+    DATA_PIPELINE_INEXISTENT={"response": f"This data pipeline is not active.", "success": False},
     SYMBOL_REQUIRED={"response": "A symbol must be included in the request.", "success": False},
     SYMBOL_INVALID=lambda symbol: {"response": f"{symbol} is not a valid symbol.", "success": False},
     EXCHANGE_REQUIRED={"response": "An exchange must be included in the request.", "success": False},

@@ -23,7 +23,7 @@ def mock_trigger_signal_successfully(mocker):
     return mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda symbol, strategy, params, candle_size, exchange: True,
+        lambda pipeline_id: True,
     )
 
 
@@ -32,7 +32,7 @@ def mock_trigger_signal_fail(mocker):
     mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda symbol, strategy, params, candle_size, exchange: False,
+        lambda pipeline_id: False,
     )
 
 
@@ -86,8 +86,8 @@ def binance_handler_instances_spy_start_bot(mocker):
     return mocker.patch('data.service.app.binance_instances', new_callable=list)
 
 
-def immediate_execution(initialize_data_collection, strategy, params, symbol, candle_size):
-    return initialize_data_collection(strategy, params, symbol, candle_size)
+def immediate_execution(initialize_data_collection, pipeline_id):
+    return initialize_data_collection(pipeline_id)
 
 
 @pytest.fixture
@@ -103,7 +103,7 @@ def mock_executor_submit(mocker):
 def binance_handler_instances_spy_stop_bot(db, create_symbol, create_assets, create_exchange, mocker):
     return mocker.patch(
         'data.service.app.binance_instances',
-        [BinanceDataHandler("MovingAverageCrossover", symbol='BTCUSDT')]
+        [BinanceDataHandler(symbol='BTCUSDT', candle_size="1h", pipeline_id=1)]
     )
 
 
@@ -133,24 +133,61 @@ def mock_start_stop_symbol_trading_success_false(mocker):
 @pytest.fixture
 def mock_check_job_status_response(mocker):
     return mocker.patch(
-        'data.sources._sources.check_job_status',
+        'data.sources._signal_triggerer.check_job_status',
     )
 
 
 @pytest.fixture
 def mock_generate_signal(mocker):
     return mocker.patch(
-        'data.sources._sources.generate_signal',
+        'data.sources._signal_triggerer.generate_signal',
     )
 
 
 @pytest.fixture
 def mock_wait_for_job_conclusion(mocker):
     return mocker.patch(
-        'data.sources._sources.wait_for_job_conclusion',
+        'data.sources._signal_triggerer.wait_for_job_conclusion',
     )
 
 
 def double_callback(callback, mock_row):
     callback(mock_row[0])
     callback(mock_row[1])
+
+def mock_redis():
+    class RedisCache:
+
+        def __init__(self):
+            print("Redis initialized")
+
+        def set(self, object_name, object_value):
+            setattr(self, object_name, object_value)
+
+        def get(self, object_name):
+            try:
+                return getattr(self, object_name)
+            except AttributeError:
+                '""'
+
+    return RedisCache()
+
+
+@pytest.fixture
+def mock_redis_connection_1(mocker):
+    return mocker.patch("data.sources._signal_triggerer.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_redis_connection_2(mocker):
+    return mocker.patch("data.service.app.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_redis_connection_3(mocker):
+    return mocker.patch("data.sources.binance._binance.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_redis_connection_4(mocker):
+    return mocker.patch("data.service.external_requests.cache", mock_redis())

@@ -1,1 +1,1 @@
-from data.sources._sources import trigger_signal
+from data.sources._signal_triggerer import trigger_signal

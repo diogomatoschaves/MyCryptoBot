@@ -1,9 +1,11 @@
+import json
 import logging
 import os
 from datetime import datetime
 
 import pandas as pd
 import django
+import redis
 from binance.websockets import BinanceSocketManager
 
 import shared.exchanges.binance.constants as const
@@ -11,14 +13,17 @@ from data.sources import trigger_signal
 from data.sources.binance.extract import extract_data
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
-from data.service.helpers import STRATEGIES
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.exceptions import InvalidInput
+from shared.utils.helpers import get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import ExchangeData, StructuredData, Symbol, Jobs
+
+
+cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 
 class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
@@ -29,15 +34,15 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
     only time based steps).
     """
 
-    def __init__(self, strategy, params=None, symbol='BTCUSDT', candle_size='1h'):
+    def __init__(self, symbol, candle_size, pipeline_id=None):
 
         BinanceHandler.__init__(self)
         BinanceSocketManager.__init__(self, self)
 
         self._check_symbol(symbol)
-        self._check_strategy(strategy, params)
-        self.exchange = 'binance'
         self.candle_size = candle_size
+        self.pipeline_id = pipeline_id
+        self.exchange = 'binance'
 
         self.conn_key = ''
 
@@ -75,19 +80,6 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         self.base = symbol_obj.base.symbol,
         self.quote = symbol_obj.quote.symbol,
 
-    def _check_strategy(self, strategy, params):
-        if strategy in STRATEGIES:
-            self.strategy = strategy
-
-            if isinstance(params, dict):
-                for key in params:
-                    if key not in STRATEGIES[strategy]["params"]:
-                        raise InvalidInput(f"Provided {key} in params is not valid.")
-
-            self.params = params
-        else:
-            raise InvalidInput(f"{strategy} is not a valid strategy.")
-
     def start_data_ingestion(self):
         """
         Public method which sets in motion the data pipeline for a given symbol.
@@ -121,7 +113,8 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         None
 
         """
-        logging.info(f"{self.symbol}: Stopping {', '.join(self.streams)} data stream(s).")
+        logging.info(json.loads(get_item_from_cache(cache, self.pipeline_id)) +
+                     f"Stopping {', '.join(self.streams)} data stream(s).")
 
         self._stop_websocket()
 
@@ -135,7 +128,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             f"{symbol.lower()}@kline_{self.candle_size}"
         ]
 
-        logging.info(f"{self.symbol}: Starting {', '.join(streams)} data stream(s).")
+        logging.info(json.loads(get_item_from_cache(cache, self.pipeline_id)) + f"Starting {', '.join(streams)} data stream(s).")
 
         self.streams = streams
 
@@ -171,7 +164,10 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             data = extract_data(model_class, self.get_historical_klines_generator, self.symbol,
                                 self.base_candle_size, candle_size)
 
-        print(f"candle_size: {candle_size}, len: {len (data)}")
+        print(f"model_class: {model_class}, len: {len (data)}")
+        print(f"base_candle_size: {self.base_candle_size}, candle_size: {candle_size}")
+
+        print(StructuredData.objects.all().count())
 
         # Transform
         data = transform_data(
@@ -188,7 +184,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         # Load
         new_entries = load_data(model_class, data, count_updates=count_updates)
 
-        logging.info(f"{self.symbol}: Added {new_entries} new rows into {model_class}.")
+        logging.info(json.loads(get_item_from_cache(cache, self.pipeline_id)) + f"Added {new_entries} new rows into {model_class}.")
 
         return new_entries
 
@@ -221,11 +217,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
             if new_entry:
                 success = trigger_signal(
-                    self.symbol,
-                    self.strategy,
-                    self.params,
-                    self.candle_size,
-                    self.exchange
+                    self.pipeline_id
                 )
 
                 if not success:

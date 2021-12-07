@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -17,7 +18,7 @@ from shared.utils.logger import configure_logger
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Jobs
+from database.model.models import Jobs, Pipeline
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -53,16 +54,20 @@ def generate_signal():
 
     logging.debug(request_data)
 
-    symbol = request_data.get("symbol", None)
-    strategy = request_data.get("strategy", None)
-    params = request_data.get("params", {})
-    candle_size = request_data.get("candle_size", "1h").lower()
-    exchange = request_data.get("exchange", "binance").lower()
+    pipeline_id = request_data.get("pipeline_id", None)
 
-    if strategy not in strategies:
-        return jsonify(Responses.STRATEGY_INVALID(strategy))
+    try:
+        pipeline = Pipeline.objects.get(id=pipeline_id)
+    except Pipeline.DoesNotExist:
+        return jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id))
 
-    job = q.enqueue_call(get_signal, (symbol, candle_size, exchange, strategy, params))
+    symbol = pipeline.symbol.name
+    strategy = pipeline.strategy
+    params = json.loads(pipeline.params)
+    candle_size = pipeline.interval
+    exchange = pipeline.exchange.name
+
+    job = q.enqueue_call(get_signal, (pipeline_id, symbol, candle_size, exchange, strategy, params))
 
     job_id = job.get_id()
 
