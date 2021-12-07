@@ -1,3 +1,5 @@
+from random import randint
+
 import pytest
 
 import execution
@@ -44,7 +46,7 @@ def binance_client_mock_factory(method, type_='mock'):
             quoteOrderQty=None,
         ):
             if newOrderRespType == "FULL":
-                return order_creation
+                return {**order_creation, "orderId": randint(0, 1E9)}
 
     @pytest.fixture
     def mock_binance_client(mocker):
