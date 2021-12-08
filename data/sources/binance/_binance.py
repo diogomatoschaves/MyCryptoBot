@@ -20,8 +20,7 @@ from shared.utils.helpers import get_item_from_cache
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import ExchangeData, StructuredData, Symbol, Jobs
-
+from database.model.models import ExchangeData, StructuredData, Symbol, Pipeline
 
 cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
@@ -164,11 +163,6 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             data = extract_data(model_class, self.get_historical_klines_generator, self.symbol,
                                 self.base_candle_size, candle_size)
 
-        print(f"model_class: {model_class}, len: {len (data)}")
-        print(f"base_candle_size: {self.base_candle_size}, candle_size: {candle_size}")
-
-        print(StructuredData.objects.all().count())
-
         # Transform
         data = transform_data(
             data,
@@ -222,12 +216,12 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
                 if not success:
                     logging.warning(
-                        f"{self.symbol}: There was an error processing the "
-                        f"signal generation request. Stopping data pipeline."
+                        json.loads(get_item_from_cache(cache, self.pipeline_id)) +
+                        "There was an error processing the "
+                        "signal generation request. Stopping data pipeline."
                     )
                     self.stop_data_ingestion()
-                    deleted = Jobs.objects.filter(job_id=self.symbol, exchange_id=self.exchange, app=os.getenv("APP_NAME")).delete()
-                    logging.debug(f"Deleted corresponding job: {deleted == 1}")
+                    Pipeline.objects.filter(id=self.pipeline_id).update(active=False)
 
     def _process_stream(
         self,
