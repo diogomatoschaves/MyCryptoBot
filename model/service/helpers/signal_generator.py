@@ -69,7 +69,7 @@ def get_signal(pipeline_id, symbol, candle_size, exchange, strategy, params=None
     return trigger_order(pipeline_id, signal)
 
 
-def trigger_order(signal, pipeline_id):
+def trigger_order(pipeline_id, signal):
 
     response = execute_order(pipeline_id, signal)
 
@@ -80,4 +80,3 @@ def trigger_order(signal, pipeline_id):
     else:
         logging.warning(response["response"])
         return False
-

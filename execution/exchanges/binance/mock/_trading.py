@@ -63,8 +63,6 @@ class BinanceMockTrader(BinanceTrader):
 
         quantity = quantity if quantity else quoteOrderQty
 
-        print(price, quantity)
-
         return {
             "symbol": symbol,
             "orderId": randint(1, 1E9),
