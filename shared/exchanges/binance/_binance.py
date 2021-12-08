@@ -24,7 +24,8 @@ class BinanceHandler(Client):
 
         self._get_api_keys(paper_trading=paper_trading)
 
-        Client.__init__(self, self.binance_api_key, self.binance_api_secret)
+        if not paper_trading:
+            Client.__init__(self, self.binance_api_key, self.binance_api_secret)
 
     def _get_api_keys(self, paper_trading):
 

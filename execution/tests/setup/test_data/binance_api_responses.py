@@ -6,8 +6,8 @@ isolated_account_info = {
             "baseAsset": {
                 "asset": "BTC",
                 "borrowEnabled": True,
-                "borrowed": "0.00000000",
-                "free": "0.00000000",
+                "borrowed": "10.00000000",
+                "free": "10.00000000",
                 "interest": "0.00000000",
                 "locked": "0.00000000",
                 "netAsset": "0.00000000",

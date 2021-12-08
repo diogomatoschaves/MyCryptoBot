@@ -5,6 +5,7 @@ import sys
 from flask import Flask, jsonify, request
 
 from execution.exchanges.binance import BinanceTrader
+from execution.exchanges.binance.mock import BinanceMockTrader
 from execution.service.helpers import validate_input, extract_and_validate
 from execution.service.helpers.responses import Responses
 from shared.utils.logger import configure_logger
@@ -16,9 +17,18 @@ if module_path not in sys.path:
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
 binance_trader = BinanceTrader()
+binance_mock_trader = BinanceMockTrader()
 
 
 app = Flask(__name__)
+
+
+def get_binance_trader_instance(paper_trading):
+
+    if paper_trading:
+        return binance_mock_trader
+
+    return binance_trader
 
 
 @app.route('/')
@@ -35,9 +45,11 @@ def start_symbol_trading():
         logging.debug(response)
         return response
 
-    if pipeline.exchange.lower() == 'binance':
+    if pipeline.exchange == 'binance':
 
-        success = binance_trader.start_symbol_trading(pipeline.symbol)
+        bt = get_binance_trader_instance(pipeline.paper_trading)
+
+        success = bt.start_symbol_trading(pipeline.symbol)
 
         if success:
             return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
@@ -53,9 +65,11 @@ def stop_symbol_trading():
         logging.debug(response)
         return response
 
-    if pipeline.exchange.lower() == 'binance':
+    if pipeline.exchange == 'binance':
 
-        success = binance_trader.stop_symbol_trading(pipeline.symbol)
+        bt = get_binance_trader_instance(pipeline.paper_trading)
+
+        success = bt.stop_symbol_trading(pipeline.symbol)
 
         if success:
             return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
@@ -87,7 +101,9 @@ def execute_order():
 
     if pipeline.exchange.lower() == 'binance':
 
-        binance_trader.trade(pipeline.symbol, signal, amount=amount)
+        bt = get_binance_trader_instance(pipeline.paper_trading)
+
+        bt.trade(pipeline.symbol, signal, amount=amount)
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))
 

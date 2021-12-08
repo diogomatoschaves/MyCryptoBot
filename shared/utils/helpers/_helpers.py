@@ -34,18 +34,16 @@ def convert_signal_to_text(signal):
         return "NEUTRAL"
 
 
-def get_logging_row_header(symbol, strategy, params, candle_size, exchange):
-    return f"{symbol}|{strategy}|{params}|{candle_size}|{exchange}: "
+def get_logging_row_header(symbol, strategy, params, candle_size, exchange, paper_trading):
+
+    paper_trading_str = "LIVE" if not paper_trading else "FAKE"
+
+    return f"{paper_trading_str}|{symbol}|{strategy}&{params}|{candle_size}|{exchange}: "
 
 
 def get_item_from_cache(cache, key):
 
     item = cache.get(f"pipeline {key}")
-
-    cache.set("dict", "1234")
-    print(cache.get("dict"))
-
-    print(item)
 
     return item if item else '""'
 

@@ -146,7 +146,8 @@ class Pipeline(models.Model):
     strategy = models.TextField(choices=STRATEGY_CHOICES)
     params = models.TextField(blank=True, default="{}")
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
+    paper_trading = models.BooleanField(default=False, blank=True, null=True)
     active = models.BooleanField(default=True, blank=True)
 
     class Meta:
-        unique_together = ("symbol", "interval", "strategy", "params", "exchange")
+        unique_together = ("symbol", "interval", "strategy", "params", "exchange", "paper_trading")

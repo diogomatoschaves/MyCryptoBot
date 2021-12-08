@@ -85,13 +85,14 @@ def start_bot():
     params = data.get("params", {})
     candle_size = data.get("candleSize", None)
     exchange = data.get("exchanges", None)
+    paper_trading = data.get("paper_trading") if type(data.get("paper_trading")) == bool else False
 
     response = check_input(
         symbol=symbol,
         strategy=strategy,
         params=params,
         candle_size=candle_size,
-        exchange=exchange
+        exchange=exchange,
     )
 
     if response is not None:
@@ -107,6 +108,7 @@ def start_bot():
         strategy=strategy,
         exchange=exchange,
         params=params,
+        paper_trading=paper_trading
     )
 
     if response is not None:
@@ -115,7 +117,7 @@ def start_bot():
 
     cache.set(
         f"pipeline {pipeline.id}",
-        json.dumps(get_logging_row_header(symbol, strategy, params, candle_size, exchange))
+        json.dumps(get_logging_row_header(symbol, strategy, params, candle_size, exchange, paper_trading))
     )
 
     response = start_stop_symbol_trading(pipeline.id, 'start')

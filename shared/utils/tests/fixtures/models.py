@@ -79,4 +79,9 @@ def structured_data_factory(db, create_exchange, create_assets, create_symbol):
 
 @pytest.fixture
 def structured_data(db, exchange_data_factory):
-    return structured_data_factory()
+    return structured_data_factory
+
+
+@pytest.fixture
+def create_structured_data(**kwargs):
+    return StructuredData.objects.create(**exchange_data_1, **kwargs)
