@@ -25,12 +25,15 @@ EXECUTION_APP_ENDPOINTS = {
 STRATEGIES = {
     'BollingerBands': {
         "name": "Bollinger Bands",
-        "params": ["ma", "sd"]
+        "params": ["ma", "sd"],
+        "optional_params": []
     },
     'MachineLearning': {
         "name": "Machine Learning",
         "params": [
             "estimator",
+        ],
+        "optional_params": [
             "lag_features",
             "rolling_features",
             "excluded_features",
@@ -43,19 +46,23 @@ STRATEGIES = {
     },
     'Momentum': {
         "name": "Momentum",
-        "params": ["window"]
+        "params": ["window"],
+        "optional_params": []
     },
     'MovingAverageConvergenceDivergence': {
         "name": "Moving Average Convergence Divergence",
-        "params": ["window_slow", "window_fast", "window_signal"]
+        "params": ["window_slow", "window_fast", "window_signal"],
+        "optional_params": []
     },
     'MovingAverage': {
         "name": "Moving Average",
-        "params": ["sma", "moving_av"]
+        "params": ["ma"],
+        "optional_params": ["moving_av"]
     },
     'MovingAverageCrossover': {
         "name": "Moving Average Crossover",
-        "params": ["SMA_S", "SMA_L", "moving_av"]
+        "params": ["SMA_S", "SMA_L"],
+        "optional_params": ["moving_av"]
     },
 }
 
@@ -107,10 +114,16 @@ def check_input(**kwargs):
         if strategy in STRATEGIES:
             if "params" in kwargs:
                 params = kwargs["params"]
+
                 for key in params:
-                    if key not in STRATEGIES[strategy]["params"]:
+                    if key not in STRATEGIES[strategy]["params"] and key not in STRATEGIES[strategy]["optional_params"]:
                         logging.debug(key)
                         return jsonify(Responses.PARAMS_INVALID(key))
+
+                for param in STRATEGIES[strategy]["params"]:
+                    if param not in params:
+                        logging.debug(f"{param} is a required parameter.")
+                        return jsonify(Responses.PARAMS_REQUIRED(param))
         else:
             logging.debug(strategy)
             return jsonify(Responses.STRATEGY_INVALID(strategy))

@@ -16,7 +16,8 @@ RESPONSES = namedtuple(
         "CANDLE_SIZE_INVALID",
         "STRATEGY_REQUIRED",
         "STRATEGY_INVALID",
-        "PARAMS_INVALID"
+        "PARAMS_INVALID",
+        "PARAMS_REQUIRED"
     ]
 )
 
@@ -36,4 +37,5 @@ Responses = RESPONSES(
     STRATEGY_REQUIRED={"response": "A strategy must be included in the request.", "success": False},
     STRATEGY_INVALID=lambda strategy: {"response": f"{strategy} is not a valid strategy.", "success": False},
     PARAMS_INVALID=lambda param_key: {"response": f"Provided {param_key} in params is not valid.", "success": False},
+    PARAMS_REQUIRED=lambda param_key: {"response": f"{param_key} is a required parameter.", "success": False},
 )

@@ -85,7 +85,7 @@ def start_bot():
     params = data.get("params", {})
     candle_size = data.get("candleSize", None)
     exchange = data.get("exchanges", None)
-    paper_trading = data.get("paper_trading") if type(data.get("paper_trading")) == bool else False
+    paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
 
     response = check_input(
         symbol=symbol,
