@@ -40,16 +40,14 @@ class TestDataExternalRequests:
         [
             pytest.param(
                 {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Binance",
+                    "pipeline_id": 1
                 },
                 "start",
                 id="START_SYMBOL_TRADING",
             ),
             pytest.param(
                 {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Binance",
+                    "pipeline_id": 1
                 },
                 "stop",
                 id="STOP_SYMBOL_TRADING",

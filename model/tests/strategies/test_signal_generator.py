@@ -138,7 +138,7 @@ class TestSignalGeneration:
 
         mock_execute_order.return_value = side_effect
 
-        params = {"symbol": "BTCUSDT", "signal": 1, "exchange": "Binance", "pipeline_id": 1}
+        params = {"signal": 1, "pipeline_id": 1}
 
         res = trigger_order(**params)
 

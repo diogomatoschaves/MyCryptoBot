@@ -2,45 +2,17 @@ import logging
 import os
 
 import django
-from flask import jsonify
+from flask import jsonify, request
+
+from shared.utils.helpers import get_pipeline_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from execution.service.helpers.responses import Responses
-from database.model.models import Symbol, Exchange
-import shared.exchanges.binance.constants as const
 
 
 def validate_input(**kwargs):
-
-    print(kwargs)
-
-    if "symbol" in kwargs:
-        symbol = kwargs["symbol"]
-
-        if symbol is None:
-            return jsonify(Responses.SYMBOL_REQUIRED)
-
-        try:
-            Symbol.objects.get(name=symbol)
-        except Symbol.DoesNotExist as e:
-            logging.debug(symbol)
-            logging.debug(e)
-            return jsonify(Responses.SYMBOL_INVALID(symbol))
-
-    if "exchange" in kwargs:
-        exchange = kwargs["exchange"]
-
-        if exchange is None:
-            return jsonify(Responses.EXCHANGE_REQUIRED)
-
-        try:
-            Exchange.objects.get(name=exchange.lower())
-        except (Exchange.DoesNotExist, AttributeError) as e:
-            logging.debug(exchange)
-            logging.debug(e)
-            return jsonify(Responses.EXCHANGE_INVALID(exchange))
 
     if "signal" in kwargs:
         signal = kwargs["signal"]
@@ -52,3 +24,21 @@ def validate_input(**kwargs):
             return jsonify(Responses.SIGNAL_INVALID(signal))
 
     return None
+
+
+def extract_and_validate():
+    request_data = request.get_json(force=True)
+
+    logging.debug(request_data)
+
+    pipeline_id = request_data.get("pipeline_id", None)
+
+    pipeline_exists, pipeline = get_pipeline_data(pipeline_id)
+
+    if pipeline_exists:
+        if not pipeline.active:
+            return pipeline, jsonify(Responses.PIPELINE_NOT_ACTIVE(pipeline.symbol, pipeline_id))
+    else:
+        return pipeline, jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id))
+
+    return pipeline, None

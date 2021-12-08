@@ -14,7 +14,7 @@ class TestExecutionService:
 
     @pytest.mark.parametrize(
         "route",
-        ["start_symbol_trading", "stop_symbol_trading", "execute_order/binance"],
+        ["start_symbol_trading", "stop_symbol_trading", "execute_order"],
     )
     @pytest.mark.parametrize("method", ["get", "put", "delete"])
     def test_routes_disallowed_methods(self, route, method, client):
@@ -43,68 +43,23 @@ class TestExecutionService:
         [
             pytest.param(
                 {
-                    "exchange": "Binance",
+                    "pipeline_id": 1
                 },
-                Responses.SYMBOL_REQUIRED,
-                id="SYMBOL_REQUIRED",
-            ),
-            pytest.param(
-                {
-                    "symbol": "BTC",
-                    "exchange": "Binance",
-                },
-                Responses.SYMBOL_INVALID("BTC"),
-                id="SYMBOL_INVALID",
-            ),
-            pytest.param(
-                {
-                    "symbol": "BTCUSDT",
-                },
-                Responses.EXCHANGE_REQUIRED,
-                id="EXCHANGE_REQUIRED",
-            ),
-            pytest.param(
-                {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Coinbase",
-                },
-                Responses.EXCHANGE_INVALID("Coinbase"),
-                id="EXCHANGE_INVALID",
-            ),
-        ],
-    )
-    def test_invalid_input(
-        self,
-        route,
-        params,
-        expected_value,
-        mock_binance_trader_success,
-        client,
-        exchange_data,
-    ):
-        res = client.post(route, json=params)
-
-        assert res.json == expected_value
-
-    @pytest.mark.parametrize(
-        "params,route,expected_value",
-        [
-            pytest.param(
-                {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Binance",
-                },
-                "start_symbol_trading",
                 Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
                 id="TRADING_SYMBOL_NO_ACCOUNT",
             ),
             pytest.param(
                 {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Binance",
+                    "pipeline_id": 2
                 },
-                "stop_symbol_trading",
-                Responses.TRADING_SYMBOL_NOT_ACTIVE("BTCUSDT"),
+                Responses.NO_SUCH_PIPELINE(2),
+                id="NO_SUCH_PIPELINE",
+            ),
+            pytest.param(
+                {
+                    "pipeline_id": 3
+                },
+                Responses.PIPELINE_NOT_ACTIVE("BTCUSDT", 3),
                 id="TRADING_SYMBOL_NOT_ACTIVE",
             ),
         ],
@@ -117,6 +72,8 @@ class TestExecutionService:
         mock_binance_trader_fail,
         client,
         exchange_data,
+        create_pipeline,
+        create_inactive_pipeline
     ):
         res = client.post(route, json=params)
 
@@ -128,20 +85,18 @@ class TestExecutionService:
             pytest.param(
                 "start_symbol_trading",
                 {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Binance",
+                    "pipeline_id": 1
                 },
                 Responses.TRADING_SYMBOL_START("BTCUSDT"),
-                id="SYMBOL_REQUIRED",
+                id="START_SYMBOL_TRADING_VALID",
             ),
             pytest.param(
                 "stop_symbol_trading",
                 {
-                    "symbol": "BTCUSDT",
-                    "exchange": "Binance",
+                    "pipeline_id": 1
                 },
                 Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
-                id="SYMBOL_INVALID",
+                id="STOP_SYMBOL_TRADING_VALID",
             ),
         ],
     )
@@ -153,71 +108,52 @@ class TestExecutionService:
         mock_binance_trader_success,
         client,
         exchange_data,
+        create_pipeline
     ):
         res = client.post(route, json=params)
 
         assert res.json == expected_value
 
     @pytest.mark.parametrize(
-        "params,exchange,expected_value",
+        "params,expected_value",
         [
             pytest.param(
-                {
-                    "signal": 1,
-                },
-                "binance",
-                Responses.SYMBOL_REQUIRED,
-                id="SYMBOL_REQUIRED",
+                {"pipeline_id": 2, "signal": 1},
+                Responses.NO_SUCH_PIPELINE(2),
+                id="NO_SUCH_PIPELINE",
             ),
             pytest.param(
-                {
-                    "symbol": "BTC",
-                    "signal": 10,
-                },
-                "binance",
-                Responses.SYMBOL_INVALID("BTC"),
-                id="SYMBOL_INVALID",
+                {"pipeline_id": 3, "signal": 1},
+                Responses.PIPELINE_NOT_ACTIVE("BTCUSDT", 3),
+                id="TRADING_SYMBOL_NOT_ACTIVE",
             ),
             pytest.param(
-                {
-                    "symbol": "BTCUSDT",
-                },
-                "binance",
-                Responses.SIGNAL_REQUIRED,
-                id="SIGNAL_REQUIRED",
+                {"pipeline_id": 1, "signal": 1},
+                Responses.ORDER_EXECUTION_SUCCESS("BTCUSDT"),
+                id="ORDER_EXECUTION_SUCCESS",
             ),
             pytest.param(
-                {
-                    "symbol": "BTCUSDT",
-                    "signal": 10,
-                },
-                "binance",
-                Responses.SIGNAL_INVALID(10),
+                {"pipeline_id": 1, "signal": "abc"},
+                Responses.SIGNAL_INVALID("abc"),
                 id="SIGNAL_INVALID",
             ),
             pytest.param(
-                {"symbol": "BTCUSDT", "signal": 1},
-                "coinbase",
-                Responses.EXCHANGE_INVALID("coinbase"),
-                id="EXCHANGE_INVALID",
-            ),
-            pytest.param(
-                {"symbol": "BTCUSDT", "signal": 1},
-                "binance",
-                Responses.ORDER_EXECUTION_SUCCESS("BTCUSDT"),
-                id="ORDER_EXECUTION_SUCCESS",
+                {"pipeline_id": 1},
+                Responses.SIGNAL_REQUIRED,
+                id="SIGNAL_REQUIRED",
             ),
         ],
     )
     def test_binance_execute_order_responses(
         self,
-        exchange,
         params,
         expected_value,
         mock_binance_trader_success,
         client,
         exchange_data,
+        create_pipeline,
+        create_inactive_pipeline,
     ):
-        res = client.post(f"/execute_order/{exchange}", json=params)
+        res = client.post(f"/execute_order", json=params)
 
         assert res.json == expected_value

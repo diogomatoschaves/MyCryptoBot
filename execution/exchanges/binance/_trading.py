@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 
 import django
+import redis
 from binance.exceptions import BinanceAPIException
 
 from shared.exchanges import BinanceHandler
@@ -16,6 +17,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import Symbol, Orders
+
+
+cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 
 class BinanceTrader(BinanceHandler, Trader):
@@ -55,8 +59,6 @@ class BinanceTrader(BinanceHandler, Trader):
             return False
 
         trading_account_exists = self._get_assets_info(symbol)
-
-        print(self.assets_info)
 
         if not trading_account_exists:
             return False

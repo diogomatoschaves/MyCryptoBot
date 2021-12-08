@@ -85,3 +85,8 @@ def mock_redis():
 @pytest.fixture
 def mock_redis_connection(mocker):
     return mocker.patch("model.service.helpers.signal_generator.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_redis_connection_2(mocker):
+    return mocker.patch("model.service.external_requests.cache", mock_redis())

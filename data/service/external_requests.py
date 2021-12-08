@@ -54,15 +54,14 @@ def generate_signal(pipeline_id):
 
 @retry_failed_connection(num_times=2)
 @json_error_handler
-def start_stop_symbol_trading(symbol, exchange, start_or_stop):
+def start_stop_symbol_trading(pipeline_id, start_or_stop):
 
     endpoint = f"{start_or_stop.upper()}_SYMBOL_TRADING"
 
     url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL"))
 
     payload = {
-        "symbol": symbol,
-        "exchange": exchange
+        "pipeline_id": pipeline_id,
     }
 
     r = requests.post(url, json=payload)

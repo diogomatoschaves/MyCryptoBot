@@ -24,7 +24,7 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from data.service.helpers import check_input
+from data.service.helpers import check_input, get_or_create_pipeline
 from database.model.models import Pipeline
 from shared.utils.logger import configure_logger
 
@@ -101,40 +101,24 @@ def start_bot():
     exchange = exchange.lower()
     candle_size = candle_size.lower()
 
-    print(f"count {Pipeline.objects.all().count()}")
+    pipeline, response = get_or_create_pipeline(
+        symbol=symbol,
+        candle_size=candle_size,
+        strategy=strategy,
+        exchange=exchange,
+        params=params,
+    )
 
-    try:
-        pipeline = Pipeline.objects.get(
-            symbol_id=symbol,
-            interval=candle_size,
-            strategy=strategy,
-            exchange_id=exchange,
-            params=json.dumps(params)
-        )
-
-        if pipeline.active:
-            return jsonify(Responses.DATA_PIPELINE_ONGOING)
-
-        else:
-            pipeline.active = True
-            pipeline.save()
-
-    except Pipeline.DoesNotExist:
-
-        pipeline = Pipeline.objects.create(
-            symbol_id=symbol,
-            interval=candle_size,
-            strategy=strategy,
-            exchange_id=exchange,
-            params=json.dumps(params)
-        )
+    if response is not None:
+        logging.debug(response)
+        return response
 
     cache.set(
         f"pipeline {pipeline.id}",
         json.dumps(get_logging_row_header(symbol, strategy, params, candle_size, exchange))
     )
 
-    response = start_stop_symbol_trading(symbol, exchange, 'start')
+    response = start_stop_symbol_trading(pipeline.id, 'start')
 
     if not response["success"]:
         logging.warning(response["response"])
@@ -167,14 +151,11 @@ def stop_bot():
     try:
         pipeline = Pipeline.objects.get(id=pipeline_id)
 
-        symbol = pipeline.symbol.name
-        exchange = pipeline.exchange.name
-
         logging.info(json.loads(get_item_from_cache(cache, pipeline_id)) + f"Stopping data pipeline.")
 
         stop_instance(pipeline_id)
 
-        response = start_stop_symbol_trading(symbol, exchange, 'stop')
+        response = start_stop_symbol_trading(pipeline_id, 'stop')
 
         logging.debug(response["response"])
 
