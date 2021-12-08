@@ -66,12 +66,12 @@ def get_signal(pipeline_id, symbol, candle_size, exchange, strategy, params=None
     logging.debug(json.loads(get_item_from_cache(cache, pipeline_id)) +
                   f"{convert_signal_to_text(signal)} signal generated")
 
-    return trigger_order(signal, symbol, exchange, pipeline_id)
+    return trigger_order(pipeline_id, signal)
 
 
-def trigger_order(signal, symbol, exchange, pipeline_id):
+def trigger_order(signal, pipeline_id):
 
-    response = execute_order(symbol, signal, exchange)
+    response = execute_order(pipeline_id, signal)
 
     if "success" in response and response["success"]:
         logging.debug(json.loads(get_item_from_cache(cache, pipeline_id)) +

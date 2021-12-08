@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import sys
@@ -12,13 +11,14 @@ from rq.job import Job
 from model.service.helpers.responses import Responses
 from model.service.helpers.signal_generator import get_signal
 from model.worker import conn
+from shared.utils.helpers import get_pipeline_data
 from shared.utils.logger import configure_logger
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Jobs, Pipeline
+from database.model.models import Jobs
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -56,22 +56,25 @@ def generate_signal():
 
     pipeline_id = request_data.get("pipeline_id", None)
 
-    try:
-        pipeline = Pipeline.objects.get(id=pipeline_id)
-    except Pipeline.DoesNotExist:
+    pipeline_exists, pipeline = get_pipeline_data(pipeline_id)
+
+    if not pipeline_exists:
         return jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id))
 
-    symbol = pipeline.symbol.name
-    strategy = pipeline.strategy
-    params = json.loads(pipeline.params)
-    candle_size = pipeline.interval
-    exchange = pipeline.exchange.name
-
-    job = q.enqueue_call(get_signal, (pipeline_id, symbol, candle_size, exchange, strategy, params))
+    job = q.enqueue_call(
+        get_signal, (
+            pipeline_id,
+            pipeline.symbol,
+            pipeline.candle_size,
+            pipeline.exchange,
+            pipeline.strategy,
+            pipeline.params
+        )
+    )
 
     job_id = job.get_id()
 
-    Jobs.objects.create(job_id=job_id, exchange_id=exchange, app=os.getenv("APP_NAME"))
+    Jobs.objects.create(job_id=job_id, exchange_id=pipeline.exchange, app=os.getenv("APP_NAME"))
 
     return jsonify(Responses.SIGNAL_GENERATION_INPROGRESS(job_id))
 

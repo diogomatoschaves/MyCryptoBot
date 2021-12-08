@@ -6,7 +6,11 @@ from shared.utils.tests.fixtures.external_modules import *
 
 class TestModelExternalRequests:
     def test_execute_order(
-        self, mock_settings_env_vars, mock_requests_post, requests_post_spy
+        self,
+        mock_settings_env_vars,
+        mock_requests_post,
+        mock_redis_connection_2,
+        requests_post_spy
     ):
         """
         GIVEN some params
@@ -16,18 +20,16 @@ class TestModelExternalRequests:
         """
 
         params = {
-            "symbol": "BTCUSDT",
+            "pipeline_id": 1,
             "signal": 1,
         }
 
-        exchange = "Binance"
-
-        res = execute_order(**{**params, "exchange": exchange})
+        res = execute_order(**params)
 
         assert res == response
         requests_post_spy.assert_called_with(
             EXECUTION_APP_ENDPOINTS["EXECUTE_ORDER"](
-                os.getenv("EXECUTION_APP_URL"), exchange
+                os.getenv("EXECUTION_APP_URL")
             ),
             json=params,
         )

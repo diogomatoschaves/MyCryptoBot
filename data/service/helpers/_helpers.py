@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -8,7 +9,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from data.service.helpers.responses import Responses
-from database.model.models import Symbol, Exchange
+from database.model.models import Symbol, Exchange, Pipeline
 import shared.exchanges.binance.constants as const
 
 MODEL_APP_ENDPOINTS = {
@@ -115,3 +116,28 @@ def check_input(**kwargs):
             return jsonify(Responses.STRATEGY_INVALID(strategy))
 
     return None
+
+
+def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params):
+
+    columns = dict(
+        symbol_id=symbol,
+        interval=candle_size,
+        strategy=strategy,
+        exchange_id=exchange,
+        params=json.dumps(params),
+    )
+
+    try:
+        pipeline = Pipeline.objects.get(**columns)
+
+        if pipeline.active:
+            return pipeline, jsonify(Responses.DATA_PIPELINE_ONGOING)
+        else:
+            pipeline.active = True
+            pipeline.save()
+
+    except Pipeline.DoesNotExist:
+        pipeline = Pipeline.objects.create(**columns)
+
+    return pipeline, None

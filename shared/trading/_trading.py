@@ -25,7 +25,6 @@ class Trader:
     def close_pos(self, symbol, date=None, row=None):
         raise NotImplementedError
 
-    # helper method
     def go_long(self, symbol, position, date, row, units=None, amount=None):
         if position == -1:
             self.buy_instrument(symbol, date, row, units=-self.units)  # if short position, go neutral first

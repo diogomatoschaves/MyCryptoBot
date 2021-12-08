@@ -1,3 +1,5 @@
+from random import randint
+
 import shared.exchanges.binance.constants as const
 from execution.exchanges.binance._trading import BinanceTrader
 from execution.tests.setup.test_data.binance_api_responses import order_creation, trading_fees, isolated_account_info
@@ -15,7 +17,7 @@ class BinanceMockTrader(BinanceTrader):
             paper_trading=True
         )
 
-        self.create_test_order()
+        # self.create_test_order()
 
     def _init_session(self):
         pass
@@ -50,4 +52,4 @@ class BinanceMockTrader(BinanceTrader):
             quoteOrderQty=None,
     ):
         if newOrderRespType == "FULL":
-            return order_creation
+            return {**order_creation, "orderId": randint(1, 1E9)}
