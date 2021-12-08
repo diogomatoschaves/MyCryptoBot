@@ -65,3 +65,14 @@ def binance_client_mock_factory(method, type_='mock'):
 
     elif type_ == 'spy':
         return spy_binance_client
+
+
+def binance_mock_trader_spy_factory(method):
+    @pytest.fixture
+    def spy_binance_client(mocker):
+        return mocker.spy(
+            execution.exchanges.binance.mock._trading.BinanceMockTrader, method
+        )
+
+    return spy_binance_client
+

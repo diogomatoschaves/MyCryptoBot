@@ -118,7 +118,7 @@ def check_input(**kwargs):
     return None
 
 
-def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params):
+def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params, paper_trading):
 
     columns = dict(
         symbol_id=symbol,
@@ -126,6 +126,7 @@ def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params):
         strategy=strategy,
         exchange_id=exchange,
         params=json.dumps(params),
+        paper_trading=paper_trading
     )
 
     try:
@@ -135,7 +136,8 @@ def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params):
             return pipeline, jsonify(Responses.DATA_PIPELINE_ONGOING)
         else:
             pipeline.active = True
-            pipeline.save()
+
+        pipeline.save()
 
     except Pipeline.DoesNotExist:
         pipeline = Pipeline.objects.create(**columns)
