@@ -46,6 +46,19 @@ def create_pipeline(db, create_exchange, create_symbol):
 
 
 @pytest.fixture
+def create_inactive_pipeline(db, create_exchange, create_symbol):
+    return Pipeline.objects.create(
+        id=3,
+        symbol_id='BTCUSDT',
+        strategy='Momentum',
+        params="{}",
+        exchange_id='binance',
+        interval="1h",
+        active=False
+    )
+
+
+@pytest.fixture
 def exchange_data_factory(db, create_exchange, create_symbol):
     def create_exchange_data(**kwargs):
         return ExchangeData.objects.create(**exchange_data_1, **kwargs)

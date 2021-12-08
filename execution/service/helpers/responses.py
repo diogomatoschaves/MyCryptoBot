@@ -7,7 +7,8 @@ RESPONSES = namedtuple(
         "TRADING_SYMBOL_START",
         "TRADING_SYMBOL_NO_ACCOUNT",
         "TRADING_SYMBOL_STOP",
-        "TRADING_SYMBOL_NOT_ACTIVE",
+        "PIPELINE_NOT_ACTIVE",
+        "NO_SUCH_PIPELINE",
         "SYMBOL_REQUIRED",
         "SYMBOL_INVALID",
         "EXCHANGE_REQUIRED",
@@ -32,10 +33,11 @@ Responses = RESPONSES(
         "success": True,
         "response": f"{symbol}: Trading symbol successfully stopped."
     },
-    TRADING_SYMBOL_NOT_ACTIVE=lambda symbol: {
+    PIPELINE_NOT_ACTIVE=lambda symbol, pipeline_id: {
         "success": False,
-        "response":  f"{symbol}: Trading had not been started."
+        "response":  f"{symbol}: Pipeline {pipeline_id} not active."
     },
+    NO_SUCH_PIPELINE=lambda pipeline_id: {"response": f"Pipeline {pipeline_id} was not found.", "success": False},
     SYMBOL_REQUIRED={"success": False, "response": "A symbol must be included in the request."},
     SYMBOL_INVALID=lambda symbol: {"success": False, "response": f"{symbol} is not a valid symbol."},
     EXCHANGE_REQUIRED={"success": False, "response": "An exchange must be included in the request."},
