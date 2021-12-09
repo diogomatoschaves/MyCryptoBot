@@ -64,3 +64,21 @@ def start_stop_symbol_trading(pipeline_id, start_or_stop):
     logging.debug(response["response"])
 
     return response
+
+
+@retry_failed_connection(num_times=2)
+@json_error_handler
+def get_strategies():
+
+    endpoint = "GET_STRATEGIES"
+
+    url = MODEL_APP_ENDPOINTS[endpoint](os.getenv("MODEL_APP_URL"))
+
+    r = requests.get(url)
+    logging.debug("get_strategies: " + r.text)
+
+    response = r.json()
+    logging.debug(f"get_strategies: {response}")
+
+    return response
+

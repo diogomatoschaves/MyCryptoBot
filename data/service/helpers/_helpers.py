@@ -14,7 +14,8 @@ import shared.exchanges.binance.constants as const
 
 MODEL_APP_ENDPOINTS = {
     "GENERATE_SIGNAL": lambda host_url: f"{host_url}/generate_signal",
-    "CHECK_JOB": lambda host_url, job_id: f"{host_url}/check_job/{job_id}"
+    "CHECK_JOB": lambda host_url, job_id: f"{host_url}/check_job/{job_id}",
+    "GET_STRATEGIES": lambda host_url: f"{host_url}/strategies",
 }
 
 EXECUTION_APP_ENDPOINTS = {
@@ -22,52 +23,8 @@ EXECUTION_APP_ENDPOINTS = {
     "STOP_SYMBOL_TRADING": lambda host_url: f"{host_url}/stop_symbol_trading",
 }
 
-STRATEGIES = {
-    'BollingerBands': {
-        "name": "Bollinger Bands",
-        "params": ["ma", "sd"],
-        "optional_params": []
-    },
-    'MachineLearning': {
-        "name": "Machine Learning",
-        "params": [
-            "estimator",
-        ],
-        "optional_params": [
-            "lag_features",
-            "rolling_features",
-            "excluded_features",
-            "nr_lags",
-            "windows",
-            "test_size",
-            "degree",
-            "print_results"
-        ]
-    },
-    'Momentum': {
-        "name": "Momentum",
-        "params": ["window"],
-        "optional_params": []
-    },
-    'MovingAverageConvergenceDivergence': {
-        "name": "Moving Average Convergence Divergence",
-        "params": ["window_slow", "window_fast", "window_signal"],
-        "optional_params": []
-    },
-    'MovingAverage': {
-        "name": "Moving Average",
-        "params": ["ma"],
-        "optional_params": ["moving_av"]
-    },
-    'MovingAverageCrossover': {
-        "name": "Moving Average Crossover",
-        "params": ["SMA_S", "SMA_L"],
-        "optional_params": ["moving_av"]
-    },
-}
 
-
-def check_input(**kwargs):
+def check_input(strategies, **kwargs):
 
     if "symbol" in kwargs:
         symbol = kwargs["symbol"]
@@ -111,16 +68,16 @@ def check_input(**kwargs):
         if strategy is None:
             return jsonify(Responses.STRATEGY_REQUIRED)
 
-        if strategy in STRATEGIES:
+        if strategy in strategies:
             if "params" in kwargs:
                 params = kwargs["params"]
 
                 for key in params:
-                    if key not in STRATEGIES[strategy]["params"] and key not in STRATEGIES[strategy]["optional_params"]:
+                    if key not in strategies[strategy]["params"] and key not in strategies[strategy]["optional_params"]:
                         logging.debug(key)
                         return jsonify(Responses.PARAMS_INVALID(key))
 
-                for param in STRATEGIES[strategy]["params"]:
+                for param in strategies[strategy]["params"]:
                     if param not in params:
                         logging.debug(f"{param} is a required parameter.")
                         return jsonify(Responses.PARAMS_REQUIRED(param))

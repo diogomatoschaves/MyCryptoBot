@@ -4,7 +4,7 @@ import django
 from django.core.paginator import Paginator
 from flask import Blueprint, jsonify
 
-from data.service.helpers import STRATEGIES
+from data.service.external_requests import get_strategies
 from shared.data.format_converter import ORDER_FORMAT_CONVERTER
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER
 
@@ -33,7 +33,8 @@ def get_resources(resources):
             response["exchanges"] = list(exchanges)
 
         elif resource == 'strategies':
-            response["strategies"] = [value for key, value in STRATEGIES.items()]
+            strategies = get_strategies()
+            response["strategies"] = strategies
 
         elif resource == 'candleSizes':
             response["candleSizes"] = [{"name": key} for key in CANDLE_SIZES_MAPPER.keys()]

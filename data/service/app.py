@@ -12,7 +12,7 @@ from flask_cors import CORS
 import redis
 
 from data.service.blueprints.dashboard import dashboard
-from data.service.external_requests import start_stop_symbol_trading
+from data.service.external_requests import start_stop_symbol_trading, get_strategies
 from data.service.helpers.responses import Responses
 from data.sources._sources import DataHandler
 from shared.utils.helpers import get_logging_row_header, get_item_from_cache
@@ -78,6 +78,12 @@ def hello_world():
 @app.route('/start_bot', methods=['PUT'])
 def start_bot():
 
+    if "STRATEGIES" not in globals():
+        STRATEGIES = get_strategies()
+        globals()["STRATEGIES"] = STRATEGIES
+    else:
+        STRATEGIES = globals()["STRATEGIES"]
+
     data = request.get_json(force=True)
 
     symbol = data.get("symbol", None)
@@ -88,6 +94,7 @@ def start_bot():
     paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
 
     response = check_input(
+        STRATEGIES,
         symbol=symbol,
         strategy=strategy,
         params=params,

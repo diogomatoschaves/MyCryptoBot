@@ -4,7 +4,7 @@ import pytest
 
 import data
 from data.sources.binance import BinanceDataHandler
-from data.tests.setup.test_data.sample_data import mock_websocket_raw_data_5m, mock_websocket_raw_data_1h
+from data.tests.setup.test_data.sample_data import mock_websocket_raw_data_5m, mock_websocket_raw_data_1h, STRATEGIES
 
 MODEL_APP_URL = 'https://example.com'
 EXECUTION_APP_URL = 'https://example.com'
@@ -177,3 +177,8 @@ def mock_redis():
 @pytest.fixture
 def mock_redis_connection(mocker):
     return mocker.patch("data.service.app.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_get_strategies(mocker):
+    mocker.patch.object(data.service.app, "get_strategies", lambda: STRATEGIES)
