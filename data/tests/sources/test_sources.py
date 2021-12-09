@@ -57,7 +57,6 @@ class TestExternalRequests:
         mock_check_job_status_response,
         mock_generate_signal,
         mock_time_sleep,
-        mock_redis_connection_1,
     ):
         """
         GIVEN some params
@@ -81,16 +80,14 @@ class TestExternalRequests:
 
         assert mock_check_job_status_response.call_count == len(side_effects)
 
-    def test_wait_for_job_conclusion_exception(
+    def test_wait_for_job_conclusion_job_not_found(
         self,
         mock_check_job_status_response,
         mock_generate_signal,
-        mock_redis_connection_1,
         mock_time_sleep
     ):
 
         mock_generate_signal.return_value = {"success": True, "job_id": 'abcdef'}
-        # mock_redis_connection.return_value = mocked_redis
 
         mock_check_job_status_response.side_effect = [
             {"status": "job not found"},
@@ -107,10 +104,9 @@ class TestExternalRequests:
             "retry": 0
         }
 
-        with pytest.raises(FailedSignalGeneration) as excinfo:
-            res = wait_for_job_conclusion(**params)
+        res = wait_for_job_conclusion(**params)
 
-        assert excinfo.type == FailedSignalGeneration
+        assert res is False
 
     @pytest.mark.parametrize(
         "return_value,expected_value",
@@ -132,7 +128,6 @@ class TestExternalRequests:
         return_value,
         expected_value,
         mock_generate_signal,
-        mock_redis_connection_1,
         mock_wait_for_job_conclusion,
     ):
         """
@@ -144,7 +139,6 @@ class TestExternalRequests:
 
         mock_generate_signal.return_value = return_value
         mock_wait_for_job_conclusion.return_value = True
-        # mock_redis_connection.return_value = mocked_redis
 
         params = {
             "pipeline_id": 1,

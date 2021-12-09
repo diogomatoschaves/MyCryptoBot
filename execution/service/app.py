@@ -39,7 +39,7 @@ def hello_world():
 @app.route('/start_symbol_trading', methods=['POST'])
 def start_symbol_trading():
 
-    pipeline, response = extract_and_validate()
+    pipeline, response, header = extract_and_validate()
 
     if response is not None:
         logging.debug(response)
@@ -49,7 +49,7 @@ def start_symbol_trading():
 
         bt = get_binance_trader_instance(pipeline.paper_trading)
 
-        success = bt.start_symbol_trading(pipeline.symbol)
+        success = bt.start_symbol_trading(pipeline.symbol, header=header)
 
         if success:
             return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
@@ -59,7 +59,7 @@ def start_symbol_trading():
 
 @app.route('/stop_symbol_trading', methods=['POST'])
 def stop_symbol_trading():
-    pipeline, response = extract_and_validate()
+    pipeline, response, header = extract_and_validate()
 
     if response is not None:
         logging.debug(response)
@@ -69,7 +69,7 @@ def stop_symbol_trading():
 
         bt = get_binance_trader_instance(pipeline.paper_trading)
 
-        success = bt.stop_symbol_trading(pipeline.symbol)
+        success = bt.stop_symbol_trading(pipeline.symbol, header=header)
 
         if success:
             return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
@@ -84,7 +84,7 @@ def execute_order():
 
     logging.debug(request_data)
 
-    pipeline, response = extract_and_validate()
+    pipeline, response, header = extract_and_validate()
 
     if response is not None:
         logging.debug(response)
@@ -103,7 +103,7 @@ def execute_order():
 
         bt = get_binance_trader_instance(pipeline.paper_trading)
 
-        bt.trade(pipeline.symbol, signal, amount=amount)
+        bt.trade(pipeline.symbol, signal, amount=amount, header=header)
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))
 

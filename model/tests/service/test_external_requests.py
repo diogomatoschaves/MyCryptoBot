@@ -9,7 +9,7 @@ class TestModelExternalRequests:
         self,
         mock_settings_env_vars,
         mock_requests_post,
-        mock_redis_connection_2,
+        mock_redis_connection,
         requests_post_spy
     ):
         """

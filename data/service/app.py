@@ -43,28 +43,28 @@ binance_instances = []
 cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 
-def initialize_data_collection(pipeline):
+def initialize_data_collection(pipeline, header):
 
-    data_handler = DataHandler(pipeline)
+    data_handler = DataHandler(pipeline, header=header)
 
     global binance_instances
     binance_instances.append(data_handler.binance_handler)
 
 
-def reduce_instances(instances, instance, pipeline_id):
+def reduce_instances(instances, instance, pipeline_id, header):
     if pipeline_id == instance.pipeline_id:
-        instance.stop_data_ingestion()
+        instance.stop_data_ingestion(header=header)
         return instances
     else:
         return [*instances, instance]
 
 
-def stop_instance(pipeline_id):
+def stop_instance(pipeline_id, header):
 
     global binance_instances
 
     binance_instances = reduce(
-        lambda instances, instance: reduce_instances(instances, instance, pipeline_id),
+        lambda instances, instance: reduce_instances(instances, instance, pipeline_id, header),
         binance_instances,
         []
     )
@@ -115,9 +115,11 @@ def start_bot():
         logging.debug(response)
         return response
 
+    header = get_logging_row_header(symbol, strategy, params, candle_size, exchange, paper_trading)
+
     cache.set(
         f"pipeline {pipeline.id}",
-        json.dumps(get_logging_row_header(symbol, strategy, params, candle_size, exchange, paper_trading))
+        json.dumps(header)
     )
 
     response = start_stop_symbol_trading(pipeline.id, 'start')
@@ -130,12 +132,12 @@ def start_bot():
 
         return jsonify({"response": response["response"]})
 
-    logging.info(json.loads(get_item_from_cache(cache, pipeline.id)) +
-                 f"Starting data pipeline.")
+    logging.info(header + f"Starting data pipeline.")
 
     executor.submit(
         initialize_data_collection,
-        pipeline
+        pipeline,
+        header
     )
 
     return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline.id))
@@ -153,9 +155,11 @@ def stop_bot():
     try:
         pipeline = Pipeline.objects.get(id=pipeline_id)
 
-        logging.info(json.loads(get_item_from_cache(cache, pipeline_id)) + f"Stopping data pipeline.")
+        header = json.loads(get_item_from_cache(cache, pipeline_id))
 
-        stop_instance(pipeline_id)
+        logging.info(header + f"Stopping data pipeline.")
+
+        stop_instance(pipeline_id, header=header)
 
         response = start_stop_symbol_trading(pipeline_id, 'stop')
 

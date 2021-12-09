@@ -23,7 +23,7 @@ def mock_trigger_signal_successfully(mocker):
     return mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda pipeline_id: True,
+        lambda pipeline_id, header='': True,
     )
 
 
@@ -32,13 +32,18 @@ def mock_trigger_signal_fail(mocker):
     mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda pipeline_id: False,
+        lambda pipeline_id, header='': False,
     )
 
 
 @pytest.fixture
 def trigger_signal_spy(mocker):
     return mocker.spy(data.sources.binance._binance, 'trigger_signal')
+
+
+def double_callback(callback, mock_row):
+    callback(mock_row[0])
+    callback(mock_row[1])
 
 
 def mock_start_multiplex_socket(self, streams, callback):
@@ -63,7 +68,7 @@ def mock_binance_handler_start_data_ingestion(mocker):
     mocker.patch.object(
         BinanceDataHandler,
         "start_data_ingestion",
-        lambda self: None
+        lambda self, header='': None
     )
 
 
@@ -72,7 +77,7 @@ def mock_binance_handler_stop_data_ingestion(mocker):
     return mocker.patch.object(
         BinanceDataHandler,
         "stop_data_ingestion",
-        lambda self: None
+        lambda self, header='': None
     )
 
 
@@ -86,8 +91,8 @@ def binance_handler_instances_spy_start_bot(mocker):
     return mocker.patch('data.service.app.binance_instances', new_callable=list)
 
 
-def immediate_execution(initialize_data_collection, pipeline_id):
-    return initialize_data_collection(pipeline_id)
+def immediate_execution(initialize_data_collection, pipeline_id, header=''):
+    return initialize_data_collection(pipeline_id, header)
 
 
 @pytest.fixture
@@ -151,10 +156,6 @@ def mock_wait_for_job_conclusion(mocker):
     )
 
 
-def double_callback(callback, mock_row):
-    callback(mock_row[0])
-    callback(mock_row[1])
-
 def mock_redis():
     class RedisCache:
 
@@ -174,20 +175,5 @@ def mock_redis():
 
 
 @pytest.fixture
-def mock_redis_connection_1(mocker):
-    return mocker.patch("data.sources._signal_triggerer.cache", mock_redis())
-
-
-@pytest.fixture
-def mock_redis_connection_2(mocker):
+def mock_redis_connection(mocker):
     return mocker.patch("data.service.app.cache", mock_redis())
-
-
-@pytest.fixture
-def mock_redis_connection_3(mocker):
-    return mocker.patch("data.sources.binance._binance.cache", mock_redis())
-
-
-@pytest.fixture
-def mock_redis_connection_4(mocker):
-    return mocker.patch("data.service.external_requests.cache", mock_redis())

@@ -13,7 +13,7 @@ class TestDataExternalRequests:
         self,
         mock_settings_env_vars,
         mock_requests_post,
-        mock_redis_connection_4,
+        mock_redis_connection,
         requests_post_spy
     ):
         """
@@ -58,7 +58,6 @@ class TestDataExternalRequests:
         self,
         params,
         start_or_stop,
-        mock_redis_connection_4,
         mock_settings_env_vars,
         mock_requests_post,
         requests_post_spy
@@ -87,7 +86,6 @@ class TestDataExternalRequests:
 
     def test_check_job_status(
         self,
-        mock_redis_connection_4,
         mock_settings_env_vars,
         mock_requests_get,
         requests_get_spy

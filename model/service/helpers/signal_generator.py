@@ -3,10 +3,9 @@ import logging
 import os
 
 import django
-import redis
 
 from model.service.external_requests import execute_order
-from shared.utils.helpers import convert_signal_to_text, get_item_from_cache
+from shared.utils.helpers import convert_signal_to_text
 from shared.utils.logger import configure_logger
 from shared.data.queries import get_data
 from model.strategies.trend import Momentum
@@ -21,10 +20,8 @@ from database.model.models import StructuredData
 
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
-cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
-
-def get_signal(pipeline_id, symbol, candle_size, exchange, strategy, params=None):
+def get_signal(pipeline_id, symbol, candle_size, exchange, strategy, params=None, header=''):
 
     if params is None:
         params = {}
@@ -32,7 +29,7 @@ def get_signal(pipeline_id, symbol, candle_size, exchange, strategy, params=None
     data = get_data(StructuredData, None, symbol, candle_size, exchange)
 
     if len(data) == 0:
-        logging.debug(f"Empty DataFrame. {symbol}, {candle_size}, {exchange}")
+        logging.debug(header + f"Empty DataFrame, aborting.")
         return False
 
     # TODO: Compact all this with eval
@@ -58,24 +55,22 @@ def get_signal(pipeline_id, symbol, candle_size, exchange, strategy, params=None
         signal_gen = MachineLearning(**params, data=data)
 
     else:
-        logging.info(f"Invalid strategy: %s" % strategy)
+        logging.warning(header + f"Invalid strategy: %s" % strategy)
         return False
 
     signal = signal_gen.get_signal()
 
-    logging.debug(json.loads(get_item_from_cache(cache, pipeline_id)) +
-                  f"{convert_signal_to_text(signal)} signal generated")
+    logging.debug(header + f"{convert_signal_to_text(signal)} signal generated")
 
-    return trigger_order(pipeline_id, signal)
+    return trigger_order(pipeline_id, signal, header=header)
 
 
-def trigger_order(pipeline_id, signal):
+def trigger_order(pipeline_id, signal, header=''):
 
-    response = execute_order(pipeline_id, signal)
+    response = execute_order(pipeline_id, signal, header=header)
 
     if "success" in response and response["success"]:
-        logging.debug(json.loads(get_item_from_cache(cache, pipeline_id)) +
-                      "Order was executed successfully.")
+        logging.debug(header + "Order was executed successfully.")
         return True
     else:
         logging.warning(response["response"])
