@@ -76,7 +76,6 @@ class TestBinanceDataHandler:
         mock_binance_handler_websocket,
         mock_binance_websocket_start,
         mock_trigger_signal_successfully,
-        mock_redis_connection_3,
         trigger_signal_spy,
         exchange_data
     ):
@@ -93,9 +92,7 @@ class TestBinanceDataHandler:
         else:
             pipeline_id = None
 
-        trigger_signal_spy.assert_called_with(
-            pipeline_id,
-        )
+        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id, )
 
         binance_data_handler.stop_data_ingestion()
 
@@ -105,18 +102,6 @@ class TestBinanceDataHandler:
     @pytest.mark.parametrize(
         "input_params,output",
         [
-            pytest.param(
-                {
-                    "symbol": "BTCUSDT",
-                    "candle_size": "1h",
-                },
-                {
-                    "expected_number_objs_structured": 1,
-                    "expected_number_objs_exchange": 15,
-                    "expected_value": 2
-                },
-                id="BaseCaseNoPipelineID",
-            ),
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
@@ -136,7 +121,6 @@ class TestBinanceDataHandler:
         self,
         input_params,
         output,
-        mock_redis_connection_3,
         mock_binance_handler_klines,
         mock_binance_client_init,
         mock_client_env_vars,
@@ -146,7 +130,7 @@ class TestBinanceDataHandler:
         mock_trigger_signal_fail,
         trigger_signal_spy,
         exchange_data,
-        create_job
+        create_pipeline
     ):
 
         binance_data_handler = BinanceDataHandler(**input_params)
@@ -157,13 +141,13 @@ class TestBinanceDataHandler:
         else:
             pipeline_id = None
 
-        trigger_signal_spy.assert_called_with(
-            pipeline_id,
-        )
+        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id, )
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
         assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
-        assert Jobs.objects.all().count() == 0
+
+        pipeline = Pipeline.objects.get(id=pipeline_id)
+        assert pipeline.active is False
 
     @pytest.mark.parametrize(
         "input_value",
@@ -183,7 +167,6 @@ class TestBinanceDataHandler:
         mock_binance_client_init,
         mock_binance_client_ping,
         mock_binance_handler_websocket,
-        mock_redis_connection_3,
         exchange_data
     ):
 

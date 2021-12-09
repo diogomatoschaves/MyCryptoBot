@@ -1,15 +1,10 @@
-import json
 import logging
 import os
 
-import redis
 import requests
 
 from data.service.helpers import MODEL_APP_ENDPOINTS, EXECUTION_APP_ENDPOINTS
 from shared.utils.decorators import retry_failed_connection, json_error_handler
-from shared.utils.helpers import get_item_from_cache
-
-cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 
 def prepare_payload(**kwargs):
@@ -31,7 +26,7 @@ def check_job_status(job_id):
 
 @retry_failed_connection(num_times=2)
 @json_error_handler
-def generate_signal(pipeline_id):
+def generate_signal(pipeline_id, header=''):
 
     url = MODEL_APP_ENDPOINTS["GENERATE_SIGNAL"](os.getenv("MODEL_APP_URL"))
 
@@ -39,9 +34,7 @@ def generate_signal(pipeline_id):
         pipeline_id=pipeline_id
     )
 
-    logging.info(
-        json.loads(get_item_from_cache(cache, pipeline_id)) + "Triggering signal"
-    )
+    logging.info(header + "Triggering signal")
 
     r = requests.post(url, json=payload)
     logging.debug(r.text)

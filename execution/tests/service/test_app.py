@@ -70,6 +70,7 @@ class TestExecutionService:
         params,
         expected_value,
         mock_binance_trader_fail,
+        mock_redis_connection,
         client,
         exchange_data,
         create_pipeline,
@@ -106,6 +107,7 @@ class TestExecutionService:
         params,
         expected_value,
         mock_binance_trader_success,
+        mock_redis_connection,
         client,
         exchange_data,
         create_pipeline
@@ -149,6 +151,7 @@ class TestExecutionService:
         params,
         expected_value,
         mock_binance_trader_success,
+        mock_redis_connection,
         client,
         exchange_data,
         create_pipeline,

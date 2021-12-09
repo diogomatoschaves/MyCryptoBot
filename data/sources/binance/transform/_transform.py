@@ -45,13 +45,13 @@ def replace_nat_values(data):
     return data.fillna(np.nan)
 
 
-def remove_incomplete_rows(data, resampled_data, candle_size, reference_candle_size):
+def remove_incomplete_rows(data, resampled_data, candle_size, reference_candle_size, header=''):
 
     counts = data.resample(const.CANDLE_SIZES_MAPPER[candle_size]).count()
 
     rows = counts[(counts != const.COUNT_MAPPER[candle_size][reference_candle_size]).any(axis=1)].min(axis=1)
 
-    logging.debug(f"Removing {len(rows)} from resampled data.")
+    logging.debug(header + f"Removed {len(rows)} from resampled data.")
 
     return resampled_data.drop(rows.index)
 
@@ -64,7 +64,8 @@ def transform_data(
     reference_candle_size='5m',
     aggregation_method=const.COLUMNS_AGGREGATION,
     is_removing_zeros=False,
-    is_removing_rows=False
+    is_removing_rows=False,
+    header=''
 ):
 
     data = remove_columns(data, ['id'])
@@ -77,7 +78,7 @@ def transform_data(
     resampled_data = resample_data(data, candle_size, aggregation_method)
 
     if is_removing_rows:
-        resampled_data = remove_incomplete_rows(data, resampled_data, candle_size, reference_candle_size)
+        resampled_data = remove_incomplete_rows(data, resampled_data, candle_size, reference_candle_size, header=header)
 
     data = add_extra_columns(resampled_data, exchange, symbol, candle_size)
 
