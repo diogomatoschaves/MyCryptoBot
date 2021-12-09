@@ -1,5 +1,4 @@
 import sys
-from database.model.helpers import STRATEGIES
 
 try:
     from django.db import models
@@ -139,11 +138,9 @@ class Orders(models.Model):
 
 class Pipeline(models.Model):
 
-    STRATEGY_CHOICES = [(strategy_key, strategy_value["name"]) for strategy_key, strategy_value in STRATEGIES.items()]
-
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     interval = models.TextField()
-    strategy = models.TextField(choices=STRATEGY_CHOICES)
+    strategy = models.TextField()
     params = models.TextField(blank=True, default="{}")
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
