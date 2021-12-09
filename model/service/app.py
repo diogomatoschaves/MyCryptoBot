@@ -1,8 +1,10 @@
+import json
 import logging
 import os
 import sys
 
 import django
+import redis
 from flask import Flask, jsonify, request
 from rq import Queue
 from rq.exceptions import NoSuchJobError
@@ -11,7 +13,7 @@ from rq.job import Job
 from model.service.helpers.responses import Responses
 from model.service.helpers.signal_generator import get_signal
 from model.worker import conn
-from shared.utils.helpers import get_pipeline_data
+from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 from shared.utils.logger import configure_logger
 
 
@@ -25,6 +27,9 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
+
+
+cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 
 app = Flask(__name__)
@@ -61,6 +66,8 @@ def generate_signal():
     if not pipeline_exists:
         return jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id))
 
+    header = json.loads(get_item_from_cache(cache, pipeline_id))
+
     job = q.enqueue_call(
         get_signal, (
             pipeline_id,
@@ -68,7 +75,8 @@ def generate_signal():
             pipeline.candle_size,
             pipeline.exchange,
             pipeline.strategy,
-            pipeline.params
+            pipeline.params,
+            header
         )
     )
 

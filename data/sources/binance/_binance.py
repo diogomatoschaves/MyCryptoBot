@@ -1,11 +1,9 @@
-import json
 import logging
 import os
 from datetime import datetime
 
 import pandas as pd
 import django
-import redis
 from binance.websockets import BinanceSocketManager
 
 import shared.exchanges.binance.constants as const
@@ -15,14 +13,11 @@ from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.exceptions import InvalidInput
-from shared.utils.helpers import get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import ExchangeData, StructuredData, Symbol, Pipeline
-
-cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 
 class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
@@ -79,7 +74,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         self.base = symbol_obj.base.symbol,
         self.quote = symbol_obj.quote.symbol,
 
-    def start_data_ingestion(self):
+    def start_data_ingestion(self, header=''):
         """
         Public method which sets in motion the data pipeline for a given symbol.
 
@@ -90,7 +85,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         """
 
         # Get missing raw data
-        self._etl_pipeline(ExchangeData, self.base_candle_size, count_updates=False)
+        self._etl_pipeline(ExchangeData, self.base_candle_size, count_updates=False, header=header)
 
         # Get missing structured data
         self._etl_pipeline(
@@ -98,12 +93,13 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             self.candle_size,
             remove_zeros=True,
             remove_rows=True,
-            count_updates=False
+            count_updates=False,
+            header=header
         )
 
-        self._start_kline_websockets(self.symbol, self._websocket_callback)
+        self._start_kline_websockets(self.symbol, self._websocket_callback, header=header)
 
-    def stop_data_ingestion(self):
+    def stop_data_ingestion(self, header=''):
         """
         Public method which stops the data pipeline for the symbol.
 
@@ -112,28 +108,25 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         None
 
         """
-        logging.info(json.loads(get_item_from_cache(cache, self.pipeline_id)) +
-                     f"Stopping {', '.join(self.streams)} data stream(s).")
+        logging.info(header + f"Stopping {', '.join(self.streams)} data stream(s).")
 
         self._stop_websocket()
 
         ExchangeData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
         StructuredData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
 
-    def _start_kline_websockets(self, symbol, callback):
+    def _start_kline_websockets(self, symbol, callback, header=''):
 
         streams = [
             f"{symbol.lower()}@kline_{self.base_candle_size}",
             f"{symbol.lower()}@kline_{self.candle_size}"
         ]
 
-        logging.info(json.loads(get_item_from_cache(cache, self.pipeline_id)) + f"Starting {', '.join(streams)} data stream(s).")
+        logging.info(header + f"Starting {', '.join(streams)} data stream(s).")
 
         self.streams = streams
 
-        self.conn_key = self.start_multiplex_socket(streams, callback)
-
-        print(self.conn_key)
+        self.conn_key = self.start_multiplex_socket(streams, lambda row: callback(row, header))
 
         if not self.started:
             self.start()
@@ -155,13 +148,14 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
         remove_zeros=False,
         remove_rows=False,
         columns_aggregation=const.COLUMNS_AGGREGATION,
-        count_updates=True
+        count_updates=True,
+        header=''
     ):
 
         # Extract
         if data is None:
             data = extract_data(model_class, self.get_historical_klines_generator, self.symbol,
-                                self.base_candle_size, candle_size)
+                                self.base_candle_size, candle_size, header=header)
 
         # Transform
         data = transform_data(
@@ -172,18 +166,19 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             reference_candle_size=reference_candle_size,
             aggregation_method=columns_aggregation,
             is_removing_zeros=remove_zeros,
-            is_removing_rows=remove_rows
+            is_removing_rows=remove_rows,
+            header=header
         )
 
         # Load
         new_entries = load_data(model_class, data, count_updates=count_updates)
 
-        logging.info(json.loads(get_item_from_cache(cache, self.pipeline_id)) + f"Added {new_entries} new rows into {model_class}.")
+        logging.info(header + f"Added {new_entries} new rows into {model_class}.")
 
         return new_entries
 
     # TODO: Add timer to check if it's below 24h
-    def _websocket_callback(self, row):
+    def _websocket_callback(self, row, header=''):
 
         logging.debug(row)
 
@@ -210,15 +205,12 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
             )
 
             if new_entry:
-                success = trigger_signal(
-                    self.pipeline_id
-                )
+                success = trigger_signal(self.pipeline_id, header=header)
 
                 if not success:
                     logging.warning(
-                        json.loads(get_item_from_cache(cache, self.pipeline_id)) +
-                        "There was an error processing the "
-                        "signal generation request. Stopping data pipeline."
+                        header +
+                        "There was an error processing the signal generation request. Stopping data pipeline."
                     )
                     self.stop_data_ingestion()
                     Pipeline.objects.filter(id=self.pipeline_id).update(active=False)

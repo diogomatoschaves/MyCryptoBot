@@ -84,7 +84,7 @@ class IterativeBacktester(BacktestMixin, Trader):
 
             self.positions_lst.append(self._get_position(self.symbol))
 
-    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None):
+    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header=''):
 
         price = self.get_values(date, row)
 
@@ -98,7 +98,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.trades += 1
         print(f"{date} |  Buying {round(units, 4)} {self.symbol} for {round(price, 5)}")
 
-    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None):
+    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header=''):
 
         price = self.get_values(date, row)
 
@@ -112,7 +112,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.trades += 1
         print(f"{date} |  Selling {round(units, 4)} {self.symbol} for {round(price, 5)}")
 
-    def close_pos(self, symbol, date=None, row=None):
+    def close_pos(self, symbol, date=None, row=None, header=''):
 
         print(75 * "-")
         print("{} |  +++ CLOSING FINAL POSITION +++".format(date))
@@ -124,7 +124,7 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
 
-        self.print_current_balance(symbol, date)
+        self.print_current_balance(date)
 
         print("{} |  net performance (%) = {}".format(date, round(perf, 2)))
         print("{} |  number of trades executed = {}".format(date, self.trades))

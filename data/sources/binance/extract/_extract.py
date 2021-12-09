@@ -36,7 +36,8 @@ def extract_data(
     symbol,
     base_candle_size,
     candle_size,
-    start_date=None
+    start_date=None,
+    header=''
 ):
     """
     Fetches missing data on specified model class and for a
@@ -61,7 +62,7 @@ def extract_data(
     if start_date is None:
         start_date = get_start_date(model_class, symbol, candle_size)
 
-    logging.info(f"{symbol}|{candle_size}: Fetching missing historical data.")
+    logging.info(header + f"Fetching missing historical data.")
 
     klines = klines_generator(symbol, base_candle_size, start_date)
 
@@ -77,7 +78,7 @@ def extract_data(
         data.append(fields)
 
         if i % 1E3 == 0:
-            logging.debug(f"{symbol}: Processed {i} new rows.")
+            logging.debug(header + f"Processed {i} new rows.")
 
         i += 1
 

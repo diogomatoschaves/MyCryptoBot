@@ -68,47 +68,62 @@ class TestDataService:
         assert res.status_code == 405
 
     @pytest.mark.parametrize(
-        "input_params,response",
+        "input_params,response,get_response",
         [
             pytest.param(
                 {
                     "strategy": "MovingAverage",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
                 "SYMBOL_REQUIRED",
+                lambda response: response,
                 id="SYMBOL_REQUIRED",
             ),
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "candleSize": "1h",
                 },
                 "EXCHANGE_REQUIRED",
+                lambda response: response,
                 id="EXCHANGE_REQUIRED",
             ),
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "exchanges": "Binance"
                 },
                 "CANDLE_SIZE_REQUIRED",
+                lambda response: response,
                 id="CANDLE_SIZE_REQUIRED",
             ),
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
                 "STRATEGY_REQUIRED",
+                lambda response: response,
                 id="STRATEGY_REQUIRED",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "strategy": "MovingAverage",
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
+                },
+                "PARAMS_REQUIRED",
+                lambda response: response("ma"),
+                id="PARAMS_REQUIRED",
             ),
         ],
     )
@@ -116,9 +131,9 @@ class TestDataService:
         self,
         input_params,
         response,
+        get_response,
         client,
-        mock_redis_connection_1,
-        mock_redis_connection_2,
+        mock_redis_connection,
         create_exchange,
         create_assets,
         create_symbol
@@ -132,58 +147,70 @@ class TestDataService:
 
         res = client.put('/start_bot', json=input_params)
 
-        assert res.json == getattr(Responses, response)
+        assert res.json == get_response(getattr(Responses, response))
 
     @pytest.mark.parametrize(
-        "input_params,response,param",
+        "input_params,response,get_param",
         [
             pytest.param(
                 {
                     "symbol": "BTC",
                     "strategy": "MovingAverage",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
                 "SYMBOL_INVALID",
-                "symbol",
+                lambda input_params: input_params["symbol"],
                 id="SYMBOL_INVALID",
             ),
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Coinbase"
                 },
                 "EXCHANGE_INVALID",
-                "exchanges",
+                lambda input_params: input_params["exchanges"],
                 id="EXCHANGE_INVALID",
             ),
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "candleSize": "efrefg",
                     "exchanges": "Binance"
                 },
                 "CANDLE_SIZE_INVALID",
-                "candleSize",
+                lambda input_params: input_params["candleSize"],
                 id="CANDLE_SIZE_INVALID",
             ),
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
                     "strategy": "Average",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
                 "STRATEGY_INVALID",
-                "strategy",
+                lambda input_params: input_params["strategy"],
                 id="STRATEGY_INVALID",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "strategy": "MovingAverage",
+                    "params": {"sma": 30, "ma": 30},
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
+                },
+                "PARAMS_INVALID",
+                lambda input_params: "sma",
+                id="PARAMS_INVALID",
             ),
         ],
     )
@@ -191,10 +218,9 @@ class TestDataService:
         self,
         input_params,
         response,
-        param,
+        get_param,
         client,
-        mock_redis_connection_1,
-        mock_redis_connection_2,
+        mock_redis_connection,
         create_exchange,
         create_assets,
         create_symbol
@@ -208,7 +234,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=input_params)
 
-        assert res.json == getattr(Responses, response)(input_params[param])
+        assert res.json == getattr(Responses, response)(get_param(input_params))
 
     @pytest.mark.parametrize(
         "params,response",
@@ -216,7 +242,8 @@ class TestDataService:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "strategy": "BollingerBands",
+                    "strategy": "MovingAverage",
+                    "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance",
                 },
@@ -230,8 +257,7 @@ class TestDataService:
         params,
         response,
         client,
-        mock_redis_connection_1,
-        mock_redis_connection_2,
+        mock_redis_connection,
         create_exchange,
         create_assets,
         create_symbol,
@@ -255,7 +281,7 @@ class TestDataService:
                 {
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -270,8 +296,7 @@ class TestDataService:
         response,
         mock_start_stop_symbol_trading_success_true,
         client,
-        mock_redis_connection_1,
-        mock_redis_connection_2,
+        mock_redis_connection,
         mock_binance_handler_start_data_ingestion,
         mock_executor_submit,
         binance_handler_instances_spy_start_bot,
@@ -309,7 +334,7 @@ class TestDataService:
                 {
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
-                    "params": {"sma": 30},
+                    "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -323,8 +348,7 @@ class TestDataService:
         mock_start_stop_symbol_trading_success_false,
         client,
         mock_binance_handler_start_data_ingestion,
-        mock_redis_connection_1,
-        mock_redis_connection_2,
+        mock_redis_connection,
         create_exchange,
         create_assets,
         create_symbol,
@@ -358,8 +382,7 @@ class TestDataService:
         response,
         client,
         mock_binance_handler_stop_data_ingestion,
-        mock_redis_connection_1,
-        mock_redis_connection_2,
+        mock_redis_connection,
         binance_handler_stop_data_ingestion_spy,
         mock_start_stop_symbol_trading_success_true,
         binance_handler_instances_spy_stop_bot,
@@ -380,7 +403,9 @@ class TestDataService:
         res = client.put('/stop_bot', json=params)
 
         assert res.json == getattr(Responses, response)
-        assert Jobs.objects.count() == 0
+
+        pipeline = Pipeline.objects.get(id=params["pipeline_id"])
+        assert pipeline.active is False
 
         binance_handler_stop_data_ingestion_spy.assert_called()
 
@@ -401,8 +426,7 @@ class TestDataService:
         params,
         response,
         client,
-        mock_redis_connection_1,
-        mock_redis_connection_2,
+        mock_redis_connection,
         create_exchange,
         create_assets,
         create_symbol,

@@ -37,8 +37,8 @@ def create_pipeline(db, create_exchange, create_symbol):
     return Pipeline.objects.create(
         id=1,
         symbol_id='BTCUSDT',
-        strategy='BollingerBands',
-        params="{}",
+        strategy='MovingAverage',
+        params='{"ma": 30}',
         exchange_id='binance',
         interval="1h",
         active=True

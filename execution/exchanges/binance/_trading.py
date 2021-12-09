@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 
 import django
-import redis
 from binance.exceptions import BinanceAPIException
 
 from shared.exchanges import BinanceHandler
@@ -17,9 +16,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import Symbol, Orders
-
-
-cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 
 class BinanceTrader(BinanceHandler, Trader):
@@ -47,7 +43,7 @@ class BinanceTrader(BinanceHandler, Trader):
         self.filled_orders = []
         self.conn_key = None
 
-    def start_symbol_trading(self, symbol):
+    def start_symbol_trading(self, symbol, header=''):
 
         if symbol in self.symbols:
             return True
@@ -58,43 +54,43 @@ class BinanceTrader(BinanceHandler, Trader):
         except Symbol.DoesNotExist:
             return False
 
-        trading_account_exists = self._get_assets_info(symbol)
+        trading_account_exists = self._get_assets_info(symbol, header)
 
         if not trading_account_exists:
             return False
 
-        self._set_initial_position(symbol)
+        self._set_initial_position(symbol, header)
 
-        self._update_account_status(symbol)
+        self._update_account_status(symbol, header=header)
 
-        self._get_symbol_net_equity(symbol)
+        self._get_symbol_net_equity(symbol, header)
 
-        self._create_initial_loan(symbol)
+        self._create_initial_loan(symbol, header)
 
-        self._get_assets_info(symbol)
-        self._update_account_status(symbol)
-        self._get_assets_info(symbol)
+        self._get_assets_info(symbol, header)
+        self._update_account_status(symbol, header=header)
+        self._get_assets_info(symbol, header)
 
-        self._get_trading_fees(symbol)
+        self._get_trading_fees(symbol, header)
 
-        self._get_max_borrow_amount(symbol)
+        self._get_max_borrow_amount(symbol, header)
 
         return True
 
-    def stop_symbol_trading(self, symbol):
+    def stop_symbol_trading(self, symbol, header=''):
 
         if symbol not in self.symbols:
             return False
 
-        logging.info(f"{symbol}: Closing positions and repaying loans.")
+        logging.info(header + f"Closing positions and repaying loans.")
 
-        position_closed = self.close_pos(symbol, date=datetime.utcnow())
+        position_closed = self.close_pos(symbol, date=datetime.utcnow(), header=header)
 
         self.repay_loans(symbol)
 
         return position_closed
 
-    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, **kwargs):
+    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
         self._execute_order(
             symbol,
             self.ORDER_TYPE_MARKET,
@@ -102,10 +98,11 @@ class BinanceTrader(BinanceHandler, Trader):
             "GOING LONG",
             units=units,
             amount=amount,
+            header=header,
             **kwargs
         )
 
-    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, **kwargs):
+    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
         self._execute_order(
             symbol,
             self.ORDER_TYPE_MARKET,
@@ -113,31 +110,34 @@ class BinanceTrader(BinanceHandler, Trader):
             "GOING SHORT",
             units=units,
             amount=amount,
+            header=header,
             **kwargs
         )
 
-    def close_pos(self, symbol, date=None, row=None):
+    def close_pos(self, symbol, date=None, row=None, header=''):
 
         if self.units == 0:
             return False
 
         if self.units < 0:
-            self.buy_instrument(symbol, date, row, units=-self.units)
+            self.buy_instrument(symbol, date, row, units=-self.units, header=header)
         else:
-            self.sell_instrument(symbol, date, row, units=self.units)
+            self.sell_instrument(symbol, date, row, units=self.units, header=header)
 
         try:
             perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
         except ZeroDivisionError:
             perf = 0
 
-        self.print_current_balance(symbol, date)
+        self.print_current_balance(date, header=header)
+        
+        header = header
 
-        logging.info(f"{symbol}: " + 100 * "-")
-        logging.info(f"{symbol}: {date} | +++ CLOSED FINAL POSITION +++")
-        logging.info(f"{symbol}: {date} | net performance (%) = {round(perf, 2)}")
-        logging.info(f"{symbol}: {date} | number of trades executed = {self.trades}")
-        logging.info(f"{symbol}: " + 100 * "-")
+        logging.info(header + f"" + 100 * "-")
+        logging.info(header + f"{date} | +++ CLOSED FINAL POSITION +++")
+        logging.info(header + f"{date} | net performance (%) = {round(perf, 2)}")
+        logging.info(header + f"{date} | number of trades executed = {self.trades}")
+        logging.info(header + f"" + 100 * "-")
 
         return True
 
@@ -151,7 +151,8 @@ class BinanceTrader(BinanceHandler, Trader):
         going,
         side_effect='MARGIN_BUY',
         units=None,
-        amount=None
+        amount=None,
+        header=''
     ):
 
         kwargs = self._get_order_kwargs(units, amount)
@@ -184,7 +185,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
         self.trades += 1
 
-        self.report_trade(order, symbol, units, going)
+        self.report_trade(order, symbol, units, going, header)
 
     def _format_order(self, order):
         return dict(
@@ -213,9 +214,9 @@ class BinanceTrader(BinanceHandler, Trader):
 
         Orders.objects.create(**formatted_order)
 
-    def _set_initial_position(self, symbol):
+    def _set_initial_position(self, symbol, header=''):
         # TODO: Get this value from database?
-        logging.debug(f"{symbol}: Setting initial position NEUTRAL.")
+        logging.debug(header + f"Setting initial position NEUTRAL.")
         self._set_position(symbol, 0)
 
     def _set_position(self, symbol, value):
@@ -225,13 +226,13 @@ class BinanceTrader(BinanceHandler, Trader):
         return self.positions[symbol]
 
     @retry_failed_connection(num_times=3)
-    def _get_trading_fees(self, symbol):
-        logging.debug(f"{symbol}: Getting trading fees.")
+    def _get_trading_fees(self, symbol, header=''):
+        logging.debug(header + f"Getting trading fees.")
         self.trading_fees[symbol] = self.get_trade_fee(symbol=symbol)['tradeFee'][0]
 
     @retry_failed_connection(num_times=3)
-    def _get_assets_info(self, symbol):
-        logging.debug(f"{symbol}: Setting asset info.")
+    def _get_assets_info(self, symbol, header=''):
+        logging.debug(header + f"Setting asset info.")
         isolated_margin_account_details = self.get_isolated_margin_account()["assets"]
 
         self.assets_info.update(
@@ -244,9 +245,9 @@ class BinanceTrader(BinanceHandler, Trader):
 
         return True
 
-    def _get_symbol_net_equity(self, symbol):
+    def _get_symbol_net_equity(self, symbol, header=''):
 
-        logging.debug(f"{symbol}: Getting symbol net equity.")
+        logging.debug(header + f"Getting symbol net equity.")
 
         quote_amount = float(self.assets_info[symbol]["quoteAsset"]["netAsset"])
         quote_amount += float(self.assets_info[symbol]["baseAsset"]["netAsset"]) * \
@@ -262,8 +263,8 @@ class BinanceTrader(BinanceHandler, Trader):
         }
 
     @retry_failed_connection(num_times=3)
-    def _get_max_borrow_amount(self, symbol):
-        logging.debug(f"{symbol}: Getting maximum borrow amount.")
+    def _get_max_borrow_amount(self, symbol, header=''):
+        logging.debug(header + f"Getting maximum borrow amount.")
         max_borrow_amount = {}
 
         for key, asset in self.symbols[symbol].items():
@@ -273,9 +274,9 @@ class BinanceTrader(BinanceHandler, Trader):
         self.max_borrow_amount[symbol] = max_borrow_amount
 
     @retry_failed_connection(num_times=3)
-    def _create_initial_loan(self, symbol):
+    def _create_initial_loan(self, symbol, header=''):
 
-        logging.debug(f"{symbol}: Creating intial loan.")
+        logging.debug(header + f"Creating intial loan.")
 
         self.max_margin_level = int(float(self.assets_info[symbol]["marginRatio"]))
         if self.margin_level > self.max_margin_level:
@@ -308,11 +309,11 @@ class BinanceTrader(BinanceHandler, Trader):
 
             self.create_margin_loan(asset=asset_symbol, amount=amount, isIsolated=True, symbol=symbol)
 
-            logging.debug(f"{symbol}: Borrowed {amount} of {asset_symbol}.")
+            logging.debug(header + f"Borrowed {amount} of {asset_symbol}.")
 
     # TODO: Add last order position
-    def _update_account_status(self, symbol, factor=1):
-        logging.debug(f"{symbol}: Updating isolated account status.")
+    def _update_account_status(self, symbol, factor=1, header=''):
+        logging.debug(header + f"Updating isolated account status.")
         self.current_balance = float(self.assets_info[symbol]["quoteAsset"]["free"])
         self.units = float(self.assets_info[symbol]["baseAsset"]["free"]) * factor
 
@@ -344,15 +345,15 @@ class BinanceTrader(BinanceHandler, Trader):
             except BinanceAPIException:
                 pass
 
-    def report_trade(self, order, symbol, units, going):
+    def report_trade(self, order, symbol, units, going, header=''):
         logging.debug(order)
 
         price = self._get_average_order_price(order)
 
         date = datetime.fromtimestamp(order["transactTime"] / 1000).astimezone(pytz.utc)
 
-        logging.info(f"{symbol}: " + 100 * "-")
-        logging.info(f"{symbol}: {date} | {going}")
-        logging.info(f"{symbol} | units = {units} | price = {price}")
-        self.print_current_nav(symbol, date, price)
-        logging.info(f"{symbol}: " + 100 * "-")
+        logging.info(header + f"" + 100 * "-")
+        logging.info(header + f"{date} | {going}")
+        logging.info(header + f"units = {units} | price = {price}")
+        self.print_current_nav(date, price)
+        logging.info(header + f"" + 100 * "-")
