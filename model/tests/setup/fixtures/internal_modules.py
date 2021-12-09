@@ -3,7 +3,7 @@ import os
 import pytest
 
 import model
-
+from model.tests.setup.test_data.sample_data import STRATEGIES
 
 TEST_APP_NAME = "test_app"
 EXECUTION_APP_URL = "https://example.com"
@@ -85,3 +85,8 @@ def mock_redis():
 @pytest.fixture
 def mock_redis_connection(mocker):
     return mocker.patch("model.service.app.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_strategies(mocker):
+    mocker.patch.object(model.service.app, "STRATEGIES", STRATEGIES)

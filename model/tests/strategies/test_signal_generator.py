@@ -1,21 +1,13 @@
 from model.service.helpers.signal_generator import get_signal, trigger_order
 from model.tests.setup.fixtures.internal_modules import *
 from model.tests.setup.test_data.sample_data import sample_structured_data
+from model.strategies.properties import STRATEGIES
 from shared.utils.tests.fixtures.models import *
 
 
 def inject_fixture(strategy):
     globals()[strategy] = mock_strategy_factory(strategy)
 
-
-STRATEGIES = [
-    "MovingAverageConvergenceDivergence",
-    "MovingAverage",
-    "MovingAverageCrossover",
-    "BollingerBands",
-    "Momentum",
-    "MachineLearning",
-]
 
 for strategy in STRATEGIES:
     inject_fixture(strategy)

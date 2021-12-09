@@ -1,6 +1,7 @@
 from model.service.helpers.responses import Responses
 from model.tests.setup.fixtures.app import *
 from model.tests.setup.fixtures.internal_modules import *
+from model.tests.setup.test_data.sample_data import STRATEGIES
 from model.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
 
@@ -18,32 +19,47 @@ class TestModelService:
             pytest.param(
                 "generate_signal",
                 "get",
-                id="start_bot_get",
+                id="generate_signal_get",
             ),
             pytest.param(
                 "generate_signal",
                 "put",
-                id="start_bot_post",
+                id="generate_signal_put",
             ),
             pytest.param(
                 "generate_signal",
                 "delete",
-                id="start_bot_delete",
+                id="generate_signal_delete",
             ),
             pytest.param(
                 "check_job/123",
                 "put",
-                id="start_bot_delete",
+                id="check_job_put",
             ),
             pytest.param(
                 "check_job/123",
                 "post",
-                id="start_bot_delete",
+                id="check_job_post",
             ),
             pytest.param(
                 "check_job/123",
                 "delete",
-                id="start_bot_delete",
+                id="strategies_delete",
+            ),
+            pytest.param(
+                "strategies",
+                "put",
+                id="strategies_put",
+            ),
+            pytest.param(
+                "strategies",
+                "post",
+                id="strategies_post",
+            ),
+            pytest.param(
+                "strategies",
+                "delete",
+                id="strategies_delete",
             ),
         ],
     )
@@ -113,19 +129,17 @@ class TestModelService:
         assert res.json == Responses.JOB_NOT_FOUND
 
     @pytest.mark.parametrize(
-        "params,nr_jobs,expected_value",
+        "params,expected_value",
         [
             pytest.param(
                 {
                     "pipeline_id": 1
                 },
-                1,
                 Responses.SIGNAL_GENERATION_INPROGRESS("abcde"),
                 id="SIGNAL_GENERATION_INPROGRESS",
             ),
             pytest.param(
                 {},
-                0,
                 Responses.NO_SUCH_PIPELINE(None),
                 id="NO_SUCH_PIPELINE",
             ),
@@ -134,7 +148,6 @@ class TestModelService:
     def test_generate_signal(
         self,
         params,
-        nr_jobs,
         expected_value,
         client,
         mock_settings_env_vars,
@@ -147,4 +160,16 @@ class TestModelService:
 
         assert res.json == expected_value
 
-        assert Jobs.objects.filter(job_id="abcde").count() == nr_jobs
+    def test_get_strategies(
+        self,
+        client,
+        mock_settings_env_vars,
+        mocked_rq_enqueue_call,
+        mock_redis_connection,
+        mock_strategies,
+        create_exchange,
+        create_pipeline
+    ):
+        res = client.get("/strategies")
+
+        assert res.json == STRATEGIES
