@@ -1,4 +1,4 @@
-from data.service.external_requests import generate_signal, start_stop_symbol_trading, check_job_status
+from data.service.external_requests import generate_signal, start_stop_symbol_trading, check_job_status, get_strategies
 from data.service.helpers import MODEL_APP_ENDPOINTS, EXECUTION_APP_ENDPOINTS
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
@@ -104,4 +104,25 @@ class TestDataExternalRequests:
         assert res == response
         requests_get_spy.assert_called_with(
             MODEL_APP_ENDPOINTS["CHECK_JOB"](os.getenv("MODEL_APP_URL"), job_id),
+        )
+
+    def test_get_strategies(
+        self,
+        mock_settings_env_vars,
+        mock_requests_get,
+        mock_redis_connection,
+        requests_get_spy
+    ):
+        """
+        GIVEN some params
+        WHEN the method generate_signal is called
+        THEN the return value is equal to the expected response
+
+        """
+
+        res = get_strategies()
+
+        assert res == response
+        requests_get_spy.assert_called_with(
+            MODEL_APP_ENDPOINTS["GET_STRATEGIES"](os.getenv("MODEL_APP_URL")),
         )
