@@ -3,7 +3,6 @@ import logging
 import os
 import sys
 
-import django
 import redis
 from flask import Flask, jsonify, request
 from rq import Queue
@@ -12,15 +11,11 @@ from rq.job import Job
 
 from model.service.helpers.responses import Responses
 from model.service.helpers.signal_generator import get_signal
+from model.strategies.properties import STRATEGIES
 from model.worker import conn
 from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 from shared.utils.logger import configure_logger
 
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
-django.setup()
-
-from database.model.models import Jobs
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -82,8 +77,6 @@ def generate_signal():
 
     job_id = job.get_id()
 
-    Jobs.objects.create(job_id=job_id, exchange_id=pipeline.exchange, app=os.getenv("APP_NAME"))
-
     return jsonify(Responses.SIGNAL_GENERATION_INPROGRESS(job_id))
 
 
@@ -105,6 +98,11 @@ def check_job(job_id):
 
     elif job.is_failed:
         return jsonify(Responses.FAILED)
+
+
+@app.route('/strategies', methods=['GET'])
+def get_strategies():
+    return jsonify(STRATEGIES)
 
 
 if __name__ == "__main__":
