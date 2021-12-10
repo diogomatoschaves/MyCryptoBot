@@ -1,4 +1,4 @@
-
+import json
 
 ORDER_FORMAT_CONVERTER = dict(
     order_id="orderId",
@@ -18,12 +18,12 @@ ORDER_FORMAT_CONVERTER = dict(
 
 
 PIPELINE_FORMAT_CONVERTER = dict(
-    id="id",
-    strategy="strategy",
-    params="params",
-    interval="candleSize",
-    exchange_id="exchange",
-    symbol_id="symbol",
-    active="active",
-    paper_trading="paperTrading"
+    id={"name": "id", "value_converter": lambda value: value},
+    strategy={"name": "strategy", "value_converter": lambda value: value},
+    params={"name": "params", "value_converter": lambda value: json.loads(value)},
+    interval={"name": "candleSize", "value_converter": lambda value: value},
+    exchange_id={"name": "exchange", "value_converter": lambda value: value},
+    symbol_id={"name": "symbol", "value_converter": lambda value: value},
+    active={"name": "active", "value_converter": lambda value: value},
+    paper_trading={"name": "paperTrading", "value_converter": lambda value: value}
 )

@@ -1,6 +1,6 @@
-import {Divider} from "semantic-ui-react";
+import {Divider, Icon} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
-import { DropdownOptions, StartPipeline, StopPipeline, Pipeline} from "../types";
+import {DropdownOptions, StartPipeline, StopPipeline, Pipeline, MenuOption} from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
 import styled from "styled-components";
@@ -13,7 +13,8 @@ interface Props {
     exchangeOptions: DropdownOptions[];
     pipelines: Pipeline[];
     startPipeline: StartPipeline;
-    stopPipeline: StopPipeline
+    stopPipeline: StopPipeline;
+    menuOption: MenuOption
 }
 
 
@@ -34,7 +35,8 @@ function PipelinePanel(props: Props) {
         candleSizeOptions,
         exchangeOptions,
         startPipeline,
-        stopPipeline
+        stopPipeline,
+        menuOption
     } = props
 
     const filteredPipelines = pipelines.sort((a, b) => {
@@ -52,7 +54,9 @@ function PipelinePanel(props: Props) {
 
     return (
         <StyledSegment basic className="flex-column">
-            <Divider horizontal style={{marginBottom: '20px', marginTop: '0'}}>Pipelines</Divider>
+            <Divider horizontal style={{marginBottom: '20px', marginTop: '0'}}>
+                <span>{menuOption.emoji}</span> Trading Bots
+            </Divider>
             <ButtonWrapper className="flex-row">
                 <NewPipeline
                     symbolsOptions={symbolsOptions}
