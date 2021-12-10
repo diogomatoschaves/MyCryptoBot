@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import {
     ActivePipeline,
     ChangeMenu,
-    DropdownOptions,
+    DropdownOptions, MenuOption,
     Order, Pipeline,
     StartPipeline,
     StopPipeline
@@ -34,7 +34,7 @@ interface State {
     pipelines: Pipeline[];
     activePipelines: ActivePipeline[];
     message: string;
-    menuOption: string
+    menuOption: MenuOption
 }
 
 
@@ -49,7 +49,12 @@ class App extends Component<any, State> {
         pipelines: [],
         activePipelines: [],
         message: '',
-        menuOption: 'pipelines'
+        menuOption: {
+            icon: 'line graph',
+            emoji: '📈',
+            text: 'Balance',
+            code: "balance"
+        }
     }
 
     componentDidMount() {
@@ -162,10 +167,11 @@ class App extends Component<any, State> {
 
         return (
             <AppDiv className="flex-row">
-                <Menu changeMenu={this.changeMenu}/>
+                <Menu menuOption={menuOption} changeMenu={this.changeMenu}/>
                 <Wrapper>
-                    {menuOption === 'pipelines' ? (
+                    {menuOption.code === 'pipelines' ? (
                         <PipelinePanel
+                            menuOption={menuOption}
                             symbolsOptions={symbolsOptions}
                             strategiesOptions={strategiesOptions}
                             candleSizeOptions={candleSizeOptions}
@@ -175,7 +181,7 @@ class App extends Component<any, State> {
                             stopPipeline={this.stopPipeline}
                         />
                     ) : (
-                        <OrdersPanel orders={orders}/>
+                        <OrdersPanel menuOption={menuOption} orders={orders}/>
                     )}
 
                 </Wrapper>

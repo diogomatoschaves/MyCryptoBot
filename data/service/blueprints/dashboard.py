@@ -88,7 +88,8 @@ def get_pipelines(page):
         response["pipelines"] = list(page_obj)
 
     response["pipelines"] = [
-        {PIPELINE_FORMAT_CONVERTER[key]: value for key, value in pipeline.items() if key in PIPELINE_FORMAT_CONVERTER}
+        {PIPELINE_FORMAT_CONVERTER[key]["name"]: PIPELINE_FORMAT_CONVERTER[key]["value_converter"](value)
+         for key, value in pipeline.items() if key in PIPELINE_FORMAT_CONVERTER}
         for pipeline in response["pipelines"]
     ]
 
