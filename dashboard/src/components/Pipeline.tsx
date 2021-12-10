@@ -11,6 +11,10 @@ const PipelineDiv = styled.div`
     width: 100%;
 `
 
+const StyledColumn = styled(Grid.Column)`
+    display: flex !important;
+`
+
 interface Props {
     pipeline: Pipeline
     startPipeline: StartPipeline
@@ -41,55 +45,58 @@ function PipelineItem(props: Props) {
                     </span>
                 </Ribbon>
                 <Grid columns={2}>
-                    <Grid.Row style={styles.row}>
-                        <Grid.Column floated='left' style={styles.leftColumn}>
-                            Trading Pair
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={styles.rightColumn} >
-                            {pipeline.symbol}
-                        </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row style={styles.row}>
-                        <Grid.Column floated='left' style={styles.leftColumn}>
-                            Strategy
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={styles.rightColumn} >
-                            {pipeline.strategy}
-                        </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row style={styles.row}>
-                        <Grid.Column floated='left' style={styles.leftColumn}>
-                            Parameters
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={styles.rightColumn} >
-                            {JSON.stringify(JSON.parse(pipeline.params))}
-                        </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row style={styles.row}>
-                        <Grid.Column floated='left' style={styles.leftColumn}>
-                            Candle size
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={styles.rightColumn} >
-                            {pipeline.candleSize}
-                        </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row style={styles.row}>
-                        <Grid.Column floated='left' style={styles.leftColumn}>
-                            Exchange
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={styles.rightColumn} >
-                            {pipeline.exchange}
-                        </Grid.Column>
-                    </Grid.Row>
+                    <Grid.Column width={11}>
+                        <Grid columns={2}>
+                            <Grid.Row>
+                                <Grid.Column>
+                                    <Grid.Column style={styles.header}>
+                                        Trading Pair
+                                    </Grid.Column>
+                                    <Grid.Column style={styles.rightColumn} >
+                                        {pipeline.symbol}
+                                    </Grid.Column>
+                                </Grid.Column>
+                                <Grid.Column>
+                                    <Grid.Column floated='left' style={styles.header}>
+                                        Strategy
+                                    </Grid.Column>
+                                    <Grid.Column floated='right' style={styles.rightColumn} >
+                                        {pipeline.strategy}
+                                    </Grid.Column>
+                                </Grid.Column>
+                            </Grid.Row>
+                            <Grid.Row>
+                                <Grid.Column>
+                                    <Grid.Column floated='left' style={styles.header}>
+                                        Candle size
+                                    </Grid.Column>
+                                    <Grid.Column floated='right' style={styles.rightColumn} >
+                                        {pipeline.candleSize}
+                                    </Grid.Column>
+                                </Grid.Column>
+                                <Grid.Column>
+                                    <Grid.Column floated='left' style={styles.header}>
+                                        Exchange
+                                    </Grid.Column>
+                                    <Grid.Column floated='right' style={styles.rightColumn} >
+                                        {pipeline.exchange}
+                                    </Grid.Column>
+                                </Grid.Column>
+                            </Grid.Row>
+                        </Grid>
+                    </Grid.Column>
+                    <StyledColumn width={5} className="flex-row">
+                        <div style={styles.buttonDiv} className='flex-column'>
+                            <PipelineButton
+                                pipeline={pipeline}
+                                startPipeline={startPipeline}
+                                stopPipeline={stopPipeline}
+                            />
+                        </div>
+                    </StyledColumn>
                 </Grid>
             </Segment>
-            <div style={styles.buttonDiv} className='flex-column'>
-                <PipelineButton
-                    pipeline={pipeline}
-                    startPipeline={startPipeline}
-                    stopPipeline={stopPipeline}
-                />
-            </div>
+
         </PipelineDiv>
     );
 }
@@ -103,26 +110,17 @@ const styles = {
         padding: '30px 30px 20px',
         marginBottom: '40px'
     },
-    row: {
-        paddingTop: '5px',
-        paddingBottom: '5px',
-    },
-    leftColumn: {
+    header: {
         color: 'rgb(130, 130, 130)',
-        fontWeight: 'bold',
-        textAlign: 'left'
     },
     rightColumn: {
-        textAlign: 'right',
         fontWeight: '600',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis'
     },
-    button: {
-        width: '80%'
-    },
     buttonDiv: {
-        width: '20%'
+        width: '100%',
+        alignSelf: 'center'
     }
 }

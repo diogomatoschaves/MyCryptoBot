@@ -34,7 +34,8 @@ interface State {
     pipelines: Pipeline[];
     activePipelines: ActivePipeline[];
     message: string;
-    menuOption: MenuOption
+    menuOption: MenuOption,
+    strategies: any
 }
 
 
@@ -48,6 +49,7 @@ class App extends Component<any, State> {
         orders: [],
         pipelines: [],
         activePipelines: [],
+        strategies: {},
         message: '',
         menuOption: {
             icon: 'line graph',
@@ -162,7 +164,8 @@ class App extends Component<any, State> {
             exchangeOptions,
             orders,
             pipelines,
-            menuOption
+            menuOption,
+            strategies
         } = this.state
 
         return (
@@ -177,6 +180,7 @@ class App extends Component<any, State> {
                             candleSizeOptions={candleSizeOptions}
                             exchangeOptions={exchangeOptions}
                             pipelines={pipelines}
+                            strategies={strategies}
                             startPipeline={this.startPipeline}
                             stopPipeline={this.stopPipeline}
                         />
