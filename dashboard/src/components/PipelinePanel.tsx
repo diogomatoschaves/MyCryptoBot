@@ -14,7 +14,8 @@ interface Props {
     pipelines: Pipeline[];
     startPipeline: StartPipeline;
     stopPipeline: StopPipeline;
-    menuOption: MenuOption
+    menuOption: MenuOption;
+    strategies: any
 }
 
 
@@ -23,7 +24,7 @@ const ButtonWrapper = styled.div`
     height: 50px; 
     margin-bottom: 30px;
     width: 100%;
-    justify-content: flex-end;
+    justify-content: center;
 `
 
 function PipelinePanel(props: Props) {
@@ -32,6 +33,7 @@ function PipelinePanel(props: Props) {
         symbolsOptions,
         strategiesOptions,
         pipelines,
+        strategies,
         candleSizeOptions,
         exchangeOptions,
         startPipeline,
@@ -59,6 +61,7 @@ function PipelinePanel(props: Props) {
             </Divider>
             <ButtonWrapper className="flex-row">
                 <NewPipeline
+                    strategies={strategies}
                     symbolsOptions={symbolsOptions}
                     strategiesOptions={strategiesOptions}
                     candleSizeOptions={candleSizeOptions}
