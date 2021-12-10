@@ -15,3 +15,15 @@ ORDER_FORMAT_CONVERTER = dict(
     is_isolated="isIsolated",
     mock="mock",
 )
+
+
+PIPELINE_FORMAT_CONVERTER = dict(
+    id="id",
+    strategy="strategy",
+    params="params",
+    interval="candleSize",
+    exchange_id="exchange",
+    symbol_id="symbol",
+    active="active",
+    paper_trading="paperTrading"
+)

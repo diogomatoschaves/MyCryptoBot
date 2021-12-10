@@ -24,6 +24,17 @@ export type Order = {
     mock: boolean
 }
 
+export type Pipeline = {
+    id: number
+    strategy: string
+    params: string
+    candleSize: string
+    exchange: string
+    symbol: string
+    active: boolean
+    paperTrading: boolean
+}
+
 export type ActivePipeline = {
     symbol: string
     strategy: string
@@ -39,5 +50,6 @@ export type PipelineParams = {
     exchanges: string
 }
 
-export type StartPipeline = (pipelineParams: PipelineParams) => void
-export type StopPipeline = ({symbol, exchange}: {symbol: string, exchange: string}) => void
+export type StartPipeline = (pipelineParams: Pipeline) => void
+export type StopPipeline = (pipelineId: number) => void
+export type ChangeMenu = (option: string) => void
