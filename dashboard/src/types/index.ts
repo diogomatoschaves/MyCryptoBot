@@ -50,6 +50,14 @@ export type PipelineParams = {
     exchanges: string
 }
 
+
+export type MenuOption = {
+    icon: string,
+    emoji: string,
+    text: string,
+    code: string
+}
+
 export type StartPipeline = (pipelineParams: Pipeline) => void
 export type StopPipeline = (pipelineId: number) => void
-export type ChangeMenu = (option: string) => void
+export type ChangeMenu = (option: MenuOption) => void

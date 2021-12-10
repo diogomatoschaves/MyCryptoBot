@@ -1,9 +1,10 @@
 import styled from "styled-components";
-import {List} from "semantic-ui-react";
-import {ChangeMenu} from "../types";
+import {Menu} from "semantic-ui-react";
+import {ChangeMenu, MenuOption} from "../types";
 
 
 interface Props {
+    menuOption: MenuOption
     changeMenu: ChangeMenu
 }
 
@@ -20,28 +21,33 @@ const Column = styled.div`
 `
 
 const menuProperties = [
-    {icon: 'line graph', text: 'Balance', menuOption: "balance"},
-    {icon: 'play', text: 'Trading Bots', menuOption: "pipelines"},
-    {icon: 'list', text: 'Positions', menuOption: "positions"},
-    {icon: 'dollar', text: 'Transactions', menuOption: "orders"},
+    {icon: 'line graph', emoji: '📈', text: 'Balance', code: "balance"},
+    {icon: 'play', emoji: '🤖', text: 'Trading Bots', code: "pipelines"},
+    {icon: 'list', emoji: '📒', text: 'Positions', code: "positions"},
+    {icon: 'dollar', emoji: '💵', text: 'Transactions', code: "orders"},
 ]
 
 
 function AppMenu(props: Props) {
 
-    const { changeMenu } = props
+    const { changeMenu, menuOption } = props
 
     return (
         <Column>
-            <List style={{paddingTop: '40px'}}>
+            <Menu style={{paddingTop: '40px'}} secondary vertical>
                 {menuProperties.map(menuItem => (
-                    <List.Item as='a' style={styles} onClick={() => changeMenu(menuItem.menuOption)}>
-                        {/*@ts-ignore*/}
-                        <List.Icon name={menuItem.icon} />
-                        <List.Content>{menuItem.text}</List.Content>
-                    </List.Item>
+                    <Menu.Item
+                        style={styles}
+                        onClick={() => changeMenu(menuItem)}
+                        active={menuOption.code === menuItem.code}
+                    >
+                        <div className="flex-row" style={{justifyContent: 'space-between'}}>
+                            <span>{menuItem.text}</span>
+                            <span>{menuItem.emoji}</span>
+                        </div>
+                    </Menu.Item>
                 ))}
-            </List>
+            </Menu>
         </Column>
     );
 }
@@ -50,8 +56,8 @@ export default AppMenu;
 
 
 const styles = {
-    fontSize: '1.2em',
-    paddingBottom: '20px',
+    fontSize: '1.1em',
+    padding: '15px',
     color: 'rgb(57, 57, 57)',
     fontWeight: 'bold',
 }

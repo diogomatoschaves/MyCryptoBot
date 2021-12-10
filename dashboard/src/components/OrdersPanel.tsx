@@ -1,11 +1,12 @@
-import {Order} from "../types";
-import {Divider, Table} from "semantic-ui-react";
+import {MenuOption, Order} from "../types";
+import {Divider, Icon, Table} from "semantic-ui-react";
 import OrderCard from './Order'
 import styled from "styled-components";
 
 
 interface Props {
     orders: Order[]
+    menuOption: MenuOption
 }
 
 
@@ -21,11 +22,13 @@ const StyledDiv = styled.div`
 
 function OrdersPanel(props: Props) {
 
-    const { orders } = props
+    const { orders, menuOption } = props
 
     return (
         <StyledDiv className="flex-column">
-            <Divider horizontal style={{marginBottom: '30px', marginTop: 0}}>Transactions</Divider>
+            <Divider horizontal style={{marginBottom: '30px', marginTop: 0}}>
+                <span>{menuOption.emoji}</span> Transactions
+            </Divider>
             <Table basic='very'>
                 <Table.Header>
                     <Table.Row>
