@@ -1,6 +1,5 @@
-import StyledSegment from "../styledComponents/StyledSegment";
 import {Order} from "../types";
-import {Divider, Segment, Table} from "semantic-ui-react";
+import {Divider, Table} from "semantic-ui-react";
 import OrderCard from './Order'
 import styled from "styled-components";
 

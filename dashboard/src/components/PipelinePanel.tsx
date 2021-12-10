@@ -1,7 +1,6 @@
-import {Button, Dropdown, Grid, Divider, TextArea, Form, Modal, Header, Icon} from "semantic-ui-react";
+import {Divider} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
-import {ActivePipeline, DropdownOptions, StartPipeline, StopPipeline, Pipeline} from "../types";
-import {useState} from "react";
+import { DropdownOptions, StartPipeline, StopPipeline, Pipeline} from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
 import styled from "styled-components";
@@ -75,11 +74,3 @@ function PipelinePanel(props: Props) {
 }
 
 export default PipelinePanel;
-
-
-const styles = {
-
-}
-
-
-// <Divider horizontal style={{marginBottom: '30px', marginTop: 0}}>Bot Control Panel</Divider>

@@ -1,5 +1,4 @@
 import {Fragment} from 'react'
-import styled from "styled-components";
 import {Button, Icon} from "semantic-ui-react";
 import {Pipeline, StartPipeline, StopPipeline} from "../types";
 
@@ -9,14 +8,6 @@ interface Props {
   startPipeline: StartPipeline
   stopPipeline: StopPipeline
 }
-
-
-const Column = styled.div`
-    height: 100%;
-    width: 50%;
-    flex-direction: column;
-    justify-content: flex-start;
-`
 
 
 function PipelineButton(props: Props) {
