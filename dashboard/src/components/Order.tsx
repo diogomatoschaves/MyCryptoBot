@@ -1,7 +1,5 @@
 import {Order} from "../types";
-import {Grid, Segment, Table} from "semantic-ui-react";
-import {DARK_YELLOW, GREEN, RED, TEAL} from "../utils/constants";
-import Ribbon from "../styledComponents/Ribbon";
+import {Table} from "semantic-ui-react";
 
 
 interface Props {

@@ -1,14 +1,11 @@
 import '../App.css';
 import {Component} from 'react'
 import styled from 'styled-components'
-import {Header} from "semantic-ui-react";
-import ControlPanel from "./ControlPanel";
 import {
     ActivePipeline,
     ChangeMenu,
     DropdownOptions,
     Order, Pipeline,
-    PipelineParams,
     StartPipeline,
     StopPipeline
 } from "../types";

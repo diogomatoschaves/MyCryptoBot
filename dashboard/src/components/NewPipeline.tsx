@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Button, Dropdown, Grid, Header, Icon, Modal} from "semantic-ui-react";
+import {Button, Dropdown, Grid, Icon, Modal} from "semantic-ui-react";
 import {DropdownOptions, StartPipeline} from "../types";
 
 
@@ -34,7 +34,7 @@ const validatePipelineCreation = (
     exchangeOptions: DropdownOptions[],
     startPipeline: StartPipeline
   }) => {
-  if (!symbol || !strategy || !candleSize || exchanges.length == 0) {
+  if (!symbol || !strategy || !candleSize || exchanges.length === 0) {
     console.log("All parameters must be specified")
     return
   }
