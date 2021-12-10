@@ -1,21 +1,20 @@
 import {Order} from "../types";
-import {Grid, Label, Segment} from "semantic-ui-react";
-import styled, {css} from "styled-components";
+import {Grid, Segment, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED, TEAL} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 
 
 interface Props {
+    index: number
     order: Order
 }
 
-const separatorColor = 'rgb(180, 180, 180)'
-
 function OrdersPanel(props: Props) {
 
-    const { order } = props
+    const { order, index } = props
 
-    const sideColor = order.side === 'SELL' ? RED : GREEN
+    const negative = order.side === 'SELL'
+    const positive = order.side === 'BUY'
 
     const executedQty = Number(order.executedQty)
     const origQty = Number(order.origQty)
@@ -24,51 +23,19 @@ function OrdersPanel(props: Props) {
 
     const decimalPlaces = 3
 
+    // active={index % 2 == 0}
+
     return (
-        <Segment style={styles.segment}>
-            <Ribbon ribbon>
-                <span style={{color: DARK_YELLOW}}>{order.symbol}
-                    <span style={{color: separatorColor}}> | </span>
-                    <span style={{color: sideColor}}> {order.side}</span>
-                    <span style={{color: separatorColor}}> | </span>
-                    <span style={{color: TEAL}}> {order.status}</span>
-                </span>
-            </Ribbon>
-            <Grid columns={2}>
-                <Grid.Row style={styles.row}>
-                    <Grid.Column floated='left' style={styles.leftColumn}>
-                        Order No.
-                    </Grid.Column>
-                    <Grid.Column floated='right' style={styles.rightColumn} >
-                        {order.orderId}
-                    </Grid.Column>
-                </Grid.Row>
-                <Grid.Row style={styles.row}>
-                    <Grid.Column floated='left' style={styles.leftColumn}>
-                        Executed / Amount
-                    </Grid.Column>
-                    <Grid.Column floated='right' style={styles.rightColumn} >
-                        {executedQty.toFixed(decimalPlaces)} / {origQty.toFixed(decimalPlaces)}
-                    </Grid.Column>
-                </Grid.Row>
-                <Grid.Row style={styles.row}>
-                    <Grid.Column floated='left' style={styles.leftColumn}>
-                        Average Price
-                    </Grid.Column>
-                    <Grid.Column floated='right' style={styles.rightColumn} >
-                        {price.toFixed(decimalPlaces)}
-                    </Grid.Column>
-                </Grid.Row>
-                <Grid.Row style={styles.row}>
-                    <Grid.Column floated='left' style={styles.leftColumn}>
-                        Total
-                    </Grid.Column>
-                    <Grid.Column floated='right' style={styles.rightColumn} >
-                        {total.toFixed(decimalPlaces)} {order.quote}
-                    </Grid.Column>
-                </Grid.Row>
-            </Grid>
-        </Segment>
+        <Table.Row positive={positive} negative={negative} key={index} >
+            <Table.Cell style={styles.defaultCell}>{order.orderId}</Table.Cell>
+            <Table.Cell style={styles.defaultCell}>{order.transactTime}</Table.Cell>
+            <Table.Cell>{order.status}</Table.Cell>
+            <Table.Cell style={styles.defaultCell}>{order.symbol}</Table.Cell>
+            <Table.Cell>{order.side}</Table.Cell>
+            <Table.Cell style={styles.defaultCell}>{executedQty.toFixed(decimalPlaces)}</Table.Cell>
+            <Table.Cell style={styles.defaultCell}>{price.toFixed(decimalPlaces)}</Table.Cell>
+            <Table.Cell style={styles.defaultCell}>{total.toFixed(decimalPlaces)} {order.quote}</Table.Cell>
+        </Table.Row>
     );
 }
 
@@ -76,21 +43,8 @@ export default OrdersPanel;
 
 
 const styles = {
-    segment: {
-        width: '100%',
-        padding: '30px 30px 20px'
-    },
-    row: {
-        paddingTop: '5px',
-        paddingBottom: '5px',
-    },
-    leftColumn: {
-        color: 'rgb(130, 130, 130)',
-        fontWeight: 'bold',
-        textAlign: 'left'
-    },
-    rightColumn: {
-        textAlign: 'right',
-        fontWeight: '600',
+    defaultCell: {
+        color: 'rgb(70, 70, 70)',
+        fontWeight: '500',
     }
 }
