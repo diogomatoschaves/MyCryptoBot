@@ -1,6 +1,7 @@
-import React, {useState} from 'react';
-import {Button, Dropdown, Grid, Icon, Modal} from "semantic-ui-react";
+import React, {useEffect, useReducer, useState} from 'react';
+import {Button, Dropdown, Grid, Header, Icon, Input, Modal} from "semantic-ui-react";
 import {DropdownOptions, StartPipeline} from "../types";
+import {validateParams, validatePipelineCreation} from "../utils/helpers";
 
 
 interface Props {
@@ -9,47 +10,47 @@ interface Props {
   candleSizeOptions: DropdownOptions[];
   exchangeOptions: DropdownOptions[];
   startPipeline: StartPipeline;
+  strategies: any;
 }
 
 
-const validatePipelineCreation = (
-  {
-    symbol,
-    symbolsOptions,
-    strategy,
-    strategiesOptions,
-    candleSize,
-    candleSizeOptions,
-    exchanges,
-    exchangeOptions,
-    startPipeline
-  }: {
-    symbol: number | undefined,
-    symbolsOptions: DropdownOptions[],
-    strategy: number | undefined,
-    strategiesOptions: DropdownOptions[],
-    candleSize: number | undefined,
-    candleSizeOptions: DropdownOptions[],
-    exchanges: Array<number>,
-    exchangeOptions: DropdownOptions[],
-    startPipeline: StartPipeline
-  }) => {
-  if (!symbol || !strategy || !candleSize || exchanges.length === 0) {
-    console.log("All parameters must be specified")
-    return
+const UPDATE_STRATEGY = 'UPDATE_STRATEGY'
+const UPDATE_SECOND_MODAL_OPEN = 'UPDATE_SECOND_MODAL_OPEN'
+const CLOSE_MODAL = 'CLOSE_MODAL'
+const UPDATE_PARAMS = 'UPDATE_PARAMS'
+
+
+const reducer = (state: any, action: any) => {
+  switch (action.type) {
+    case UPDATE_STRATEGY:
+      return {
+        ...state,
+        secondModalOpen: action.value && state.strategy !== action.value,
+        strategy: action.value
+      }
+    case UPDATE_SECOND_MODAL_OPEN:
+      return {
+        ...state,
+        secondModalOpen: action.value,
+      }
+    case CLOSE_MODAL:
+      return {
+        ...state,
+        strategy: null,
+        secondModalOpen: false,
+        params: {}
+      }
+    case UPDATE_PARAMS:
+      return {
+        ...state,
+        params: {
+          ...state.params,
+          ...action.value
+        },
+      }
+    default:
+      throw new Error();
   }
-
-  startPipeline({
-    // @ts-ignore
-    symbol: symbolsOptions.find(option => symbol === option.value).text,
-    // @ts-ignore
-    strategy: strategiesOptions.find(option => strategy === option.value).text,
-    // @ts-ignore
-    candleSize: candleSizeOptions.find(option => candleSize === option.value).text,
-    // @ts-ignore
-    exchanges: exchangeOptions.find(option => exchanges[0] === option.value).text, // TODO: Generalize this for any number of exchanges
-  })
-
 }
 
 
@@ -62,19 +63,35 @@ const NewPipeline = (props: Props) => {
     candleSizeOptions,
     exchangeOptions,
     startPipeline,
+    strategies
   } = props
 
   const [open, setOpen] = useState(false)
 
   const [symbol, setSymbol] = useState()
-  const [strategy, setStrategy] = useState()
   const [candleSize, setCandleSize] = useState()
   const [exchanges, setExchange] = useState([])
 
+  const [{strategy, secondModalOpen, params}, dispatch] = useReducer(
+      reducer, {strategy: undefined, secondModalOpen: false, params: {}}
+  );
 
   return (
       <Modal
-          onClose={() => setOpen(false)}
+          onClose={() => {
+            // @ts-ignore
+            setExchange(undefined)
+            // @ts-ignore
+            setSymbol(undefined)
+            // @ts-ignore
+            dispatch({
+              type: UPDATE_STRATEGY,
+              value: undefined,
+            })
+            // @ts-ignore
+            setCandleSize(undefined)
+            setOpen(false)
+          }}
           onOpen={() => setOpen(true)}
           open={open}
           dimmer={'inverted'}
@@ -87,8 +104,8 @@ const NewPipeline = (props: Props) => {
             </Button>
           }
       >
-        <Modal.Header>Start a New Trading Bot</Modal.Header>
-        <Modal.Content scrolling>
+        <Modal.Header>New Trading Bot <span>🤖</span></Modal.Header>
+        <Modal.Content >
           <Grid columns={2}>
             <Grid.Row>
               <Grid.Column>
@@ -103,18 +120,6 @@ const NewPipeline = (props: Props) => {
               </Grid.Column>
               <Grid.Column>
                 <Dropdown
-                    placeholder='Strategy'
-                    value={strategy}
-                    onChange={(e: any, {value}: {value?: any}) => setStrategy(value)}
-                    search
-                    selection
-                    options={strategiesOptions}
-                />
-              </Grid.Column>
-            </Grid.Row>
-            <Grid.Row>
-              <Grid.Column>
-                <Dropdown
                     placeholder='Candle size'
                     value={candleSize}
                     onChange={(e: any, {value}: {value?: any}) => setCandleSize(value)}
@@ -123,6 +128,8 @@ const NewPipeline = (props: Props) => {
                     options={candleSizeOptions}
                 />
               </Grid.Column>
+            </Grid.Row>
+            <Grid.Row>
               <Grid.Column>
                 <Dropdown
                     placeholder='Exchange'
@@ -134,21 +141,119 @@ const NewPipeline = (props: Props) => {
                     options={exchangeOptions}
                 />
               </Grid.Column>
-            </Grid.Row>
-            <Grid.Row>
               <Grid.Column>
-                {/*<Form>*/}
-                {/*    <TextArea placeholder='Params'/>*/}
-                {/*</Form>*/}
-              </Grid.Column>
-              <Grid.Column style={{alignSelf: 'center'}}>
-
+                <Dropdown
+                    placeholder='Strategy'
+                    value={strategy}
+                    onChange={(e: any, {value}: {value?: any}) => dispatch({
+                      type: UPDATE_STRATEGY,
+                      value,
+                    })}
+                    search
+                    selection
+                    options={strategiesOptions}
+                />
               </Grid.Column>
             </Grid.Row>
+            {/*<Header as='h4'>Strategy Parameters</Header>*/}
+            {/*? <Grid.Row>Select a strategy first!</Grid.Row>*/}
+            <Modal
+              onClose={() => {
+                dispatch({type: CLOSE_MODAL})
+              }}
+              dimmer="inverted"
+              open={strategy && secondModalOpen}
+              size="small"
+            >
+              <Modal.Header>{strategy && strategiesOptions[strategy - 1].text}</Modal.Header>
+              <Modal.Content scrolling>
+                {strategy && (
+                  <Grid columns={2}>
+                    <Grid.Column>
+                      <Header as='h5'>Required:</Header>
+                      {/*@ts-ignore*/}
+                      {strategies[strategiesOptions[strategy - 1].text].params.map(param => (
+                        <Grid.Row style={{paddingBottom: '10px'}}>
+                          <Grid.Column>
+                            <Input
+                              onChange={(e, {value}) => {
+                                dispatch({
+                                  type: UPDATE_PARAMS,
+                                  value: {
+                                    [param]: value
+                                  }
+                                })
+                              }}
+                              placeholder={param}/>
+                          </Grid.Column>
+                        </Grid.Row>
+                      ))}
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Header as='h5'>Optional:</Header>
+                      {/*@ts-ignore*/}
+                      {strategies[strategiesOptions[strategy - 1].text].optional_params.map(param => (
+                        <Grid.Row style={{paddingBottom: '10px'}}>
+                          <Grid.Column>
+                            <Input
+                              onChange={(e, {value}) => {
+                                dispatch({
+                                  type: UPDATE_PARAMS,
+                                  value: {
+                                    [param]: value
+                                  }
+                                })
+                              }}
+                              placeholder={param}/>
+                          </Grid.Column>
+                        </Grid.Row>
+                      ))}
+                    </Grid.Column>
+                  </Grid>
+                )}
+              </Modal.Content>
+              <Modal.Actions>
+                <Button
+                    icon='check'
+                    content='Validate'
+                    onClick={() => {
+                      new Promise((resolve, reject) => {
+                        validateParams(
+                            resolve,
+                            reject,
+                            params,
+                            strategies[strategiesOptions[strategy - 1].text]
+
+                        )
+                      })
+                        .then(() => {
+                          dispatch({
+                            type: UPDATE_SECOND_MODAL_OPEN,
+                            value: false
+                          })
+                        })
+                        .catch(() => {})
+                    }}
+                />
+              </Modal.Actions>
+            </Modal>
           </Grid>
         </Modal.Content>
         <Modal.Actions>
-          <Button color='black' onClick={() => setOpen(false)}>
+          <Button color='black' onClick={() => {
+            // @ts-ignore
+            setExchange(undefined)
+            // @ts-ignore
+            setSymbol(undefined)
+            // @ts-ignore
+            dispatch({
+              type: UPDATE_STRATEGY,
+              value: undefined,
+            })
+            // @ts-ignore
+            setCandleSize(undefined)
+            setOpen(false)
+          }}>
             Cancel
           </Button>
           <Button
