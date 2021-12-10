@@ -1,4 +1,4 @@
-import {Divider, Grid} from "semantic-ui-react";
+import {Divider, Grid, Header} from "semantic-ui-react";
 import PipelinePanel from "./PipelinePanel";
 import OrdersPanel from "./OrdersPanel";
 import {ActivePipeline, DropdownOptions, Order, StartPipeline, StopPipeline} from "../types";
@@ -18,13 +18,10 @@ interface Props {
 
 
 const Wrapper = styled.div`
-    height: calc(100% - 50px);
-    width: 100%;
-`
-
-const Column = styled.div`
+    padding-top: 20px;
     height: 100%;
-    width: 50%;
+    width: 100%;
+    overflow-y: scroll;
 `
 
 
@@ -42,23 +39,16 @@ function ControlPanel(props: Props) {
     } = props
 
     return (
-        <Wrapper className="flex-row">
-            <Column style={{overflowY: 'scroll'}}>
-                <PipelinePanel
-                    symbolsOptions={symbolsOptions}
-                    strategiesOptions={strategiesOptions}
-                    candleSizeOptions={candleSizeOptions}
-                    exchangeOptions={exchangeOptions}
-                    activePipelines={activePipelines}
-                    startPipeline={startPipeline}
-                    stopPipeline={stopPipeline}
-                />
-            </Column>
-            <Column style={{overflowY: 'scroll'}}>
-                <OrdersPanel orders={orders}/>
-            </Column>
+        <Wrapper className="flex-column">
+            <OrdersPanel orders={orders}/>
         </Wrapper>
     );
 }
 
 export default ControlPanel;
+
+
+// <Header size='huge' style={{height: '50px'}}>Crypto Bot Dashboard</Header>
+// <Column style={{overflowY: 'scroll'}}>
+
+// </Column>

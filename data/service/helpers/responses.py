@@ -25,7 +25,8 @@ RESPONSES = namedtuple(
 Responses = RESPONSES(
     DATA_PIPELINE_START_OK=lambda pipeline_id: {"response": f"Data pipeline successfully started.",
                                                 "success": True, "pipeline_id": pipeline_id},
-    DATA_PIPELINE_ONGOING={"response": f"Data pipeline already ongoing.", "success": False},
+    DATA_PIPELINE_ONGOING=lambda pipeline_id: {"response": f"Data pipeline already ongoing.", "success": False,
+                                               "pipeline_id": pipeline_id},
     DATA_PIPELINE_STOPPED={"response": f"Data pipeline stopped.", "success": True},
     DATA_PIPELINE_INEXISTENT={"response": f"This data pipeline is not active.", "success": False},
     SYMBOL_REQUIRED={"response": "A symbol must be included in the request.", "success": False},

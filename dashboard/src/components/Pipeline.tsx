@@ -1,9 +1,10 @@
-import {ActivePipeline, StopPipeline} from "../types";
+import {ActivePipeline, Pipeline, StartPipeline, StopPipeline} from "../types";
 import {Button, Grid, Segment} from "semantic-ui-react";
-import {DARK_YELLOW} from "../utils/constants";
+import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
 import {stopBot} from "../apiCalls";
+import PipelineButton from "./PipelineButton";
 
 
 
@@ -11,28 +12,49 @@ const PipelineDiv = styled.div`
     width: 100%;
 `
 
-interface Props extends ActivePipeline {
+interface Props {
+    pipeline: Pipeline
+    startPipeline: StartPipeline
     stopPipeline: StopPipeline
 }
 
 
-function Pipeline(props: Props) {
+function PipelineItem(props: Props) {
 
-    const { symbol, strategy, params, candleSize, exchange, stopPipeline } = props
+    const {
+        pipeline,
+        startPipeline,
+        stopPipeline
+    } = props
+
+    const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
+    const liveStr = pipeline.paperTrading ? "Paper Trading" : "Live"
 
     return (
         <PipelineDiv className="flex-row">
             <Segment style={styles.segment}>
                 <Ribbon ribbon>
-                    <span style={{color: DARK_YELLOW}}>{symbol}</span>
+                    <span>
+                        <span style={{color: activeProps.color}}>{activeProps.status}</span>
+                        <span> | </span>
+                        <span>{liveStr}</span>
+                    </span>
                 </Ribbon>
                 <Grid columns={2}>
+                    <Grid.Row style={styles.row}>
+                        <Grid.Column floated='left' style={styles.leftColumn}>
+                            Trading Pair
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={styles.rightColumn} >
+                            {pipeline.symbol}
+                        </Grid.Column>
+                    </Grid.Row>
                     <Grid.Row style={styles.row}>
                         <Grid.Column floated='left' style={styles.leftColumn}>
                             Strategy
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.rightColumn} >
-                            {strategy}
+                            {pipeline.strategy}
                         </Grid.Column>
                     </Grid.Row>
                     <Grid.Row style={styles.row}>
@@ -40,7 +62,7 @@ function Pipeline(props: Props) {
                             Parameters
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.rightColumn} >
-                            {JSON.stringify(params)}
+                            {JSON.stringify(JSON.parse(pipeline.params))}
                         </Grid.Column>
                     </Grid.Row>
                     <Grid.Row style={styles.row}>
@@ -48,7 +70,7 @@ function Pipeline(props: Props) {
                             Candle size
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.rightColumn} >
-                            {candleSize}
+                            {pipeline.candleSize}
                         </Grid.Column>
                     </Grid.Row>
                     <Grid.Row style={styles.row}>
@@ -56,31 +78,30 @@ function Pipeline(props: Props) {
                             Exchange
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.rightColumn} >
-                            {exchange}
+                            {pipeline.exchange}
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>
             </Segment>
             <div style={styles.buttonDiv} className='flex-column'>
-                <Button
-                    onClick={() => stopPipeline({symbol, exchange})}
-                    style={styles.button}
-                    color={'red'}
-                >
-                    Stop Pipeline
-                </Button>
+                <PipelineButton
+                    pipeline={pipeline}
+                    startPipeline={startPipeline}
+                    stopPipeline={stopPipeline}
+                />
             </div>
         </PipelineDiv>
     );
 }
 
-export default Pipeline;
+export default PipelineItem;
 
 
 const styles = {
     segment: {
         width: '80%',
-        padding: '30px 30px 20px'
+        padding: '30px 30px 20px',
+        marginBottom: '40px'
     },
     row: {
         paddingTop: '5px',

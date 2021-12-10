@@ -278,7 +278,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        assert res.json == getattr(Responses, response)
+        assert res.json == getattr(Responses, response)(1)
 
     @pytest.mark.parametrize(
         "params,response",

@@ -103,7 +103,7 @@ def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params, pape
         pipeline = Pipeline.objects.get(**columns)
 
         if pipeline.active:
-            return pipeline, jsonify(Responses.DATA_PIPELINE_ONGOING)
+            return pipeline, jsonify(Responses.DATA_PIPELINE_ONGOING(pipeline.id))
         else:
             pipeline.active = True
 
@@ -113,3 +113,7 @@ def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params, pape
         pipeline = Pipeline.objects.create(**columns)
 
     return pipeline, None
+
+
+def convert_queryset_to_dict(queryset):
+    return {res["name"]: res for res in queryset}
