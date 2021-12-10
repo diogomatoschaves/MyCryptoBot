@@ -1,9 +1,8 @@
-import {ActivePipeline, Pipeline, StartPipeline, StopPipeline} from "../types";
-import {Button, Grid, Segment} from "semantic-ui-react";
-import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
+import {Pipeline, StartPipeline, StopPipeline} from "../types";
+import { Grid, Icon, Segment} from "semantic-ui-react";
+import {GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
-import {stopBot} from "../apiCalls";
 import PipelineButton from "./PipelineButton";
 
 
@@ -28,15 +27,16 @@ function PipelineItem(props: Props) {
     } = props
 
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
-    const liveStr = pipeline.paperTrading ? "Paper Trading" : "Live"
+    const liveStr = pipeline.active ? pipeline.paperTrading ? "Test Mode" : "Live Mode" : ""
 
     return (
         <PipelineDiv className="flex-row">
-            <Segment style={styles.segment}>
-                <Ribbon ribbon>
-                    <span>
-                        <span style={{color: activeProps.color}}>{activeProps.status}</span>
-                        <span> | </span>
+            <Segment style={styles.segment} secondary raised>
+                <Ribbon ribbon color={'grey'}>
+                    <span >
+                        <span style={{color: activeProps.color, fontSize: '0.7em'}}><Icon name={'circle'}/></span>
+                        <span >{activeProps.status}</span>
+                        {liveStr !== "" && <span> | </span>}
                         <span>{liveStr}</span>
                     </span>
                 </Ribbon>
