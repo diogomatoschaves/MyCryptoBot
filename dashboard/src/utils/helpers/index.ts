@@ -1,4 +1,5 @@
-import {DropdownOptions, StartPipeline} from "../../types";
+import {DropdownOptions, Order, RawOrder, StartPipeline} from "../../types";
+import PipelinePanel from "../../components/PipelinePanel";
 
 export const validatePipelineCreation = (
     {
@@ -50,4 +51,17 @@ export const validateParams = (resolve: any, reject: any, params: any, strategy:
     }
   })
   return resolve()
+}
+
+
+export const organizeOrders = (orders: RawOrder[]): Order[] => {
+
+  return orders.map((order) => {
+    return {
+      ...order,
+      transactTime: new Date(Date.parse(order.transactTime))
+    }
+  }).sort((a, b) => {
+    return b.transactTime.getTime() - a.transactTime.getTime()
+  })
 }

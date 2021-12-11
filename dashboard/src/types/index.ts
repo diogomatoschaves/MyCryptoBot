@@ -12,7 +12,25 @@ export type Order = {
     symbol: string,
     base: string,
     quote: string,
-    transactTime: number,
+    transactTime: Date,
+    price: number,
+    origQty: number,
+    executedQty: number,
+    cummulativeQuoteQty: number,
+    status: string
+    type: string
+    side: string
+    isIsolated: boolean
+    mock: boolean
+}
+
+export type RawOrder = {
+    orderId: number,
+    clientOrderId: number,
+    symbol: string,
+    base: string,
+    quote: string,
+    transactTime: string,
     price: number,
     origQty: number,
     executedQty: number,

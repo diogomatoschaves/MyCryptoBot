@@ -14,6 +14,7 @@ import Menu from "./Menu";
 import Wrapper from "../styledComponents/Wrapper";
 import PipelinePanel from "./PipelinePanel";
 import OrdersPanel from "./OrdersPanel";
+import {organizeOrders} from "../utils/helpers";
 
 
 const AppDiv = styled.div`
@@ -85,7 +86,7 @@ class App extends Component<any, State> {
                 this.setState(state => {
                     return {
                         ...state,
-                        ...orders
+                        orders: organizeOrders(orders.orders)
                     }
                 })
             })
@@ -106,7 +107,7 @@ class App extends Component<any, State> {
                     this.setState(state => {
                         return {
                             ...state,
-                            ...orders
+                            orders: organizeOrders(orders.orders)
                         }
                     })
                 })
