@@ -121,7 +121,7 @@ class App extends Component<any, State> {
                 this.setState(state => ({
                     message: message.response,
                     pipelines: message.success ? [...state.pipelines, {
-                        id: message.pipeline_id,
+                        id: message.pipelineId,
                         symbol: pipelineParams.symbol,
                         strategy: pipelineParams.strategy,
                         exchange: pipelineParams.exchanges,

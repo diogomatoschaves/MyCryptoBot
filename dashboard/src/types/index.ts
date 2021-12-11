@@ -22,6 +22,7 @@ export type Order = {
     side: string
     isIsolated: boolean
     mock: boolean
+    pipelineId: number
 }
 
 export type RawOrder = {
@@ -40,6 +41,7 @@ export type RawOrder = {
     side: string
     isIsolated: boolean
     mock: boolean
+    pipelineId: number
 }
 
 export type Pipeline = {
