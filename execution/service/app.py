@@ -49,7 +49,7 @@ def start_symbol_trading():
 
         bt = get_binance_trader_instance(pipeline.paper_trading)
 
-        success = bt.start_symbol_trading(pipeline.symbol, header=header)
+        success = bt.start_symbol_trading(pipeline.symbol, header=header, pipeline_id=pipeline.id)
 
         if success:
             return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
@@ -69,7 +69,7 @@ def stop_symbol_trading():
 
         bt = get_binance_trader_instance(pipeline.paper_trading)
 
-        success = bt.stop_symbol_trading(pipeline.symbol, header=header)
+        success = bt.stop_symbol_trading(pipeline.symbol, header=header, pipeline_id=pipeline.id)
 
         if success:
             return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
@@ -103,7 +103,7 @@ def execute_order():
 
         bt = get_binance_trader_instance(pipeline.paper_trading)
 
-        bt.trade(pipeline.symbol, signal, amount=amount, header=header)
+        bt.trade(pipeline.symbol, signal, amount=amount, header=header, pipeline_id=pipeline.id)
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))
 

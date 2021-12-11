@@ -43,7 +43,7 @@ class BinanceTrader(BinanceHandler, Trader):
         self.filled_orders = []
         self.conn_key = None
 
-    def start_symbol_trading(self, symbol, header=''):
+    def start_symbol_trading(self, symbol, header='', **kwargs):
 
         if symbol in self.symbols:
             return True
@@ -65,7 +65,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
         self._get_symbol_net_equity(symbol, header)
 
-        self._create_initial_loan(symbol, header)
+        self._create_initial_loan(symbol, header, **kwargs)
 
         self._get_assets_info(symbol, header)
         self._update_account_status(symbol, header=header)
@@ -77,14 +77,14 @@ class BinanceTrader(BinanceHandler, Trader):
 
         return True
 
-    def stop_symbol_trading(self, symbol, header=''):
+    def stop_symbol_trading(self, symbol, header='', **kwargs):
 
         if symbol not in self.symbols:
             return False
 
         logging.info(header + f"Closing positions and repaying loans.")
 
-        position_closed = self.close_pos(symbol, date=datetime.utcnow(), header=header)
+        position_closed = self.close_pos(symbol, date=datetime.utcnow(), header=header, **kwargs)
 
         self.repay_loans(symbol)
 
@@ -114,15 +114,15 @@ class BinanceTrader(BinanceHandler, Trader):
             **kwargs
         )
 
-    def close_pos(self, symbol, date=None, row=None, header=''):
+    def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 
         if self.units == 0:
             return False
 
         if self.units < 0:
-            self.buy_instrument(symbol, date, row, units=-self.units, header=header)
+            self.buy_instrument(symbol, date, row, units=-self.units, header=header, **kwargs)
         else:
-            self.sell_instrument(symbol, date, row, units=self.units, header=header)
+            self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)
 
         try:
             perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
@@ -152,8 +152,11 @@ class BinanceTrader(BinanceHandler, Trader):
         side_effect='MARGIN_BUY',
         units=None,
         amount=None,
-        header=''
+        header='',
+        **kwargs
     ):
+
+        pipeline_id = kwargs["pipeline_id"] if "pipeline_id" in kwargs else None
 
         kwargs = self._get_order_kwargs(units, amount)
 
@@ -170,9 +173,11 @@ class BinanceTrader(BinanceHandler, Trader):
             **kwargs
         )
 
+        print(order)
+
         order["price"] = self._get_average_order_price(order)
 
-        self._process_order(order)
+        self._process_order(order, pipeline_id)
 
         # factor = -1 if order_side == self.SIDE_SELL and amount else 1
         factor = 1 if order_side == self.SIDE_SELL else -1
@@ -187,7 +192,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
         self.report_trade(order, symbol, units, going, header)
 
-    def _format_order(self, order):
+    def _format_order(self, order, pipeline_id):
         return dict(
             order_id=order["orderId"],
             client_order_id=order["clientOrderId"],
@@ -202,15 +207,16 @@ class BinanceTrader(BinanceHandler, Trader):
             side=order["side"],
             is_isolated=order["isIsolated"],
             mock=self.paper_trading,
+            pipeline_id=pipeline_id
         )
 
-    def _process_order(self, order):
+    def _process_order(self, order, pipeline_id):
 
         self.filled_orders.append(order)
 
         logging.debug(order)
 
-        formatted_order = self._format_order(order)
+        formatted_order = self._format_order(order, pipeline_id)
 
         Orders.objects.create(**formatted_order)
 
@@ -274,7 +280,7 @@ class BinanceTrader(BinanceHandler, Trader):
         self.max_borrow_amount[symbol] = max_borrow_amount
 
     @retry_failed_connection(num_times=3)
-    def _create_initial_loan(self, symbol, header=''):
+    def _create_initial_loan(self, symbol, header='', **kwargs):
 
         logging.debug(header + f"Creating intial loan.")
 
@@ -284,7 +290,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
         # TODO: Suppress message
         try:
-            self.sell_instrument(symbol, units=float(self.assets_info[symbol]["baseAsset"]["free"]))
+            self.sell_instrument(symbol, units=float(self.assets_info[symbol]["baseAsset"]["free"]), **kwargs)
         except BinanceAPIException:
             pass
 
