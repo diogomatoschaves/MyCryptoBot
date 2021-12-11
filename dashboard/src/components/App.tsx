@@ -15,6 +15,7 @@ import Wrapper from "../styledComponents/Wrapper";
 import PipelinePanel from "./PipelinePanel";
 import OrdersPanel from "./OrdersPanel";
 import {organizeOrders} from "../utils/helpers";
+import PositionsPanel from "./PositionsPanel";
 
 
 const AppDiv = styled.div`
@@ -186,8 +187,10 @@ class App extends Component<any, State> {
                             startPipeline={this.startPipeline}
                             stopPipeline={this.stopPipeline}
                         />
-                    ) : (
+                    ) : menuOption.code === 'transactions' ? (
                         <OrdersPanel menuOption={menuOption} orders={orders}/>
+                    ) : menuOption.code === 'positions' && (
+                        <PositionsPanel menuOption={menuOption}/>
                     )}
 
                 </Wrapper>
