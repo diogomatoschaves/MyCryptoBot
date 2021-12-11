@@ -57,7 +57,7 @@ function PipelinePanel(props: Props) {
     return (
         <StyledSegment basic className="flex-column">
             <Divider horizontal style={{marginBottom: '20px', marginTop: '0'}}>
-                <span>{menuOption.emoji}</span> Trading Bots
+                <span>{menuOption.emoji}</span> {menuOption.text}
             </Divider>
             <ButtonWrapper className="flex-row">
                 <NewPipeline
