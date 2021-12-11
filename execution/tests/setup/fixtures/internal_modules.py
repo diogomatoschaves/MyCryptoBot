@@ -7,13 +7,13 @@ class MockBinanceTrader:
     def __init__(self, success=True):
         self._success = success
 
-    def start_symbol_trading(self, symbol, header=''):
+    def start_symbol_trading(self, symbol, header='', **kwargs):
         return self._success
 
-    def stop_symbol_trading(self, symbol, header=''):
+    def stop_symbol_trading(self, symbol, header='', **kwargs):
         return self._success
 
-    def trade(self, symbol, signal, amount, header=''):
+    def trade(self, symbol, signal, amount, header='', **kwargs):
         pass
 
 
