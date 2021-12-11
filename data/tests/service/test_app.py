@@ -324,7 +324,7 @@ class TestDataService:
         print(Pipeline.objects.all().count())
 
         assert res.json["response"] == getattr(Responses, response)(1)["response"]
-        assert type(res.json["pipeline_id"]) == int
+        assert type(res.json["pipelineId"]) == int
         assert len(binance_handler_instances_spy_start_bot) == 1
 
         pipeline = Pipeline.objects.last()
@@ -379,7 +379,7 @@ class TestDataService:
         [
             pytest.param(
                 {
-                    "pipeline_id": 1
+                    "pipelineId": 1
                 },
                 "DATA_PIPELINE_STOPPED",
                 id="DATA_PIPELINE_STOPPED",
@@ -416,7 +416,7 @@ class TestDataService:
 
         assert res.json == getattr(Responses, response)
 
-        pipeline = Pipeline.objects.get(id=params["pipeline_id"])
+        pipeline = Pipeline.objects.get(id=params["pipelineId"])
         assert pipeline.active is False
 
         binance_handler_stop_data_ingestion_spy.assert_called()
@@ -426,7 +426,7 @@ class TestDataService:
         [
             pytest.param(
                 {
-                    "pipeline_id": 1
+                    "pipelineId": 1
                 },
                 "DATA_PIPELINE_INEXISTENT",
                 id="DATA_PIPELINE_INEXISTENT",
