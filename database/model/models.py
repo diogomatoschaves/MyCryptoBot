@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 
 try:
     from django.db import models
@@ -148,3 +149,15 @@ class Pipeline(models.Model):
 
     class Meta:
         unique_together = ("symbol", "interval", "strategy", "params", "exchange", "paper_trading")
+
+
+class Position(models.Model):
+
+    symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
+    exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
+    paper_trading = models.BooleanField(default=False, blank=True, null=True)
+    buying_price = models.FloatField()
+    amount = models.FloatField()
+    open = models.BooleanField(default=True, blank=True)
+    open_time = models.DateTimeField(default=datetime.now())
+    close_time = models.DateTimeField(null=True, blank=True)
