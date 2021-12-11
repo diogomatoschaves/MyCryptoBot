@@ -27,7 +27,7 @@ function OrdersPanel(props: Props) {
     return (
         <StyledDiv className="flex-column">
             <Divider horizontal style={{marginBottom: '30px', marginTop: 0}}>
-                <span>{menuOption.emoji}</span> Transactions
+                <span>{menuOption.emoji}</span> {menuOption.text}
             </Divider>
             <Table basic='very'>
                 <Table.Header>

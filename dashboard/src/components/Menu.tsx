@@ -15,7 +15,6 @@ const Column = styled.div`
     flex-direction: column;
     justify-content: flex-start;
     padding: 20px;
-    //background-color: rgb(43, 105, 122);
     background-color: rgb(215, 215, 215);
     box-shadow: 0px 0px 5px 3px rgba(0, 0, 0, 0.2);
 `
@@ -24,7 +23,7 @@ const menuProperties = [
     {icon: 'line graph', emoji: '📈', text: 'Balance', code: "balance"},
     {icon: 'play', emoji: '🤖', text: 'Trading Bots', code: "pipelines"},
     {icon: 'list', emoji: '📒', text: 'Positions', code: "positions"},
-    {icon: 'dollar', emoji: '💵', text: 'Transactions', code: "orders"},
+    {icon: 'dollar', emoji: '💵', text: 'Transactions', code: "transactions"},
 ]
 
 
