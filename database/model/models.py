@@ -135,6 +135,7 @@ class Orders(models.Model):
     is_isolated = models.BooleanField(default=False)
     exchange = models.ForeignKey(Exchange, default='binance', on_delete=models.SET_DEFAULT)
     mock = models.BooleanField(null=True, default=False)
+    pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
 
 
 class Pipeline(models.Model):
@@ -155,9 +156,10 @@ class Position(models.Model):
 
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
+    pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
     buying_price = models.FloatField()
     amount = models.FloatField()
     open = models.BooleanField(default=True, blank=True)
-    open_time = models.DateTimeField(default=datetime.now())
+    open_time = models.DateTimeField(auto_now_add=True)
     close_time = models.DateTimeField(null=True, blank=True)

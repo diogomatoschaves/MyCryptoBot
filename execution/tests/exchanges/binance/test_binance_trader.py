@@ -1,5 +1,6 @@
 import pytest
 
+from database.model.models import Orders
 from execution.exchanges.binance import BinanceTrader
 from execution.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
@@ -173,6 +174,7 @@ class TestBinanceTrader:
         create_exchange,
         create_margin_order,
         create_margin_order_spy,
+        create_pipeline
     ):
         binance_trader = BinanceTrader()
         binance_trader.symbols = {
@@ -181,10 +183,16 @@ class TestBinanceTrader:
             }
         }
 
+        pipeline_id = 1
+
         binance_trader._set_position(self.symbol, initial_position)
 
-        binance_trader.trade(self.symbol, signal, amount="all")
+        binance_trader.trade(self.symbol, signal, amount="all", pipeline_id=pipeline_id)
 
         assert binance_trader._get_position(self.symbol) == signal
 
         assert create_margin_order_spy.call_count == abs(initial_position - signal)
+
+        if initial_position != signal:
+            order = Orders.objects.last()
+            assert order.pipeline_id == pipeline_id

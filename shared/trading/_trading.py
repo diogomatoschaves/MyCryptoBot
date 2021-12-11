@@ -17,55 +17,57 @@ class Trader:
     def _get_position(self, symbol):
         raise NotImplementedError
 
-    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header=''):
+    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
         raise NotImplementedError
 
-    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header=''):
+    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
         raise NotImplementedError
 
-    def close_pos(self, symbol, date=None, row=None, header=''):
+    def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
         raise NotImplementedError
 
-    def go_long(self, symbol, position, date, row, units=None, amount=None, header=''):
+    def go_long(self, symbol, position, date, row, units=None, amount=None, header='', **kwargs):
         if position == -1:
-            self.buy_instrument(symbol, date, row, units=-self.units, header=header)  # if short position, go neutral first
+            self.buy_instrument(symbol, date, row, units=-self.units, header=header, **kwargs)  # if short position, go neutral first
 
         if units:
-            self.buy_instrument(symbol, date, row, units=units, header=header)
+            self.buy_instrument(symbol, date, row, units=units, header=header, **kwargs)
         elif amount:
             if amount == "all":
                 amount = self.current_balance
-            self.buy_instrument(symbol, date, row, amount=amount, header=header)  # go long
+            self.buy_instrument(symbol, date, row, amount=amount, header=header, **kwargs)  # go long
 
     # helper method
-    def go_short(self, symbol, position, date, row, units=None, amount=None, header=''):
+    def go_short(self, symbol, position, date, row, units=None, amount=None, header='', **kwargs):
         if position == 1:
-            self.sell_instrument(symbol, date, row, units=self.units, header=header)  # if long position, go neutral first
+            self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)  # if long position, go neutral first
 
         if units:
-            self.sell_instrument(symbol, date, row, units=units, header=header)
+            self.sell_instrument(symbol, date, row, units=units, header=header, **kwargs)
         elif amount:
             if amount == "all":
                 amount = self.current_balance
-            self.sell_instrument(symbol, date, row, amount=amount, header=header)  # go short
+            self.sell_instrument(symbol, date, row, amount=amount, header=header, **kwargs)  # go short
 
-    def trade(self, symbol, signal, date=None, row=None, amount=None, units=None, header=''):
+    def trade(self, symbol, signal, date=None, row=None, amount=None, units=None, header='', **kwargs):
 
         position = self._get_position(symbol)
 
         if signal == 1:  # signal to go long
             if position in [0, -1]:
-                self.go_long(symbol, position, date, row, amount=amount, units=units, header=header)  # go long with full amount
+                # go long with full amount
+                self.go_long(symbol, position, date, row, amount=amount, units=units, header=header, **kwargs)
                 self._set_position(symbol, 1)  # long position
         elif signal == -1:  # signal to go short
             if position in [0, 1]:
-                self.go_short(symbol, position, date, row, amount=amount, units=units, header=header)  # go short with full amount
+                # go short with full amount
+                self.go_short(symbol, position, date, row, amount=amount, units=units, header=header, **kwargs)
                 self._set_position(symbol, -1)  # short position
         elif signal == 0:
             if position == -1:
-                self.buy_instrument(symbol, date, row, units=-self.units, header=header)
+                self.buy_instrument(symbol, date, row, units=-self.units, header=header, **kwargs)
             elif position == 1:
-                self.sell_instrument(symbol, date, row, units=self.units, header=header)
+                self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)
             self._set_position(symbol, 0)
 
         if position == signal:

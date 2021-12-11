@@ -14,6 +14,7 @@ ORDER_FORMAT_CONVERTER = dict(
     side="side",
     is_isolated="isIsolated",
     mock="mock",
+    pipeline_id="pipelineId",
 )
 
 
