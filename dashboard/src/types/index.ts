@@ -27,7 +27,7 @@ export type Order = {
 export type Pipeline = {
     id: number
     strategy: string
-    params: string
+    params: Object
     candleSize: string
     exchange: string
     symbol: string
@@ -35,19 +35,13 @@ export type Pipeline = {
     paperTrading: boolean
 }
 
-export type ActivePipeline = {
-    symbol: string
-    strategy: string
-    params?: any
-    candleSize: string
-    exchange: string
-}
-
 export type PipelineParams = {
     symbol: string
     strategy: string
     candleSize: string
     exchanges: string
+    params: Object,
+    paperTrading: boolean
 }
 
 
@@ -58,6 +52,6 @@ export type MenuOption = {
     code: string
 }
 
-export type StartPipeline = (pipelineParams: Pipeline) => void
+export type StartPipeline = (pipelineParams: PipelineParams) => void
 export type StopPipeline = (pipelineId: number) => void
 export type ChangeMenu = (option: MenuOption) => void

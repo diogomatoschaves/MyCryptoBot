@@ -10,7 +10,9 @@ export const validatePipelineCreation = (
       candleSizeOptions,
       exchanges,
       exchangeOptions,
-      startPipeline
+      startPipeline,
+      params,
+      liveTrading
     }: {
       symbol: number | undefined,
       symbolsOptions: DropdownOptions[],
@@ -20,7 +22,9 @@ export const validatePipelineCreation = (
       candleSizeOptions: DropdownOptions[],
       exchanges: Array<number>,
       exchangeOptions: DropdownOptions[],
-      startPipeline: StartPipeline
+      startPipeline: StartPipeline,
+      params: Object,
+      liveTrading: boolean
     }) => {
   if (!symbol || !strategy || !candleSize || exchanges.length === 0) {
     console.log("All parameters must be specified")
@@ -28,16 +32,14 @@ export const validatePipelineCreation = (
   }
 
   startPipeline({
-    // @ts-ignore
-    symbol: symbolsOptions.find(option => symbol === option.value).text,
-    // @ts-ignore
-    strategy: strategiesOptions.find(option => strategy === option.value).text,
-    // @ts-ignore
-    candleSize: candleSizeOptions.find(option => candleSize === option.value).text,
-    // @ts-ignore
-    exchanges: exchangeOptions.find(option => exchanges[0] === option.value).text, // TODO: Generalize this for any number of exchanges
+    symbol: symbol ? symbolsOptions[symbol - 1].text : "",
+    strategy: strategy ? strategiesOptions[strategy - 1].text : "",
+    candleSize: candleSize ? candleSizeOptions[candleSize - 1].text : "",
+    // TODO: Generalize this for any number of exchanges
+    exchanges: exchanges.length > 0 ? exchangeOptions[exchanges[0] - 1].text : "",
+    params,
+    paperTrading: !liveTrading
   })
-
 }
 
 

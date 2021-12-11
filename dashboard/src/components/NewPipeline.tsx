@@ -1,5 +1,5 @@
-import React, {useEffect, useReducer, useState} from 'react';
-import {Button, Dropdown, Grid, Header, Icon, Input, Modal} from "semantic-ui-react";
+import React, {useReducer, useState} from 'react';
+import {Button, Checkbox, Dropdown, Grid, Header, Icon, Input, Modal} from "semantic-ui-react";
 import {DropdownOptions, StartPipeline} from "../types";
 import {validateParams, validatePipelineCreation} from "../utils/helpers";
 
@@ -18,6 +18,7 @@ const UPDATE_STRATEGY = 'UPDATE_STRATEGY'
 const UPDATE_SECOND_MODAL_OPEN = 'UPDATE_SECOND_MODAL_OPEN'
 const CLOSE_MODAL = 'CLOSE_MODAL'
 const UPDATE_PARAMS = 'UPDATE_PARAMS'
+const UPDATE_CHECKBOX = 'UPDATE_CHECKBOX'
 
 
 const reducer = (state: any, action: any) => {
@@ -38,7 +39,8 @@ const reducer = (state: any, action: any) => {
         ...state,
         strategy: null,
         secondModalOpen: false,
-        params: {}
+        params: {},
+        liveTrading: false
       }
     case UPDATE_PARAMS:
       return {
@@ -47,6 +49,11 @@ const reducer = (state: any, action: any) => {
           ...state.params,
           ...action.value
         },
+      }
+    case UPDATE_CHECKBOX:
+      return {
+        ...state,
+        liveTrading: !state.liveTrading
       }
     default:
       throw new Error();
@@ -72,8 +79,13 @@ const NewPipeline = (props: Props) => {
   const [candleSize, setCandleSize] = useState()
   const [exchanges, setExchange] = useState([])
 
-  const [{strategy, secondModalOpen, params}, dispatch] = useReducer(
-      reducer, {strategy: undefined, secondModalOpen: false, params: {}}
+  const [{strategy, secondModalOpen, params, liveTrading}, dispatch] = useReducer(
+      reducer, {
+        strategy: undefined,
+        secondModalOpen: false,
+        params: {},
+        liveTrading: false
+      }
   );
 
   return (
@@ -83,11 +95,7 @@ const NewPipeline = (props: Props) => {
             setExchange(undefined)
             // @ts-ignore
             setSymbol(undefined)
-            // @ts-ignore
-            dispatch({
-              type: UPDATE_STRATEGY,
-              value: undefined,
-            })
+            dispatch({type: CLOSE_MODAL})
             // @ts-ignore
             setCandleSize(undefined)
             setOpen(false)
@@ -95,6 +103,7 @@ const NewPipeline = (props: Props) => {
           onOpen={() => setOpen(true)}
           open={open}
           dimmer={'inverted'}
+          size="small"
           trigger={
             <Button>
               <span style={{marginRight: '10px'}}>
@@ -155,8 +164,15 @@ const NewPipeline = (props: Props) => {
                 />
               </Grid.Column>
             </Grid.Row>
-            {/*<Header as='h4'>Strategy Parameters</Header>*/}
-            {/*? <Grid.Row>Select a strategy first!</Grid.Row>*/}
+            <Grid.Row>
+              <Grid.Column>
+                <Checkbox
+                  label={'📡 Live trading'}
+                  onChange={() => dispatch({type: UPDATE_CHECKBOX})}
+                  checked={liveTrading}
+                />
+              </Grid.Column>
+            </Grid.Row>
             <Modal
               onClose={() => {
                 dispatch({type: CLOSE_MODAL})
@@ -171,9 +187,8 @@ const NewPipeline = (props: Props) => {
                   <Grid columns={2}>
                     <Grid.Column>
                       <Header as='h5'>Required:</Header>
-                      {/*@ts-ignore*/}
-                      {strategies[strategiesOptions[strategy - 1].text].params.map(param => (
-                        <Grid.Row style={{paddingBottom: '10px'}}>
+                      {strategy &&  strategies[strategiesOptions[strategy - 1].text].params.map((param: string) => (
+                        <Grid.Row key={param} style={{paddingBottom: '10px'}}>
                           <Grid.Column>
                             <Input
                               onChange={(e, {value}) => {
@@ -193,7 +208,7 @@ const NewPipeline = (props: Props) => {
                       <Header as='h5'>Optional:</Header>
                       {/*@ts-ignore*/}
                       {strategies[strategiesOptions[strategy - 1].text].optional_params.map(param => (
-                        <Grid.Row style={{paddingBottom: '10px'}}>
+                        <Grid.Row key={param} style={{paddingBottom: '10px'}}>
                           <Grid.Column>
                             <Input
                               onChange={(e, {value}) => {
@@ -223,7 +238,6 @@ const NewPipeline = (props: Props) => {
                             reject,
                             params,
                             strategies[strategiesOptions[strategy - 1].text]
-
                         )
                       })
                         .then(() => {
@@ -271,7 +285,9 @@ const NewPipeline = (props: Props) => {
                   strategiesOptions,
                   candleSizeOptions,
                   exchangeOptions,
-                  startPipeline
+                  startPipeline,
+                  params,
+                  liveTrading
                 })
               }}
               positive
