@@ -2,10 +2,9 @@ import '../App.css';
 import {Component} from 'react'
 import styled from 'styled-components'
 import {
-    ActivePipeline,
     ChangeMenu,
     DropdownOptions, MenuOption,
-    Order, Pipeline,
+    Order, Pipeline, PipelineParams,
     StartPipeline,
     StopPipeline
 } from "../types";
@@ -32,7 +31,6 @@ interface State {
     exchangeOptions: DropdownOptions[];
     orders: Order[];
     pipelines: Pipeline[];
-    activePipelines: ActivePipeline[];
     message: string;
     menuOption: MenuOption,
     strategies: any
@@ -48,7 +46,6 @@ class App extends Component<any, State> {
         exchangeOptions: [],
         orders: [],
         pipelines: [],
-        activePipelines: [],
         strategies: {},
         message: '',
         menuOption: {
@@ -116,17 +113,21 @@ class App extends Component<any, State> {
         }, 60 * 1000)
     }
 
-    startPipeline: StartPipeline = (pipelineParams: Pipeline) => {
+    startPipeline: StartPipeline = (pipelineParams: PipelineParams) => {
         startBot(pipelineParams)
             .then(message => {
                 this.setState(state => ({
                     message: message.response,
-                    activePipelines: message.success ? [...state.activePipelines, {
+                    pipelines: message.success ? [...state.pipelines, {
+                        id: message.pipeline_id,
                         symbol: pipelineParams.symbol,
                         strategy: pipelineParams.strategy,
-                        exchange: pipelineParams.exchange,
-                        candleSize: pipelineParams.candleSize
-                    }] : state.activePipelines
+                        exchange: pipelineParams.exchanges,
+                        candleSize: pipelineParams.candleSize,
+                        params: pipelineParams.params,
+                        paperTrading: pipelineParams.paperTrading,
+                        active: true
+                    }] : state.pipelines
                 }))
             })
     }

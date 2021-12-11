@@ -157,7 +157,7 @@ def stop_bot():
     # closes any open positions
     data = request.get_json(force=True)
 
-    pipeline_id = data.get("pipeline_id", None)
+    pipeline_id = data.get("pipelineId", None)
 
     try:
         pipeline = Pipeline.objects.get(id=pipeline_id)

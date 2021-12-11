@@ -34,7 +34,14 @@ function PipelineButton(props: Props) {
           </Button>
         ) : (
           <Button
-              onClick={() => startPipeline(pipeline)}
+              onClick={() => startPipeline({
+                symbol: pipeline.symbol,
+                strategy: pipeline.strategy,
+                candleSize: pipeline.candleSize,
+                exchanges: pipeline.exchange,
+                params: pipeline.params,
+                paperTrading: pipeline.paperTrading
+              })}
               style={styles.button}
               color={'green'}
               icon
