@@ -260,20 +260,6 @@ class StructuredData(models.Model):
     def __repr__(self):
         return self.__class__.__name__
 
-    # 'url_shares',
-    # 'unique_url_shares', 'reddit_posts', 'reddit_posts_score',
-    # 'reddit_comments', 'reddit_comments_score', 'tweets', 'tweet_spam',
-    # 'tweet_followers', 'tweet_quotes', 'tweet_retweets', 'tweet_favorites',
-    # 'tweet_sentiment1', 'tweet_sentiment2', 'tweet_sentiment3',
-    # 'tweet_sentiment4', 'tweet_sentiment5', 'tweet_sentiment_impact1',
-    # 'tweet_sentiment_impact2', 'tweet_sentiment_impact3',
-    # 'tweet_sentiment_impact4', 'tweet_sentiment_impact5', 'social_score',
-    # 'average_sentiment', 'sentiment_absolute', 'sentiment_relative', 'news',
-    # 'medium', 'youtube', 'price_score', 'social_impact_score',
-    # 'correlation_rank', 'galaxy_score', 'volatility', 'alt_rank',
-    # 'volume_24h_rank', 'social_volume', 'price_btc', 'social_volume_global',
-    # 'social_dominance', 'market_dominance', 'tweet_replies'
-
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")
 
@@ -323,6 +309,7 @@ class Pipeline(models.Model):
 
 class Position(models.Model):
 
+    position = models.IntegerField()
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)

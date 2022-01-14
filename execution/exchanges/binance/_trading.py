@@ -15,7 +15,7 @@ from shared.utils.decorators.failed_connection import retry_failed_connection
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol, Orders
+from database.model.models import Symbol, Orders, Position
 
 
 class BinanceTrader(BinanceHandler, Trader):
@@ -42,6 +42,7 @@ class BinanceTrader(BinanceHandler, Trader):
         self.open_orders = []
         self.filled_orders = []
         self.conn_key = None
+        self.exchange = 'binance'
 
     def start_symbol_trading(self, symbol, header='', **kwargs):
 
@@ -124,6 +125,8 @@ class BinanceTrader(BinanceHandler, Trader):
         else:
             self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)
 
+        self._set_position(symbol, 0, **kwargs)
+
         try:
             perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
         except ZeroDivisionError:
@@ -172,8 +175,6 @@ class BinanceTrader(BinanceHandler, Trader):
             sideEffectType=side_effect,
             **kwargs
         )
-
-        print(order)
 
         order["price"] = self._get_average_order_price(order)
 
@@ -225,8 +226,56 @@ class BinanceTrader(BinanceHandler, Trader):
         logging.debug(header + f"Setting initial position NEUTRAL.")
         self._set_position(symbol, 0)
 
-    def _set_position(self, symbol, value):
+    def _set_position(self, symbol, value, **kwargs):
+
+        pipeline_id = kwargs.pop("pipeline_id", None)
+
         self.positions[symbol] = value
+
+        qs = Orders.objects.filter(pipeline_id=pipeline_id, symbol_id=symbol).order_by('-transact_time')[:2]
+
+        if len(qs) >= 2 and \
+                qs[0].pipeline_id == qs[1].pipeline_id and \
+                qs[0].symbol == qs[1].symbol and \
+                qs[0].side == qs[1].side:
+
+            amount = qs[0].executed_qty + qs[1].executed_qty
+            price = (qs[0].price + qs[1].price) / amount
+        elif len(qs) >= 1:
+            amount = qs[0].executed_qty
+            price = qs[0].price
+        else:
+            return
+
+        if Position.objects.filter(pipeline_id=pipeline_id, symbol=symbol).exists():
+            if value == 0:
+                Position.objects.filter(
+                    pipeline_id=pipeline_id,
+                    symbol=symbol
+                ).update(
+                    position=value,
+                    open=False,
+                    close_time=datetime.utcnow()
+                )
+            else:
+                Position.objects.filter(
+                    pipeline_id=pipeline_id,
+                    symbol=symbol
+                ).update(
+                    position=value,
+                    open=True,
+                    close_time=None
+                )
+        else:
+            Position.objects.create(
+                position=value,
+                symbol_id=symbol,
+                exchange_id=self.exchange,
+                pipeline_id=pipeline_id,
+                paper_trading=self.paper_trading,
+                buying_price=price,
+                amount=amount,
+            )
 
     def _get_position(self, symbol):
         return self.positions[symbol]

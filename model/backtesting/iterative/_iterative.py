@@ -25,7 +25,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         else:
             return method
 
-    def _set_position(self, symbol, value):
+    def _set_position(self, symbol, value, **kwargs):
         self.positions[symbol] = value
 
     def _get_position(self, symbol):
