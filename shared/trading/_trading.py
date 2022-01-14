@@ -11,7 +11,7 @@ class Trader:
         self.units = units
         self.trades = 0
 
-    def _set_position(self, symbol, value):
+    def _set_position(self, symbol, value, **kwargs):
         raise NotImplementedError
 
     def _get_position(self, symbol):
@@ -57,18 +57,19 @@ class Trader:
             if position in [0, -1]:
                 # go long with full amount
                 self.go_long(symbol, position, date, row, amount=amount, units=units, header=header, **kwargs)
-                self._set_position(symbol, 1)  # long position
+                self._set_position(symbol, 1, **kwargs)  # long position
         elif signal == -1:  # signal to go short
             if position in [0, 1]:
                 # go short with full amount
                 self.go_short(symbol, position, date, row, amount=amount, units=units, header=header, **kwargs)
-                self._set_position(symbol, -1)  # short position
+                self._set_position(symbol, -1, **kwargs)  # short position
         elif signal == 0:
             if position == -1:
                 self.buy_instrument(symbol, date, row, units=-self.units, header=header, **kwargs)
             elif position == 1:
                 self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)
-            self._set_position(symbol, 0)
+
+            self._set_position(symbol, 0, **kwargs)
 
         if position == signal:
             verbose_position = "LONG" if position == 1 else "SHORT" if position == -1 else "NEUTRAL"

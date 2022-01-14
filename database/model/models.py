@@ -154,6 +154,7 @@ class Pipeline(models.Model):
 
 class Position(models.Model):
 
+    position = models.IntegerField()
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
