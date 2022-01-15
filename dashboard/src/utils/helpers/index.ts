@@ -1,4 +1,4 @@
-import {DropdownOptions, Order, RawOrder, StartPipeline} from "../../types";
+import {DropdownOptions, Order, Position, RawOrder, RawPosition, StartPipeline} from "../../types";
 import PipelinePanel from "../../components/PipelinePanel";
 
 export const validatePipelineCreation = (
@@ -64,4 +64,43 @@ export const organizeOrders = (orders: RawOrder[]): Order[] => {
   }).sort((a, b) => {
     return b.transactTime.getTime() - a.transactTime.getTime()
   })
+}
+
+
+export const organizePositions = (positions: RawPosition[]): Position[] => {
+
+  return positions.map((position) => {
+    return {
+      ...position,
+      openTime: new Date(Date.parse(position.openTime)),
+      closeTime: new Date(Date.parse(position.closeTime))
+    }
+  }).sort((a, b) => {
+    return b.openTime.getTime() - a.openTime.getTime()
+  })
+}
+
+
+export const timeFormatter = (date: Date) => {
+
+  const currentDate = new Date()
+
+  // @ts-ignore
+  let difference = currentDate - date;
+
+  const days = Math.floor(difference/1000/60/60/24);
+  difference -= days*1000*60*60*24;
+
+  const hours = Math.floor(difference/1000/60/60);
+  difference -= hours*1000*60*60;
+
+  const minutes = Math.floor(difference/1000/60);
+
+  if (days) {
+    return `${days}d ${hours}h ${minutes}m`
+  } else if (hours) {
+    return `${hours}h ${minutes}m`
+  } else {
+    return `${minutes}m`
+  }
 }
