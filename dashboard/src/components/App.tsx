@@ -4,17 +4,17 @@ import styled from 'styled-components'
 import {
     ChangeMenu,
     DropdownOptions, MenuOption,
-    Order, Pipeline, PipelineParams,
+    Order, Pipeline, PipelineParams, Position,
     StartPipeline,
     StopPipeline
 } from "../types";
-import {getOrders, getPipelines, getResources, startBot, stopBot} from "../apiCalls";
+import {getOrders, getPipelines, getPositions, getResources, startBot, stopBot} from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
 import Wrapper from "../styledComponents/Wrapper";
 import PipelinePanel from "./PipelinePanel";
 import OrdersPanel from "./OrdersPanel";
-import {organizeOrders} from "../utils/helpers";
+import {organizeOrders, organizePositions} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 
 
@@ -33,6 +33,7 @@ interface State {
     exchangeOptions: DropdownOptions[];
     orders: Order[];
     pipelines: Pipeline[];
+    positions: Position[];
     message: string;
     menuOption: MenuOption,
     strategies: any
@@ -48,6 +49,7 @@ class App extends Component<any, State> {
         exchangeOptions: [],
         orders: [],
         pipelines: [],
+        positions: [],
         strategies: {},
         message: '',
         menuOption: {
@@ -98,6 +100,16 @@ class App extends Component<any, State> {
                     return {
                         ...state,
                         ...pipelines
+                    }
+                })
+            })
+
+        getPositions()
+            .then(positions => {
+                this.setState(state => {
+                    return {
+                        ...state,
+                        positions: organizePositions(positions.positions)
                     }
                 })
             })
@@ -167,6 +179,7 @@ class App extends Component<any, State> {
             exchangeOptions,
             orders,
             pipelines,
+            positions,
             menuOption,
             strategies
         } = this.state
@@ -187,10 +200,10 @@ class App extends Component<any, State> {
                             startPipeline={this.startPipeline}
                             stopPipeline={this.stopPipeline}
                         />
-                    ) : menuOption.code === 'transactions' ? (
+                    ) : menuOption.code === 'trades' ? (
                         <OrdersPanel menuOption={menuOption} orders={orders}/>
                     ) : menuOption.code === 'positions' && (
-                        <PositionsPanel menuOption={menuOption}/>
+                        <PositionsPanel menuOption={menuOption} positions={positions}/>
                     )}
 
                 </Wrapper>

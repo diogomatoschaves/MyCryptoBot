@@ -28,3 +28,17 @@ PIPELINE_FORMAT_CONVERTER = dict(
     active={"name": "active", "value_converter": lambda value: value},
     paper_trading={"name": "paperTrading", "value_converter": lambda value: value}
 )
+
+
+POSITION_FORMAT_CONVERTER = dict(
+    position="position",
+    symbol_id="symbol",
+    exchange_id="exchange",
+    pipeline_id="pipelineId",
+    paper_trading="paperTrading",
+    buying_price="price",
+    amount="amount",
+    open="open",
+    open_time="openTime",
+    close_time="closeTime"
+)

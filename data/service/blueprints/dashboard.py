@@ -6,13 +6,13 @@ from flask import Blueprint, jsonify
 
 from data.service.external_requests import get_strategies
 from data.service.helpers._helpers import convert_queryset_to_dict
-from shared.data.format_converter import ORDER_FORMAT_CONVERTER, PIPELINE_FORMAT_CONVERTER
+from shared.data.format_converter import ORDER_FORMAT_CONVERTER, PIPELINE_FORMAT_CONVERTER, POSITION_FORMAT_CONVERTER
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol, Exchange, Orders, Pipeline
+from database.model.models import Symbol, Exchange, Orders, Pipeline, Position
 
 dashboard = Blueprint('dashboard', __name__)
 
@@ -94,3 +94,30 @@ def get_pipelines(page):
     ]
 
     return jsonify(response)
+
+
+@dashboard.route('/positions', defaults={'page': None})
+@dashboard.route('/positions/<page>')
+def get_positions(page):
+
+    response = {}
+
+    positions = Position.objects.all().order_by('id').values()
+
+    paginator = Paginator(positions, 100)
+
+    if page is None:
+        page_obj = paginator.get_page(1)
+        response["positions"] = list(page_obj)
+
+    elif isinstance(page, int):
+        page_obj = paginator.get_page(page)
+        response["positions"] = list(page_obj)
+
+    response["positions"] = [
+        {POSITION_FORMAT_CONVERTER[key]: value for key, value in position.items() if key in POSITION_FORMAT_CONVERTER}
+        for position in response["positions"]
+    ]
+
+    return jsonify(response)
+

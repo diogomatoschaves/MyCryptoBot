@@ -1,6 +1,6 @@
 import {MenuOption, Order} from "../types";
 import {Divider, Icon, Table} from "semantic-ui-react";
-import OrderCard from './Order'
+import OrderRow from './OrderRow'
 import styled from "styled-components";
 
 
@@ -44,7 +44,7 @@ function OrdersPanel(props: Props) {
                 </Table.Header>
                 <Table.Body>
                     {orders.map((order, index) => {
-                        return <OrderCard index={index} order={order}/>
+                        return <OrderRow index={index} order={order}/>
                     })}
                 </Table.Body>
             </Table>

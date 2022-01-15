@@ -23,7 +23,7 @@ const menuProperties = [
     {icon: 'line graph', emoji: '📈', text: 'Balance', code: "balance"},
     {icon: 'play', emoji: '🤖', text: 'Trading Bots', code: "pipelines"},
     {icon: 'list', emoji: '📒', text: 'Positions', code: "positions"},
-    {icon: 'dollar', emoji: '💵', text: 'Transactions', code: "transactions"},
+    {icon: 'dollar', emoji: '💵', text: 'Trades', code: "trades"},
 ]
 
 
