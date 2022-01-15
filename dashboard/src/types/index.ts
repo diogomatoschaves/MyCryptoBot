@@ -64,6 +64,33 @@ export type PipelineParams = {
     paperTrading: boolean
 }
 
+export type Position = {
+    position: number,
+    symbol: string,
+    exchange: string,
+    pipelineId: number,
+    paperTrading: boolean,
+    price: number,
+    amount: number,
+    open: boolean,
+    openTime: Date,
+    closeTime: Date
+}
+
+
+export type RawPosition = {
+    position: number,
+    symbol: string,
+    exchange: string,
+    pipelineId: number,
+    paperTrading: boolean,
+    price: number,
+    amount: number,
+    open: boolean,
+    openTime: string,
+    closeTime: string
+}
+
 
 export type MenuOption = {
     icon: string,

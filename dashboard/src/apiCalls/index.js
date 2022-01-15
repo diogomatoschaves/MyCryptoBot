@@ -62,6 +62,26 @@ export const getPipelines = async (page) => {
 }
 
 
+export const getPositions = async (page) => {
+
+  const url = `${apiHost}/positions${page ? '/' + page : ''}`
+
+  return await fetch(url, {
+    method: 'GET',
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+    }
+  })
+    .then(res => {
+      if (res.status >= 400) {
+        throw(new Error('Error fetching orders'))
+      } else {
+        return res.json()
+      }
+    })
+}
+
+
 export const startBot = async (requestData) => {
 
   const url = `${apiHost}/start_bot`

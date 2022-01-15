@@ -8,7 +8,7 @@ interface Props {
     order: Order
 }
 
-function OrdersPanel(props: Props) {
+function OrderRow(props: Props) {
 
   const { order, index } = props
 
@@ -47,7 +47,7 @@ function OrdersPanel(props: Props) {
     );
 }
 
-export default OrdersPanel;
+export default OrderRow;
 
 
 const styles = {
