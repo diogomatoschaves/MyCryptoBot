@@ -164,3 +164,18 @@ class Position(models.Model):
     open = models.BooleanField(default=True, blank=True)
     open_time = models.DateTimeField(auto_now_add=True)
     close_time = models.DateTimeField(null=True, blank=True)
+
+
+class Trade(models.Model):
+
+    symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
+    open_time = models.DateTimeField(auto_now_add=True)
+    close_time = models.DateTimeField(null=True, blank=True)
+    open_price = models.FloatField()
+    close_price = models.FloatField(null=True, blank=True)
+    amount = models.FloatField()
+    profit_loss = models.FloatField(null=True, blank=True)
+    side = models.IntegerField()
+    exchange = models.ForeignKey(Exchange, default='binance', on_delete=models.SET_DEFAULT)
+    mock = models.BooleanField(null=True, default=False)
+    pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)

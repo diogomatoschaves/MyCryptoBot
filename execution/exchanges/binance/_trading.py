@@ -15,7 +15,7 @@ from shared.utils.decorators.failed_connection import retry_failed_connection
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol, Orders, Position
+from database.model.models import Symbol, Orders, Position, Trade
 
 
 class BinanceTrader(BinanceHandler, Trader):
@@ -42,7 +42,7 @@ class BinanceTrader(BinanceHandler, Trader):
         self.open_orders = []
         self.filled_orders = []
         self.conn_key = None
-        self.exchange = 'binance'
+        self.exchange = "binance"
 
     def start_symbol_trading(self, symbol, header='', **kwargs):
 
@@ -85,7 +85,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
         logging.info(header + f"Closing positions and repaying loans.")
 
-        position_closed = self.close_pos(symbol, date=datetime.utcnow(), header=header, **kwargs)
+        position_closed = self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
 
         self.repay_loans(symbol)
 
@@ -125,7 +125,7 @@ class BinanceTrader(BinanceHandler, Trader):
         else:
             self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)
 
-        self._set_position(symbol, 0, **kwargs)
+        self._set_position(symbol, 0, previous_position=1, **kwargs)
 
         try:
             perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
@@ -226,59 +226,94 @@ class BinanceTrader(BinanceHandler, Trader):
         logging.debug(header + f"Setting initial position NEUTRAL.")
         self._set_position(symbol, 0)
 
-    def _set_position(self, symbol, value, **kwargs):
+    def _set_position(self, symbol, position, **kwargs):
 
         pipeline_id = kwargs.pop("pipeline_id", None)
 
-        self.positions[symbol] = value
+        self.positions[symbol] = position
 
-        qs = Orders.objects.filter(pipeline_id=pipeline_id, symbol_id=symbol).order_by('-transact_time')[:2]
+        previous_position = kwargs.pop("previous_position", 0)
 
-        if len(qs) >= 2 and \
-                qs[0].pipeline_id == qs[1].pipeline_id and \
-                qs[0].symbol == qs[1].symbol and \
-                qs[0].side == qs[1].side:
-
-            amount = qs[0].executed_qty + qs[1].executed_qty
-            price = (qs[0].price + qs[1].price) / amount
-        elif len(qs) >= 1:
-            amount = qs[0].executed_qty
-            price = qs[0].price
-        else:
-            return
+        new_trade = self._handle_trades(pipeline_id, symbol, previous_position, position)
 
         if Position.objects.filter(pipeline_id=pipeline_id, symbol=symbol).exists():
-            if value == 0:
+            if position == 0:
                 Position.objects.filter(
                     pipeline_id=pipeline_id,
                     symbol=symbol
                 ).update(
-                    position=value,
+                    position=position,
                     open=False,
-                    close_time=datetime.utcnow()
+                    close_time=datetime.now(tz=pytz.UTC)
                 )
             else:
                 Position.objects.filter(
                     pipeline_id=pipeline_id,
                     symbol=symbol
                 ).update(
-                    position=value,
+                    position=position,
                     open=True,
                     close_time=None
                 )
-        else:
+        elif new_trade:
             Position.objects.create(
-                position=value,
+                position=position,
                 symbol_id=symbol,
                 exchange_id=self.exchange,
                 pipeline_id=pipeline_id,
                 paper_trading=self.paper_trading,
-                buying_price=price,
-                amount=amount,
+                buying_price=new_trade.open_price,
+                amount=new_trade.amount,
             )
 
     def _get_position(self, symbol):
         return self.positions[symbol]
+
+    def _handle_trades(self, pipeline_id, symbol, previous_position, position):
+
+        number_orders = abs(previous_position - position)
+
+        orders = list(
+            Orders.objects.filter(
+                pipeline_id=pipeline_id,
+                symbol_id=symbol
+            ).order_by('-transact_time')[:number_orders]
+        )
+
+        if len(orders) == 0:
+            return None
+
+        if previous_position != 0:
+
+            closing_order = orders.pop(0)
+
+            last_trade = Trade.objects.filter(pipeline_id=pipeline_id, symbol_id=symbol).last()
+
+            last_trade.close_price = closing_order.price
+            last_trade.close_time = datetime.now(tz=pytz.UTC)
+            last_trade.profit_loss = last_trade.side * (last_trade.close_price / last_trade.open_price - 1)
+            last_trade.save()
+
+        if position != 0:
+
+            new_order = orders.pop(0)
+
+            # amount = sum([order.executed_qty for order in orders])
+            # price = sum([order.price * order.executed_qty for order in orders]) / amount if amount > 0 else 0
+
+            new_trade = Trade.objects.create(
+                symbol_id=symbol,
+                open_price=new_order.price,
+                amount=new_order.executed_qty,
+                side=1 if new_order.side == "BUY" else -1,
+                exchange_id=self.exchange,
+                mock=new_order.mock,
+                pipeline_id=pipeline_id
+            )
+
+            return new_trade
+
+        return None
 
     @retry_failed_connection(num_times=3)
     def _get_trading_fees(self, symbol, header=''):

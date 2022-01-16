@@ -1,4 +1,3 @@
-import json
 import logging
 
 
@@ -41,7 +40,6 @@ class Trader:
     def go_short(self, symbol, position, date, row, units=None, amount=None, header='', **kwargs):
         if position == 1:
             self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)  # if long position, go neutral first
-
         if units:
             self.sell_instrument(symbol, date, row, units=units, header=header, **kwargs)
         elif amount:
@@ -57,19 +55,19 @@ class Trader:
             if position in [0, -1]:
                 # go long with full amount
                 self.go_long(symbol, position, date, row, amount=amount, units=units, header=header, **kwargs)
-                self._set_position(symbol, 1, **kwargs)  # long position
+                self._set_position(symbol, 1, previous_position=position, **kwargs)  # long position
         elif signal == -1:  # signal to go short
             if position in [0, 1]:
                 # go short with full amount
                 self.go_short(symbol, position, date, row, amount=amount, units=units, header=header, **kwargs)
-                self._set_position(symbol, -1, **kwargs)  # short position
+                self._set_position(symbol, -1, previous_position=position, **kwargs)  # short position
         elif signal == 0:
             if position == -1:
                 self.buy_instrument(symbol, date, row, units=-self.units, header=header, **kwargs)
             elif position == 1:
                 self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)
 
-            self._set_position(symbol, 0, **kwargs)
+            self._set_position(symbol, 0, previous_position=position, **kwargs)
 
         if position == signal:
             verbose_position = "LONG" if position == 1 else "SHORT" if position == -1 else "NEUTRAL"

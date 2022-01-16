@@ -1,4 +1,4 @@
-import {DropdownOptions, Order, Position, RawOrder, RawPosition, StartPipeline} from "../../types";
+import {DropdownOptions, Trade, Position, RawTrade, RawPosition, StartPipeline} from "../../types";
 import PipelinePanel from "../../components/PipelinePanel";
 
 export const validatePipelineCreation = (
@@ -54,15 +54,16 @@ export const validateParams = (resolve: any, reject: any, params: any, strategy:
 }
 
 
-export const organizeOrders = (orders: RawOrder[]): Order[] => {
+export const organizeTrades = (trades: RawTrade[]): Trade[] => {
 
-  return orders.map((order) => {
+  return trades.map((trade) => {
     return {
-      ...order,
-      transactTime: new Date(Date.parse(order.transactTime))
+      ...trade,
+      openTime: new Date(Date.parse(trade.openTime)),
+      closeTime: trade.closeTime ? new Date(Date.parse(trade.closeTime)) : null,
     }
   }).sort((a, b) => {
-    return b.transactTime.getTime() - a.transactTime.getTime()
+    return b.openTime.getTime() - a.openTime.getTime()
   })
 }
 

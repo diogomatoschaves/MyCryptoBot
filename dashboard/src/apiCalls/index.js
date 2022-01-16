@@ -22,9 +22,9 @@ export const getResources = async (resources) => {
 }
 
 
-export const getOrders = async (page) => {
+export const getTrades = async (page) => {
 
-  const url = `${apiHost}/orders${page ? '/' + page : ''}`
+  const url = `${apiHost}/trades${page ? '/' + page : ''}`
 
   return await fetch(url, {
     method: 'GET',
