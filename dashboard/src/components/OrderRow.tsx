@@ -30,8 +30,8 @@ function OrderRow(props: Props) {
   return (
         <Table.Row active={index % 2 == 0} key={index} >
             <Table.Cell style={styles.defaultCell}>{order.orderId}</Table.Cell>
-          <Table.Cell style={styles.defaultCell}>{order.transactTime.toUTCString()}</Table.Cell>
-            <Table.Cell>{order.status}</Table.Cell>
+          <Table.Cell style={{...styles.defaultCell, fontWeight: 600}}>{order.transactTime.toLocaleString()}</Table.Cell>
+            <Table.Cell>{order.type}</Table.Cell>
             <Table.Cell style={{...styles.defaultCell, color: DARK_YELLOW}}>{order.symbol}</Table.Cell>
             <Table.Cell style={{color, fontWeight: '600'}}>{order.side}</Table.Cell>
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell}}>

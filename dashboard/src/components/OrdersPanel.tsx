@@ -34,11 +34,11 @@ function OrdersPanel(props: Props) {
                     <Table.Row>
                         <Table.HeaderCell>Order Id</Table.HeaderCell>
                         <Table.HeaderCell>Time</Table.HeaderCell>
-                        <Table.HeaderCell>Status</Table.HeaderCell>
+                        <Table.HeaderCell>Type</Table.HeaderCell>
                         <Table.HeaderCell>Trading Pair</Table.HeaderCell>
                         <Table.HeaderCell>Side</Table.HeaderCell>
                         <Table.HeaderCell>Quantity</Table.HeaderCell>
-                        <Table.HeaderCell>Buying Price</Table.HeaderCell>
+                        <Table.HeaderCell>Price</Table.HeaderCell>
                         <Table.HeaderCell>Total</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
