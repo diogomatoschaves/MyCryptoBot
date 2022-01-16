@@ -1,6 +1,6 @@
 import pytest
 
-from database.model.models import Orders, Position
+from database.model.models import Orders, Position, Trade
 from execution.exchanges.binance import BinanceTrader
 from execution.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
@@ -138,6 +138,7 @@ class TestBinanceTrader:
         expected_value,
         create_symbol,
         create_exchange,
+        create_orders,
         ping,
         init_session,
         create_margin_order,
@@ -148,7 +149,7 @@ class TestBinanceTrader:
         binance_trader = BinanceTrader()
         binance_trader.symbols = symbols
 
-        binance_trader._set_position(self.symbol, 1)
+        binance_trader._set_position(self.symbol, 1, pipeline_id=1)
         binance_trader.units = units
         binance_trader.initial_balance = 100
         binance_trader.max_borrow_amount = {
@@ -157,15 +158,15 @@ class TestBinanceTrader:
             }
         }
 
-        return_value = binance_trader.stop_symbol_trading(self.symbol)
+        return_value = binance_trader.stop_symbol_trading(self.symbol, pipeline_id=1)
 
         assert return_value == expected_value
 
         assert repay_margin_loan_spy.call_count == times_called[0]
         assert create_margin_order_spy.call_count == times_called[1]
 
-    @pytest.mark.parametrize("initial_position", [-1, 0, 1])
     @pytest.mark.parametrize("signal", [-1, 0, 1])
+    @pytest.mark.parametrize("initial_position", [-1, 0, 1])
     def test_trade(
         self,
         initial_position,
@@ -174,6 +175,7 @@ class TestBinanceTrader:
         init_session,
         create_symbol,
         create_exchange,
+        create_orders,
         create_margin_order,
         create_margin_order_spy,
         create_pipeline
@@ -187,15 +189,19 @@ class TestBinanceTrader:
 
         pipeline_id = 1
 
-        binance_trader._set_position(self.symbol, initial_position)
+        print(f"initial_position: {initial_position}, signal: {signal}")
+
+        binance_trader._set_position(self.symbol, initial_position, pipeline_id=pipeline_id)
 
         binance_trader.trade(self.symbol, signal, amount="all", pipeline_id=pipeline_id)
 
         assert binance_trader._get_position(self.symbol) == signal
 
-        assert create_margin_order_spy.call_count == abs(initial_position - signal)
+        number_orders = abs(initial_position - signal)
 
-        if initial_position != signal:
+        assert create_margin_order_spy.call_count == number_orders
+
+        if number_orders > 0:
             order = Orders.objects.last()
             assert order.pipeline_id == pipeline_id
 
@@ -203,7 +209,16 @@ class TestBinanceTrader:
 
             assert len(positions) == 1
             assert positions[0].position == signal
-            assert positions[0].open
+            assert positions[0].open if signal != 0 else not positions[0].open
+
+        if initial_position == 0 and signal == 0:
+            assert Trade.objects.all().count() == 0
+        else:
+            trades = Trade.objects.all()
+
+            assert len(trades) == max(number_orders, 1)
+            assert trades[0].amount == float(order_creation["executedQty"])
+            assert trades[0].open_price == float(order_creation["price"])
 
     def test_all(
         self,
@@ -212,6 +227,7 @@ class TestBinanceTrader:
         create_symbol,
         create_exchange,
         create_pipeline,
+        create_orders,
         create_margin_order,
         repay_margin_loan,
         get_isolated_margin_account,
@@ -231,3 +247,9 @@ class TestBinanceTrader:
         assert len(positions) == 1
         assert positions[0].position == 0
         assert not positions[0].open
+
+        trades = Trade.objects.all()
+
+        assert len(trades) == 1
+        assert all(trade.amount == float(order_creation["executedQty"]) for trade in trades)
+        assert all(trade.open_price == float(order_creation["price"]) for trade in trades)

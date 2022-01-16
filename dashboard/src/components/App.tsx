@@ -4,17 +4,17 @@ import styled from 'styled-components'
 import {
     ChangeMenu,
     DropdownOptions, MenuOption,
-    Order, Pipeline, PipelineParams, Position,
+    Trade, Pipeline, PipelineParams, Position,
     StartPipeline,
     StopPipeline
 } from "../types";
-import {getOrders, getPipelines, getPositions, getResources, startBot, stopBot} from "../apiCalls";
+import {getTrades, getPipelines, getPositions, getResources, startBot, stopBot} from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
 import Wrapper from "../styledComponents/Wrapper";
 import PipelinePanel from "./PipelinePanel";
-import OrdersPanel from "./OrdersPanel";
-import {organizeOrders, organizePositions} from "../utils/helpers";
+import TradesPanel from "./TradesPanel";
+import {organizeTrades, organizePositions} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 
 
@@ -31,7 +31,7 @@ interface State {
     strategiesOptions: DropdownOptions[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
-    orders: Order[];
+    orders: Trade[];
     pipelines: Pipeline[];
     positions: Position[];
     message: string;
@@ -84,12 +84,12 @@ class App extends Component<any, State> {
             })
             .catch()
 
-        getOrders()
-            .then(orders => {
+        getTrades()
+            .then(response => {
                 this.setState(state => {
                     return {
                         ...state,
-                        orders: organizeOrders(orders.orders)
+                        trades: organizeTrades(response.trades)
                     }
                 })
             })
@@ -115,12 +115,12 @@ class App extends Component<any, State> {
             })
 
         setInterval(() => {
-            getOrders()
-                .then(orders => {
+            getTrades()
+                .then(response => {
                     this.setState(state => {
                         return {
                             ...state,
-                            orders: organizeOrders(orders.orders)
+                            trades: organizeTrades(response.trades)
                         }
                     })
                 })
@@ -201,7 +201,7 @@ class App extends Component<any, State> {
                             stopPipeline={this.stopPipeline}
                         />
                     ) : menuOption.code === 'trades' ? (
-                        <OrdersPanel menuOption={menuOption} orders={orders}/>
+                        <TradesPanel menuOption={menuOption} orders={orders}/>
                     ) : menuOption.code === 'positions' && (
                         <PositionsPanel menuOption={menuOption} positions={positions}/>
                     )}

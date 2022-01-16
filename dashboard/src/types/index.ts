@@ -6,40 +6,38 @@ export type DropdownOptions = {
     value?: number | undefined
 }
 
-export type Order = {
-    orderId: number,
-    clientOrderId: number,
+export type Trade = {
+    id: number,
     symbol: string,
+    exchange: string
     base: string,
     quote: string,
-    transactTime: Date,
-    price: number,
-    origQty: number,
-    executedQty: number,
-    cummulativeQuoteQty: number,
-    status: string
+    openTime: Date,
+    closeTime: Date | null,
+    openPrice: number,
+    closePrice: number | null,
+    profitLoss: number | null,
+    amount: number,
     type: string
     side: string
-    isIsolated: boolean
     mock: boolean
     pipelineId: number
 }
 
-export type RawOrder = {
-    orderId: number,
-    clientOrderId: number,
+export type RawTrade = {
+    id: number,
     symbol: string,
+    exchange: string
     base: string,
     quote: string,
-    transactTime: string,
-    price: number,
-    origQty: number,
-    executedQty: number,
-    cummulativeQuoteQty: number,
-    status: string
+    openTime: string,
+    closeTime: string | null,
+    openPrice: number,
+    closePrice: number | null,
+    profitLoss: number | null,
+    amount: number,
     type: string
     side: string
-    isIsolated: boolean
     mock: boolean
     pipelineId: number
 }
