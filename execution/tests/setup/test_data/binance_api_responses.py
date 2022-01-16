@@ -55,7 +55,7 @@ order_creation = {
     "symbol": "BTCUSDT",
     "clientOrderId": "6gCrw2kRUAF9CvJDGP16IP",
     "transactTime": 1507725176595,
-    "price": "1.00000000",
+    "price": "3998.3",
     "origQty": "10.00000000",
     "executedQty": "10.00000000",
     "cummulativeQuoteQty": "10.00000000",

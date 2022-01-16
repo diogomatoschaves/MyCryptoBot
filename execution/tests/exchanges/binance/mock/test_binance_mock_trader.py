@@ -129,6 +129,7 @@ class TestBinanceMockTrader:
         expected_value,
         create_symbol,
         create_exchange,
+        create_orders,
         create_structured_data,
         create_margin_order_spy,
         repay_margin_loan_spy
@@ -136,7 +137,7 @@ class TestBinanceMockTrader:
         binance_trader = BinanceMockTrader()
         binance_trader.symbols = symbols
 
-        binance_trader._set_position(self.symbol, 1)
+        binance_trader._set_position(self.symbol, 1, pipeline_id=1)
         binance_trader.units = units
         binance_trader.initial_balance = 100
         binance_trader.max_borrow_amount = {
@@ -145,7 +146,7 @@ class TestBinanceMockTrader:
             }
         }
 
-        binance_trader.stop_symbol_trading(self.symbol)
+        binance_trader.stop_symbol_trading(self.symbol, pipeline_id=1)
 
         assert repay_margin_loan_spy.call_count == times_called[0]
         assert create_margin_order_spy.call_count == times_called[1]

@@ -1,7 +1,11 @@
+import datetime
+from random import randint
+
 import pytest
+import pytz
 
 from data.tests.setup.test_data.sample_data import exchange_data_1
-from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData, Pipeline
+from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData, Pipeline, Orders, Trade
 
 TEST_APP_NAME = 'test_app'
 
@@ -42,6 +46,56 @@ def create_pipeline(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True
+    )
+
+
+@pytest.fixture
+def create_orders(db, create_exchange, create_symbol, create_pipeline):
+    order_1 = Orders.objects.create(
+        order_id=randint(1, 1E9),
+        client_order_id=1234,
+        symbol_id="BTCUSDT",
+        transact_time=datetime.datetime.now(pytz.utc),
+        price=3998.3,
+        original_qty=10,
+        executed_qty=10,
+        cummulative_quote_qty=0,
+        status="FILLED",
+        type="MARKET",
+        side="BUY",
+        is_isolated=True,
+        mock=True,
+        pipeline_id=1
+    )
+    order_2 = Orders.objects.create(
+        order_id=randint(1, 1E9),
+        client_order_id=1234,
+        symbol_id="BTCUSDT",
+        transact_time=datetime.datetime.now(pytz.utc),
+        price=3998.3,
+        original_qty=10,
+        executed_qty=10,
+        cummulative_quote_qty=0,
+        status="FILLED",
+        type="MARKET",
+        side="BUY",
+        is_isolated=True,
+        mock=True,
+        pipeline_id=1
+    )
+    return order_1, order_2
+
+
+@pytest.fixture
+def create_trade(db, create_exchange, create_symbol, create_pipeline):
+    return Trade.objects.create(
+        symbol_id="BTCUSDT",
+        open_price=3998.3,
+        amount=10,
+        side=-1,
+        exchange_id='binance',
+        mock=True,
+        pipeline_id=1,
     )
 
 

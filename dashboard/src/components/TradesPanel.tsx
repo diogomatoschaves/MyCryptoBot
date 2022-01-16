@@ -1,11 +1,11 @@
-import {MenuOption, Order} from "../types";
+import {MenuOption, Trade} from "../types";
 import {Divider, Icon, Table} from "semantic-ui-react";
-import OrderRow from './OrderRow'
+import TradeRow from './TradeRow'
 import styled from "styled-components";
 
 
 interface Props {
-    orders: Order[]
+    orders: Trade[]
     menuOption: MenuOption
 }
 
@@ -20,7 +20,7 @@ const StyledDiv = styled.div`
     position: relative;
 `
 
-function OrdersPanel(props: Props) {
+function TradesPanel(props: Props) {
 
     const { orders, menuOption } = props
 
@@ -32,19 +32,21 @@ function OrdersPanel(props: Props) {
             <Table basic='very'>
                 <Table.Header>
                     <Table.Row>
-                        <Table.HeaderCell>Order Id</Table.HeaderCell>
-                        <Table.HeaderCell>Time</Table.HeaderCell>
+                        <Table.HeaderCell>Id</Table.HeaderCell>
+                        <Table.HeaderCell>Open Time</Table.HeaderCell>
+                        <Table.HeaderCell>Close Time</Table.HeaderCell>
                         <Table.HeaderCell>Type</Table.HeaderCell>
-                        <Table.HeaderCell>Trading Pair</Table.HeaderCell>
+                        <Table.HeaderCell>Symbol</Table.HeaderCell>
+                        <Table.HeaderCell>Exchange</Table.HeaderCell>
                         <Table.HeaderCell>Side</Table.HeaderCell>
                         <Table.HeaderCell>Quantity</Table.HeaderCell>
-                        <Table.HeaderCell>Price</Table.HeaderCell>
-                        <Table.HeaderCell>Total</Table.HeaderCell>
+                        <Table.HeaderCell>Open Price</Table.HeaderCell>
+                        <Table.HeaderCell>PnL</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
                     {orders.map((order, index) => {
-                        return <OrderRow index={index} order={order}/>
+                        return <TradeRow index={index} trade={order}/>
                     })}
                 </Table.Body>
             </Table>
@@ -52,4 +54,4 @@ function OrdersPanel(props: Props) {
     );
 }
 
-export default OrdersPanel;
+export default TradesPanel;

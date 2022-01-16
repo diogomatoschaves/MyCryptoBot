@@ -1,18 +1,17 @@
 import json
 
-ORDER_FORMAT_CONVERTER = dict(
-    order_id="orderId",
-    client_order_id="clientOrderId",
+TRADE_FORMAT_CONVERTER = dict(
+    id="id",
     symbol_id="symbol",
-    transact_time="transactTime",
-    price="price",
-    original_qty="origQty",
-    executed_qty="executedQty",
-    cummulative_quote_qty="cummulativeQuoteQty",
-    status="status",
+    exchange_id="exchange",
+    open_time="openTime",
+    close_time="closeTime",
+    open_price="openPrice",
+    close_price="closePrice",
+    profit_loss="profitLoss",
+    amount="amount",
     type="type",
     side="side",
-    is_isolated="isIsolated",
     mock="mock",
     pipeline_id="pipelineId",
 )
