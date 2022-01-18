@@ -26,7 +26,6 @@ function TradeRow(props: Props) {
 
   return (
         <Table.Row active={index % 2 == 0} key={index} >
-            <Table.Cell style={styles.defaultCell}>{trade.id}</Table.Cell>
             <Table.Cell style={{...styles.defaultCell, fontWeight: 600}}>
               {trade.openTime.toLocaleString()}
             </Table.Cell>
