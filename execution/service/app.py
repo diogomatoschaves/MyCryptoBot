@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request
 
 from execution.exchanges.binance import BinanceTrader
 from execution.exchanges.binance.mock import BinanceMockTrader
+from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_input, extract_and_validate
 from execution.service.helpers.responses import Responses
 from shared.utils.logger import configure_logger
@@ -21,6 +22,7 @@ binance_mock_trader = BinanceMockTrader()
 
 
 app = Flask(__name__)
+app.register_blueprint(market_data)
 
 
 def get_binance_trader_instance(paper_trading):
