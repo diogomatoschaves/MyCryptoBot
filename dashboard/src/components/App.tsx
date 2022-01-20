@@ -6,9 +6,9 @@ import {
     DropdownOptions, MenuOption,
     Trade, Pipeline, PipelineParams, Position,
     StartPipeline,
-    StopPipeline
+    StopPipeline, GetCurrentPrices
 } from "../types";
-import {getTrades, getPipelines, getPositions, getResources, startBot, stopBot} from "../apiCalls";
+import {getTrades, getPipelines, getPositions, getResources, startBot, stopBot, getPrice} from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
 import Wrapper from "../styledComponents/Wrapper";
@@ -31,12 +31,14 @@ interface State {
     strategiesOptions: DropdownOptions[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
-    orders: Trade[];
+    trades: Trade[];
     pipelines: Pipeline[];
     positions: Position[];
     message: string;
     menuOption: MenuOption,
     strategies: any
+    symbols: string[],
+    currentPrices: Object
 }
 
 
@@ -47,7 +49,7 @@ class App extends Component<any, State> {
         strategiesOptions: [],
         candleSizeOptions: [],
         exchangeOptions: [],
-        orders: [],
+        trades: [],
         pipelines: [],
         positions: [],
         strategies: {},
@@ -57,7 +59,9 @@ class App extends Component<any, State> {
             emoji: '📈',
             text: 'Balance',
             code: "balance"
-        }
+        },
+        symbols: [],
+        currentPrices: {}
     }
 
     componentDidMount() {
@@ -99,9 +103,13 @@ class App extends Component<any, State> {
                 this.setState(state => {
                     return {
                         ...state,
-                        ...pipelines
+                        ...pipelines,
+                        // @ts-ignore
+                        symbols: [...new Set(pipelines.pipelines.map(pipeline => pipeline.symbol))]
                     }
                 })
+
+                this.getCurrentPrices()
             })
 
         getPositions()
@@ -154,10 +162,11 @@ class App extends Component<any, State> {
                     pipelines: message.success ? state.pipelines.reduce(
                         (newArray: Pipeline[], pipeline: Pipeline) => {
                             if (pipelineId === pipeline.id) {
-                                return [...newArray, {
-                                    ...pipeline,
-                                    active: false
-                                }]
+                                return [
+                                    ...newArray, {
+                                        ...pipeline,
+                                        active: false
+                                    }]
                             } else return [...newArray, pipeline]
                         },
                         []
@@ -170,6 +179,20 @@ class App extends Component<any, State> {
         this.setState({ menuOption })
     }
 
+    getCurrentPrices: GetCurrentPrices = () => {
+        Promise.allSettled(
+            this.state.symbols.map(symbol => getPrice(symbol))
+        ).then(results => {
+            this.setState({
+                currentPrices: results.reduce((prices, result) => {
+                    if (result.status === 'fulfilled') {
+                        return {...prices, [result.value.symbol]: Number(result.value.price)}
+                    } else return prices
+                }, {})
+            })
+        })
+    }
+
     render(){
 
         const {
@@ -177,11 +200,12 @@ class App extends Component<any, State> {
             strategiesOptions,
             candleSizeOptions,
             exchangeOptions,
-            orders,
+            trades,
             pipelines,
             positions,
             menuOption,
-            strategies
+            strategies,
+            currentPrices
         } = this.state
 
         return (
@@ -201,7 +225,7 @@ class App extends Component<any, State> {
                             stopPipeline={this.stopPipeline}
                         />
                     ) : menuOption.code === 'trades' ? (
-                        <TradesPanel menuOption={menuOption} orders={orders}/>
+                        <TradesPanel menuOption={menuOption} trades={trades} currentPrices={currentPrices}/>
                     ) : menuOption.code === 'positions' && (
                         <PositionsPanel menuOption={menuOption} positions={positions}/>
                     )}

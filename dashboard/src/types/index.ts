@@ -18,8 +18,7 @@ export type Trade = {
     closePrice: number | null,
     profitLoss: number | null,
     amount: number,
-    type: string
-    side: string
+    side: number
     mock: boolean
     pipelineId: number
 }
@@ -36,8 +35,7 @@ export type RawTrade = {
     closePrice: number | null,
     profitLoss: number | null,
     amount: number,
-    type: string
-    side: string
+    side: number
     mock: boolean
     pipelineId: number
 }
@@ -100,3 +98,4 @@ export type MenuOption = {
 export type StartPipeline = (pipelineParams: PipelineParams) => void
 export type StopPipeline = (pipelineId: number) => void
 export type ChangeMenu = (option: MenuOption) => void
+export type GetCurrentPrices = () => void
