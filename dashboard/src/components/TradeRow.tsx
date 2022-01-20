@@ -1,6 +1,7 @@
 import {Trade} from "../types";
 import {Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
+import {timeFormatter} from "../utils/helpers";
 
 
 interface Props {
@@ -37,13 +38,15 @@ function TradeRow(props: Props) {
 
   const decimalPlaces = 3
 
+  const duration = timeFormatter(trade.openTime, trade.closeTime && trade.closeTime)
+
   return (
         <Table.Row active={index % 2 == 0} key={index} >
-            <Table.Cell style={{...styles.defaultCell, fontWeight: 600}}>
+            <Table.Cell style={{...styles.defaultCell}}>
               {trade.openTime.toLocaleString()}
             </Table.Cell>
-            <Table.Cell style={{...styles.defaultCell, fontWeight: 600}}>
-              {trade.closeTime && trade.closeTime.toLocaleString()}
+            <Table.Cell style={{...styles.defaultCell }}>
+              {duration}
             </Table.Cell>
             <Table.Cell style={{...styles.defaultCell, color: DARK_YELLOW}}>{trade.symbol}</Table.Cell>
             <Table.Cell style={{color, fontWeight: '600'}}>{side}</Table.Cell>
@@ -53,7 +56,7 @@ function TradeRow(props: Props) {
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell}}>
               {price.toFixed(decimalPlaces)}
             </Table.Cell>
-            <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell, color}}>
+            <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell, color: pnlColor}}>
               {pnl && `${pnl}%`}
             </Table.Cell>
             <Table.Cell style={styles.defaultCell}>{trade.exchange}</Table.Cell>
