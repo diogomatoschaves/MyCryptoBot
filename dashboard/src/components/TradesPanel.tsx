@@ -5,8 +5,9 @@ import styled from "styled-components";
 
 
 interface Props {
-    orders: Trade[]
+    trades: Trade[]
     menuOption: MenuOption
+    currentPrices: Object
 }
 
 
@@ -22,7 +23,7 @@ const StyledDiv = styled.div`
 
 function TradesPanel(props: Props) {
 
-    const { orders, menuOption } = props
+    const { trades, menuOption, currentPrices } = props
 
     return (
         <StyledDiv className="flex-column">
@@ -36,7 +37,6 @@ function TradesPanel(props: Props) {
                         <Table.HeaderCell>end</Table.HeaderCell>
                         <Table.HeaderCell>symbol</Table.HeaderCell>
                         <Table.HeaderCell>type</Table.HeaderCell>
-                        <Table.HeaderCell>side</Table.HeaderCell>
                         <Table.HeaderCell>quantity</Table.HeaderCell>
                         <Table.HeaderCell>price</Table.HeaderCell>
                         <Table.HeaderCell>profit/loss</Table.HeaderCell>
@@ -44,8 +44,8 @@ function TradesPanel(props: Props) {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {orders.map((order, index) => {
-                        return <TradeRow index={index} trade={order}/>
+                    {trades.map((trade, index) => {
+                        return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
                     })}
                 </Table.Body>
             </Table>
