@@ -34,7 +34,7 @@ function TradesPanel(props: Props) {
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>start</Table.HeaderCell>
-                        <Table.HeaderCell>end</Table.HeaderCell>
+                        <Table.HeaderCell>duration</Table.HeaderCell>
                         <Table.HeaderCell>symbol</Table.HeaderCell>
                         <Table.HeaderCell>type</Table.HeaderCell>
                         <Table.HeaderCell>quantity</Table.HeaderCell>
