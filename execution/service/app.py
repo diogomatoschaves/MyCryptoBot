@@ -3,6 +3,7 @@ import os
 import sys
 
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 from execution.exchanges.binance import BinanceTrader
 from execution.exchanges.binance.mock import BinanceMockTrader
@@ -23,6 +24,8 @@ binance_mock_trader = BinanceMockTrader()
 
 app = Flask(__name__)
 app.register_blueprint(market_data)
+
+CORS(app)
 
 
 def get_binance_trader_instance(paper_trading):
