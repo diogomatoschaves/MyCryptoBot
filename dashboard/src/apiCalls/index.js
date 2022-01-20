@@ -1,10 +1,11 @@
-const apiHost = process.env.REACT_APP_API_HOST
+const dataAPIHost = process.env.REACT_APP_DATA_API_HOST
+const executionAPIHost = process.env.REACT_APP_EXECUTION_API_HOST
 
 export const getResources = async (resources) => {
 
   const resourcesString = resources.join()
 
-  const url = `${apiHost}/resources/${resourcesString}`
+  const url = `${dataAPIHost}/resources/${resourcesString}`
 
   return await fetch(url, {
     method: 'GET',
@@ -24,7 +25,7 @@ export const getResources = async (resources) => {
 
 export const getTrades = async (page) => {
 
-  const url = `${apiHost}/trades${page ? '/' + page : ''}`
+  const url = `${dataAPIHost}/trades${page ? '/' + page : ''}`
 
   return await fetch(url, {
     method: 'GET',
@@ -34,7 +35,7 @@ export const getTrades = async (page) => {
   })
     .then(res => {
       if (res.status >= 400) {
-        throw(new Error('Error fetching orders'))
+        throw(new Error('Error fetching trades'))
       } else {
         return res.json()
       }
@@ -44,7 +45,7 @@ export const getTrades = async (page) => {
 
 export const getPipelines = async (page) => {
 
-  const url = `${apiHost}/pipelines${page ? '/' + page : ''}`
+  const url = `${dataAPIHost}/pipelines${page ? '/' + page : ''}`
 
   return await fetch(url, {
     method: 'GET',
@@ -54,7 +55,7 @@ export const getPipelines = async (page) => {
   })
     .then(res => {
       if (res.status >= 400) {
-        throw(new Error('Error fetching orders'))
+        throw(new Error('Error fetching pipelines'))
       } else {
         return res.json()
       }
@@ -64,7 +65,7 @@ export const getPipelines = async (page) => {
 
 export const getPositions = async (page) => {
 
-  const url = `${apiHost}/positions${page ? '/' + page : ''}`
+  const url = `${dataAPIHost}/positions${page ? '/' + page : ''}`
 
   return await fetch(url, {
     method: 'GET',
@@ -74,7 +75,27 @@ export const getPositions = async (page) => {
   })
     .then(res => {
       if (res.status >= 400) {
-        throw(new Error('Error fetching orders'))
+        throw(new Error('Error fetching positions'))
+      } else {
+        return res.json()
+      }
+    })
+}
+
+
+export const getPrice = async (symbol) => {
+
+  const url = `${executionAPIHost}/prices?symbol=${symbol}`
+
+  return await fetch(url, {
+    method: 'GET',
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+    }
+  })
+    .then(res => {
+      if (res.status >= 400) {
+        throw(new Error('Error fetching prices'))
       } else {
         return res.json()
       }
@@ -84,7 +105,7 @@ export const getPositions = async (page) => {
 
 export const startBot = async (requestData) => {
 
-  const url = `${apiHost}/start_bot`
+  const url = `${dataAPIHost}/start_bot`
 
   const response = await fetch(url, {
     body: JSON.stringify(requestData),
@@ -97,7 +118,7 @@ export const startBot = async (requestData) => {
 
 export const stopBot = async (requestData) => {
 
-  const url = `${apiHost}/stop_bot`
+  const url = `${dataAPIHost}/stop_bot`
 
   const response = await fetch(url, {
     body: JSON.stringify(requestData),
