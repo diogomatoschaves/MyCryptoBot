@@ -82,9 +82,9 @@ export const organizePositions = (positions: RawPosition[]): Position[] => {
 }
 
 
-export const timeFormatter = (date: Date) => {
+export const timeFormatter = (date: Date, currentDate?: Date | null) => {
 
-  const currentDate = new Date()
+  currentDate = currentDate || new Date()
 
   // @ts-ignore
   let difference = currentDate - date;
