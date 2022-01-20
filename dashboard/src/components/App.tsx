@@ -1,21 +1,22 @@
 import '../App.css';
 import {Component} from 'react'
-import styled from 'styled-components'
+import styled, {css} from 'styled-components'
 import {
     ChangeMenu,
     DropdownOptions, MenuOption,
     Trade, Pipeline, PipelineParams, Position,
     StartPipeline,
-    StopPipeline, GetCurrentPrices
+    StopPipeline, GetCurrentPrices, Message
 } from "../types";
 import {getTrades, getPipelines, getPositions, getResources, startBot, stopBot, getPrice} from "../apiCalls";
-import {RESOURCES_MAPPING} from "../utils/constants";
+import {GREEN, RED, RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
-import Wrapper from "../styledComponents/Wrapper";
+import MessageComponent from "./Message";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
 import {organizeTrades, organizePositions} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
+import {Box, Wrapper} from "../styledComponents";
 
 
 const AppDiv = styled.div`
@@ -26,6 +27,16 @@ const AppDiv = styled.div`
   justify-content: flex-start;
 `
 
+const StyledBox = styled(Box)`
+  transition: bottom 1s ease;
+  position: fixed;
+  ${(props: any) =>
+    props.bottom &&
+    css`
+      bottom: ${props.bottom}px;
+    `}
+`
+
 interface State {
     symbolsOptions: DropdownOptions[];
     strategiesOptions: DropdownOptions[];
@@ -34,15 +45,17 @@ interface State {
     trades: Trade[];
     pipelines: Pipeline[];
     positions: Position[];
-    message: string;
     menuOption: MenuOption,
     strategies: any
     symbols: string[],
     currentPrices: Object
+    message: Message
 }
 
 
 class App extends Component<any, State> {
+
+    messageTimeout: any
 
     state = {
         symbolsOptions: [],
@@ -53,7 +66,6 @@ class App extends Component<any, State> {
         pipelines: [],
         positions: [],
         strategies: {},
-        message: '',
         menuOption: {
             icon: 'line graph',
             emoji: '📈',
@@ -61,7 +73,8 @@ class App extends Component<any, State> {
             code: "balance"
         },
         symbols: [],
-        currentPrices: {}
+        currentPrices: {},
+        message: {show: false, bottomProp: -300, text: null, color: "#000000"}
     }
 
     componentDidMount() {
@@ -135,13 +148,46 @@ class App extends Component<any, State> {
         }, 60 * 1000)
     }
 
+    componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<State>, snapshot?: any) {
+
+        const { message } = this.state
+
+        if (prevState.message.show !== message.show && message.show) {
+            this.setState({message: {...message, bottomProp: 40, show: false}})
+
+            if (this.messageTimeout) {
+                clearTimeout(this.messageTimeout)
+            }
+            this.messageTimeout = setTimeout(() => {
+                this.setState((state) =>
+                    ({
+                        message: {
+                            ...state.message,
+                            bottomProp: -300
+                        }
+                    }),
+                    () => {
+                        if (this.messageTimeout) {
+                            clearTimeout(this.messageTimeout)
+                        }
+                    }
+                )
+            }, 4200)
+        }
+    }
+
     startPipeline: StartPipeline = (pipelineParams: PipelineParams) => {
         startBot(pipelineParams)
-            .then(message => {
+            .then(response => {
                 this.setState(state => ({
-                    message: message.response,
-                    pipelines: message.success ? [...state.pipelines, {
-                        id: message.pipelineId,
+                    message: {
+                        ...state.message,
+                        text: response.response,
+                        show: true,
+                        color: response.success ? "000000" : RED
+                    },
+                    pipelines: response.success ? [...state.pipelines, {
+                        id: response.pipelineId,
                         symbol: pipelineParams.symbol,
                         strategy: pipelineParams.strategy,
                         exchange: pipelineParams.exchanges,
@@ -156,10 +202,15 @@ class App extends Component<any, State> {
 
     stopPipeline: StopPipeline = (pipelineId) => {
         stopBot({pipelineId})
-            .then(message => {
+            .then(response => {
                 this.setState(state => ({
-                    message: message.response,
-                    pipelines: message.success ? state.pipelines.reduce(
+                    message: {
+                        ...state.message,
+                        text: response.response,
+                        show: true,
+                        color: response.success ? "000000" : RED
+                    },
+                    pipelines: response.success ? state.pipelines.reduce(
                         (newArray: Pipeline[], pipeline: Pipeline) => {
                             if (pipelineId === pipeline.id) {
                                 return [
@@ -205,7 +256,8 @@ class App extends Component<any, State> {
             positions,
             menuOption,
             strategies,
-            currentPrices
+            currentPrices,
+            message
         } = this.state
 
         return (
@@ -229,9 +281,12 @@ class App extends Component<any, State> {
                     ) : menuOption.code === 'positions' && (
                         <PositionsPanel menuOption={menuOption} positions={positions}/>
                     )}
-
                 </Wrapper>
-
+                {message.text && (
+                    <StyledBox align="center" bottom={message.bottomProp}>
+                        <MessageComponent message={message.text} color={message.color}/>
+                    </StyledBox>
+                )}
             </AppDiv>
         );
     }
