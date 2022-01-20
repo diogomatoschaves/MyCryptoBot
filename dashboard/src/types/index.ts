@@ -95,6 +95,14 @@ export type MenuOption = {
     code: string
 }
 
+
+export type Message = {
+    text: string | null,
+    show: boolean,
+    bottomProp: number,
+    color: string
+}
+
 export type StartPipeline = (pipelineParams: PipelineParams) => void
 export type StopPipeline = (pipelineId: number) => void
 export type ChangeMenu = (option: MenuOption) => void
