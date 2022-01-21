@@ -26,13 +26,13 @@ function PositionRow(props: Props) {
   return (
       <Table.Row active={index % 2 == 0} key={index} >
         <Table.Cell style={{fontWeight: 600, color: DARK_YELLOW}}>{position.symbol}</Table.Cell>
-        <Table.Cell>{position.exchange}</Table.Cell>
-        <Table.Cell>{position.open ? "Open": " Closed"}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{age}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{position.open ? "Open": " Closed"}</Table.Cell>
         <Table.Cell style={{color, fontWeight: '600'}}>{positionSide}</Table.Cell>
-        <Table.Cell>{Number(position.amount).toFixed(decimalPlaces)}</Table.Cell>
-        <Table.Cell>{Number(position.price).toFixed(decimalPlaces)}</Table.Cell>
-        <Table.Cell>{age}</Table.Cell>
-        <Table.Cell>{position.paperTrading ? "Yes" : "No"}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{Number(position.amount).toFixed(decimalPlaces)}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{Number(position.price).toFixed(decimalPlaces)}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{position.paperTrading ? "Yes" : "No"}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{position.exchange}</Table.Cell>
       </Table.Row>
   );
 }

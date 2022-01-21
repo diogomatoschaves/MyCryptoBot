@@ -16,20 +16,20 @@ const PositionsPanel = (props: Props) => {
 
   return (
       <StyledSegment basic className="flex-column">
-        <Divider horizontal style={{marginBottom: '20px', marginTop: '0'}}>
+        <Divider horizontal style={{marginBottom: '30px', marginTop: '0'}}>
           <span>{menuOption.emoji}</span> {menuOption.text}
         </Divider>
         <Table basic='very'>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell>Symbol</Table.HeaderCell>
-              <Table.HeaderCell>Exchange</Table.HeaderCell>
+              <Table.HeaderCell>Asset</Table.HeaderCell>
+              <Table.HeaderCell>Age</Table.HeaderCell>
               <Table.HeaderCell>Status</Table.HeaderCell>
               <Table.HeaderCell>Position</Table.HeaderCell>
               <Table.HeaderCell>Amount</Table.HeaderCell>
               <Table.HeaderCell>Price</Table.HeaderCell>
-              <Table.HeaderCell>Age</Table.HeaderCell>
               <Table.HeaderCell>Paper Trading</Table.HeaderCell>
+              <Table.HeaderCell>Exchange</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
