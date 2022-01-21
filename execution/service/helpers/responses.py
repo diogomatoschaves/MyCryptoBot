@@ -23,26 +23,26 @@ RESPONSES = namedtuple(
 Responses = RESPONSES(
     TRADING_SYMBOL_START=lambda symbol: {
         "success": True,
-        "response": f"{symbol}: Trading symbol successfully started."
+        "message": f"{symbol}: Trading symbol successfully started."
     },
     TRADING_SYMBOL_NO_ACCOUNT=lambda symbol: {
         "success": False,
-        "response":  f"{symbol}: Trading account does not exist."
+        "message":  f"{symbol}: Trading account does not exist."
     },
     TRADING_SYMBOL_STOP=lambda symbol: {
         "success": True,
-        "response": f"{symbol}: Trading symbol successfully stopped."
+        "message": f"{symbol}: Trading symbol successfully stopped."
     },
     PIPELINE_NOT_ACTIVE=lambda symbol, pipeline_id: {
         "success": False,
-        "response":  f"{symbol}: Pipeline {pipeline_id} not active."
+        "message":  f"{symbol}: Pipeline {pipeline_id} not active."
     },
-    NO_SUCH_PIPELINE=lambda pipeline_id: {"response": f"Pipeline {pipeline_id} was not found.", "success": False},
-    SYMBOL_REQUIRED={"success": False, "response": "A symbol must be included in the request."},
-    SYMBOL_INVALID=lambda symbol: {"success": False, "response": f"{symbol} is not a valid symbol."},
-    EXCHANGE_REQUIRED={"success": False, "response": "An exchange must be included in the request."},
-    EXCHANGE_INVALID=lambda exchange: {"success": False, "response": f"{exchange} is not a valid exchange."},
-    SIGNAL_REQUIRED={"success": False, "response": "A signal must be included in the request."},
-    SIGNAL_INVALID=lambda signal: {"success": False, "response": f"{signal} is not a valid signal."},
-    ORDER_EXECUTION_SUCCESS=lambda symbol: {"response": f"{symbol}: Order was sent successfully.", "success": True},
+    NO_SUCH_PIPELINE=lambda pipeline_id: {"message": f"Pipeline {pipeline_id} was not found.", "success": False},
+    SYMBOL_REQUIRED={"success": False, "message": "A symbol must be included in the request."},
+    SYMBOL_INVALID=lambda symbol: {"success": False, "message": f"{symbol} is not a valid symbol."},
+    EXCHANGE_REQUIRED={"success": False, "message": "An exchange must be included in the request."},
+    EXCHANGE_INVALID=lambda exchange: {"success": False, "message": f"{exchange} is not a valid exchange."},
+    SIGNAL_REQUIRED={"success": False, "message": "A signal must be included in the request."},
+    SIGNAL_INVALID=lambda signal: {"success": False, "message": f"{signal} is not a valid signal."},
+    ORDER_EXECUTION_SUCCESS=lambda symbol: {"message": f"{symbol}: Order was sent successfully.", "success": True},
 )
