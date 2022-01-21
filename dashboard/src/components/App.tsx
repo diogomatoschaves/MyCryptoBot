@@ -182,7 +182,7 @@ class App extends Component<any, State> {
                 this.setState(state => ({
                     message: {
                         ...state.message,
-                        text: response.response,
+                        text: response.message,
                         show: true,
                         color: response.success ? "000000" : RED
                     },
@@ -206,7 +206,7 @@ class App extends Component<any, State> {
                 this.setState(state => ({
                     message: {
                         ...state.message,
-                        text: response.response,
+                        text: response.message,
                         show: true,
                         color: response.success ? "000000" : RED
                     },

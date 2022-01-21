@@ -323,7 +323,7 @@ class TestDataService:
 
         print(Pipeline.objects.all().count())
 
-        assert res.json["response"] == getattr(Responses, response)(1)["response"]
+        assert res.json == getattr(Responses, response)(1)
         assert type(res.json["pipelineId"]) == int
         assert len(binance_handler_instances_spy_start_bot) == 1
 
