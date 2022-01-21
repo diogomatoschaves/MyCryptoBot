@@ -21,13 +21,12 @@ function TradeRow(props: Props) {
 
   const negative = trade.side === -1
 
-  const side = trade.side === 1 ? "BUY" : "SELL"
+  const side = trade.side === 1 ? "LONG" : "SHORT"
 
   const color = negative ? RED : GREEN
 
   const amount = Number(trade.amount)
   const price = Number(trade.openPrice)
-  const total = price * amount
 
   const pnl = trade.profitLoss ?
       (trade.profitLoss * 100).toFixed(2) :
@@ -42,13 +41,15 @@ function TradeRow(props: Props) {
 
   return (
         <Table.Row active={index % 2 == 0} key={index} >
+            <Table.Cell style={{...styles.defaultCell, color: DARK_YELLOW, fontWeight: '600'}}>
+              {trade.symbol}
+            </Table.Cell>
             <Table.Cell style={{...styles.defaultCell}}>
               {trade.openTime.toLocaleString()}
             </Table.Cell>
             <Table.Cell style={{...styles.defaultCell }}>
               {duration}
             </Table.Cell>
-            <Table.Cell style={{...styles.defaultCell, color: DARK_YELLOW}}>{trade.symbol}</Table.Cell>
             <Table.Cell style={{color, fontWeight: '600'}}>{side}</Table.Cell>
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell}}>
               {amount.toFixed(decimalPlaces)}

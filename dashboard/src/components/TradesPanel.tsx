@@ -33,14 +33,14 @@ function TradesPanel(props: Props) {
             <Table basic='very'>
                 <Table.Header>
                     <Table.Row>
-                        <Table.HeaderCell>start</Table.HeaderCell>
-                        <Table.HeaderCell>duration</Table.HeaderCell>
-                        <Table.HeaderCell>symbol</Table.HeaderCell>
-                        <Table.HeaderCell>type</Table.HeaderCell>
-                        <Table.HeaderCell>quantity</Table.HeaderCell>
-                        <Table.HeaderCell>price</Table.HeaderCell>
-                        <Table.HeaderCell>profit/loss</Table.HeaderCell>
-                        <Table.HeaderCell>exchange</Table.HeaderCell>
+                        <Table.HeaderCell>Asset</Table.HeaderCell>
+                        <Table.HeaderCell>Open</Table.HeaderCell>
+                        <Table.HeaderCell>Duration</Table.HeaderCell>
+                        <Table.HeaderCell>Side</Table.HeaderCell>
+                        <Table.HeaderCell>Amount</Table.HeaderCell>
+                        <Table.HeaderCell>Price</Table.HeaderCell>
+                        <Table.HeaderCell>Net Profit</Table.HeaderCell>
+                        <Table.HeaderCell>Exchange</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
