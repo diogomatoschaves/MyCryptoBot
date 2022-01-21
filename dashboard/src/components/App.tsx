@@ -150,7 +150,7 @@ class App extends Component<any, State> {
 
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<State>, snapshot?: any) {
 
-        const { message } = this.state
+        const { message, menuOption } = this.state
 
         if (prevState.message.show !== message.show && message.show) {
             this.setState({message: {...message, bottomProp: 40, show: false}})
@@ -173,6 +173,10 @@ class App extends Component<any, State> {
                     }
                 )
             }, 4200)
+        }
+
+        if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'trades') {
+            this.getCurrentPrices()
         }
     }
 
