@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify
 
 from data.service.external_requests import get_strategies
 from data.service.helpers._helpers import convert_queryset_to_dict
-from shared.data.format_converter import TRADE_FORMAT_CONVERTER, PIPELINE_FORMAT_CONVERTER, POSITION_FORMAT_CONVERTER
+from shared.data.format_converter import TRADE_FORMAT_CONVERTER, POSITION_FORMAT_CONVERTER
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -75,7 +75,7 @@ def get_pipelines(page):
 
     response = {}
 
-    pipelines = Pipeline.objects.all().order_by('id').values()
+    pipelines = Pipeline.objects.all().order_by('id')
 
     paginator = Paginator(pipelines, 20)
 
@@ -87,11 +87,7 @@ def get_pipelines(page):
         page_obj = paginator.get_page(page)
         response["pipelines"] = list(page_obj)
 
-    response["pipelines"] = [
-        {PIPELINE_FORMAT_CONVERTER[key]["name"]: PIPELINE_FORMAT_CONVERTER[key]["value_converter"](value)
-         for key, value in pipeline.items() if key in PIPELINE_FORMAT_CONVERTER}
-        for pipeline in response["pipelines"]
-    ]
+    response["pipelines"] = [pipeline.as_json() for pipeline in response["pipelines"]]
 
     return jsonify(response)
 

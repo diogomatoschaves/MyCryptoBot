@@ -14,7 +14,7 @@ import Menu from "./Menu";
 import MessageComponent from "./Message";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
-import {organizeTrades, organizePositions} from "../utils/helpers";
+import {organizeTrades, organizePositions, organizePipelines} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import {Box, Wrapper} from "../styledComponents";
 
@@ -112,13 +112,13 @@ class App extends Component<any, State> {
             })
 
         getPipelines()
-            .then(pipelines => {
+            .then(response => {
                 this.setState(state => {
                     return {
                         ...state,
-                        ...pipelines,
+                        pipelines: organizePipelines(response.pipelines),
                         // @ts-ignore
-                        symbols: [...new Set(pipelines.pipelines.map(pipeline => pipeline.symbol))]
+                        symbols: [...new Set(response.pipelines.map(pipeline => pipeline.symbol))]
                     }
                 })
 
@@ -190,16 +190,8 @@ class App extends Component<any, State> {
                         show: true,
                         color: response.success ? "000000" : RED
                     },
-                    pipelines: response.success ? [...state.pipelines, {
-                        id: response.pipelineId,
-                        symbol: pipelineParams.symbol,
-                        strategy: pipelineParams.strategy,
-                        exchange: pipelineParams.exchanges,
-                        candleSize: pipelineParams.candleSize,
-                        params: pipelineParams.params,
-                        paperTrading: pipelineParams.paperTrading,
-                        active: true
-                    }] : state.pipelines
+                    pipelines: response.success ? [...state.pipelines, ...organizePipelines([response.pipeline])]
+                        : state.pipelines
                 }))
             })
     }
@@ -217,11 +209,7 @@ class App extends Component<any, State> {
                     pipelines: response.success ? state.pipelines.reduce(
                         (newArray: Pipeline[], pipeline: Pipeline) => {
                             if (pipelineId === pipeline.id) {
-                                return [
-                                    ...newArray, {
-                                        ...pipeline,
-                                        active: false
-                                    }]
+                                return [...newArray, ...organizePipelines([response.pipeline])]
                             } else return [...newArray, pipeline]
                         },
                         []

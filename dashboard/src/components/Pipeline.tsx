@@ -4,6 +4,7 @@ import {GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
 import PipelineButton from "./PipelineButton";
+import {timeFormatter} from "../utils/helpers";
 
 
 
@@ -33,6 +34,8 @@ function PipelineItem(props: Props) {
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
     const liveStr = pipeline.paperTrading ? "Test Mode" : "Live Mode"
 
+    const age = pipeline.openTime ? timeFormatter(pipeline.openTime) : "-"
+
     return (
         <PipelineDiv className="flex-row">
             <Segment style={styles.segment} secondary raised>
@@ -45,7 +48,7 @@ function PipelineItem(props: Props) {
                 </Ribbon>
                 <Grid columns={2}>
                     <Grid.Column width={11}>
-                        <Grid columns={2}>
+                        <Grid columns={3}>
                             <Grid.Row>
                                 <Grid.Column>
                                     <Grid.Column style={styles.header}>
@@ -61,6 +64,14 @@ function PipelineItem(props: Props) {
                                     </Grid.Column>
                                     <Grid.Column floated='right' style={styles.rightColumn} >
                                         {pipeline.strategy}
+                                    </Grid.Column>
+                                </Grid.Column>
+                                <Grid.Column>
+                                    <Grid.Column floated='left' style={styles.header}>
+                                        Time running
+                                    </Grid.Column>
+                                    <Grid.Column floated='right' style={styles.rightColumn} >
+                                        {age}
                                     </Grid.Column>
                                 </Grid.Column>
                             </Grid.Row>
@@ -79,6 +90,14 @@ function PipelineItem(props: Props) {
                                     </Grid.Column>
                                     <Grid.Column floated='right' style={styles.rightColumn} >
                                         {pipeline.exchange}
+                                    </Grid.Column>
+                                </Grid.Column>
+                                <Grid.Column>
+                                    <Grid.Column floated='left' style={styles.header}>
+                                        # trades
+                                    </Grid.Column>
+                                    <Grid.Column floated='right' style={styles.rightColumn} >
+                                        {pipeline.numberTrades}
                                     </Grid.Column>
                                 </Grid.Column>
                             </Grid.Row>

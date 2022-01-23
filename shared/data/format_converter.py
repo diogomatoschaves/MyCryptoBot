@@ -1,4 +1,3 @@
-import json
 
 TRADE_FORMAT_CONVERTER = dict(
     id="id",
@@ -14,18 +13,6 @@ TRADE_FORMAT_CONVERTER = dict(
     side="side",
     mock="mock",
     pipeline_id="pipelineId",
-)
-
-
-PIPELINE_FORMAT_CONVERTER = dict(
-    id={"name": "id", "value_converter": lambda value: value},
-    strategy={"name": "strategy", "value_converter": lambda value: value},
-    params={"name": "params", "value_converter": lambda value: json.loads(value)},
-    interval={"name": "candleSize", "value_converter": lambda value: value},
-    exchange_id={"name": "exchange", "value_converter": lambda value: value},
-    symbol_id={"name": "symbol", "value_converter": lambda value: value},
-    active={"name": "active", "value_converter": lambda value: value},
-    paper_trading={"name": "paperTrading", "value_converter": lambda value: value}
 )
 
 

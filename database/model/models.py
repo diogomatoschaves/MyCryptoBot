@@ -1,3 +1,4 @@
+import json
 import sys
 from datetime import datetime
 
@@ -147,6 +148,21 @@ class Pipeline(models.Model):
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
     active = models.BooleanField(default=True, blank=True)
+    open_time = models.DateTimeField(auto_now_add=True, null=True)
+
+    def as_json(self):
+        return dict(
+            id = self.id,
+            strategy=self.strategy,
+            params=json.loads(self.params),
+            candleSize=self.interval,
+            exchange=self.exchange.name,
+            symbol=self.symbol.name,
+            active=self.active,
+            paperTrading=self.paper_trading,
+            openTime=self.open_time.isoformat() if self.open_time else None,
+            numberTrades=self.trade_set.count()
+        )
 
     class Meta:
         unique_together = ("symbol", "interval", "strategy", "params", "exchange", "paper_trading")
