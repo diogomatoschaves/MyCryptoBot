@@ -40,7 +40,7 @@ def generate_signal(pipeline_id, header=''):
     logging.debug(r.text)
 
     response = r.json()
-    logging.debug(response["response"])
+    logging.debug(response["message"])
 
     return response
 
@@ -61,7 +61,7 @@ def start_stop_symbol_trading(pipeline_id, start_or_stop):
     logging.debug(r.text)
 
     response = r.json()
-    logging.debug(response["response"])
+    logging.debug(response["message"])
 
     return response
 

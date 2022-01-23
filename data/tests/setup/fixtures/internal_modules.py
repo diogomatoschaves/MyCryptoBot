@@ -122,7 +122,7 @@ def mock_start_stop_symbol_trading_success_true(mocker):
     mocker.patch.object(
         data.service.app,
         'start_stop_symbol_trading',
-        lambda pipeline_id, start_or_stop: {"success": True, "response": ''},
+        lambda pipeline_id, start_or_stop: {"success": True, "message": ''},
     )
 
 
@@ -131,7 +131,7 @@ def mock_start_stop_symbol_trading_success_false(mocker):
     return mocker.patch.object(
         data.service.app,
         'start_stop_symbol_trading',
-        lambda pipeline_id, start_or_stop: {"success": False, "response": 'Failed'},
+        lambda pipeline_id, start_or_stop: {"success": False, "message": 'Failed'},
     )
 
 

@@ -3,7 +3,7 @@ import time
 import pytest
 import requests
 
-response = {"response": "Something", "success": True}
+response = {"message": "Something", "success": True}
 
 
 def mock_response(*args, **kwargs):
@@ -18,7 +18,7 @@ def mock_response(*args, **kwargs):
 
         @property
         def text(self):
-            return response["response"]
+            return response["message"]
 
     return MockResponse(response, 200)
 

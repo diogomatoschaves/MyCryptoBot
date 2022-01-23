@@ -73,5 +73,5 @@ def trigger_order(pipeline_id, signal, header=''):
         logging.debug(header + "Order was executed successfully.")
         return True
     else:
-        logging.warning(response["response"])
+        logging.warning(response["message"])
         return False
