@@ -49,6 +49,22 @@ export type Pipeline = {
     symbol: string
     active: boolean
     paperTrading: boolean
+    openTime: Date | null
+    numberTrades: number
+}
+
+
+export type RawPipeline = {
+    id: number
+    strategy: string
+    params: Object
+    candleSize: string
+    exchange: string
+    symbol: string
+    active: boolean
+    paperTrading: boolean
+    openTime: string | null
+    numberTrades: number
 }
 
 export type PipelineParams = {
