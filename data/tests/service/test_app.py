@@ -321,8 +321,6 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        print(Pipeline.objects.all().count())
-
         assert res.json == getattr(Responses, response)(1)
         assert type(res.json["pipelineId"]) == int
         assert len(binance_handler_instances_spy_start_bot) == 1
@@ -372,7 +370,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        assert res.json["response"] == 'Failed'
+        assert res.json["message"] == 'Failed'
 
     @pytest.mark.parametrize(
         "params,response",

@@ -26,6 +26,6 @@ def execute_order(pipeline_id, signal, header=''):
     logging.debug(r.text)
 
     response = r.json()
-    logging.debug(response["response"])
+    logging.debug(response["message"])
 
     return response
