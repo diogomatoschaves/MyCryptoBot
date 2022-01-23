@@ -31,7 +31,7 @@ function PipelineItem(props: Props) {
     } = props
 
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
-    const liveStr = pipeline.active ? pipeline.paperTrading ? "Test Mode" : "Live Mode" : ""
+    const liveStr = pipeline.paperTrading ? "Test Mode" : "Live Mode"
 
     return (
         <PipelineDiv className="flex-row">
@@ -40,8 +40,7 @@ function PipelineItem(props: Props) {
                     <span >
                         <span style={{color: activeProps.color, fontSize: '0.7em'}}><Icon name={'circle'}/></span>
                         <span >{activeProps.status}</span>
-                        {liveStr !== "" && <span> | </span>}
-                        <span>{liveStr}</span>
+                        <span> | {liveStr}</span>
                     </span>
                 </Ribbon>
                 <Grid columns={2}>
