@@ -109,12 +109,12 @@ class TestSignalGeneration:
         "side_effect,expected_value",
         [
             pytest.param(
-                {"success": True, "response": "Success"},
+                {"success": True, "message": "Success"},
                 True,
                 id="EXECUTE_ORDER_SUCCESS",
             ),
             pytest.param(
-                {"success": False, "response": "Fail"},
+                {"success": False, "message": "Fail"},
                 False,
                 id="EXECUTE_ORDER_FAIL",
             ),

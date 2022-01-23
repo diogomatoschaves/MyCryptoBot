@@ -132,12 +132,12 @@ def start_bot():
     response = start_stop_symbol_trading(pipeline.id, 'start')
 
     if not response["success"]:
-        logging.warning(response["response"])
+        logging.warning(response["message"])
 
         pipeline.active = False
         pipeline.save()
 
-        return jsonify({"response": response["response"]})
+        return response
 
     logging.info(header + f"Starting data pipeline.")
 
@@ -170,7 +170,7 @@ def stop_bot():
 
         response = start_stop_symbol_trading(pipeline_id, 'stop')
 
-        logging.debug(response["response"])
+        logging.debug(response["message"])
 
         pipeline.active = False
         pipeline.save()

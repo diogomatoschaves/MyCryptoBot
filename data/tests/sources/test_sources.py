@@ -117,7 +117,7 @@ class TestExternalRequests:
                 id="SUCCESS",
             ),
             pytest.param(
-                {"success": False, "response": "Failed"},
+                {"success": False, "message": "Failed"},
                 False,
                 id="FAIL",
             )

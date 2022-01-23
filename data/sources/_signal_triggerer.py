@@ -17,7 +17,7 @@ def trigger_signal(pipeline_id, header='', retry=0):
     if "success" in response and response["success"]:
         return wait_for_job_conclusion(response["job_id"], pipeline_id, header=header, retry=retry)
     else:
-        logging.info(response["response"])
+        logging.info(response["message"])
         return False
 
 
