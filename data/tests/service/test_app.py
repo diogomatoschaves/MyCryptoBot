@@ -321,11 +321,10 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        assert res.json == getattr(Responses, response)(1)
-        assert type(res.json["pipelineId"]) == int
-        assert len(binance_handler_instances_spy_start_bot) == 1
-
         pipeline = Pipeline.objects.last()
+
+        assert res.json == getattr(Responses, response)(pipeline)
+        assert len(binance_handler_instances_spy_start_bot) == 1
 
         assert pipeline.symbol.name == params["symbol"]
         assert pipeline.exchange.name == params["exchanges"].lower()
@@ -412,9 +411,10 @@ class TestDataService:
 
         res = client.put('/stop_bot', json=params)
 
-        assert res.json == getattr(Responses, response)
-
         pipeline = Pipeline.objects.get(id=params["pipelineId"])
+
+        assert res.json == getattr(Responses, response)(pipeline)
+
         assert pipeline.active is False
 
         binance_handler_stop_data_ingestion_spy.assert_called()

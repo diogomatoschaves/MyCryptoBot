@@ -1,4 +1,13 @@
-import {DropdownOptions, Trade, Position, RawTrade, RawPosition, StartPipeline} from "../../types";
+import {
+  DropdownOptions,
+  Trade,
+  Position,
+  RawTrade,
+  RawPosition,
+  StartPipeline,
+  RawPipeline,
+  Pipeline
+} from "../../types";
 import PipelinePanel from "../../components/PipelinePanel";
 
 export const validatePipelineCreation = (
@@ -51,6 +60,17 @@ export const validateParams = (resolve: any, reject: any, params: any, strategy:
     }
   })
   return resolve()
+}
+
+
+export const organizePipelines = (pipelines: RawPipeline[]): Pipeline[] => {
+
+  return pipelines.map((pipeline) => {
+    return {
+      ...pipeline,
+      openTime: pipeline.openTime ? new Date(Date.parse(pipeline.openTime)) : null,
+    }
+  })
 }
 
 

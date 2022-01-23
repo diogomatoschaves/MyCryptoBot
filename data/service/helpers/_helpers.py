@@ -1,9 +1,12 @@
+import datetime
 import json
 import logging
 import os
 
 import django
+import pytz
 from flask import jsonify
+from pytz import tzinfo
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -106,6 +109,7 @@ def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params, pape
             return pipeline, jsonify(Responses.DATA_PIPELINE_ONGOING(pipeline.id))
         else:
             pipeline.active = True
+            pipeline.open_time = datetime.datetime.now(pytz.utc)
 
         pipeline.save()
 

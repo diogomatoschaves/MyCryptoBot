@@ -147,7 +147,7 @@ def start_bot():
         header
     )
 
-    return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline.id))
+    return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline))
 
 
 @app.route('/stop_bot', methods=['PUT'])
@@ -173,9 +173,10 @@ def stop_bot():
         logging.debug(response["message"])
 
         pipeline.active = False
+        pipeline.open_time = None
         pipeline.save()
 
-        return jsonify(Responses.DATA_PIPELINE_STOPPED)
+        return jsonify(Responses.DATA_PIPELINE_STOPPED(pipeline))
     except Pipeline.DoesNotExist:
         return jsonify(Responses.DATA_PIPELINE_INEXISTENT)
 
