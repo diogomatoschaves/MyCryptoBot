@@ -15,7 +15,7 @@ const dateStringOptions = {day: 'numeric', month: 'short', year: 'numeric', hour
 
 
 const getPnl = (original: number, current: number, side: number) => {
-  return ((side * (current / original) - 1) * 100).toFixed(2)
+  return ((side * ((current / original) - 1)) * 100).toFixed(2)
 }
 
 function TradeRow(props: Props) {
