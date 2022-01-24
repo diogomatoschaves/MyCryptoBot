@@ -1,7 +1,8 @@
 import {MenuOption, Trade} from "../types";
-import {Divider, Icon, Table} from "semantic-ui-react";
+import {Button, Divider, Icon, Table} from "semantic-ui-react";
 import TradeRow from './TradeRow'
 import styled from "styled-components";
+import {useEffect, useReducer, useRef, useState} from "react";
 
 
 interface Props {
@@ -21,20 +22,63 @@ const StyledDiv = styled.div`
     position: relative;
 `
 
+const FILTER_TRADES = 'FILTER_TRADES'
+
+
+const reducer = (state: any, action: any) => {
+    switch (action.type) {
+        case FILTER_TRADES:
+            return {
+                ...state,
+                openTrades: action.trades.filter((trade: Trade) => !trade.closeTime),
+                closedTrades: action.trades.filter((trade: Trade) => trade.closeTime),
+            }
+        default:
+            throw new Error();
+    }
+}
+
 function TradesPanel(props: Props) {
 
     const { trades, menuOption, currentPrices } = props
+
+    const previous = useRef({trades}).current;
+
+    const [open, setOpenOrClosed] = useState(true)
+
+    const [{openTrades, closedTrades}, dispatch] = useReducer(
+        reducer, {
+            openTrades: trades.filter((trade: Trade) => !trade.closeTime),
+            closedTrades: trades.filter((trade: Trade) => trade.closeTime),
+        }
+    );
+
+    useEffect(() => {
+        if (trades !== previous.trades) {
+            dispatch({
+                type: FILTER_TRADES,
+                trades
+            })
+        }
+        return () => {
+            previous.trades = trades
+        };
+    }, [trades]);
 
     return (
         <StyledDiv className="flex-column">
             <Divider horizontal style={{marginBottom: '30px', marginTop: 0}}>
                 <span>{menuOption.emoji}</span> {menuOption.text}
             </Divider>
+            <Button.Group size="mini" style={{alignSelf: 'center'}}>
+                <Button onClick={() => setOpenOrClosed(true)} primary={open}>Open</Button>
+                <Button onClick={() => setOpenOrClosed(false)} primary={!open}>Closed</Button>
+            </Button.Group>
             <Table basic='very'>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>Asset</Table.HeaderCell>
-                        <Table.HeaderCell>Open</Table.HeaderCell>
+                        <Table.HeaderCell>Opened</Table.HeaderCell>
                         <Table.HeaderCell>Duration</Table.HeaderCell>
                         <Table.HeaderCell>Side</Table.HeaderCell>
                         <Table.HeaderCell>Amount</Table.HeaderCell>
@@ -44,9 +88,15 @@ function TradesPanel(props: Props) {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {trades.map((trade, index) => {
-                        return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
-                    })}
+                    {open ? (
+                        openTrades.map((trade: Trade, index: number) => {
+                            return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
+                        })
+                    ) : (
+                        closedTrades.map((trade: Trade, index: number) => {
+                            return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
+                        })
+                    )}
                 </Table.Body>
             </Table>
         </StyledDiv>
