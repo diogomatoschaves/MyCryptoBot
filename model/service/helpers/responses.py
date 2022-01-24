@@ -16,15 +16,54 @@ RESPONSES = namedtuple(
 )
 
 
+ReturnCodes = RESPONSES(
+    STRATEGY_INVALID="STRATEGY_INVALID",
+    SIGNAL_GENERATION_INPROGRESS="SIGNAL_GENERATION_INPROGRESS",
+    NO_SUCH_PIPELINE="NO_SUCH_PIPELINE",
+    JOB_NOT_FOUND="JOB_NOT_FOUND",
+    FINISHED="FINISHED",
+    IN_QUEUE="IN_QUEUE",
+    WAITING="WAITING",
+    FAILED="FAILED",
+)
+
+
 Responses = RESPONSES(
-    STRATEGY_INVALID=lambda strategy: {"message": f"{strategy} is not a valid strategy.", "success": False},
-    SIGNAL_GENERATION_INPROGRESS=lambda job_id: {
-        "message": f"Signal generation process started.", "success": True, "job_id": job_id
+    STRATEGY_INVALID=lambda strategy: {
+        "code": ReturnCodes.STRATEGY_INVALID,
+        "success": False,
+        "message": f"{strategy} is not a valid strategy.",
     },
-    NO_SUCH_PIPELINE=lambda pipeline_id: {"message": f"Pipeline {pipeline_id} was not found.", "success": False},
-    FINISHED=lambda result: {"status": 'finished', "success": result},
-    JOB_NOT_FOUND={"status": 'job not found'},
-    IN_QUEUE={"status": 'job not found'},
-    WAITING={"status": 'waiting'},
-    FAILED={"status": 'failed'},
+    SIGNAL_GENERATION_INPROGRESS=lambda job_id: {
+        "code": ReturnCodes.SIGNAL_GENERATION_INPROGRESS,
+        "success": True,
+        "message": f"Signal generation process started.",
+        "job_id": job_id
+    },
+    NO_SUCH_PIPELINE=lambda pipeline_id: {
+        "code": ReturnCodes.NO_SUCH_PIPELINE,
+        "success": False,
+        "message": f"Pipeline {pipeline_id} was not found.",
+    },
+    FINISHED=lambda result: {
+        "code": ReturnCodes.FINISHED,
+        "success": result,
+        "status": 'Job finished.',
+    },
+    JOB_NOT_FOUND={
+        "code": ReturnCodes.JOB_NOT_FOUND,
+        "status": 'Job not found.'
+    },
+    IN_QUEUE={
+        "code": ReturnCodes.IN_QUEUE,
+        "status": 'Job in queue.'
+    },
+    WAITING={
+        "code": ReturnCodes.WAITING,
+        "status": 'Job waiting.'
+    },
+    FAILED={
+        "code": ReturnCodes.FAILED,
+        "status": 'Job failed.'
+    },
 )
