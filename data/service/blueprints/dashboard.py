@@ -6,13 +6,12 @@ from flask import Blueprint, jsonify
 
 from data.service.external_requests import get_strategies
 from data.service.helpers._helpers import convert_queryset_to_dict
-from shared.data.format_converter import TRADE_FORMAT_CONVERTER, POSITION_FORMAT_CONVERTER
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol, Exchange, Orders, Pipeline, Position, Trade
+from database.model.models import Symbol, Exchange, Pipeline, Position, Trade
 
 dashboard = Blueprint('dashboard', __name__)
 
@@ -49,7 +48,7 @@ def get_trades(page):
 
     response = {}
 
-    orders = Trade.objects.all().order_by('open_time').values()
+    orders = Trade.objects.all().order_by('open_time')
 
     paginator = Paginator(orders, 20)
 
@@ -61,10 +60,7 @@ def get_trades(page):
         page_obj = paginator.get_page(page)
         response["trades"] = list(page_obj)
 
-    response["trades"] = [
-        {TRADE_FORMAT_CONVERTER[key]: value for key, value in trade.items() if key in TRADE_FORMAT_CONVERTER}
-        for trade in response["trades"]
-    ]
+    response["trades"] = [trade.as_json() for trade in response["trades"]]
 
     return jsonify(response)
 
@@ -98,7 +94,7 @@ def get_positions(page):
 
     response = {}
 
-    positions = Position.objects.all().order_by('id').values()
+    positions = Position.objects.all().order_by('id')
 
     paginator = Paginator(positions, 100)
 
@@ -110,10 +106,7 @@ def get_positions(page):
         page_obj = paginator.get_page(page)
         response["positions"] = list(page_obj)
 
-    response["positions"] = [
-        {POSITION_FORMAT_CONVERTER[key]: value for key, value in position.items() if key in POSITION_FORMAT_CONVERTER}
-        for position in response["positions"]
-    ]
+    response["positions"] = [position.as_json() for position in response["positions"]]
 
     return jsonify(response)
 
