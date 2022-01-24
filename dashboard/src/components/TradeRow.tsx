@@ -11,6 +11,9 @@ interface Props {
 }
 
 
+const dateStringOptions = {day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric'}
+
+
 const getPnl = (original: number, current: number, side: number) => {
   return ((side * (current / original) - 1) * 100).toFixed(2)
 }
@@ -45,7 +48,8 @@ function TradeRow(props: Props) {
               {trade.symbol}
             </Table.Cell>
             <Table.Cell style={{...styles.defaultCell}}>
-              {trade.openTime.toLocaleString()}
+              {/*@ts-ignore*/}
+              {trade.openTime.toLocaleString('en-UK', dateStringOptions)}
             </Table.Cell>
             <Table.Cell style={{...styles.defaultCell }}>
               {duration}
