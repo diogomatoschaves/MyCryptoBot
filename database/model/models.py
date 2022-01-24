@@ -152,7 +152,7 @@ class Pipeline(models.Model):
 
     def as_json(self):
         return dict(
-            id = self.id,
+            id=self.id,
             strategy=self.strategy,
             params=json.loads(self.params),
             candleSize=self.interval,
@@ -181,6 +181,21 @@ class Position(models.Model):
     open_time = models.DateTimeField(auto_now_add=True)
     close_time = models.DateTimeField(null=True, blank=True)
 
+    def as_json(self):
+        return dict(
+            id=self.id,
+            position=self.position,
+            symbol=self.symbol.name,
+            exchange=self.exchange.name,
+            pipelineId=self.pipeline.id,
+            paperTrading=self.paper_trading,
+            price=self.buying_price,
+            amount=self.amount,
+            open=self.open,
+            openTime=self.open_time,
+            closeTime=self.close_time
+        )
+
 
 class Trade(models.Model):
 
@@ -195,3 +210,19 @@ class Trade(models.Model):
     exchange = models.ForeignKey(Exchange, default='binance', on_delete=models.SET_DEFAULT)
     mock = models.BooleanField(null=True, default=False)
     pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
+
+    def as_json(self):
+        return dict(
+            id=self.id,
+            symbol=self.symbol.name,
+            exchange=self.exchange.name,
+            openTime=self.open_time,
+            closeTime=self.close_time,
+            openPrice=self.open_price,
+            closePrice=self.close_price,
+            profitLoss=self.profit_loss,
+            amount=self.amount,
+            side=self.side,
+            mock=self.mock,
+            pipeline_id=self.pipeline.id,
+        )
