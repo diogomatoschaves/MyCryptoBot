@@ -51,6 +51,7 @@ export type Pipeline = {
     paperTrading: boolean
     openTime: Date | null
     numberTrades: number
+    profitLoss: number
 }
 
 
@@ -65,6 +66,7 @@ export type RawPipeline = {
     paperTrading: boolean
     openTime: string | null
     numberTrades: number
+    profitLoss: number
 }
 
 export type PipelineParams = {
