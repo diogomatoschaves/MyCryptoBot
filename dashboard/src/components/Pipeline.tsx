@@ -36,6 +36,10 @@ function PipelineItem(props: Props) {
 
     const age = pipeline.openTime ? timeFormatter(pipeline.openTime) : "-"
 
+    const pnl = pipeline.profitLoss ? `${(pipeline.profitLoss * 100).toFixed(2)}%` : '-'
+
+    const color = pipeline.profitLoss > 0 ? GREEN : pipeline.profitLoss < 0 ? RED : "000000"
+
     return (
         <PipelineDiv className="flex-row">
             <Segment style={styles.segment} secondary raised>
@@ -46,11 +50,11 @@ function PipelineItem(props: Props) {
                         <span> | {liveStr}</span>
                     </span>
                 </Ribbon>
-                <Grid columns={2}>
-                    <Grid.Column width={11}>
-                        <Grid columns={3}>
+                <Grid columns={1}>
+                    <Grid.Column width={16}>
+                        <Grid columns={4}>
                             <Grid.Row>
-                                <Grid.Column>
+                                <Grid.Column width={3}>
                                     <Grid.Column style={styles.header}>
                                         Trading Pair
                                     </Grid.Column>
@@ -58,7 +62,7 @@ function PipelineItem(props: Props) {
                                         {pipeline.symbol}
                                     </Grid.Column>
                                 </Grid.Column>
-                                <Grid.Column>
+                                <Grid.Column width={4}>
                                     <Grid.Column floated='left' style={styles.header}>
                                         Strategy
                                     </Grid.Column>
@@ -66,7 +70,7 @@ function PipelineItem(props: Props) {
                                         {pipeline.strategy}
                                     </Grid.Column>
                                 </Grid.Column>
-                                <Grid.Column>
+                                <Grid.Column width={3}>
                                     <Grid.Column floated='left' style={styles.header}>
                                         Time running
                                     </Grid.Column>
@@ -74,9 +78,21 @@ function PipelineItem(props: Props) {
                                         {age}
                                     </Grid.Column>
                                 </Grid.Column>
+                                <Grid.Column width={6} className="flex-row">
+                                    <Grid columns={1}>
+                                        <Grid.Column>
+                                            <Grid.Column floated='left' style={styles.header}>
+                                                Profit / Loss
+                                            </Grid.Column>
+                                            <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
+                                                {pnl}
+                                            </Grid.Column>
+                                        </Grid.Column>
+                                    </Grid>
+                                </Grid.Column>
                             </Grid.Row>
                             <Grid.Row>
-                                <Grid.Column>
+                                <Grid.Column width={3}>
                                     <Grid.Column floated='left' style={styles.header}>
                                         Candle size
                                     </Grid.Column>
@@ -84,7 +100,7 @@ function PipelineItem(props: Props) {
                                         {pipeline.candleSize}
                                     </Grid.Column>
                                 </Grid.Column>
-                                <Grid.Column>
+                                <Grid.Column width={4}>
                                     <Grid.Column floated='left' style={styles.header}>
                                         Exchange
                                     </Grid.Column>
@@ -92,7 +108,7 @@ function PipelineItem(props: Props) {
                                         {pipeline.exchange}
                                     </Grid.Column>
                                 </Grid.Column>
-                                <Grid.Column>
+                                <Grid.Column width={3}>
                                     <Grid.Column floated='left' style={styles.header}>
                                         # trades
                                     </Grid.Column>
@@ -100,18 +116,18 @@ function PipelineItem(props: Props) {
                                         {pipeline.numberTrades}
                                     </Grid.Column>
                                 </Grid.Column>
+                                <StyledColumn width={6} className="flex-row">
+                                    <div style={styles.buttonDiv} className='flex-column'>
+                                        <PipelineButton
+                                            pipeline={pipeline}
+                                            startPipeline={startPipeline}
+                                            stopPipeline={stopPipeline}
+                                        />
+                                    </div>
+                                </StyledColumn>
                             </Grid.Row>
                         </Grid>
                     </Grid.Column>
-                    <StyledColumn width={5} className="flex-row">
-                        <div style={styles.buttonDiv} className='flex-column'>
-                            <PipelineButton
-                                pipeline={pipeline}
-                                startPipeline={startPipeline}
-                                stopPipeline={stopPipeline}
-                            />
-                        </div>
-                    </StyledColumn>
                 </Grid>
             </Segment>
 

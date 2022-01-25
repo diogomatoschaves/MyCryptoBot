@@ -1,6 +1,7 @@
 import json
 import sys
 from datetime import datetime
+from functools import reduce
 
 try:
     from django.db import models
@@ -150,6 +151,19 @@ class Pipeline(models.Model):
     active = models.BooleanField(default=True, blank=True)
     open_time = models.DateTimeField(auto_now_add=True, null=True)
 
+    def get_profit_loss(self):
+
+        result = reduce(
+            lambda accum, trade: [
+                accum[0] + trade.profit_loss * trade.amount,
+                accum[1] + trade.amount
+            ] if trade.profit_loss else accum,
+            self.trade_set.iterator(),
+            [0, 0]
+        )
+
+        return round(result[0] / result[1] if result[1] > 0 else 0, 7)
+
     def as_json(self):
         return dict(
             id=self.id,
@@ -161,7 +175,8 @@ class Pipeline(models.Model):
             active=self.active,
             paperTrading=self.paper_trading,
             openTime=self.open_time.isoformat() if self.open_time else None,
-            numberTrades=self.trade_set.count()
+            numberTrades=self.trade_set.count(),
+            profitLoss=self.get_profit_loss()
         )
 
     class Meta:
