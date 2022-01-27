@@ -109,7 +109,7 @@ const NewPipeline = (props: Props) => {
               <span style={{marginRight: '10px'}}>
                   <Icon name={'plus'}/>
               </span>
-              Create Trading Bot
+              New Trading Bot
             </Button>
           }
       >
@@ -271,7 +271,7 @@ const NewPipeline = (props: Props) => {
             Cancel
           </Button>
           <Button
-              content="Create trading bot"
+              content="New trading bot"
               labelPosition='right'
               icon='checkmark'
               onClick={() => {
