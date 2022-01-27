@@ -71,8 +71,8 @@ function TradesPanel(props: Props) {
                 <span>{menuOption.emoji}</span> {menuOption.text}
             </Divider>
             <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                <Button onClick={() => setOpenOrClosed(true)} primary={open}>Open</Button>
-                <Button onClick={() => setOpenOrClosed(false)} primary={!open}>Closed</Button>
+                <Button onClick={() => setOpenOrClosed(true)} secondary={open}>Open</Button>
+                <Button onClick={() => setOpenOrClosed(false)} secondary={!open}>Closed</Button>
             </Button.Group>
             <Table basic='very'>
                 <Table.Header>
@@ -82,7 +82,7 @@ function TradesPanel(props: Props) {
                         <Table.HeaderCell>Duration</Table.HeaderCell>
                         <Table.HeaderCell>Side</Table.HeaderCell>
                         <Table.HeaderCell>Amount</Table.HeaderCell>
-                        <Table.HeaderCell>Price</Table.HeaderCell>
+                        <Table.HeaderCell>Buying Price</Table.HeaderCell>
                         <Table.HeaderCell>Net Profit</Table.HeaderCell>
                         <Table.HeaderCell>Exchange</Table.HeaderCell>
                     </Table.Row>

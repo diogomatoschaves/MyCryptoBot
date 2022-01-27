@@ -20,6 +20,7 @@ interface Props {
     pipeline: Pipeline
     startPipeline: StartPipeline
     stopPipeline: StopPipeline
+    live: boolean
 }
 
 
@@ -28,11 +29,12 @@ function PipelineItem(props: Props) {
     const {
         pipeline,
         startPipeline,
-        stopPipeline
+        stopPipeline,
+        live
     } = props
 
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
-    const liveStr = pipeline.paperTrading ? "Test Mode" : "Live Mode"
+    const liveStr = pipeline.paperTrading ? "Demo Mode" : "Live Trading"
 
     const age = pipeline.openTime ? timeFormatter(pipeline.openTime) : "-"
 
@@ -43,7 +45,7 @@ function PipelineItem(props: Props) {
     return (
         <PipelineDiv className="flex-row">
             <Segment style={styles.segment} secondary raised>
-                <Ribbon ribbon color={'grey'}>
+                <Ribbon ribbon color="grey">
                     <span >
                         <span style={{color: activeProps.color, fontSize: '0.7em'}}><Icon name={'circle'}/></span>
                         <span >{activeProps.status}</span>
@@ -130,7 +132,6 @@ function PipelineItem(props: Props) {
                     </Grid.Column>
                 </Grid>
             </Segment>
-
         </PipelineDiv>
     );
 }

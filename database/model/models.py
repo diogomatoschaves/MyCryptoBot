@@ -152,7 +152,6 @@ class Pipeline(models.Model):
     open_time = models.DateTimeField(auto_now_add=True, null=True)
 
     def get_profit_loss(self):
-
         result = reduce(
             lambda accum, trade: [
                 accum[0] + trade.profit_loss * trade.amount,
@@ -162,7 +161,7 @@ class Pipeline(models.Model):
             [0, 0]
         )
 
-        return round(result[0] / result[1] if result[1] > 0 else 0, 7)
+        return round(result[0] / result[1] if result[1] > 0 else 0, 5)
 
     def as_json(self):
         return dict(
