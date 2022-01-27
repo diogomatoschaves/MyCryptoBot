@@ -1,9 +1,10 @@
-import {Divider, Icon} from "semantic-ui-react";
+import {Button, Divider, Icon} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
-import {DropdownOptions, StartPipeline, StopPipeline, Pipeline, MenuOption} from "../types";
+import {DropdownOptions, StartPipeline, StopPipeline, Pipeline, MenuOption, Trade} from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
 import styled from "styled-components";
+import {useEffect, useReducer, useRef, useState} from "react";
 
 
 interface Props {
@@ -19,13 +20,39 @@ interface Props {
 }
 
 
-
 const ButtonWrapper = styled.div`
     height: 50px; 
     margin-bottom: 30px;
     width: 100%;
-    justify-content: center;
+    justify-content: space-around;
 `
+
+const FILTER_PIPELINES = 'FILTER_PIPELINES'
+
+
+const reducer = (state: any, action: any) => {
+    switch (action.type) {
+        case FILTER_PIPELINES:
+            const { pipelines } = action
+            return {
+                ...state,
+                liveActivePipelines: pipelines.filter(
+                    (pipeline: Pipeline) => pipeline.active && !pipeline.paperTrading
+                ),
+                demoActivePipelines: pipelines.filter(
+                    (pipeline: Pipeline) => pipeline.active && pipeline.paperTrading
+                ),
+                liveStoppedPipelines: pipelines.filter(
+                    (pipeline: Pipeline) => !pipeline.active && !pipeline.paperTrading)
+                ,
+                demoStoppedPipelines: pipelines.filter(
+                    (pipeline: Pipeline) => !pipeline.active && pipeline.paperTrading
+                ),
+            }
+        default:
+            throw new Error();
+    }
+}
 
 function PipelinePanel(props: Props) {
 
@@ -41,18 +68,49 @@ function PipelinePanel(props: Props) {
         menuOption
     } = props
 
-    const filteredPipelines = pipelines.sort((a, b) => {
+    const previous = useRef({ pipelines }).current;
 
-        if (a.active && b.active) {
-            return 0
-        } else if (a.active && !b.active) {
-            return -1
-        } else if (!a.active && b.active) {
-            return 1
-        } else {
-            return 0
+    const [live, filterLive] = useState(true)
+    const [active, filterActive] = useState(true)
+
+    const [
+        {
+            liveActivePipelines,
+            demoActivePipelines,
+            liveStoppedPipelines,
+            demoStoppedPipelines,
+        }, dispatch
+    ] = useReducer(
+        reducer, {
+            liveActivePipelines: pipelines.filter(
+                (pipeline: Pipeline) => pipeline.active && !pipeline.paperTrading
+            ),
+            demoActivePipelines: pipelines.filter(
+                (pipeline: Pipeline) => pipeline.active && pipeline.paperTrading
+            ),
+            liveStoppedPipelines: pipelines.filter(
+                (pipeline: Pipeline) => !pipeline.active && !pipeline.paperTrading)
+            ,
+            demoStoppedPipelines: pipelines.filter(
+                (pipeline: Pipeline) => !pipeline.active && pipeline.paperTrading
+            ),
         }
-    })
+    );
+
+    useEffect(() => {
+        if (pipelines !== previous.pipelines) {
+            dispatch({
+                type: FILTER_PIPELINES,
+                pipelines
+            })
+        }
+        return () => {
+            previous.pipelines = pipelines
+        };
+    }, [pipelines]);
+
+    const filteredPipelines = (live && active) ? liveActivePipelines : (live && !active) ? liveStoppedPipelines :
+        (!live && active) ? demoActivePipelines : demoStoppedPipelines
 
     return (
         <StyledSegment basic className="flex-column">
@@ -60,6 +118,22 @@ function PipelinePanel(props: Props) {
                 <span>{menuOption.emoji}</span> {menuOption.text}
             </Divider>
             <ButtonWrapper className="flex-row">
+                <Button.Group size="mini" style={{alignSelf: 'center'}}>
+                    <Button onClick={() => filterActive(true)} secondary={active}>
+                        Running
+                    </Button>
+                    <Button onClick={() => filterActive(false)} secondary={!active}>
+                        Stopped
+                    </Button>
+                </Button.Group>
+                <Button.Group size="mini" style={{alignSelf: 'center'}}>
+                    <Button onClick={() => filterLive(true)} secondary={live}>
+                        Live
+                    </Button>
+                    <Button onClick={() => filterLive(false)} secondary={!live}>
+                        Demo
+                    </Button>
+                </Button.Group>
                 <NewPipeline
                     strategies={strategies}
                     symbolsOptions={symbolsOptions}
@@ -74,8 +148,10 @@ function PipelinePanel(props: Props) {
                     startPipeline={startPipeline}
                     stopPipeline={stopPipeline}
                     pipeline={pipeline}
+                    live={live}
                 />
             ))}
+            {filteredPipelines.length === 0 && "There are no trading bots that match the chosen filters."}
         </StyledSegment>
     );
 }
