@@ -17,6 +17,7 @@ import TradesPanel from "./TradesPanel";
 import {organizeTrades, organizePositions, organizePipelines} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import {Box, Wrapper} from "../styledComponents";
+import Dashboard from "./Dashboard";
 
 
 const AppDiv = styled.div`
@@ -279,8 +280,10 @@ class App extends Component<any, State> {
                         />
                     ) : menuOption.code === 'trades' ? (
                         <TradesPanel menuOption={menuOption} trades={trades} currentPrices={currentPrices}/>
-                    ) : menuOption.code === 'positions' && (
+                    ) : menuOption.code === 'positions' ? (
                         <PositionsPanel menuOption={menuOption} positions={positions}/>
+                    ) : menuOption.code === 'dashboard' && (
+                        <Dashboard menuOption={menuOption} />
                     )}
                 </Wrapper>
                 {message.text && (
