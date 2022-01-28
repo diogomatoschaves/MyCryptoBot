@@ -20,7 +20,7 @@ const Column = styled.div`
 `
 
 const menuProperties = [
-    {icon: 'line graph', emoji: '📈', text: 'Balance', code: "balance"},
+    {icon: 'line graph', emoji: '📈', text: 'Dashboard', code: "dashboard"},
     {icon: 'play', emoji: '🤖', text: 'Trading Bots', code: "pipelines"},
     {icon: 'list', emoji: '📒', text: 'Positions', code: "positions"},
     {icon: 'dollar', emoji: '💵', text: 'Trades', code: "trades"},
