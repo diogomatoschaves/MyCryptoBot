@@ -183,16 +183,25 @@ class App extends Component<any, State> {
     startPipeline: StartPipeline = (pipelineParams: PipelineParams) => {
         startBot(pipelineParams)
             .then(response => {
-                this.setState(state => ({
-                    message: {
-                        ...state.message,
-                        text: response.message,
-                        show: true,
-                        color: response.success ? "000000" : RED
-                    },
-                    pipelines: response.success ? [...state.pipelines, ...organizePipelines([response.pipeline])]
-                        : state.pipelines
-                }))
+                this.setState(state => {
+                    const pipelineIds = state.pipelines.map((pipe: Pipeline) => pipe.id)
+                    return {
+                        message: {
+                            ...state.message,
+                            text: response.message,
+                            show: true,
+                            color: response.success ? "000000" : RED
+                        },
+                        pipelines: response.success ? pipelineIds.includes(response.pipeline.id) ? (
+                            state.pipelines.reduce((pipelines: Pipeline[], pipeline: Pipeline) => {
+                                return [
+                                    ...pipelines,
+                                    pipeline.id === response.pipeline.id ? response.pipeline : pipeline]
+                            }, [])) : (
+                                [...state.pipelines, ...organizePipelines([response.pipeline])]
+                            ) : state.pipelines
+                    }
+                })
             })
     }
 
