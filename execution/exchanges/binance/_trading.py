@@ -289,10 +289,11 @@ class BinanceTrader(BinanceHandler, Trader):
 
             last_trade = Trade.objects.filter(pipeline_id=pipeline_id, symbol_id=symbol).last()
 
-            last_trade.close_price = closing_order.price
-            last_trade.close_time = datetime.now(tz=pytz.UTC)
-            last_trade.profit_loss = last_trade.side * (last_trade.close_price / last_trade.open_price - 1)
-            last_trade.save()
+            if last_trade:
+                last_trade.close_price = closing_order.price
+                last_trade.close_time = datetime.now(tz=pytz.UTC)
+                last_trade.profit_loss = last_trade.side * (last_trade.close_price / last_trade.open_price - 1)
+                last_trade.save()
 
         if position != 0:
 
