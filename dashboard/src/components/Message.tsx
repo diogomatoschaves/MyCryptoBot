@@ -1,13 +1,15 @@
 import React from 'react'
 import styled, {css} from 'styled-components'
 import { StyledBox } from '../styledComponents'
+import {Message} from "semantic-ui-react";
 
 interface Props {
   message: string | null
-  color: string
+  color: string,
+  success: boolean
 }
 
-const StyledMessage = styled(StyledBox)`
+const StyledMessage = styled(Message)`
   &.ui.segment {
     font-size: 1.1em;
     font-weight: 600;
@@ -20,6 +22,15 @@ const StyledMessage = styled(StyledBox)`
   }
 `
 
-export default function Message({ message, color }: Props) {
-  return <StyledMessage padded={true} color={color}>{message}</StyledMessage>
+export default function UserMessage({ success, message, color }: Props) {
+  return <StyledMessage
+      success={success}
+      negative={!success}
+      padded={true}
+      color={color}
+  >
+    <StyledMessage.Header>
+      {message}
+    </StyledMessage.Header>
+  </StyledMessage>
 }
