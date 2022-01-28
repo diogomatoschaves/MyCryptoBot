@@ -40,6 +40,7 @@ export type RawTrade = {
     pipelineId: number
 }
 
+
 export type Pipeline = {
     id: number
     strategy: string

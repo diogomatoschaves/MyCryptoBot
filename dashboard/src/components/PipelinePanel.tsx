@@ -99,6 +99,7 @@ function PipelinePanel(props: Props) {
 
     useEffect(() => {
         if (pipelines !== previous.pipelines) {
+            console.log("pipelines updated")
             dispatch({
                 type: FILTER_PIPELINES,
                 pipelines
