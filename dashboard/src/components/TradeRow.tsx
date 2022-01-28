@@ -65,6 +65,7 @@ function TradeRow(props: Props) {
               {pnl && `${pnl}%`}
             </Table.Cell>
             <Table.Cell style={styles.defaultCell}>{trade.exchange}</Table.Cell>
+            <Table.Cell style={styles.defaultCell}>{trade.mock ? "True" : "False"}</Table.Cell>
         </Table.Row>
     );
 }
