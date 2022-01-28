@@ -70,8 +70,8 @@ class App extends Component<any, State> {
         menuOption: {
             icon: 'line graph',
             emoji: '📈',
-            text: 'Balance',
-            code: "balance"
+            text: 'Dashboard',
+            code: 'dashboard'
         },
         symbols: [],
         currentPrices: {},
