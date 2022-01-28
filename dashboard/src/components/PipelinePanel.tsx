@@ -21,8 +21,7 @@ interface Props {
 
 
 const ButtonWrapper = styled.div`
-    height: 50px; 
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     width: 100%;
     justify-content: space-around;
 `
@@ -152,7 +151,9 @@ function PipelinePanel(props: Props) {
                     live={live}
                 />
             ))}
-            {filteredPipelines.length === 0 && "There are no trading bots that match the chosen filters."}
+            {filteredPipelines.length === 0 && (
+                <span>"There are no trading bots that match the chosen filters."</span>
+            )}
         </StyledSegment>
     );
 }
