@@ -74,7 +74,7 @@ class App extends Component<any, State> {
         },
         symbols: [],
         currentPrices: {},
-        message: {show: false, bottomProp: -300, text: null, color: "#000000"}
+        message: {show: false, bottomProp: -300, text: null, color: "#000000", success: true}
     }
 
     componentDidMount() {
@@ -276,7 +276,7 @@ class App extends Component<any, State> {
                 </Wrapper>
                 {message.text && (
                     <StyledBox align="center" bottom={message.bottomProp}>
-                        <MessageComponent message={message.text} color={message.color}/>
+                        <MessageComponent success={message.success} message={message.text} color={message.color}/>
                     </StyledBox>
                 )}
             </AppDiv>

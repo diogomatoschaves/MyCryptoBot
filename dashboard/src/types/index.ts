@@ -118,7 +118,8 @@ export type Message = {
     text: string | null,
     show: boolean,
     bottomProp: number,
-    color: string
+    color: string,
+    success: boolean
 }
 
 export type StartPipeline = (pipelineParams: PipelineParams) => void
