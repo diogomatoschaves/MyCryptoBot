@@ -271,7 +271,7 @@ const NewPipeline = (props: Props) => {
             Cancel
           </Button>
           <Button
-              content="New trading bot"
+              content="Create trading bot"
               labelPosition='right'
               icon='checkmark'
               onClick={() => {
