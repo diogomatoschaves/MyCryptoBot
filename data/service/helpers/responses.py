@@ -17,7 +17,9 @@ RESPONSES = namedtuple(
         "STRATEGY_REQUIRED",
         "STRATEGY_INVALID",
         "PARAMS_INVALID",
-        "PARAMS_REQUIRED"
+        "PARAMS_REQUIRED",
+        "NAME_INVALID",
+        "NAME_REQUIRED"
     ]
 )
 
@@ -36,7 +38,9 @@ ReturnCodes = RESPONSES(
     STRATEGY_REQUIRED="STRATEGY_REQUIRED",
     STRATEGY_INVALID="STRATEGY_INVALID",
     PARAMS_INVALID="PARAMS_INVALID",
-    PARAMS_REQUIRED="PARAMS_REQUIRED"
+    PARAMS_REQUIRED="PARAMS_REQUIRED",
+    NAME_INVALID="NAME_INVALID",
+    NAME_REQUIRED="NAME_REQUIRED"
 )
 
 
@@ -69,7 +73,11 @@ Responses = RESPONSES(
     STRATEGY_INVALID=lambda strategy: {"code": ReturnCodes.STRATEGY_INVALID,
                                        "message": f"{strategy} is not a valid strategy.", "success": False},
     PARAMS_INVALID=lambda param_key: {"code": ReturnCodes.PARAMS_INVALID,
-                                      "message": f"Provided {param_key} in params is not valid.", "success": False},
+                                      "message": f"The provided {param_key} parameters are not valid.", "success": False},
     PARAMS_REQUIRED=lambda param_key: {"code": ReturnCodes.PARAMS_REQUIRED,
                                        "message": f"{param_key} is a required parameter.", "success": False},
+    NAME_INVALID=lambda name: {"code": ReturnCodes.NAME_INVALID,
+                               "message": f"{name} is not a valid name for the trading bot.", "success": False},
+    NAME_REQUIRED={"code": ReturnCodes.NAME_REQUIRED,
+                   "message": "A valid name is required for starting a trading bot.", "success": False},
 )

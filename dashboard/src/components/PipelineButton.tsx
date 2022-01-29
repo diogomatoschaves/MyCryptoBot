@@ -35,6 +35,8 @@ function PipelineButton(props: Props) {
         ) : (
           <Button
               onClick={() => startPipeline({
+                name: pipeline.name,
+                allocation: pipeline.allocation,
                 symbol: pipeline.symbol,
                 strategy: pipeline.strategy,
                 candleSize: pipeline.candleSize,

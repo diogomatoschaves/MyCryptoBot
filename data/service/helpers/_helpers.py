@@ -6,7 +6,6 @@ import os
 import django
 import pytz
 from flask import jsonify
-from pytz import tzinfo
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -75,25 +74,43 @@ def check_input(strategies, **kwargs):
             if "params" in kwargs:
                 params = kwargs["params"]
 
+                invalid_params = []
                 for key in params:
                     if key not in strategies[strategy]["params"] and key not in strategies[strategy]["optional_params"]:
                         logging.debug(key)
-                        return jsonify(Responses.PARAMS_INVALID(key))
+                        invalid_params.append(key)
 
-                for param in strategies[strategy]["params"]:
-                    if param not in params:
-                        logging.debug(f"{param} is a required parameter.")
-                        return jsonify(Responses.PARAMS_REQUIRED(param))
+                if len(invalid_params) > 0:
+                    return jsonify(Responses.PARAMS_INVALID(', '.join(invalid_params)))
+
+            required_params = []
+            for param in strategies[strategy]["params"]:
+                if param not in kwargs.get("params", {}):
+                    required_params.append(param)
+
+            if len(required_params) > 0:
+                response = Responses.PARAMS_REQUIRED(', '.join(required_params))
+                logging.debug(response)
+                return jsonify(response)
         else:
             logging.debug(strategy)
             return jsonify(Responses.STRATEGY_INVALID(strategy))
 
+    if "name" not in kwargs or kwargs["name"] is None:
+        return jsonify(Responses.NAME_REQUIRED)
+    else:
+        name = kwargs["name"]
+        if not isinstance(name, str):
+            return jsonify(Responses.NAME_INVALID(kwargs["name"]))
+
     return None
 
 
-def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params, paper_trading):
+def get_or_create_pipeline(name, allocation, symbol, candle_size, strategy, exchange, params, paper_trading):
 
     columns = dict(
+        name=name,
+        allocation=allocation,
         symbol_id=symbol,
         interval=candle_size,
         strategy=strategy,
@@ -114,6 +131,7 @@ def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params, pape
         pipeline.save()
 
     except Pipeline.DoesNotExist:
+        print("we got here")
         pipeline = Pipeline.objects.create(**columns)
 
     return pipeline, None
@@ -121,3 +139,4 @@ def get_or_create_pipeline(symbol, candle_size, strategy, exchange, params, pape
 
 def convert_queryset_to_dict(queryset):
     return {res["name"]: res for res in queryset}
+

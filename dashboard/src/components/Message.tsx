@@ -5,20 +5,13 @@ import {Message} from "semantic-ui-react";
 
 interface Props {
   message: string | null
-  color: string,
+  color?: string,
   success: boolean
 }
 
 const StyledMessage = styled(Message)`
-  &.ui.segment {
-    font-size: 1.1em;
-    font-weight: 600;
-    margin: 3px;
-    ${(props: any) =>
-      props.color &&
-      css`
-        color: ${props.color};
-      `}
+  &.ui.message {
+    
   }
 `
 

@@ -6,12 +6,13 @@ import {
   RawPosition,
   StartPipeline,
   RawPipeline,
-  Pipeline
+  Pipeline, UpdateMessage
 } from "../../types";
-import PipelinePanel from "../../components/PipelinePanel";
 
-export const validatePipelineCreation = (
+export const validatePipelineCreation = async (
     {
+      name,
+      allocation,
       symbol,
       symbolsOptions,
       strategy,
@@ -21,9 +22,12 @@ export const validatePipelineCreation = (
       exchanges,
       exchangeOptions,
       startPipeline,
+      dispatch,
       params,
       liveTrading
     }: {
+      name: string | undefined,
+      allocation: string | undefined,
       symbol: number | undefined,
       symbolsOptions: DropdownOptions[],
       strategy: number | undefined,
@@ -33,12 +37,26 @@ export const validatePipelineCreation = (
       exchanges: Array<number>,
       exchangeOptions: DropdownOptions[],
       startPipeline: StartPipeline,
+      dispatch: any,
       params: Object,
       liveTrading: boolean
     }) => {
-  if (!symbol || !strategy || !candleSize || exchanges.length === 0) {
-    console.log("All parameters must be specified")
-    return
+  if (!name || !allocation || !symbol || !strategy || !candleSize || exchanges.length === 0) {
+    dispatch({
+      type: "UPDATE_MESSAGE",
+      message: {text: "All parameters must be specified.", success: false}
+    })
+    return false
+  }
+
+  const allocationNumber = Number(allocation)
+
+  if (!allocationNumber) {
+    dispatch({
+      type: "UPDATE_MESSAGE",
+      message: {text: "Allocated capital must be a number.", success: false}
+    })
+    return false
   }
 
   startPipeline({
@@ -48,8 +66,12 @@ export const validatePipelineCreation = (
     // TODO: Generalize this for any number of exchanges
     exchanges: exchanges.length > 0 ? exchangeOptions[exchanges[0] - 1].text : "",
     params,
+    name,
+    allocation: allocationNumber,
     paperTrading: !liveTrading
   })
+
+  return true
 }
 
 
