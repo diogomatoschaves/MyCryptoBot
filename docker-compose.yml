@@ -17,6 +17,10 @@ services:
       - EXECUTION_APP_URL=http://host.docker.internal:5002
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
+    volumes:
+      - ./data:/usr/src/app/data
+      - ./database:/usr/src/app/database
+      - ./shared:/usr/src/app/shared
   model-service:
     build:
       context: .
@@ -41,6 +45,10 @@ services:
       - EXECUTION_APP_URL=http://host.docker.internal:5002
     depends_on:
       - redis
+    volumes:
+      - ./model:/usr/src/app/model
+      - ./database:/usr/src/app/database
+      - ./shared:/usr/src/app/shared
   execution-service:
     build:
       context: .
@@ -56,6 +64,10 @@ services:
       - APP_NAME=crypto-bot-execution
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
+    volumes:
+      - ./execution:/usr/src/app/execution
+      - ./database:/usr/src/app/database
+      - ./shared:/usr/src/app/shared
   redis:
     image: redis
   dashboard:
