@@ -1,7 +1,8 @@
 import {Trade} from "../types";
-import {Table} from "semantic-ui-react";
+import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
-import {timeFormatter} from "../utils/helpers";
+import {getPnl, timeFormatter} from "../utils/helpers";
+import React from "react";
 
 
 interface Props {
@@ -13,10 +14,6 @@ interface Props {
 
 const dateStringOptions = {day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric'}
 
-
-const getPnl = (original: number, current: number, side: number) => {
-  return ((side * ((current / original) - 1)) * 100).toFixed(2)
-}
 
 function TradeRow(props: Props) {
 
@@ -43,8 +40,11 @@ function TradeRow(props: Props) {
   const duration = timeFormatter(trade.openTime, trade.closeTime && trade.closeTime)
 
   return (
-        <Table.Row active={index % 2 == 0} key={index} >
-            <Table.Cell style={{...styles.defaultCell, color: DARK_YELLOW, fontWeight: '600'}}>
+        <Table.Row key={index} >
+            <Table.Cell style={styles.defaultCell}>
+              <Label ribbon>{trade.mock ? "Demo" : "Live"}</Label>
+            </Table.Cell>
+            <Table.Cell collapsing style={{...styles.defaultCell, color: DARK_YELLOW, fontWeight: '600'}}>
               {trade.symbol}
             </Table.Cell>
             <Table.Cell style={{...styles.defaultCell}}>
@@ -64,8 +64,6 @@ function TradeRow(props: Props) {
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell, color: pnlColor}}>
               {pnl && `${pnl}%`}
             </Table.Cell>
-            <Table.Cell style={styles.defaultCell}>{trade.exchange}</Table.Cell>
-            <Table.Cell style={styles.defaultCell}>{trade.mock ? "True" : "False"}</Table.Cell>
         </Table.Row>
     );
 }

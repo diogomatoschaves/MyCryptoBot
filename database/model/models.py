@@ -206,6 +206,7 @@ class Position(models.Model):
             symbol=self.symbol.name,
             exchange=self.exchange.name,
             pipelineId=self.pipeline.id,
+            pipelineName=self.pipeline.name,
             paperTrading=self.paper_trading,
             price=self.buying_price,
             amount=self.amount,
