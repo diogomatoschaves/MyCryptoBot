@@ -1,5 +1,5 @@
-import {Pipeline, StartPipeline, StopPipeline} from "../types";
-import { Grid, Icon, Segment} from "semantic-ui-react";
+import {DeletePipeline, Pipeline, StartPipeline, StopPipeline} from "../types";
+import {Button, Grid, Icon, Segment} from "semantic-ui-react";
 import {GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
@@ -20,6 +20,7 @@ interface Props {
     pipeline: Pipeline
     startPipeline: StartPipeline
     stopPipeline: StopPipeline
+    deletePipeline: DeletePipeline
     live: boolean
 }
 
@@ -30,7 +31,7 @@ function PipelineItem(props: Props) {
         pipeline,
         startPipeline,
         stopPipeline,
-        live
+        deletePipeline,
     } = props
 
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
@@ -80,18 +81,20 @@ function PipelineItem(props: Props) {
                                         {age}
                                     </Grid.Column>
                                 </Grid.Column>
-                                <Grid.Column width={6} className="flex-row">
-                                    <Grid columns={1}>
-                                        <Grid.Column>
-                                            <Grid.Column floated='left' style={styles.header}>
-                                                Profit / Loss
-                                            </Grid.Column>
-                                            <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
-                                                {pnl}
-                                            </Grid.Column>
-                                        </Grid.Column>
-                                    </Grid>
-                                </Grid.Column>
+                                <StyledColumn width={6} className="flex-row">
+                                    <div style={styles.buttonDiv} className='flex-column'>
+                                        <Button
+                                            icon
+                                            onClick={() => deletePipeline(pipeline.id)}
+                                            style={{width: '80%'}}
+                                        >
+                                            <span style={{marginRight: '10px', marginLeft: '-10px'}}>
+                                                <Icon name={'delete'}/>
+                                            </span>
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </StyledColumn>
                             </Grid.Row>
                             <Grid.Row>
                                 <Grid.Column width={3}>
@@ -135,6 +138,17 @@ function PipelineItem(props: Props) {
         </PipelineDiv>
     );
 }
+
+// <Grid columns={1}>
+//     <Grid.Column>
+//         <Grid.Column floated='left' style={styles.header}>
+//             Profit / Loss
+//         </Grid.Column>
+//         <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
+//             {pnl}
+//         </Grid.Column>
+//     </Grid.Column>
+// </Grid>
 
 export default PipelineItem;
 

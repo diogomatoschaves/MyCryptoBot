@@ -6,9 +6,9 @@ import {
     DropdownOptions, MenuOption,
     Trade, Pipeline, PipelineParams, Position,
     StartPipeline,
-    StopPipeline, GetCurrentPrices, Message, UpdateMessage
+    StopPipeline, GetCurrentPrices, Message, UpdateMessage, DeletePipeline
 } from "../types";
-import {getTrades, getPipelines, getPositions, getResources, startBot, stopBot, getPrice} from "../apiCalls";
+import {getTrades, getPipelines, getPositions, getResources, startBot, stopBot, getPrice, deleteBot} from "../apiCalls";
 import {GREEN, RED, RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
 import MessageComponent from "./Message";
@@ -191,7 +191,7 @@ class App extends Component<any, State> {
                             ...state.message,
                             text: response.message,
                             show: true,
-                            color: response.success ? "000000" : RED
+                            success: response.success,
                         },
                         pipelines: response.success ? pipelineIds.includes(response.pipeline.id) ? (
                             state.pipelines.reduce((pipelines: Pipeline[], pipeline: Pipeline) => {
@@ -214,7 +214,7 @@ class App extends Component<any, State> {
                         ...state.message,
                         text: response.message,
                         show: true,
-                        color: response.success ? "000000" : RED
+                        success: response.success
                     },
                     pipelines: response.success ? state.pipelines.reduce(
                         (newArray: Pipeline[], pipeline: Pipeline) => {
@@ -224,6 +224,32 @@ class App extends Component<any, State> {
                         },
                         []
                     ) : state.pipelines
+                }))
+            })
+    }
+
+    deletePipeline: DeletePipeline = (pipelineId) => {
+        deleteBot(pipelineId)
+            .then(response => {
+                this.setState(state => ({
+                    message: {
+                        ...state.message,
+                        text: response.message,
+                        show: true,
+                        success: response.success
+                    },
+                    pipelines: response.success ? state.pipelines.reduce(
+                        (newArray: Pipeline[], pipeline: Pipeline) => {
+                            return pipelineId === pipeline.id ? newArray : [...newArray, pipeline]
+                        },
+                        []
+                    ) : state.pipelines,
+                    positions: response.success ? state.positions.reduce(
+                        (newPositions: Position[], position: Position) => {
+                            return position.pipelineId === pipelineId ? newPositions : [...newPositions, position]
+                        },
+                        []
+                    ) : state.positions
                 }))
             })
     }
@@ -288,6 +314,7 @@ class App extends Component<any, State> {
                             strategies={strategies}
                             startPipeline={this.startPipeline}
                             stopPipeline={this.stopPipeline}
+                            deletePipeline={this.deletePipeline}
                             updateMessage={this.updateMessage}
                         />
                     ) : menuOption.code === 'trades' ? (

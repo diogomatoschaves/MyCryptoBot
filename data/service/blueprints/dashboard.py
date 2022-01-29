@@ -2,7 +2,7 @@ import os
 
 import django
 from django.core.paginator import Paginator
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 from data.service.external_requests import get_strategies
 from data.service.helpers._helpers import convert_queryset_to_dict
@@ -65,25 +65,42 @@ def get_trades(page):
     return jsonify(response)
 
 
-@dashboard.route('/pipelines', defaults={'page': None})
+@dashboard.route('/pipelines', defaults={'page': None}, methods=["GET", "DELETE"])
 @dashboard.route('/pipelines/<page>')
-def get_pipelines(page):
+def handle_pipelines(page):
 
-    response = {}
+    response = {"message": "This method is not allowed", "success": False}
 
-    pipelines = Pipeline.objects.all().order_by('id')
+    pipeline_id = request.args.get("pipelineId", None)
 
-    paginator = Paginator(pipelines, 20)
+    if request.method == 'GET':
 
-    if page is None:
-        page_obj = paginator.get_page(1)
-        response["pipelines"] = list(page_obj)
+        if Pipeline.objects.filter(id=pipeline_id).exists():
+            response["pipelines"] = [pipeline.as_json() for pipeline in Pipeline.objects.filter(id=pipeline_id)]
 
-    elif isinstance(page, int):
-        page_obj = paginator.get_page(page)
-        response["pipelines"] = list(page_obj)
+        else:
+            pipelines = Pipeline.objects.all().order_by('id')
 
-    response["pipelines"] = [pipeline.as_json() for pipeline in response["pipelines"]]
+            paginator = Paginator(pipelines, 20)
+
+            if page is None:
+                page_obj = paginator.get_page(1)
+                response["pipelines"] = list(page_obj)
+
+            elif isinstance(page, int):
+                page_obj = paginator.get_page(page)
+                response["pipelines"] = list(page_obj)
+
+            response["pipelines"] = [pipeline.as_json() for pipeline in response["pipelines"]]
+
+        response.update({"message": "The request was successful.", "success": True})
+
+    if request.method == 'DELETE':
+        if Pipeline.objects.filter(id=pipeline_id).exists():
+            Pipeline.objects.filter(id=pipeline_id).delete()
+            response.update({"message": "The trading bot was deleted", "success": True})
+        else:
+            response.update({"message": "The requested trading bot was not found", "success": False})
 
     return jsonify(response)
 

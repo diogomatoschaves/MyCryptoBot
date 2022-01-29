@@ -1,6 +1,14 @@
 import {Button, Divider, Header, Message} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
-import {DropdownOptions, StartPipeline, StopPipeline, Pipeline, MenuOption, UpdateMessage} from "../types";
+import {
+    DropdownOptions,
+    StartPipeline,
+    StopPipeline,
+    Pipeline,
+    MenuOption,
+    UpdateMessage,
+    DeletePipeline
+} from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
 import styled from "styled-components";
@@ -15,6 +23,7 @@ interface Props {
     pipelines: Pipeline[];
     startPipeline: StartPipeline;
     stopPipeline: StopPipeline;
+    deletePipeline: DeletePipeline;
     updateMessage: UpdateMessage;
     menuOption: MenuOption;
     strategies: any
@@ -65,6 +74,7 @@ function PipelinePanel(props: Props) {
         exchangeOptions,
         startPipeline,
         stopPipeline,
+        deletePipeline,
         updateMessage,
         menuOption
     } = props
@@ -151,6 +161,7 @@ function PipelinePanel(props: Props) {
                 <PipelineItem
                     startPipeline={startPipeline}
                     stopPipeline={stopPipeline}
+                    deletePipeline={deletePipeline}
                     pipeline={pipeline}
                     live={live}
                 />
@@ -158,7 +169,7 @@ function PipelinePanel(props: Props) {
             {filteredPipelines.length === 0 && (
                 <Message>
                     <Message.Header>
-                        There are no trading bots that match the chosen filters.
+                        There are no trading bots matching the chosen filters.
                     </Message.Header>
                 </Message>
             )}
