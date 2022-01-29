@@ -72,6 +72,7 @@ class TestDataService:
         [
             pytest.param(
                 {
+                    "name": "Hello World",
                     "strategy": "MovingAverage",
                     "params": {"ma": 30},
                     "candleSize": "1h",
@@ -83,6 +84,7 @@ class TestDataService:
             ),
             pytest.param(
                 {
+                    "name": "Hello World",
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"ma": 30},
@@ -94,6 +96,7 @@ class TestDataService:
             ),
             pytest.param(
                 {
+                    "name": "Hello World",
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"ma": 30},
@@ -105,6 +108,7 @@ class TestDataService:
             ),
             pytest.param(
                 {
+                    "name": "Hello World",
                     "symbol": "BTCUSDT",
                     "params": {"ma": 30},
                     "candleSize": "1h",
@@ -116,14 +120,27 @@ class TestDataService:
             ),
             pytest.param(
                 {
+                    "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
+                    "strategy": "MovingAverageCrossover",
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
                 "PARAMS_REQUIRED",
-                lambda response: response("ma"),
+                lambda response: response("SMA_S, SMA_L"),
                 id="PARAMS_REQUIRED",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "strategy": "MovingAverage",
+                    "params": {"ma": 30},
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
+                },
+                "NAME_REQUIRED",
+                lambda response: response,
+                id="NAME_REQUIRED",
             ),
         ],
     )
@@ -214,6 +231,19 @@ class TestDataService:
                 lambda input_params: "sma",
                 id="PARAMS_INVALID",
             ),
+            pytest.param(
+                {
+                    "name": False,
+                    "symbol": "BTCUSDT",
+                    "strategy": "MovingAverage",
+                    "params": {"ma": 30},
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
+                },
+                "NAME_INVALID",
+                lambda input_params: input_params["name"],
+                id="NAME_INVALID",
+            ),
         ],
     )
     def test_start_bot_invalid_input_response(
@@ -245,6 +275,7 @@ class TestDataService:
         [
             pytest.param(
                 {
+                    "name": "Hello World",
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"ma": 30},
@@ -285,6 +316,7 @@ class TestDataService:
         [
             pytest.param(
                 {
+                    "name": "Hello World",
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"ma": 30},
@@ -337,6 +369,7 @@ class TestDataService:
         [
             pytest.param(
                 {
+                    "name": "Hello World",
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
                     "params": {"ma": 30},

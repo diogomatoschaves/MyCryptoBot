@@ -142,10 +142,12 @@ class Orders(models.Model):
 
 class Pipeline(models.Model):
 
+    name = models.TextField(null=True, blank=True)
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     interval = models.TextField()
     strategy = models.TextField()
     params = models.TextField(blank=True, default="{}")
+    allocation = models.FloatField(null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
     active = models.BooleanField(default=True, blank=True)
@@ -165,9 +167,11 @@ class Pipeline(models.Model):
 
     def as_json(self):
         return dict(
+            name=self.name,
             id=self.id,
             strategy=self.strategy,
             params=json.loads(self.params),
+            allocation=self.allocation,
             candleSize=self.interval,
             exchange=self.exchange.name,
             symbol=self.symbol.name,
@@ -179,7 +183,7 @@ class Pipeline(models.Model):
         )
 
     class Meta:
-        unique_together = ("symbol", "interval", "strategy", "params", "exchange", "paper_trading")
+        unique_together = ("name", "symbol", "interval", "strategy", "params", "exchange", "paper_trading")
 
 
 class Position(models.Model):

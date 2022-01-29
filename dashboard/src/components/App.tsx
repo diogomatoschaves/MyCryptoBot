@@ -6,7 +6,7 @@ import {
     DropdownOptions, MenuOption,
     Trade, Pipeline, PipelineParams, Position,
     StartPipeline,
-    StopPipeline, GetCurrentPrices, Message
+    StopPipeline, GetCurrentPrices, Message, UpdateMessage
 } from "../types";
 import {getTrades, getPipelines, getPositions, getResources, startBot, stopBot, getPrice} from "../apiCalls";
 import {GREEN, RED, RESOURCES_MAPPING} from "../utils/constants";
@@ -246,6 +246,17 @@ class App extends Component<any, State> {
         })
     }
 
+    updateMessage: UpdateMessage = (text, success) => {
+        this.setState(state => ({
+            message: {
+                ...state.message,
+                show: true,
+                text,
+                success,
+            }
+        }))
+    }
+
     render(){
 
         const {
@@ -277,6 +288,7 @@ class App extends Component<any, State> {
                             strategies={strategies}
                             startPipeline={this.startPipeline}
                             stopPipeline={this.stopPipeline}
+                            updateMessage={this.updateMessage}
                         />
                     ) : menuOption.code === 'trades' ? (
                         <TradesPanel menuOption={menuOption} trades={trades} currentPrices={currentPrices}/>

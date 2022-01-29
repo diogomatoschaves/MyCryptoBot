@@ -40,6 +40,7 @@ def create_job(db):
 def create_pipeline(db, create_exchange, create_symbol):
     return Pipeline.objects.create(
         id=1,
+        name='Hello World',
         symbol_id='BTCUSDT',
         strategy='MovingAverage',
         params='{"ma": 30}',

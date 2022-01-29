@@ -1,7 +1,8 @@
 import React, {useReducer, useState} from 'react';
-import {Button, Checkbox, Dropdown, Grid, Header, Icon, Input, Modal} from "semantic-ui-react";
-import {DropdownOptions, StartPipeline} from "../types";
+import {Button, Checkbox, Dropdown, Form, Grid, Header, Icon, Input, Modal, TextArea} from "semantic-ui-react";
+import {DropdownOptions, StartPipeline, UpdateMessage} from "../types";
 import {validateParams, validatePipelineCreation} from "../utils/helpers";
+import MessageComponent from "./Message";
 
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
   candleSizeOptions: DropdownOptions[];
   exchangeOptions: DropdownOptions[];
   startPipeline: StartPipeline;
+  updateMessage: UpdateMessage;
   strategies: any;
 }
 
@@ -19,6 +21,7 @@ const UPDATE_SECOND_MODAL_OPEN = 'UPDATE_SECOND_MODAL_OPEN'
 const CLOSE_MODAL = 'CLOSE_MODAL'
 const UPDATE_PARAMS = 'UPDATE_PARAMS'
 const UPDATE_CHECKBOX = 'UPDATE_CHECKBOX'
+const UPDATE_MESSAGE = 'UPDATE_MESSAGE'
 
 
 const reducer = (state: any, action: any) => {
@@ -40,7 +43,8 @@ const reducer = (state: any, action: any) => {
         strategy: null,
         secondModalOpen: false,
         params: {},
-        liveTrading: false
+        liveTrading: false,
+        message: {text: '', success: false}
       }
     case UPDATE_PARAMS:
       return {
@@ -54,6 +58,11 @@ const reducer = (state: any, action: any) => {
       return {
         ...state,
         liveTrading: !state.liveTrading
+      }
+    case UPDATE_MESSAGE:
+      return {
+        ...state,
+        message: action.message
       }
     default:
       throw new Error();
@@ -77,19 +86,23 @@ const NewPipeline = (props: Props) => {
 
   const [symbol, setSymbol] = useState()
   const [candleSize, setCandleSize] = useState()
+  const [name, setName] = useState()
+  const [allocation, setAllocation] = useState()
   const [exchanges, setExchange] = useState([])
 
-  const [{strategy, secondModalOpen, params, liveTrading}, dispatch] = useReducer(
+  const [{strategy, secondModalOpen, params, liveTrading, message}, dispatch] = useReducer(
       reducer, {
         strategy: undefined,
         secondModalOpen: false,
         params: {},
-        liveTrading: false
+        liveTrading: false,
+        message: {text: '', success: false}
       }
   );
 
   return (
       <Modal
+          closeIcon
           onClose={() => {
             // @ts-ignore
             setExchange(undefined)
@@ -102,7 +115,6 @@ const NewPipeline = (props: Props) => {
           }}
           onOpen={() => setOpen(true)}
           open={open}
-          dimmer={'inverted'}
           size="small"
           trigger={
             <Button>
@@ -116,6 +128,22 @@ const NewPipeline = (props: Props) => {
         <Modal.Header>New Trading Bot <span>🤖</span></Modal.Header>
         <Modal.Content >
           <Grid columns={2}>
+            <Grid.Row >
+              <Grid.Column>
+                <Input
+                    placeholder='Name'
+                    value={name}
+                    onChange={(e: any, {value}: {value?: any}) => setName(value)}
+                />
+              </Grid.Column>
+              <Grid.Column>
+                <Input
+                    placeholder='Allocated capital'
+                    value={allocation}
+                    onChange={(e: any, {value}: {value?: any}) => setAllocation(value)}
+                />
+              </Grid.Column>
+            </Grid.Row>
             <Grid.Row>
               <Grid.Column>
                 <Dropdown
@@ -173,6 +201,13 @@ const NewPipeline = (props: Props) => {
                 />
               </Grid.Column>
             </Grid.Row>
+            {message.text && (
+                <Grid.Row>
+                  <Grid.Column>
+                    <MessageComponent success={message.success} message={message.text}/>
+                  </Grid.Column>
+                </Grid.Row>
+            )}
             <Modal
               onClose={() => {
                 dispatch({type: CLOSE_MODAL})
@@ -274,9 +309,11 @@ const NewPipeline = (props: Props) => {
               content="Create trading bot"
               labelPosition='right'
               icon='checkmark'
-              onClick={() => {
-                setOpen(false)
-                validatePipelineCreation({
+              onClick={async () => {
+
+                const success = await validatePipelineCreation({
+                  name,
+                  allocation,
                   symbol,
                   strategy,
                   candleSize,
@@ -286,9 +323,11 @@ const NewPipeline = (props: Props) => {
                   candleSizeOptions,
                   exchangeOptions,
                   startPipeline,
+                  dispatch,
                   params,
                   liveTrading
                 })
+                if (success) setOpen(false)
               }}
               positive
           />

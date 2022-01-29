@@ -1,6 +1,6 @@
-import {Button, Divider, Icon} from "semantic-ui-react";
+import {Button, Divider, Message} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
-import {DropdownOptions, StartPipeline, StopPipeline, Pipeline, MenuOption, Trade} from "../types";
+import {DropdownOptions, StartPipeline, StopPipeline, Pipeline, MenuOption, UpdateMessage} from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
 import styled from "styled-components";
@@ -15,6 +15,7 @@ interface Props {
     pipelines: Pipeline[];
     startPipeline: StartPipeline;
     stopPipeline: StopPipeline;
+    updateMessage: UpdateMessage;
     menuOption: MenuOption;
     strategies: any
 }
@@ -64,6 +65,7 @@ function PipelinePanel(props: Props) {
         exchangeOptions,
         startPipeline,
         stopPipeline,
+        updateMessage,
         menuOption
     } = props
 
@@ -141,6 +143,7 @@ function PipelinePanel(props: Props) {
                     candleSizeOptions={candleSizeOptions}
                     exchangeOptions={exchangeOptions}
                     startPipeline={startPipeline}
+                    updateMessage={updateMessage}
                 />
             </ButtonWrapper>
             {filteredPipelines.map((pipeline: Pipeline) => (
@@ -152,7 +155,11 @@ function PipelinePanel(props: Props) {
                 />
             ))}
             {filteredPipelines.length === 0 && (
-                <span>"There are no trading bots that match the chosen filters."</span>
+                <Message>
+                    <Message.Header>
+                        There are no trading bots that match the chosen filters.
+                    </Message.Header>
+                </Message>
             )}
         </StyledSegment>
     );
