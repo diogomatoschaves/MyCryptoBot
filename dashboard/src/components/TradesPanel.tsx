@@ -1,5 +1,5 @@
 import {MenuOption, Trade} from "../types";
-import {Button, Divider, Icon, Table} from "semantic-ui-react";
+import {Button, Divider, Header, Icon, Table} from "semantic-ui-react";
 import TradeRow from './TradeRow'
 import styled from "styled-components";
 import {useEffect, useReducer, useRef, useState} from "react";
@@ -67,9 +67,10 @@ function TradesPanel(props: Props) {
 
     return (
         <StyledDiv className="flex-column">
-            <Divider horizontal style={{marginBottom: '30px', marginTop: 0}}>
-                <span>{menuOption.emoji}</span> {menuOption.text}
-            </Divider>
+            <Header size={'large'} dividing>
+                <span style={{marginRight: 10}}>{menuOption.emoji}</span>
+                {menuOption.text}
+            </Header>
             <Button.Group size="mini" style={{alignSelf: 'center'}}>
                 <Button onClick={() => setOpenOrClosed(true)} secondary={open}>Open</Button>
                 <Button onClick={() => setOpenOrClosed(false)} secondary={!open}>Closed</Button>
