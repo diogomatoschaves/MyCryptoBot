@@ -1,18 +1,19 @@
 import {Position} from "../types";
-import {Table} from "semantic-ui-react";
+import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import React from "react";
-import {timeFormatter} from "../utils/helpers";
+import {getPnl, timeFormatter} from "../utils/helpers";
 
 
 interface Props {
   index: number
   position: Position;
+  currentPrices: Object
 }
 
 function PositionRow(props: Props) {
 
-  const { position, index } = props
+  const { position, index, currentPrices } = props
 
   const negative = position.position === -1
   const positive = position.position === 1
@@ -23,15 +24,28 @@ function PositionRow(props: Props) {
 
   const decimalPlaces = 3
 
+  // @ts-ignore
+  const pnl = currentPrices[position.symbol] ? getPnl(position.price, currentPrices[position.symbol], position.position)
+      : 0
+
+  const pnlColor = pnl > 0 ? GREEN : RED
+
   return (
-      <Table.Row active={index % 2 == 0} key={index} >
+      <Table.Row key={index}>
+        <Table.Cell style={styles.defaultCell}>
+          <Label ribbon>{position.paperTrading ? "Demo" : "Live"}</Label>
+        </Table.Cell>
+        <Table.Cell style={{...styles.defaultCell, fontWeight: 600}}>
+          <Label color={'pink'}>{position.pipelineName}</Label>
+        </Table.Cell>
         <Table.Cell style={{fontWeight: 600, color: DARK_YELLOW}}>{position.symbol}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{age}</Table.Cell>
-        <Table.Cell style={styles.defaultCell}>{position.open ? "Open": " Closed"}</Table.Cell>
         <Table.Cell style={{color, fontWeight: '600'}}>{positionSide}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{Number(position.amount).toFixed(decimalPlaces)}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{Number(position.price).toFixed(decimalPlaces)}</Table.Cell>
-        <Table.Cell style={styles.defaultCell}>{position.paperTrading ? "Yes" : "No"}</Table.Cell>
+        <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell, color: pnlColor}}>
+          {pnl && `${pnl}%`}
+        </Table.Cell>
         <Table.Cell style={styles.defaultCell}>{position.exchange}</Table.Cell>
       </Table.Row>
   );

@@ -1,12 +1,12 @@
 import {
   DropdownOptions,
-  Trade,
+  Pipeline,
   Position,
-  RawTrade,
-  RawPosition,
-  StartPipeline,
   RawPipeline,
-  Pipeline, UpdateMessage
+  RawPosition,
+  RawTrade,
+  StartPipeline,
+  Trade
 } from "../../types";
 
 export const validatePipelineCreation = async (
@@ -146,4 +146,8 @@ export const timeFormatter = (date: Date, currentDate?: Date | null) => {
   } else {
     return `${minutes}m`
   }
+}
+
+export const getPnl = (original: number, current: number, side: number) => {
+  return ((side * ((current / original) - 1)) * 100).toFixed(2)
 }

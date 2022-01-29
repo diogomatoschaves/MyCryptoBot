@@ -75,9 +75,10 @@ function TradesPanel(props: Props) {
                 <Button onClick={() => setOpenOrClosed(true)} secondary={open}>Open</Button>
                 <Button onClick={() => setOpenOrClosed(false)} secondary={!open}>Closed</Button>
             </Button.Group>
-            <Table basic='very' size="small" compact definition >
+            <Table basic='very' size="small" compact striped>
                 <Table.Header>
                     <Table.Row>
+                        <Table.HeaderCell>Type </Table.HeaderCell>
                         <Table.HeaderCell>Asset</Table.HeaderCell>
                         <Table.HeaderCell>Opened</Table.HeaderCell>
                         <Table.HeaderCell>Duration</Table.HeaderCell>
@@ -85,8 +86,6 @@ function TradesPanel(props: Props) {
                         <Table.HeaderCell>Amount</Table.HeaderCell>
                         <Table.HeaderCell>Buying Price</Table.HeaderCell>
                         <Table.HeaderCell>Net Profit</Table.HeaderCell>
-                        <Table.HeaderCell>Exchange</Table.HeaderCell>
-                        <Table.HeaderCell>Paper Trading</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
