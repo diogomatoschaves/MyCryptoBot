@@ -1,5 +1,5 @@
 import React from 'react';
-import {Divider, Header, Table} from "semantic-ui-react";
+import {Header, Table} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
 import {MenuOption, Position} from "../types";
 import PositionRow from "./PositionRow";
@@ -7,12 +7,13 @@ import PositionRow from "./PositionRow";
 
 interface Props {
   menuOption: MenuOption;
-  positions: Position[]
+  positions: Position[];
+  currentPrices: Object;
 }
 
 const PositionsPanel = (props: Props) => {
 
-  const { menuOption, positions } = props
+  const { menuOption, positions, currentPrices } = props
 
   return (
       <StyledSegment basic className="flex-column">
@@ -20,22 +21,23 @@ const PositionsPanel = (props: Props) => {
           <span style={{marginRight: 10}}>{menuOption.emoji}</span>
           {menuOption.text}
         </Header>
-        <Table basic='very'>
+        <Table basic='very' striped>
           <Table.Header>
             <Table.Row>
+              <Table.HeaderCell>Type</Table.HeaderCell>
+              <Table.HeaderCell width={3}>Trading Bot</Table.HeaderCell>
               <Table.HeaderCell>Asset</Table.HeaderCell>
-              <Table.HeaderCell>Age</Table.HeaderCell>
-              <Table.HeaderCell>Status</Table.HeaderCell>
+              <Table.HeaderCell>Open since</Table.HeaderCell>
               <Table.HeaderCell>Position</Table.HeaderCell>
               <Table.HeaderCell>Amount</Table.HeaderCell>
-              <Table.HeaderCell>Price</Table.HeaderCell>
-              <Table.HeaderCell>Paper Trading</Table.HeaderCell>
+              <Table.HeaderCell>Entry Price</Table.HeaderCell>
+              <Table.HeaderCell>Net Profit</Table.HeaderCell>
               <Table.HeaderCell>Exchange</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
             {positions.map((position, index) => {
-              return <PositionRow index={index} position={position}/>
+              return <PositionRow index={index} position={position} currentPrices={currentPrices}/>
             })}
           </Table.Body>
         </Table>
