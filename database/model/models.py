@@ -191,7 +191,7 @@ class Position(models.Model):
     position = models.IntegerField()
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
-    pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
+    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE, null=True)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
     buying_price = models.FloatField()
     amount = models.FloatField()
@@ -242,5 +242,5 @@ class Trade(models.Model):
             amount=self.amount,
             side=self.side,
             mock=self.mock,
-            pipeline_id=self.pipeline.id,
+            pipeline_id=self.pipeline.id if self.pipeline else None,
         )
