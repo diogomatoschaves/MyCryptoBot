@@ -1,4 +1,4 @@
-import {Button, Divider, Message} from "semantic-ui-react";
+import {Button, Divider, Header, Message} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
 import {DropdownOptions, StartPipeline, StopPipeline, Pipeline, MenuOption, UpdateMessage} from "../types";
 import PipelineItem from './Pipeline'
@@ -116,9 +116,10 @@ function PipelinePanel(props: Props) {
 
     return (
         <StyledSegment basic className="flex-column">
-            <Divider horizontal style={{marginBottom: '20px', marginTop: '0'}}>
-                <span>{menuOption.emoji}</span> {menuOption.text}
-            </Divider>
+            <Header size={'large'} dividing>
+                <span style={{marginRight: 10}}>{menuOption.emoji}</span>
+                {menuOption.text}
+            </Header>
             <ButtonWrapper className="flex-row">
                 <Button.Group size="mini" style={{alignSelf: 'center'}}>
                     <Button onClick={() => filterActive(true)} secondary={active}>

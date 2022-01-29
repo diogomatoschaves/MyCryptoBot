@@ -1,5 +1,5 @@
 import React from 'react';
-import {Divider, Table} from "semantic-ui-react";
+import {Divider, Header, Table} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
 import {MenuOption, Position} from "../types";
 import PositionRow from "./PositionRow";
@@ -16,9 +16,10 @@ const PositionsPanel = (props: Props) => {
 
   return (
       <StyledSegment basic className="flex-column">
-        <Divider horizontal style={{marginBottom: '30px', marginTop: '0'}}>
-          <span>{menuOption.emoji}</span> {menuOption.text}
-        </Divider>
+        <Header size={'large'} dividing>
+          <span style={{marginRight: 10}}>{menuOption.emoji}</span>
+          {menuOption.text}
+        </Header>
         <Table basic='very'>
           <Table.Header>
             <Table.Row>
