@@ -131,6 +131,7 @@ export type Message = {
 
 export type StartPipeline = (pipelineParams: PipelineParams) => void
 export type StopPipeline = (pipelineId: number) => void
+export type DeletePipeline = (pipelineId: number) => void
 export type ChangeMenu = (option: MenuOption) => void
 export type GetCurrentPrices = () => void
 export type UpdateMessage = (text: string, success: boolean)  => void

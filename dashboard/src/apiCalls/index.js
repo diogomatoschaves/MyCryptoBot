@@ -127,3 +127,14 @@ export const stopBot = async (requestData) => {
 
   return await response.json()
 }
+
+export const deleteBot = async (pipelineId) => {
+
+  const url = `${dataAPIHost}/pipelines?pipelineId=${pipelineId}`
+
+  const response = await fetch(url, {
+    method: 'DELETE'
+  })
+
+  return await response.json()
+}
