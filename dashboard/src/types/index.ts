@@ -46,6 +46,8 @@ export type Pipeline = {
     strategy: string
     params: Object
     candleSize: string
+    name: string,
+    allocation: number,
     exchange: string
     symbol: string
     active: boolean
@@ -61,6 +63,8 @@ export type RawPipeline = {
     strategy: string
     params: Object
     candleSize: string
+    name: string,
+    allocation: number,
     exchange: string
     symbol: string
     active: boolean
@@ -71,6 +75,8 @@ export type RawPipeline = {
 }
 
 export type PipelineParams = {
+    name: string,
+    allocation: number,
     symbol: string
     strategy: string
     candleSize: string
@@ -127,3 +133,4 @@ export type StartPipeline = (pipelineParams: PipelineParams) => void
 export type StopPipeline = (pipelineId: number) => void
 export type ChangeMenu = (option: MenuOption) => void
 export type GetCurrentPrices = () => void
+export type UpdateMessage = (text: string, success: boolean)  => void
