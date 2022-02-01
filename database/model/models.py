@@ -152,6 +152,7 @@ class Pipeline(models.Model):
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
     active = models.BooleanField(default=True, blank=True)
     open_time = models.DateTimeField(auto_now_add=True, null=True)
+    color = models.TextField()
 
     def get_profit_loss(self):
         result = reduce(
@@ -179,7 +180,8 @@ class Pipeline(models.Model):
             paperTrading=self.paper_trading,
             openTime=self.open_time.isoformat() if self.open_time else None,
             numberTrades=self.trade_set.count(),
-            profitLoss=self.get_profit_loss()
+            profitLoss=self.get_profit_loss(),
+            color=self.color
         )
 
     class Meta:
