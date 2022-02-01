@@ -4,7 +4,7 @@ import {StyledSegment} from "../styledComponents";
 import {useEffect, useReducer, useRef} from "react";
 import {timeFormatterDate, timeFormatterDiff} from "../utils/helpers";
 import { PieChart } from 'react-minimal-pie-chart';
-import {BLUE, DARK_YELLOW, GREEN, PINK, PURPLE, RED, TEAL, VIOLET, YELLOW} from "../utils/constants";
+import {COLORS, GREEN, RED} from "../utils/constants";
 
 
 interface Props {
@@ -14,7 +14,6 @@ interface Props {
   currentPrices: Object
 }
 
-const colorsArray = [PURPLE, VIOLET, PINK, BLUE, TEAL, GREEN, RED, YELLOW, DARK_YELLOW]
 const UPDATE_TRADES_STATISTICS = 'UPDATE_TRADES_STATISTICS'
 const UPDATE_POSITIONS_STATISTICS = 'UPDATE_POSITIONS_STATISTICS'
 
@@ -147,7 +146,7 @@ function Dashboard(props: Props) {
   const pieChartData = Object.keys(symbolsCount).map((symbol, index) => ({
     title: symbol,
     value: (symbolsCount[symbol] / openPositions * 100),
-    color: colorsArray[index],
+    color: COLORS[index],
   }))
 
   return (
