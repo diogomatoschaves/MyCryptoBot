@@ -14,6 +14,7 @@ export const validatePipelineCreation = async (
       name,
       allocation,
       symbol,
+      color,
       symbolsOptions,
       strategy,
       strategiesOptions,
@@ -29,6 +30,7 @@ export const validatePipelineCreation = async (
       name: string | undefined,
       allocation: string | undefined,
       symbol: number | undefined,
+      color: string | undefined,
       symbolsOptions: DropdownOptions[],
       strategy: number | undefined,
       strategiesOptions: DropdownOptions[],
@@ -41,7 +43,7 @@ export const validatePipelineCreation = async (
       params: Object,
       liveTrading: boolean
     }) => {
-  if (!name || !allocation || !symbol || !strategy || !candleSize || exchanges.length === 0) {
+  if (!name || !color || !allocation || !symbol || !strategy || !candleSize || exchanges.length === 0) {
     dispatch({
       type: "UPDATE_MESSAGE",
       message: {text: "All parameters must be specified.", success: false}
@@ -68,7 +70,8 @@ export const validatePipelineCreation = async (
     params,
     name,
     allocation: allocationNumber,
-    paperTrading: !liveTrading
+    paperTrading: !liveTrading,
+    color
   })
 
   return true

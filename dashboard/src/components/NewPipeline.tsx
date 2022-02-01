@@ -3,6 +3,7 @@ import {Button, Checkbox, Dropdown, Form, Grid, Header, Icon, Input, Modal, Text
 import {DropdownOptions, StartPipeline, UpdateMessage} from "../types";
 import {validateParams, validatePipelineCreation} from "../utils/helpers";
 import MessageComponent from "./Message";
+import {COLORS_NAMES} from "../utils/constants";
 
 
 interface Props {
@@ -14,6 +15,17 @@ interface Props {
   updateMessage: UpdateMessage;
   strategies: any;
 }
+
+
+const colorOptions = COLORS_NAMES.map((colorName, index) => {
+  const name = colorName.toLowerCase()
+  return {
+    key: name,
+    text: name,
+    value: name,
+    label: { className: `light-${name}`, empty: true, circular: true}
+  }
+})
 
 
 const UPDATE_STRATEGY = 'UPDATE_STRATEGY'
@@ -40,7 +52,7 @@ const reducer = (state: any, action: any) => {
     case CLOSE_MODAL:
       return {
         ...state,
-        strategy: null,
+        strategy: undefined,
         secondModalOpen: false,
         params: {},
         liveTrading: false,
@@ -84,11 +96,14 @@ const NewPipeline = (props: Props) => {
 
   const [open, setOpen] = useState(false)
 
+  const [color, setColor] = useState()
   const [symbol, setSymbol] = useState()
   const [candleSize, setCandleSize] = useState()
   const [name, setName] = useState()
   const [allocation, setAllocation] = useState()
   const [exchanges, setExchange] = useState([])
+
+  console.log(color)
 
   const [{strategy, secondModalOpen, params, liveTrading, message}, dispatch] = useReducer(
       reducer, {
@@ -200,14 +215,17 @@ const NewPipeline = (props: Props) => {
                   checked={liveTrading}
                 />
               </Grid.Column>
+              <Grid.Column>
+                <Dropdown
+                    className={`light-${color}`}
+                    placeholder='Color'
+                    value={color}
+                    onChange={(e: any, entry: any) => setColor(entry.value)}
+                    selection
+                    options={colorOptions}
+                />
+              </Grid.Column>
             </Grid.Row>
-            {message.text && (
-                <Grid.Row>
-                  <Grid.Column>
-                    <MessageComponent success={message.success} message={message.text}/>
-                  </Grid.Column>
-                </Grid.Row>
-            )}
             <Modal
               onClose={() => {
                 dispatch({type: CLOSE_MODAL})
@@ -289,48 +307,61 @@ const NewPipeline = (props: Props) => {
           </Grid>
         </Modal.Content>
         <Modal.Actions>
-          <Button color='black' onClick={() => {
-            // @ts-ignore
-            setExchange(undefined)
-            // @ts-ignore
-            setSymbol(undefined)
-            // @ts-ignore
-            dispatch({
-              type: UPDATE_STRATEGY,
-              value: undefined,
-            })
-            // @ts-ignore
-            setCandleSize(undefined)
-            setOpen(false)
-          }}>
-            Cancel
-          </Button>
-          <Button
-              content="Create trading bot"
-              labelPosition='right'
-              icon='checkmark'
-              onClick={async () => {
-
-                const success = await validatePipelineCreation({
-                  name,
-                  allocation,
-                  symbol,
-                  strategy,
-                  candleSize,
-                  exchanges,
-                  symbolsOptions,
-                  strategiesOptions,
-                  candleSizeOptions,
-                  exchangeOptions,
-                  startPipeline,
-                  dispatch,
-                  params,
-                  liveTrading
+          <div className="flex-row" style={{justifyContent: message.text ? 'space-between' : 'flex-end'}}>
+            {message.text && (
+                <div>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <MessageComponent success={message.success} message={message.text}/>
+                    </Grid.Column>
+                  </Grid.Row>
+                </div>
+            )}
+            <div>
+              <Button color='black' onClick={() => {
+                // @ts-ignore
+                setExchange(undefined)
+                // @ts-ignore
+                setSymbol(undefined)
+                // @ts-ignore
+                dispatch({
+                  type: CLOSE_MODAL,
                 })
-                if (success) setOpen(false)
-              }}
-              positive
-          />
+                // @ts-ignore
+                setCandleSize(undefined)
+                setOpen(false)
+              }}>
+                Cancel
+              </Button>
+              <Button
+                  content="Create trading bot"
+                  labelPosition='right'
+                  icon='checkmark'
+                  onClick={async () => {
+
+                    const success = await validatePipelineCreation({
+                      name,
+                      allocation,
+                      color,
+                      symbol,
+                      strategy,
+                      candleSize,
+                      exchanges,
+                      symbolsOptions,
+                      strategiesOptions,
+                      candleSizeOptions,
+                      exchangeOptions,
+                      startPipeline,
+                      dispatch,
+                      params,
+                      liveTrading
+                    })
+                    if (success) setOpen(false)
+                  }}
+                  positive
+              />
+            </div>
+          </div>
         </Modal.Actions>
       </Modal>
   );

@@ -55,6 +55,7 @@ export type Pipeline = {
     openTime: Date | null
     numberTrades: number
     profitLoss: number
+    color: string
 }
 
 
@@ -72,6 +73,7 @@ export type RawPipeline = {
     openTime: string | null
     numberTrades: number
     profitLoss: number
+    color: string
 }
 
 export type PipelineParams = {
@@ -82,7 +84,8 @@ export type PipelineParams = {
     candleSize: string
     exchanges: string
     params: Object,
-    paperTrading: boolean
+    paperTrading: boolean,
+    color: string
 }
 
 export type Position = {
