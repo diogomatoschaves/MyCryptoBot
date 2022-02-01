@@ -61,6 +61,7 @@ const positionsReducerCallback = (currentPrices: Object) => (metrics: any, posit
     openPositions: metrics.openPositions + 1,
     // @ts-ignore
     totalEquityPositions: metrics.totalEquityPositions + position.amount * currentPrices[position.symbol],
+    totalInitialEquity: metrics.totalEquityPositions + position.amount * position.price,
     symbolsCount: {
       ...metrics.symbolsCount,
       [position.symbol]: metrics.symbolsCount[position.symbol] ? metrics.symbolsCount[position.symbol] + 1 : 1
@@ -71,6 +72,7 @@ const positionsReducerCallback = (currentPrices: Object) => (metrics: any, posit
 const positionsReducerInitialState = {
   openPositions: 0,
   totalEquityPositions: 0,
+  totalInitialEquity: 0,
   symbolsCount: {},
 }
 
@@ -108,6 +110,7 @@ function Dashboard(props: Props) {
   const [{
     openPositions,
     totalEquityPositions,
+    totalInitialEquity,
     symbolsCount,
   }, positionsDispatch] = useReducer(
       positionsReducer, positions.reduce(positionsReducerCallback(currentPrices), positionsReducerInitialState)
@@ -138,6 +141,9 @@ function Dashboard(props: Props) {
   const avgTradeDuration = totalTradeDuration / numberTrades
   const winRate = winningTrades / closedTrades * 100
 
+  const totalPnl = ((totalEquityPositions - totalInitialEquity) / totalInitialEquity * 100)
+  const pnlColor = totalPnl > 0 ? GREEN : RED
+
   const pieChartData = Object.keys(symbolsCount).map((symbol, index) => ({
     title: symbol,
     value: (symbolsCount[symbol] / openPositions * 100),
@@ -157,89 +163,100 @@ function Dashboard(props: Props) {
           <Grid columns={3}>
             <Grid.Row>
               <Grid.Column>
-                <Grid.Column style={styles.header}>
-                  Total trades
+                <Grid.Column style={styles.tradesHeader}>
+                  # trades
                 </Grid.Column>
-                <Grid.Column style={styles.rightColumn} >
+                <Grid.Column style={styles.tradesColumn} >
                   {numberTrades}
                 </Grid.Column>
               </Grid.Column>
               <Grid.Column>
-                <Grid.Column floated='left' style={styles.header}>
+                <Grid.Column floated='left' style={styles.tradesHeader}>
                   Max trade duration
                 </Grid.Column>
-                <Grid.Column floated='right' style={styles.rightColumn} >
+                <Grid.Column floated='right' style={styles.tradesColumn}>
                   {timeFormatterDate(maxTradeDuration)}
                 </Grid.Column>
               </Grid.Column>
               <Grid.Column>
-                <Grid.Column floated='left' style={styles.header}>
+                <Grid.Column floated='left' style={styles.tradesHeader}>
                   Avg trade duration
                 </Grid.Column>
-                <Grid.Column floated='right' style={styles.rightColumn} >
+                <Grid.Column floated='right' style={styles.tradesColumn} >
                   {timeFormatterDiff(avgTradeDuration)}
                 </Grid.Column>
               </Grid.Column>
             </Grid.Row>
             <Grid.Row>
               <Grid.Column>
-                <Grid.Column style={styles.header}>
+                <Grid.Column style={styles.tradesHeader}>
                   Win Rate
                 </Grid.Column>
-                <Grid.Column style={styles.rightColumn} >
+                <Grid.Column style={styles.tradesColumn} >
                   {winRate.toFixed(0)}%
                 </Grid.Column>
               </Grid.Column>
               <Grid.Column>
-                <Grid.Column style={styles.header}>
+                <Grid.Column style={styles.tradesHeader}>
                   Best Trade
                 </Grid.Column>
-                <Grid.Column style={styles.rightColumn} >
+                <Grid.Column style={styles.tradesColumn} >
                   {(bestTrade * 100).toFixed(2)}%
                 </Grid.Column>
               </Grid.Column>
               <Grid.Column>
-                <Grid.Column style={styles.header}>
+                <Grid.Column style={styles.tradesHeader}>
                   Worst Trade
                 </Grid.Column>
-                <Grid.Column style={styles.rightColumn} >
+                <Grid.Column style={styles.tradesColumn} >
                   {(worstTrade * 100).toFixed(2)}%
                 </Grid.Column>
               </Grid.Column>
             </Grid.Row>
           </Grid>
         </Segment>
-        <Segment secondary raised>
+        <Segment secondary raised style={{width: '70%'}}>
           <Header size={'medium'} color="pink">
-            Positions
+            Open Positions
           </Header>
-          <Grid columns={2}>
+          <Grid columns={3}>
             <Grid.Row>
               <Grid.Column>
-                <Grid.Column style={styles.header}>
-                  Open Positions
+                <Grid.Column style={styles.positionsHeader}>
+                  # positions
                 </Grid.Column>
-                <Grid.Column style={styles.rightColumn} >
+                <Grid.Column style={styles.positionsColumn} >
                   {openPositions}
                 </Grid.Column>
               </Grid.Column>
               <Grid.Column>
-                <Grid.Column floated='left' style={styles.header}>
-                  Total Equity Exposure
+                <Grid.Column floated='left' style={styles.positionsHeader}>
+                  Total Equity
                 </Grid.Column>
-                <Grid.Column floated='right' style={styles.rightColumn} >
+                <Grid.Column floated='right' style={styles.positionsColumn} >
                   {totalEquityPositions.toFixed(0)} USDT
                 </Grid.Column>
               </Grid.Column>
+              <Grid.Column>
+                <Grid.Column floated='left' style={styles.positionsHeader}>
+                  Net profit
+                </Grid.Column>
+                <Grid.Column floated='right' style={{...styles.positionsColumn, color: pnlColor}} >
+                  {totalPnl.toFixed(2)}%
+                </Grid.Column>
+              </Grid.Column>
+            </Grid.Row>
+            <Grid.Row>
             </Grid.Row>
           </Grid>
           <PieChart
-              totalValue={openPositions.length}
+              viewBoxSize={[100, 65]}
+              center={[50, 25]}
               data={pieChartData}
               label={({dataEntry}) => `${dataEntry.title}`}
               labelStyle={(index) => ({
                 fill: pieChartData[index].color,
-                fontSize: '4px',
+                fontSize: '3px',
                 fontFamily: 'sans-serif',
               })}
               lineWidth={65}
@@ -260,13 +277,22 @@ const styles = {
       padding: '30px 30px 20px',
       marginBottom: '40px'
     },
-    header: {
+    tradesHeader: {
       fontSize: '1.0em',
       color: 'rgb(169,142,227)',
     },
-    rightColumn: {
+    positionsHeader: {
+      fontSize: '1.0em',
+      color: 'rgb(184,126,206)',
+    },
+    tradesColumn: {
       fontSize: '1.4em',
       color: '#6435C9',
+      fontWeight: '600',
+    },
+    positionsColumn: {
+      fontSize: '1.4em',
+      color: '#A333C8',
       fontWeight: '600',
     },
     buttonDiv: {
