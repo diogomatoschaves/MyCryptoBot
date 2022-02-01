@@ -124,13 +124,18 @@ export const organizePositions = (positions: RawPosition[]): Position[] => {
 }
 
 
-export const timeFormatter = (date: Date, currentDate?: Date | null) => {
+export const timeFormatterDate = (date: Date, currentDate?: Date | null) => {
 
   currentDate = currentDate || new Date()
 
   // @ts-ignore
   let difference = currentDate - date;
 
+  return timeFormatterDiff(difference)
+
+}
+
+export const timeFormatterDiff = (difference: number) => {
   const days = Math.floor(difference/1000/60/60/24);
   difference -= days*1000*60*60*24;
 

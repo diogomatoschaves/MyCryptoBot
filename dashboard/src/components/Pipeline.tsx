@@ -4,7 +4,7 @@ import {GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
 import PipelineButton from "./PipelineButton";
-import {timeFormatter} from "../utils/helpers";
+import {timeFormatterDate} from "../utils/helpers";
 
 
 
@@ -37,7 +37,7 @@ function PipelineItem(props: Props) {
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
     const liveStr = pipeline.paperTrading ? "Demo Mode" : "Live Trading"
 
-    const age = pipeline.openTime ? timeFormatter(pipeline.openTime) : "-"
+    const age = pipeline.openTime ? timeFormatterDate(pipeline.openTime) : "-"
 
     const pnl = pipeline.profitLoss ? `${(pipeline.profitLoss * 100).toFixed(2)}%` : '-'
 

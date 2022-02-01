@@ -2,7 +2,7 @@ import {Position} from "../types";
 import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import React from "react";
-import {getPnl, timeFormatter} from "../utils/helpers";
+import {getPnl, timeFormatterDate} from "../utils/helpers";
 
 
 interface Props {
@@ -20,7 +20,7 @@ function PositionRow(props: Props) {
   const positionSide = positive ? "LONG" : negative ? "SHORT" : "NEUTRAL"
   const color = negative ? RED : positive ? GREEN : DARK_YELLOW
 
-  const age = timeFormatter(position.openTime)
+  const age = timeFormatterDate(position.openTime)
 
   const decimalPlaces = 3
 
