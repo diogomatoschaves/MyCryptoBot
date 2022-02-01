@@ -1,7 +1,7 @@
 import {Trade} from "../types";
 import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
-import {getPnl, timeFormatter} from "../utils/helpers";
+import {getPnl, timeFormatterDate} from "../utils/helpers";
 import React from "react";
 
 
@@ -37,7 +37,7 @@ function TradeRow(props: Props) {
 
   const decimalPlaces = 3
 
-  const duration = timeFormatter(trade.openTime, trade.closeTime && trade.closeTime)
+  const duration = timeFormatterDate(trade.openTime, trade.closeTime && trade.closeTime)
 
   return (
         <Table.Row key={index} >
