@@ -47,33 +47,74 @@
 
 
 .light-purple {
-  background-color: rgba(163, 51, 200, 0.06) !important
+  background-color: rgba(163, 51, 200, 0.06) !important;
+  border-color: rgba(163, 51, 200, 0.8) !important
 }
 
 .light-violet {
-  background-color: rgba(100, 53, 201, 0.06) !important
+  background-color: rgba(100, 53, 201, 0.06) !important;
+  border-color: rgba(100, 53, 201, 0.8) !important
 }
 
 .light-pink {
-  background-color: rgba(224, 57, 151, 0.06) !important
+  background-color: rgba(224, 57, 151, 0.06) !important;
+  border-color: rgba(224, 57, 151, 0.8) !important
 }
 
 .light-blue {
-  background-color: rgba(33, 133, 208, 0.06) !important
+  background-color: rgba(33, 133, 208, 0.06) !important;
+  border-color: rgba(33, 133, 208, 0.8) !important
 }
 
 .light-teal {
-  background-color: rgba(0, 181, 173, 0.06) !important
+  background-color: rgba(0, 181, 173, 0.06) !important;
+  border-color: rgba(0, 181, 173, 0.8) !important
 }
 
 .light-green {
-  background-color: rgba(33, 186, 69, 0.06) !important
+  background-color: rgba(33, 186, 69, 0.06) !important;
+  border-color: rgba(33, 186, 69, 0.8) !important
 }
 
 .light-red {
-  background-color: rgba(219, 40, 40, 0.06) !important
+  background-color: rgba(219, 40, 40, 0.06) !important;
+  border-color: rgba(219, 40, 40, 0.8) !important
 }
 
 .light-yellow {
-  background-color: rgba(251, 189, 8, 0.06) !important
+  background-color: rgba(251, 189, 8, 0.06) !important;
+  border-color: rgba(251, 189, 8, 0.8) !important
+}
+
+
+.dark-purple {
+  background-color: rgba(163, 51, 200, 0.8) !important
+}
+
+.dark-violet {
+  background-color: rgba(100, 53, 201, 0.8) !important
+}
+
+.dark-pink {
+  background-color: rgba(224, 57, 151, 0.8) !important
+}
+
+.dark-blue {
+  background-color: rgba(33, 133, 208, 0.8) !important
+}
+
+.dark-teal {
+  background-color: rgba(0, 181, 173, 0.8) !important
+}
+
+.dark-green {
+  background-color: rgba(33, 186, 69, 0.8) !important
+}
+
+.dark-red {
+  background-color: rgba(219, 40, 40, 0.8) !important
+}
+
+.dark-yellow {
+  background-color: rgba(251, 189, 8, 0.8) !important
 }
