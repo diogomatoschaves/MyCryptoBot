@@ -123,6 +123,8 @@ const NewPipeline = (props: Props) => {
             setExchange(undefined)
             // @ts-ignore
             setSymbol(undefined)
+            // @ts-ignore
+            setColor(undefined)
             dispatch({type: CLOSE_MODAL})
             // @ts-ignore
             setCandleSize(undefined)
@@ -328,6 +330,8 @@ const NewPipeline = (props: Props) => {
                   type: CLOSE_MODAL,
                 })
                 // @ts-ignore
+                setColor(undefined)
+                // @ts-ignore
                 setCandleSize(undefined)
                 setOpen(false)
               }}>
@@ -338,7 +342,6 @@ const NewPipeline = (props: Props) => {
                   labelPosition='right'
                   icon='checkmark'
                   onClick={async () => {
-
                     const success = await validatePipelineCreation({
                       name,
                       allocation,

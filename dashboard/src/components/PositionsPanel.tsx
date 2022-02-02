@@ -1,19 +1,20 @@
 import React from 'react';
 import {Header, Table} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
-import {MenuOption, Position} from "../types";
+import {MenuOption, Pipeline, Position} from "../types";
 import PositionRow from "./PositionRow";
 
 
 interface Props {
   menuOption: MenuOption;
   positions: Position[];
+  pipelines: Pipeline[];
   currentPrices: Object;
 }
 
 const PositionsPanel = (props: Props) => {
 
-  const { menuOption, positions, currentPrices } = props
+  const { menuOption, positions, currentPrices, pipelines } = props
 
   return (
       <StyledSegment basic className="flex-column">
@@ -37,7 +38,12 @@ const PositionsPanel = (props: Props) => {
           </Table.Header>
           <Table.Body>
             {positions.map((position, index) => {
-              return <PositionRow index={index} position={position} currentPrices={currentPrices}/>
+              return <PositionRow
+                  index={index}
+                  position={position}
+                  pipelines={pipelines}
+                  currentPrices={currentPrices}
+              />
             })}
           </Table.Body>
         </Table>

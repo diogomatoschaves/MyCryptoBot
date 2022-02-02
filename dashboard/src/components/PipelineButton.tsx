@@ -42,7 +42,8 @@ function PipelineButton(props: Props) {
                 candleSize: pipeline.candleSize,
                 exchanges: pipeline.exchange,
                 params: pipeline.params,
-                paperTrading: pipeline.paperTrading
+                paperTrading: pipeline.paperTrading,
+                color: pipeline.color
               })}
               style={styles.button}
               color={'green'}

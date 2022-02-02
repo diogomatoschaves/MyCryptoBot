@@ -35,7 +35,7 @@ function PipelineItem(props: Props) {
     } = props
 
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
-    const liveStr = pipeline.paperTrading ? "Demo Mode" : "Live Trading"
+    const liveStr = pipeline.paperTrading ? "Demo" : "Live"
 
     const age = pipeline.openTime ? timeFormatterDate(pipeline.openTime) : "-"
 
@@ -45,12 +45,14 @@ function PipelineItem(props: Props) {
 
     return (
         <PipelineDiv className="flex-row">
-            <Segment style={styles.segment} secondary raised>
-                <Ribbon ribbon color="grey">
-                    <span >
-                        <span style={{color: activeProps.color, fontSize: '0.7em'}}><Icon name={'circle'}/></span>
-                        <span >{activeProps.status}</span>
-                        <span> | {liveStr}</span>
+            <Segment className={`light-${pipeline.color}`} style={styles.segment} raised>
+                <Ribbon ribbon>
+                    <span>
+                        <span>{' '}{liveStr}</span>
+                        {/*<span style={{marginLeft: '6px'}}>*/}
+                        {/*    <span style={{color: activeProps.color, fontSize: '0.7em'}}><Icon name={'circle'}/></span>*/}
+                        {/*    <span >{activeProps.status}</span>*/}
+                        {/*</span>*/}
                     </span>
                 </Ribbon>
                 <Grid columns={1}>
@@ -131,7 +133,28 @@ function PipelineItem(props: Props) {
                                     </div>
                                 </StyledColumn>
                             </Grid.Row>
+                            <Grid.Row>
+                                <Grid.Column width={3}>
+                                    <Grid.Column floated='right' style={{...styles.rightColumn, fontSize: '1.2em'}} >
+                                        <span >
+                                            <span style={{color: activeProps.color, fontSize: '0.7em'}}><Icon name={'circle'}/></span>
+                                            <span >{activeProps.status}</span>
+                                        </span>
+                                    </Grid.Column>
+                                </Grid.Column>
+                                <Grid.Column width={4}>
+                                    <Grid.Column floated='left' style={styles.header}>
+                                        Profit / Loss
+                                    </Grid.Column>
+                                    <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
+                                        {pnl}
+                                    </Grid.Column>
+                                </Grid.Column>
+                            </Grid.Row>
                         </Grid>
+                        {/*<Grid columns={2}>*/}
+                        {/*    */}
+                        {/*</Grid>*/}
                     </Grid.Column>
                 </Grid>
             </Segment>
@@ -139,16 +162,6 @@ function PipelineItem(props: Props) {
     );
 }
 
-// <Grid columns={1}>
-//     <Grid.Column>
-//         <Grid.Column floated='left' style={styles.header}>
-//             Profit / Loss
-//         </Grid.Column>
-//         <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
-//             {pnl}
-//         </Grid.Column>
-//     </Grid.Column>
-// </Grid>
 
 export default PipelineItem;
 
@@ -157,7 +170,8 @@ const styles = {
     segment: {
         width: '80%',
         padding: '30px 30px 20px',
-        marginBottom: '40px'
+        marginBottom: '40px',
+        // border: 'none'
     },
     header: {
         color: 'rgb(130, 130, 130)',
