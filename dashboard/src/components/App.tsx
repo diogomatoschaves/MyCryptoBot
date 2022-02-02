@@ -320,7 +320,12 @@ class App extends Component<any, State> {
                     ) : menuOption.code === 'trades' ? (
                         <TradesPanel menuOption={menuOption} trades={trades} currentPrices={currentPrices}/>
                     ) : menuOption.code === 'positions' ? (
-                        <PositionsPanel menuOption={menuOption} positions={positions} currentPrices={currentPrices}/>
+                        <PositionsPanel
+                            menuOption={menuOption}
+                            positions={positions}
+                            pipelines={pipelines}
+                            currentPrices={currentPrices}
+                        />
                     ) : menuOption.code === 'dashboard' && (
                         <Dashboard
                             menuOption={menuOption}
