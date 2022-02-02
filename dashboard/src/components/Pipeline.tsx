@@ -1,6 +1,6 @@
 import {DeletePipeline, Pipeline, StartPipeline, StopPipeline} from "../types";
 import {Button, Grid, Icon, Segment} from "semantic-ui-react";
-import {GREEN, RED} from "../utils/constants";
+import {COLORS, GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
 import PipelineButton from "./PipelineButton";
@@ -45,7 +45,11 @@ function PipelineItem(props: Props) {
 
     return (
         <PipelineDiv className="flex-row">
-            <Segment className={`light-${pipeline.color}`} style={styles.segment} raised>
+            <Segment
+                className={`light-${pipeline.color}`}
+                style={styles.segment}
+                raised
+            >
                 <Ribbon ribbon>
                     <span>
                         <span>{' '}{liveStr}</span>
