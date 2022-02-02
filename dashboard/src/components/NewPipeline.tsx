@@ -103,8 +103,6 @@ const NewPipeline = (props: Props) => {
   const [allocation, setAllocation] = useState()
   const [exchanges, setExchange] = useState([])
 
-  console.log(color)
-
   const [{strategy, secondModalOpen, params, liveTrading, message}, dispatch] = useReducer(
       reducer, {
         strategy: undefined,
@@ -134,7 +132,7 @@ const NewPipeline = (props: Props) => {
           open={open}
           size="small"
           trigger={
-            <Button>
+            <Button inverted secondary>
               <span style={{marginRight: '10px'}}>
                   <Icon name={'plus'}/>
               </span>
@@ -232,7 +230,6 @@ const NewPipeline = (props: Props) => {
               onClose={() => {
                 dispatch({type: CLOSE_MODAL})
               }}
-              dimmer="inverted"
               open={strategy && secondModalOpen}
               size="small"
             >

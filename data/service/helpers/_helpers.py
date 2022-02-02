@@ -103,13 +103,27 @@ def check_input(strategies, **kwargs):
         if not isinstance(name, str):
             return jsonify(Responses.NAME_INVALID(kwargs["name"]))
 
+    if "color" not in kwargs or kwargs["name"] is None:
+        return jsonify(Responses.COLOR_REQUIRED)
+
     return None
 
 
-def get_or_create_pipeline(name, allocation, symbol, candle_size, strategy, exchange, params, paper_trading):
+def get_or_create_pipeline(
+    name,
+    color,
+    allocation,
+    symbol,
+    candle_size,
+    strategy,
+    exchange,
+    params,
+    paper_trading
+):
 
     columns = dict(
         name=name,
+        color=color,
         allocation=allocation,
         symbol_id=symbol,
         interval=candle_size,

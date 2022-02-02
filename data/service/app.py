@@ -87,6 +87,7 @@ def start_bot():
     data = request.get_json(force=True)
 
     name = data.get("name", None)
+    color = data.get("color", None)
     allocation = data.get("allocation", None)
     symbol = data.get("symbol", None)
     strategy = data.get("strategy", None)
@@ -98,6 +99,7 @@ def start_bot():
     response = check_input(
         STRATEGIES,
         name=name,
+        color=color,
         allocation=allocation,
         symbol=symbol,
         strategy=strategy,
@@ -115,6 +117,7 @@ def start_bot():
 
     pipeline, response = get_or_create_pipeline(
         name=name,
+        color=color,
         allocation=allocation,
         symbol=symbol,
         candle_size=candle_size,

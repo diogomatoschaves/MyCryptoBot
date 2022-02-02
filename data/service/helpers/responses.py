@@ -19,7 +19,8 @@ RESPONSES = namedtuple(
         "PARAMS_INVALID",
         "PARAMS_REQUIRED",
         "NAME_INVALID",
-        "NAME_REQUIRED"
+        "NAME_REQUIRED",
+        "COLOR_REQUIRED",
     ]
 )
 
@@ -40,7 +41,8 @@ ReturnCodes = RESPONSES(
     PARAMS_INVALID="PARAMS_INVALID",
     PARAMS_REQUIRED="PARAMS_REQUIRED",
     NAME_INVALID="NAME_INVALID",
-    NAME_REQUIRED="NAME_REQUIRED"
+    NAME_REQUIRED="NAME_REQUIRED",
+    COLOR_REQUIRED="COLOR_REQUIRED",
 )
 
 
@@ -80,4 +82,6 @@ Responses = RESPONSES(
                                "message": f"{name} is not a valid name for the trading bot.", "success": False},
     NAME_REQUIRED={"code": ReturnCodes.NAME_REQUIRED,
                    "message": "A valid name is required for starting a trading bot.", "success": False},
+    COLOR_REQUIRED={"code": ReturnCodes.COLOR_REQUIRED,
+                    "message": "A valid color is required for starting a trading bot.", "success": False},
 )

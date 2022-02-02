@@ -1,10 +1,11 @@
 import {DeletePipeline, Pipeline, StartPipeline, StopPipeline} from "../types";
-import {Button, Grid, Icon, Segment} from "semantic-ui-react";
+import {Button, Grid, Header, Icon, Modal, Segment} from "semantic-ui-react";
 import {COLORS, GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
 import PipelineButton from "./PipelineButton";
 import {timeFormatterDate} from "../utils/helpers";
+import {useState} from "react";
 
 
 
@@ -22,6 +23,7 @@ interface Props {
     stopPipeline: StopPipeline
     deletePipeline: DeletePipeline
     live: boolean
+    active: boolean
 }
 
 
@@ -32,7 +34,10 @@ function PipelineItem(props: Props) {
         startPipeline,
         stopPipeline,
         deletePipeline,
+        active
     } = props
+
+    const [open, setOpen] = useState(false)
 
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
     const liveStr = pipeline.paperTrading ? "Demo" : "Live"
@@ -53,10 +58,6 @@ function PipelineItem(props: Props) {
                 <Ribbon ribbon>
                     <span>
                         <span>{' '}{liveStr}</span>
-                        {/*<span style={{marginLeft: '6px'}}>*/}
-                        {/*    <span style={{color: activeProps.color, fontSize: '0.7em'}}><Icon name={'circle'}/></span>*/}
-                        {/*    <span >{activeProps.status}</span>*/}
-                        {/*</span>*/}
                     </span>
                 </Ribbon>
                 <Grid columns={1}>
@@ -81,25 +82,61 @@ function PipelineItem(props: Props) {
                                 </Grid.Column>
                                 <Grid.Column width={3}>
                                     <Grid.Column floated='left' style={styles.header}>
-                                        Time running
+                                        Time running {!active && '(All time)'}
                                     </Grid.Column>
                                     <Grid.Column floated='right' style={styles.rightColumn} >
                                         {age}
                                     </Grid.Column>
                                 </Grid.Column>
                                 <StyledColumn width={6} className="flex-row">
-                                    <div style={styles.buttonDiv} className='flex-column'>
-                                        <Button
-                                            icon
-                                            onClick={() => deletePipeline(pipeline.id)}
-                                            style={{width: '80%'}}
-                                        >
-                                            <span style={{marginRight: '10px', marginLeft: '-10px'}}>
-                                                <Icon name={'delete'}/>
-                                            </span>
-                                            Delete
-                                        </Button>
-                                    </div>
+                                    <Modal
+                                        onClose={() => setOpen(false)}
+                                        onOpen={() => setOpen(true)}
+                                        open={open}
+                                        size='small'
+                                        trigger={
+                                            <div style={styles.buttonDiv} className='flex-column'>
+                                                <Button
+                                                    icon
+                                                    style={{width: '80%'}}
+                                                >
+                                                    <span style={{marginRight: '10px', marginLeft: '-10px'}}>
+                                                        <Icon name={'delete'}/>
+                                                    </span>
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        }
+                                    >
+                                        <Header icon>
+                                            <Icon name='delete' />
+                                            Delete trading bot
+                                        </Header>
+                                        <Modal.Content>
+                                            <p>
+                                                Are you sure you want to delete this trading bot?
+                                            </p>
+                                        </Modal.Content>
+                                        <Modal.Actions>
+                                            <Button
+                                                color='red'
+                                                inverted
+                                                onClick={() => setOpen(false)}
+                                            >
+                                                <Icon name='remove' /> No
+                                            </Button>
+                                            <Button
+                                                color='green'
+                                                inverted
+                                                onClick={() => {
+                                                    deletePipeline(pipeline.id)
+                                                    setOpen(false)
+                                                }}
+                                            >
+                                                <Icon name='checkmark' /> Yes
+                                            </Button>
+                                        </Modal.Actions>
+                                    </Modal>
                                 </StyledColumn>
                             </Grid.Row>
                             <Grid.Row>
@@ -121,10 +158,10 @@ function PipelineItem(props: Props) {
                                 </Grid.Column>
                                 <Grid.Column width={3}>
                                     <Grid.Column floated='left' style={styles.header}>
-                                        # trades
+                                        Profit / Loss {!active && '(All time)'}
                                     </Grid.Column>
-                                    <Grid.Column floated='right' style={styles.rightColumn} >
-                                        {pipeline.numberTrades}
+                                    <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
+                                        {pnl}
                                     </Grid.Column>
                                 </Grid.Column>
                                 <StyledColumn width={6} className="flex-row">
@@ -148,17 +185,14 @@ function PipelineItem(props: Props) {
                                 </Grid.Column>
                                 <Grid.Column width={4}>
                                     <Grid.Column floated='left' style={styles.header}>
-                                        Profit / Loss
+                                        # trades
                                     </Grid.Column>
-                                    <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
-                                        {pnl}
+                                    <Grid.Column floated='right' style={styles.rightColumn} >
+                                        {pipeline.numberTrades}
                                     </Grid.Column>
                                 </Grid.Column>
                             </Grid.Row>
                         </Grid>
-                        {/*<Grid columns={2}>*/}
-                        {/*    */}
-                        {/*</Grid>*/}
                     </Grid.Column>
                 </Grid>
             </Segment>
