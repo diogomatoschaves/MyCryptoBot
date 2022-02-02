@@ -1,4 +1,4 @@
-import {Position} from "../types";
+import {Pipeline, Position} from "../types";
 import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import React from "react";
@@ -8,12 +8,13 @@ import {getPnl, timeFormatterDate} from "../utils/helpers";
 interface Props {
   index: number
   position: Position;
+  pipelines: Pipeline[]
   currentPrices: Object
 }
 
 function PositionRow(props: Props) {
 
-  const { position, index, currentPrices } = props
+  const { position, index, currentPrices, pipelines } = props
 
   const negative = position.position === -1
   const positive = position.position === 1
@@ -30,13 +31,17 @@ function PositionRow(props: Props) {
 
   const pnlColor = pnl > 0 ? GREEN : RED
 
+  const pipeline = pipelines.find(pipe => pipe.id === position.pipelineId)
+  const pipelineColor = pipeline ? pipeline.color : undefined
+
   return (
       <Table.Row key={index}>
         <Table.Cell style={styles.defaultCell}>
           <Label ribbon>{position.paperTrading ? "Demo" : "Live"}</Label>
         </Table.Cell>
         <Table.Cell style={{...styles.defaultCell, fontWeight: 600}}>
-          <Label color={'pink'}>{position.pipelineName}</Label>
+          {/*@ts-ignore*/}
+          <Label color={pipelineColor}>{position.pipelineName}</Label>
         </Table.Cell>
         <Table.Cell style={{fontWeight: 600, color: DARK_YELLOW}}>{position.symbol}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{age}</Table.Cell>
