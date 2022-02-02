@@ -164,6 +164,7 @@ function PipelinePanel(props: Props) {
                     deletePipeline={deletePipeline}
                     pipeline={pipeline}
                     live={live}
+                    active={active}
                 />
             ))}
             {filteredPipelines.length === 0 && (
