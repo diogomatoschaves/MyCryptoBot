@@ -207,7 +207,7 @@ class App extends Component<any, State> {
     }
 
     stopPipeline: StopPipeline = (pipelineId) => {
-        stopBot({pipelineId})
+        return stopBot({pipelineId})
             .then(response => {
                 this.setState(state => ({
                     message: {
