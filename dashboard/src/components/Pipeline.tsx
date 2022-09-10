@@ -1,5 +1,5 @@
 import {DeletePipeline, Pipeline, StartPipeline, StopPipeline} from "../types";
-import {Button, Grid, Header, Icon, Modal, Segment} from "semantic-ui-react";
+import {Button, Grid, Header, Icon, Label, Modal, Segment} from "semantic-ui-react";
 import {COLORS, GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
@@ -15,6 +15,12 @@ const PipelineDiv = styled.div`
 
 const StyledColumn = styled(Grid.Column)`
     display: flex !important;
+`
+
+const StyledRow = styled(Grid.Row)`
+    & .ui.grid.row {
+        padding: 0.9rem;
+    }
 `
 
 interface Props {
@@ -55,15 +61,13 @@ function PipelineItem(props: Props) {
                 style={styles.segment}
                 raised
             >
-                <Ribbon ribbon>
-                    <span>
-                        <span>{' '}{liveStr}</span>
-                    </span>
+                <Ribbon color={pipeline.color} ribbon>
+                    {pipeline.name}
                 </Ribbon>
                 <Grid columns={1}>
                     <Grid.Column width={16}>
                         <Grid columns={4}>
-                            <Grid.Row>
+                            <StyledRow>
                                 <Grid.Column width={3}>
                                     <Grid.Column style={styles.header}>
                                         Trading Pair
@@ -123,12 +127,15 @@ function PipelineItem(props: Props) {
                                                 inverted
                                                 onClick={() => setOpen(false)}
                                             >
-                                                <Icon name='remove' /> No
+                                                <Icon name='remove'/> No
                                             </Button>
                                             <Button
                                                 color='green'
                                                 inverted
-                                                onClick={() => {
+                                                onClick={async () => {
+                                                    if (pipeline.active) {
+                                                        await stopPipeline(pipeline.id)
+                                                    }
                                                     deletePipeline(pipeline.id)
                                                     setOpen(false)
                                                 }}
@@ -138,8 +145,8 @@ function PipelineItem(props: Props) {
                                         </Modal.Actions>
                                     </Modal>
                                 </StyledColumn>
-                            </Grid.Row>
-                            <Grid.Row>
+                            </StyledRow>
+                            <StyledRow>
                                 <Grid.Column width={3}>
                                     <Grid.Column floated='left' style={styles.header}>
                                         Candle size
@@ -173,8 +180,8 @@ function PipelineItem(props: Props) {
                                         />
                                     </div>
                                 </StyledColumn>
-                            </Grid.Row>
-                            <Grid.Row>
+                            </StyledRow>
+                            <StyledRow>
                                 <Grid.Column width={3}>
                                     <Grid.Column floated='right' style={{...styles.rightColumn, fontSize: '1.2em'}} >
                                         <span >
@@ -182,8 +189,16 @@ function PipelineItem(props: Props) {
                                             <span >{activeProps.status}</span>
                                         </span>
                                     </Grid.Column>
+                                    {/*<Grid.Column floated='right' style={{...styles.rightColumn, fontSize: '1.2em'}} >*/}
+                                    {/*    <Label>{liveStr}</Label>*/}
+                                    {/*</Grid.Column>*/}
                                 </Grid.Column>
                                 <Grid.Column width={4}>
+                                    <Grid.Column floated='right' style={{...styles.rightColumn, fontSize: '1.2em'}} >
+                                        <Label>{liveStr}</Label>
+                                    </Grid.Column>
+                                </Grid.Column>
+                                <Grid.Column width={3}>
                                     <Grid.Column floated='left' style={styles.header}>
                                         # trades
                                     </Grid.Column>
@@ -191,7 +206,7 @@ function PipelineItem(props: Props) {
                                         {pipeline.numberTrades}
                                     </Grid.Column>
                                 </Grid.Column>
-                            </Grid.Row>
+                            </StyledRow>
                         </Grid>
                     </Grid.Column>
                 </Grid>
