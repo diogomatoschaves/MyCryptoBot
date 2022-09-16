@@ -1,7 +1,4 @@
-import pytest
-
-from database.model.models import Orders
-from execution.exchanges.binance.mock import BinanceMockTrader
+from execution.exchanges.binance.margin.mock import BinanceMockTrader
 from execution.tests.setup.fixtures.external_modules import binance_mock_trader_spy_factory
 from shared.utils.tests.fixtures.models import *
 
