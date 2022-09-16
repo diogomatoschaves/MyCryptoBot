@@ -1,7 +1,7 @@
 import pytest
 
 from database.model.models import Orders, Position, Trade
-from execution.exchanges.binance import BinanceTrader
+from execution.exchanges.binance import BinanceMarginTrader
 from execution.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
 
@@ -84,7 +84,7 @@ class TestBinanceTrader:
         get_max_margin_loan_spy,
         create_margin_order_spy
     ):
-        binance_trader = BinanceTrader()
+        binance_trader = BinanceMarginTrader()
         binance_trader.symbols = symbols
 
         return_value = binance_trader.start_symbol_trading(symbol)
@@ -146,7 +146,7 @@ class TestBinanceTrader:
         repay_margin_loan,
         repay_margin_loan_spy
     ):
-        binance_trader = BinanceTrader()
+        binance_trader = BinanceMarginTrader()
         binance_trader.symbols = symbols
 
         binance_trader._set_position(self.symbol, 1, pipeline_id=1)
@@ -180,7 +180,7 @@ class TestBinanceTrader:
         create_margin_order_spy,
         create_pipeline
     ):
-        binance_trader = BinanceTrader()
+        binance_trader = BinanceMarginTrader()
         binance_trader.symbols = {
             self.symbol: {
                 "quote": "USDT", "base": "BTC"
@@ -236,7 +236,7 @@ class TestBinanceTrader:
         get_max_margin_loan,
     ):
 
-        binance_trader = BinanceTrader()
+        binance_trader = BinanceMarginTrader()
 
         binance_trader.start_symbol_trading(self.symbol, pipeline_id=1)
         binance_trader.trade(self.symbol, 1, amount="all", pipeline_id=1)
