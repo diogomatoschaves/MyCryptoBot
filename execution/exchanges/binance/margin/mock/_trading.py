@@ -8,17 +8,17 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import StructuredData
-from execution.exchanges.binance._trading import BinanceTrader
+from execution.exchanges.binance.margin._trading import BinanceMarginTrader
 from execution.tests.setup.test_data.binance_api_responses import trading_fees, isolated_account_info
 
 
-class BinanceMockTrader(BinanceTrader):
+class BinanceMockMarginTrader(BinanceMarginTrader):
 
     def __init__(
         self,
         margin_level=3,
     ):
-        BinanceTrader.__init__(
+        BinanceMarginTrader.__init__(
             self,
             margin_level=margin_level,
             paper_trading=True

@@ -18,7 +18,7 @@ django.setup()
 from database.model.models import Symbol, Orders, Position, Trade
 
 
-class BinanceTrader(BinanceHandler, Trader):
+class BinanceMarginTrader(BinanceHandler, Trader):
 
     AUTO_REPAY = 'AUTO_REPAY'
 
