@@ -5,8 +5,8 @@ import sys
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from execution.exchanges.binance import BinanceTrader
-from execution.exchanges.binance.mock import BinanceMockTrader
+from execution.exchanges.binance import BinanceMarginTrader
+from execution.exchanges.binance.margin.mock import BinanceMockTrader
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_input, extract_and_validate
 from execution.service.helpers.responses import Responses
@@ -18,7 +18,7 @@ if module_path not in sys.path:
 
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
-binance_trader = BinanceTrader()
+binance_trader = BinanceMarginTrader()
 binance_mock_trader = BinanceMockTrader()
 
 
