@@ -7,14 +7,16 @@ ENV PYTHONUNBUFFERED 1
 
 ENV DIRECTORY execution
 
+ENV POETRY_HOME /opt/poetry
+
 # Install and setup poetry
 RUN pip install -U pip \
     && apt-get update \
     && yes | apt-get install libpq-dev \
     && apt install -y curl netcat \
-    && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python \
+    && curl -sSL https://install.python-poetry.org | python - --version 1.2.0 \
     && pip install psycopg2-binary==2.8.6
-ENV PATH="${PATH}:/root/.poetry/bin"
+ENV PATH="$POETRY_HOME/bin:$PATH"
 
 COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /
 
