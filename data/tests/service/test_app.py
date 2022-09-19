@@ -275,6 +275,7 @@ class TestDataService:
         [
             pytest.param(
                 {
+                    "color": "purple",
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
@@ -316,6 +317,7 @@ class TestDataService:
         [
             pytest.param(
                 {
+                    "color": "purple",
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
@@ -369,6 +371,7 @@ class TestDataService:
         [
             pytest.param(
                 {
+                    "color": "purple",
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
