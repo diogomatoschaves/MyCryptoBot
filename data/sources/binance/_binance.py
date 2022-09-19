@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 import django
-from binance.websockets import BinanceSocketManager
+from binance import ThreadedWebsocketManager
 
 import shared.exchanges.binance.constants as const
 from data.sources import trigger_signal
@@ -20,7 +20,7 @@ django.setup()
 from database.model.models import ExchangeData, StructuredData, Symbol, Pipeline
 
 
-class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
+class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
     """
     Class that handles realtime / incoming data from the Binance API, and
@@ -31,7 +31,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
     def __init__(self, symbol, candle_size, pipeline_id=None):
 
         BinanceHandler.__init__(self)
-        BinanceSocketManager.__init__(self, self)
+        ThreadedWebsocketManager.__init__(self, self.binance_api_key, self.binance_api_secret)
 
         self._check_symbol(symbol)
         self.candle_size = candle_size
@@ -126,7 +126,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         self.streams = streams
 
-        self.conn_key = self.start_multiplex_socket(streams, lambda row: callback(row, header))
+        self.conn_key = self.start_multiplex_socket(lambda row: callback(row, header), streams)
 
         if not self.started:
             self.start()
@@ -137,7 +137,7 @@ class BinanceDataHandler(BinanceHandler, BinanceSocketManager):
 
         self.stop_socket(self.conn_key)
 
-        self.close()
+        # self.close()
 
     def _etl_pipeline(
         self,

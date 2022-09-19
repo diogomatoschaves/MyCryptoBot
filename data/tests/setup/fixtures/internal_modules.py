@@ -46,7 +46,7 @@ def double_callback(callback, mock_row):
     callback(mock_row[1])
 
 
-def mock_start_multiplex_socket(self, streams, callback):
+def mock_start_multiplex_socket(self, callback, streams):
     double_callback(callback, mock_websocket_raw_data_5m)
     double_callback(callback, mock_websocket_raw_data_1h)
 
