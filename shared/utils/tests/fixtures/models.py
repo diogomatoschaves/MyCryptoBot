@@ -1,8 +1,13 @@
 import datetime
+import os
 from random import randint
 
+import django
 import pytest
 import pytz
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
+django.setup()
 
 from data.tests.setup.test_data.sample_data import exchange_data_1
 from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData, Pipeline, Orders, Trade
