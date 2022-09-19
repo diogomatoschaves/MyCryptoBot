@@ -171,11 +171,10 @@ class BinanceMarginTrader(BinanceTrader):
 
         self.current_balance += factor * float(order['cummulativeQuoteQty'])
         self.units -= factor * units
-        # self._update_account_status(factor)
 
         self.trades += 1
 
-        self.report_trade(order, symbol, units, going, header)
+        self.report_trade(order, units, going, header)
 
     def _format_order(self, order, pipeline_id):
         return dict(

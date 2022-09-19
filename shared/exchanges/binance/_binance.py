@@ -30,8 +30,6 @@ class BinanceHandler(Client):
             testnet=paper_trading
         )
 
-        self.futures_account(symbol='BTCUSDT')
-
     def _get_api_keys(self, paper_trading):
 
         if paper_trading:

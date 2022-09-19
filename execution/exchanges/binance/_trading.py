@@ -5,12 +5,13 @@ from datetime import datetime
 import django
 import pytz
 
-from database.model.models import Position, Trade, Orders
 from shared.exchanges import BinanceHandler
 from shared.trading import Trader
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
+
+from database.model.models import Position, Trade, Orders
 
 
 class BinanceTrader(BinanceHandler, Trader):
