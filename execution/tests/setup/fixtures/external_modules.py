@@ -51,13 +51,13 @@ def binance_client_mock_factory(method, type_='mock'):
     @pytest.fixture
     def mock_binance_client(mocker):
         return mocker.patch.object(
-            execution.exchanges.binance._trading.BinanceMarginTrader, method, getattr(MockBinanceHandler, method)
+            execution.exchanges.binance.margin._trading.BinanceMarginTrader, method, getattr(MockBinanceHandler, method)
         )
 
     @pytest.fixture
     def spy_binance_client(mocker):
         return mocker.spy(
-            execution.exchanges.binance._trading.BinanceMarginTrader, method
+            execution.exchanges.binance.margin._trading.BinanceMarginTrader, method
         )
 
     if type_ == 'mock':
@@ -71,7 +71,7 @@ def binance_mock_trader_spy_factory(method):
     @pytest.fixture
     def spy_binance_client(mocker):
         return mocker.spy(
-            execution.exchanges.binance.mock._trading.BinanceMockMarginTrader, method
+            execution.exchanges.binance.margin.mock._trading.BinanceMockMarginTrader, method
         )
 
     return spy_binance_client

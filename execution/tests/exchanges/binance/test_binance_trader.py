@@ -1,7 +1,13 @@
+import os
+
+import django
 import pytest
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
+django.setup()
+
 from database.model.models import Orders, Position, Trade
-from execution.exchanges.binance import BinanceMarginTrader
+from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
 
