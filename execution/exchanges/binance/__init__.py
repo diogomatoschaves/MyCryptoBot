@@ -1,1 +1,1 @@
-from execution.exchanges.binance.margin._trading import BinanceMarginTrader
+from execution.exchanges.binance._trading import BinanceTrader
