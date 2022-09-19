@@ -17,15 +17,20 @@ class BinanceHandler(Client):
     @retry_failed_connection(num_times=3)
     def __init__(self, paper_trading=False, base_candle_size='5m'):
 
-        if paper_trading:
-            self.API_URL = 'https://testnet.binance.vision/api'
+        self.paper_trading = paper_trading
 
         self.base_candle_size = base_candle_size
 
         self._get_api_keys(paper_trading=paper_trading)
 
-        # if not paper_trading:
-        Client.__init__(self, self.binance_api_key, self.binance_api_secret)
+        Client.__init__(
+            self,
+            self.binance_api_key,
+            self.binance_api_secret,
+            testnet=paper_trading
+        )
+
+        self.futures_account(symbol='BTCUSDT')
 
     def _get_api_keys(self, paper_trading):
 
