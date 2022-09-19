@@ -1,4 +1,4 @@
-from execution.exchanges.binance.margin.mock import BinanceMockTrader
+from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.tests.setup.fixtures.external_modules import binance_mock_trader_spy_factory
 from shared.utils.tests.fixtures.models import *
 
@@ -72,7 +72,7 @@ class TestBinanceMockTrader:
         get_max_margin_loan_spy,
         create_margin_order_spy
     ):
-        binance_trader = BinanceMockTrader()
+        binance_trader = BinanceMockMarginTrader()
         binance_trader.symbols = symbols
 
         return_value = binance_trader.start_symbol_trading(symbol)
@@ -131,7 +131,7 @@ class TestBinanceMockTrader:
         create_margin_order_spy,
         repay_margin_loan_spy
     ):
-        binance_trader = BinanceMockTrader()
+        binance_trader = BinanceMockMarginTrader()
         binance_trader.symbols = symbols
 
         binance_trader._set_position(self.symbol, 1, pipeline_id=1)
@@ -159,7 +159,7 @@ class TestBinanceMockTrader:
         create_structured_data,
         create_margin_order_spy
     ):
-        binance_trader = BinanceMockTrader()
+        binance_trader = BinanceMockMarginTrader()
         binance_trader.start_symbol_trading(self.symbol)
         binance_trader.symbols = {
             self.symbol: {
