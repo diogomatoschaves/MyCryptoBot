@@ -26,7 +26,32 @@ class BinanceTrader(BinanceHandler, Trader):
         Trader.__init__(self, 0)
 
         self.positions = {}
+        self.filled_orders = []
         self.exchange = "binance"
+
+    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
+        self._execute_order(
+            symbol,
+            self.ORDER_TYPE_MARKET,
+            self.SIDE_BUY,
+            "GOING LONG",
+            units=units,
+            amount=amount,
+            header=header,
+            **kwargs
+        )
+
+    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
+        self._execute_order(
+            symbol,
+            self.ORDER_TYPE_MARKET,
+            self.SIDE_SELL,
+            "GOING SHORT",
+            units=units,
+            amount=amount,
+            header=header,
+            **kwargs
+        )
 
     def _set_initial_position(self, symbol, header=''):
         # TODO: Get this value from database?
@@ -72,6 +97,22 @@ class BinanceTrader(BinanceHandler, Trader):
                 buying_price=new_trade.open_price,
                 amount=new_trade.amount,
             )
+
+    def _format_order(self, order, pipeline_id):
+        raise NotImplementedError
+
+    def _execute_order(self, symbol, order_type, order_side, going, units, amount, header, **kwargs):
+        raise NotImplementedError
+
+    def _process_order(self, order, pipeline_id):
+
+        self.filled_orders.append(order)
+
+        logging.debug(order)
+
+        formatted_order = self._format_order(order, pipeline_id)
+
+        Orders.objects.create(**formatted_order)
 
     def _get_position(self, symbol):
         return self.positions[symbol]
