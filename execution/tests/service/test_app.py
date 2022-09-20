@@ -43,7 +43,8 @@ class TestExecutionService:
         [
             pytest.param(
                 {
-                    "pipeline_id": 1
+                    "pipeline_id": 1,
+                    "binance_account_type": "margin"
                 },
                 Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
                 id="TRADING_SYMBOL_NO_ACCOUNT",
@@ -86,7 +87,8 @@ class TestExecutionService:
             pytest.param(
                 "start_symbol_trading",
                 {
-                    "pipeline_id": 1
+                    "pipeline_id": 1,
+                    "binance_account_type": 'margin'
                 },
                 Responses.TRADING_SYMBOL_START("BTCUSDT"),
                 id="START_SYMBOL_TRADING_VALID",
@@ -94,7 +96,8 @@ class TestExecutionService:
             pytest.param(
                 "stop_symbol_trading",
                 {
-                    "pipeline_id": 1
+                    "pipeline_id": 1,
+                    "binance_account_type": 'margin'
                 },
                 Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
                 id="STOP_SYMBOL_TRADING_VALID",
@@ -120,27 +123,46 @@ class TestExecutionService:
         "params,expected_value",
         [
             pytest.param(
-                {"pipeline_id": 2, "signal": 1},
+                {
+                    "pipeline_id": 2,
+                    "binance_account_type": "margin",
+                    "signal": 1
+                },
                 Responses.NO_SUCH_PIPELINE(2),
                 id="NO_SUCH_PIPELINE",
             ),
             pytest.param(
-                {"pipeline_id": 3, "signal": 1},
+                {
+                    "pipeline_id": 3,
+                    "signal": 1,
+                    "binance_account_type": "margin",
+                },
                 Responses.PIPELINE_NOT_ACTIVE("BTCUSDT", 3),
                 id="TRADING_SYMBOL_NOT_ACTIVE",
             ),
             pytest.param(
-                {"pipeline_id": 1, "signal": 1},
+                {
+                    "pipeline_id": 1,
+                    "binance_account_type": "margin",
+                    "signal": 1
+                },
                 Responses.ORDER_EXECUTION_SUCCESS("BTCUSDT"),
                 id="ORDER_EXECUTION_SUCCESS",
             ),
             pytest.param(
-                {"pipeline_id": 1, "signal": "abc"},
+                {
+                    "pipeline_id": 1,
+                    "binance_account_type": "margin",
+                    "signal": "abc"
+                },
                 Responses.SIGNAL_INVALID("abc"),
                 id="SIGNAL_INVALID",
             ),
             pytest.param(
-                {"pipeline_id": 1},
+                {
+                    "pipeline_id": 1,
+                    "binance_account_type": "margin",
+                },
                 Responses.SIGNAL_REQUIRED,
                 id="SIGNAL_REQUIRED",
             ),

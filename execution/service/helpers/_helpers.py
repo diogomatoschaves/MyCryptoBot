@@ -36,16 +36,18 @@ def extract_and_validate():
 
     logging.debug(request_data)
 
+    binance_account_type = request_data.get('binance_account_type', 'futures')
+
     pipeline_id = request_data.get("pipeline_id", None)
 
     pipeline_exists, pipeline = get_pipeline_data(pipeline_id)
 
     if pipeline_exists:
         if not pipeline.active:
-            return pipeline, jsonify(Responses.PIPELINE_NOT_ACTIVE(pipeline.symbol, pipeline_id)), None
+            return pipeline, jsonify(Responses.PIPELINE_NOT_ACTIVE(pipeline.symbol, pipeline_id)), None, None
     else:
-        return pipeline, jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id)), None
+        return pipeline, jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id)), None, None
 
     header = json.loads(get_item_from_cache(cache, pipeline_id))
 
-    return pipeline, None, header
+    return pipeline, None, header, binance_account_type
