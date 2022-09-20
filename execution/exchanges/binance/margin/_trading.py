@@ -88,30 +88,6 @@ class BinanceMarginTrader(BinanceTrader):
 
         return position_closed
 
-    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
-        self._execute_order(
-            symbol,
-            self.ORDER_TYPE_MARKET,
-            self.SIDE_BUY,
-            "GOING LONG",
-            units=units,
-            amount=amount,
-            header=header,
-            **kwargs
-        )
-
-    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
-        self._execute_order(
-            symbol,
-            self.ORDER_TYPE_MARKET,
-            self.SIDE_SELL,
-            "GOING SHORT",
-            units=units,
-            amount=amount,
-            header=header,
-            **kwargs
-        )
-
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 
         if self.units == 0:
@@ -193,16 +169,6 @@ class BinanceMarginTrader(BinanceTrader):
             mock=self.paper_trading,
             pipeline_id=pipeline_id
         )
-
-    def _process_order(self, order, pipeline_id):
-
-        self.filled_orders.append(order)
-
-        logging.debug(order)
-
-        formatted_order = self._format_order(order, pipeline_id)
-
-        Orders.objects.create(**formatted_order)
 
     def _set_initial_position(self, symbol, header=''):
         # TODO: Get this value from database?
