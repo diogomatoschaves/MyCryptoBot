@@ -5,6 +5,7 @@ import sys
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+from execution.exchanges.binance.futures import BinanceFuturesTrader
 from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
@@ -18,8 +19,10 @@ if module_path not in sys.path:
 
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
-binance_trader = BinanceMarginTrader()
-binance_mock_trader = BinanceMockMarginTrader()
+binance_futures_trader = BinanceFuturesTrader()
+binance_futures_mock_trader = BinanceFuturesTrader(paper_trading=True)
+binance_margin_trader = BinanceMarginTrader()
+binance_margin_mock_trader = BinanceMockMarginTrader()
 
 
 app = Flask(__name__)
@@ -28,12 +31,21 @@ app.register_blueprint(market_data)
 CORS(app)
 
 
-def get_binance_trader_instance(paper_trading):
+def get_binance_trader_instance(binance_account_type, paper_trading):
 
-    if paper_trading:
-        return binance_mock_trader
+    if binance_account_type == 'futures':
+        if paper_trading:
+            return binance_futures_mock_trader
+        else:
+            return binance_futures_trader
 
-    return binance_trader
+    if binance_account_type == 'margin':
+        if paper_trading:
+            return binance_margin_mock_trader
+        else:
+            return binance_margin_trader
+
+    return binance_futures_mock_trader
 
 
 @app.route('/')
@@ -44,7 +56,7 @@ def hello_world():
 @app.route('/start_symbol_trading', methods=['POST'])
 def start_symbol_trading():
 
-    pipeline, response, header = extract_and_validate()
+    pipeline, response, header, binance_account_type = extract_and_validate()
 
     if response is not None:
         logging.debug(response)
@@ -52,7 +64,7 @@ def start_symbol_trading():
 
     if pipeline.exchange == 'binance':
 
-        bt = get_binance_trader_instance(pipeline.paper_trading)
+        bt = get_binance_trader_instance(binance_account_type, pipeline.paper_trading)
 
         success = bt.start_symbol_trading(pipeline.symbol, header=header, pipeline_id=pipeline.id)
 
@@ -64,7 +76,7 @@ def start_symbol_trading():
 
 @app.route('/stop_symbol_trading', methods=['POST'])
 def stop_symbol_trading():
-    pipeline, response, header = extract_and_validate()
+    pipeline, response, header, binance_account_type = extract_and_validate()
 
     if response is not None:
         logging.debug(response)
@@ -72,7 +84,7 @@ def stop_symbol_trading():
 
     if pipeline.exchange == 'binance':
 
-        bt = get_binance_trader_instance(pipeline.paper_trading)
+        bt = get_binance_trader_instance(binance_account_type, pipeline.paper_trading)
 
         success = bt.stop_symbol_trading(pipeline.symbol, header=header, pipeline_id=pipeline.id)
 
@@ -89,7 +101,7 @@ def execute_order():
 
     logging.debug(request_data)
 
-    pipeline, response, header = extract_and_validate()
+    pipeline, response, header, binance_account_type = extract_and_validate()
 
     if response is not None:
         logging.debug(response)
@@ -106,7 +118,7 @@ def execute_order():
 
     if pipeline.exchange.lower() == 'binance':
 
-        bt = get_binance_trader_instance(pipeline.paper_trading)
+        bt = get_binance_trader_instance(binance_account_type, pipeline.paper_trading)
 
         bt.trade(pipeline.symbol, signal, amount=amount, header=header, pipeline_id=pipeline.id)
 
