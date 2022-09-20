@@ -16,7 +16,7 @@ from shared.utils.decorators.failed_connection import retry_failed_connection
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol, Orders
+from database.model.models import Symbol
 
 
 class BinanceFuturesTrader(BinanceTrader):
@@ -75,34 +75,6 @@ class BinanceFuturesTrader(BinanceTrader):
 
         return position_closed
 
-    def get_symbol_info(self, symbol):
-        account = self.futures_account()
-        for position in account["positions"]:
-            if position['symbol'] == symbol:
-                pass
-
-    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
-        self._execute_order(
-            symbol,
-            self.ORDER_TYPE_MARKET,
-            self.SIDE_BUY,
-            "GOING LONG",
-            units=units,
-            header=header,
-            **kwargs
-        )
-
-    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
-        self._execute_order(
-            symbol,
-            self.ORDER_TYPE_MARKET,
-            self.SIDE_SELL,
-            "GOING SHORT",
-            units=units,
-            header=header,
-            **kwargs
-        )
-
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 
         if self.units == 0:
@@ -127,7 +99,8 @@ class BinanceFuturesTrader(BinanceTrader):
         order_type,
         order_side,
         going,
-        units=None,
+        units,
+        amount=None,
         header='',
         **kwargs
     ):
@@ -174,16 +147,6 @@ class BinanceFuturesTrader(BinanceTrader):
             mock=self.paper_trading,
             pipeline_id=pipeline_id
         )
-
-    def _process_order(self, order, pipeline_id):
-
-        self.filled_orders.append(order)
-
-        logging.debug(order)
-
-        formatted_order = self._format_order(order, pipeline_id)
-
-        Orders.objects.create(**formatted_order)
 
     # TODO: Add last order position
     def _set_initial_balance(self, symbol, amount, factor=1, header=''):
