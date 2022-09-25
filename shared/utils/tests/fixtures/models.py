@@ -10,7 +10,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from data.tests.setup.test_data.sample_data import exchange_data_1
-from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData, Pipeline, Orders, Trade
+from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData, Pipeline, Orders, Trade, \
+    Position
 
 TEST_APP_NAME = 'test_app'
 
@@ -91,6 +92,20 @@ def create_orders(db, create_exchange, create_symbol, create_pipeline):
         pipeline_id=1
     )
     return order_1, order_2
+
+
+@pytest.fixture
+def create_position(db, create_exchange, create_symbol, create_pipeline):
+    return Position.objects.create(
+        position=0,
+        symbol_id="BTCUSDT",
+        exchange_id='binance',
+        pipeline_id=1,
+        paper_trading=True,
+        buying_price=0,
+        amount=0,
+        open=False,
+    )
 
 
 @pytest.fixture

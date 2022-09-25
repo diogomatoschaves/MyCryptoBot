@@ -32,7 +32,7 @@ for method in METHODS:
     inject_fixture(*method)
 
 
-class TestBinanceTrader:
+class TestBinanceMarginTrader:
 
     symbol = "BTCUSDT"
 
@@ -223,8 +223,8 @@ class TestBinanceTrader:
             trades = Trade.objects.all()
 
             assert len(trades) == max(number_orders, 1)
-            assert trades[0].amount == float(order_creation["executedQty"])
-            assert trades[0].open_price == float(order_creation["price"])
+            assert trades[0].amount == float(margin_order_creation["executedQty"])
+            assert trades[0].open_price == float(margin_order_creation["price"])
 
     def test_all(
         self,
@@ -257,5 +257,5 @@ class TestBinanceTrader:
         trades = Trade.objects.all()
 
         assert len(trades) == 1
-        assert all(trade.amount == float(order_creation["executedQty"]) for trade in trades)
-        assert all(trade.open_price == float(order_creation["price"]) for trade in trades)
+        assert all(trade.amount == float(margin_order_creation["executedQty"]) for trade in trades)
+        assert all(trade.open_price == float(margin_order_creation["price"]) for trade in trades)

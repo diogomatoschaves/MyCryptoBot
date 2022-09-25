@@ -51,7 +51,7 @@ trading_fees = {
 }
 
 
-order_creation = {
+margin_order_creation = {
     "symbol": "BTCUSDT",
     "clientOrderId": "6gCrw2kRUAF9CvJDGP16IP",
     "transactTime": 1507725176595,
@@ -99,3 +99,28 @@ order_creation = {
         },
     ],
 }
+
+futures_order_creation = {
+    "orderId": 3214109855,
+    "symbol": "BTCUSDT",
+    "status": "FILLED",
+    "clientOrderId": "6MyYUkDJ4wU16daDkGXzy5",
+    "price": "19298.33000",
+    "avgPrice": "19298.33000",
+    "origQty": "0.040",
+    "executedQty": "0.040",
+    "cumQty": "0.040",
+    "cumQuote": "771.93320",
+    "timeInForce": "GTC",
+    "type": "MARKET",
+    "reduceOnly": True,
+    "closePosition": False,
+    "side": "SELL",
+    "positionSide": "BOTH",
+    "stopPrice": "0",
+    "workingType": "CONTRACT_PRICE",
+    "priceProtect": False,
+    "origType": "MARKET",
+    "updateTime": 1663601948038
+}
+
