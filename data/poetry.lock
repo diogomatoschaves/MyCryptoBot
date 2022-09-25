@@ -599,7 +599,7 @@ responses = ">=0.6.0"
 
 [[package]]
 name = "python-binance"
-version = "1.0.16"
+version = "1.0.15"
 description = "Binance REST API python implementation"
 category = "main"
 optional = false
@@ -611,7 +611,7 @@ dateparser = "*"
 requests = "*"
 six = "*"
 ujson = "*"
-websockets = "*"
+websockets = "9.1"
 
 [[package]]
 name = "python-dateutil"
@@ -784,11 +784,11 @@ python-versions = "*"
 
 [[package]]
 name = "websockets"
-version = "10.3"
+version = "9.1"
 description = "An implementation of the WebSocket Protocol (RFC 6455 & 7692)"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.6.1"
 
 [[package]]
 name = "werkzeug"
@@ -830,7 +830,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "b8dd9038f7b18c2fe5c57dcf49be1d9d0401e958cca5c1b0ba74746f56c98514"
+content-hash = "fa9dcde692d3d75a988b79db7cc8601c2e52e9e616b25c7e7ee188bc021b3c91"
 
 [metadata.files]
 aiohttp = []
