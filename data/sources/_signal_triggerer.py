@@ -29,17 +29,17 @@ def wait_for_job_conclusion(job_id, pipeline_id, retry, header=''):
         response = check_job_status(job_id)
 
         if "status" in response:
-            if response["status"] == "job not found":
+            if response["code"] == "JOB_NOT_FOUND":
                 return trigger_signal(pipeline_id, header=header, retry=retry+1)
-            elif response["status"] == "finished":
+            elif response["code"] == "FINISHED":
                 logging.debug(header + f"Job {job_id} finished successfully.")
                 return True
-            elif response["status"] in ["in-queue", "waiting"]:
-                time.sleep(5)
+            elif response["code"] in ["IN_QUEUE", "WAITING"]:
                 logging.debug(header + f"{job_id}: Waiting for job conclusion.")
-                retries += 1
-            elif response["status"] == "failed":
+            elif response["code"] == "FAILED":
                 return False
 
-        if retries > 40:
+        if retries > 4:
             return False
+
+        time.sleep(4)
