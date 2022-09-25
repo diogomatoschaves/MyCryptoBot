@@ -138,7 +138,13 @@ def start_bot():
         json.dumps(header)
     )
 
-    response = start_stop_symbol_trading(pipeline.id, 'start')
+    payload = {
+        "pipeline_id": pipeline.id,
+        "equity": allocation,
+        "binance_trader_type": "futures"  # TODO: Get this value from the user
+    }
+
+    response = start_stop_symbol_trading(payload, 'start')
 
     if not response["success"]:
         logging.warning(response["message"])
@@ -177,7 +183,7 @@ def stop_bot():
 
         stop_instance(pipeline_id, header=header)
 
-        response = start_stop_symbol_trading(pipeline_id, 'stop')
+        response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop')
 
         logging.debug(response["message"])
 

@@ -37,14 +37,14 @@ class TestExecutionService:
 
         assert res.status_code == 405
 
-    @pytest.mark.parametrize("route", ["start_symbol_trading", "stop_symbol_trading"])
     @pytest.mark.parametrize(
         "params,expected_value",
         [
             pytest.param(
                 {
                     "pipeline_id": 1,
-                    "binance_account_type": "margin"
+                    "binance_account_type": "margin",
+                    "equity": 100
                 },
                 Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
                 id="TRADING_SYMBOL_NO_ACCOUNT_MARGIN",
@@ -52,7 +52,68 @@ class TestExecutionService:
             pytest.param(
                 {
                     "pipeline_id": 1,
-                    "binance_account_type": "futures"
+                    "binance_account_type": "futures",
+                    "equity": 100
+                },
+                Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
+                id="TRADING_SYMBOL_NO_ACCOUNT_FUTURES",
+            ),
+            pytest.param(
+                {
+                    "pipeline_id": 1,
+                },
+                Responses.EQUITY_REQUIRED("BTCUSDT"),
+                id="TRADING_SYMBOL_NO_EQUITY",
+            ),
+            pytest.param(
+                {
+                    "pipeline_id": 2
+                },
+                Responses.NO_SUCH_PIPELINE(2),
+                id="NO_SUCH_PIPELINE",
+            ),
+            pytest.param(
+                {
+                    "pipeline_id": 3
+                },
+                Responses.PIPELINE_NOT_ACTIVE("BTCUSDT", 3),
+                id="TRADING_SYMBOL_NOT_ACTIVE",
+            ),
+        ],
+    )
+    def test_binance_trader_fail_start(
+        self,
+        params,
+        expected_value,
+        mock_binance_margin_trader_fail,
+        mock_binance_futures_trader_fail,
+        mock_redis_connection,
+        client,
+        exchange_data,
+        create_pipeline,
+        create_inactive_pipeline
+    ):
+        res = client.post("start_symbol_trading", json=params)
+
+        assert res.json == expected_value
+
+    @pytest.mark.parametrize(
+        "params,expected_value",
+        [
+            pytest.param(
+                {
+                    "pipeline_id": 1,
+                    "binance_account_type": "margin",
+                    "equity": 100
+                },
+                Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
+                id="TRADING_SYMBOL_NO_ACCOUNT_MARGIN",
+            ),
+            pytest.param(
+                {
+                    "pipeline_id": 1,
+                    "binance_account_type": "futures",
+                    "equity": 100
                 },
                 Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
                 id="TRADING_SYMBOL_NO_ACCOUNT_FUTURES",
@@ -73,20 +134,19 @@ class TestExecutionService:
             ),
         ],
     )
-    def test_binance_trader_fail(
-        self,
-        route,
-        params,
-        expected_value,
-        mock_binance_margin_trader_fail,
-        mock_binance_futures_trader_fail,
-        mock_redis_connection,
-        client,
-        exchange_data,
-        create_pipeline,
-        create_inactive_pipeline
+    def test_binance_trader_fail_stop(
+            self,
+            params,
+            expected_value,
+            mock_binance_margin_trader_fail,
+            mock_binance_futures_trader_fail,
+            mock_redis_connection,
+            client,
+            exchange_data,
+            create_pipeline,
+            create_inactive_pipeline
     ):
-        res = client.post(route, json=params)
+        res = client.post("stop_symbol_trading", json=params)
 
         assert res.json == expected_value
 
@@ -110,6 +170,7 @@ class TestExecutionService:
                 "start_symbol_trading",
                 {
                     "pipeline_id": 1,
+                    "equity": 100
                 },
                 Responses.TRADING_SYMBOL_START("BTCUSDT"),
                 id="START_SYMBOL_TRADING_VALID",

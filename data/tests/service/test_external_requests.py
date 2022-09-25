@@ -40,14 +40,18 @@ class TestDataExternalRequests:
         [
             pytest.param(
                 {
-                    "pipeline_id": 1
+                    "pipeline_id": 1,
+                    "equity": 100,
+                    "binance_trader_type": "futures"
                 },
                 "start",
                 id="START_SYMBOL_TRADING",
             ),
             pytest.param(
                 {
-                    "pipeline_id": 1
+                    "pipeline_id": 1,
+                    "equity": 100,
+                    "binance_trader_type": "futures"
                 },
                 "stop",
                 id="STOP_SYMBOL_TRADING",
@@ -69,14 +73,9 @@ class TestDataExternalRequests:
 
         """
 
-        expanded_params = {
-            **params,
-            "start_or_stop": start_or_stop
-        }
-
         endpoint = f"{start_or_stop.upper()}_SYMBOL_TRADING"
 
-        res = start_stop_symbol_trading(**expanded_params)
+        res = start_stop_symbol_trading(params, start_or_stop=start_or_stop)
 
         assert res == response
         requests_post_spy.assert_called_with(

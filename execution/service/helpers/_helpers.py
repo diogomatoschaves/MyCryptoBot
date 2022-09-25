@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from collections import namedtuple
 
 import django
 import redis
@@ -12,6 +13,20 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from execution.service.helpers.responses import Responses
+
+
+fields = [
+    "response",
+    "header",
+    "binance_account_type",
+    "equity"
+]
+
+Parameters = namedtuple(
+    'Parameters',
+    fields,
+    defaults=(None,) * len(fields)
+)
 
 
 cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
@@ -32,22 +47,23 @@ def validate_input(**kwargs):
 
 
 def extract_and_validate():
+
     request_data = request.get_json(force=True)
 
     logging.debug(request_data)
 
     binance_account_type = request_data.get('binance_account_type', 'futures')
-
+    equity = request_data.get('equity', None)
     pipeline_id = request_data.get("pipeline_id", None)
 
     pipeline_exists, pipeline = get_pipeline_data(pipeline_id)
 
     if pipeline_exists:
         if not pipeline.active:
-            return pipeline, jsonify(Responses.PIPELINE_NOT_ACTIVE(pipeline.symbol, pipeline_id)), None, None
+            return pipeline, Parameters(jsonify(Responses.PIPELINE_NOT_ACTIVE(pipeline.symbol, pipeline_id)))
     else:
-        return pipeline, jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id)), None, None
+        return pipeline, Parameters(jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id)))
 
     header = json.loads(get_item_from_cache(cache, pipeline_id))
 
-    return pipeline, None, header, binance_account_type
+    return pipeline, Parameters(None, header, binance_account_type, equity)
