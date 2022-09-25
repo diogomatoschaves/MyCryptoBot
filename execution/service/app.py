@@ -56,17 +56,25 @@ def hello_world():
 @app.route('/start_symbol_trading', methods=['POST'])
 def start_symbol_trading():
 
-    pipeline, response, header, binance_account_type = extract_and_validate()
+    pipeline, parameters = extract_and_validate()
 
-    if response is not None:
-        logging.debug(response)
-        return response
+    if parameters.response is not None:
+        logging.debug(parameters.response)
+        return parameters.response
+
+    if parameters.equity is None:
+        return jsonify(Responses.EQUITY_REQUIRED(pipeline.symbol))
 
     if pipeline.exchange == 'binance':
 
-        bt = get_binance_trader_instance(binance_account_type, pipeline.paper_trading)
+        bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
-        success = bt.start_symbol_trading(pipeline.symbol, header=header, pipeline_id=pipeline.id)
+        success = bt.start_symbol_trading(
+            pipeline.symbol,
+            equity=parameters.equity,
+            header=parameters.header,
+            pipeline_id=pipeline.id
+        )
 
         if success:
             return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
@@ -76,17 +84,17 @@ def start_symbol_trading():
 
 @app.route('/stop_symbol_trading', methods=['POST'])
 def stop_symbol_trading():
-    pipeline, response, header, binance_account_type = extract_and_validate()
+    pipeline, parameters = extract_and_validate()
 
-    if response is not None:
-        logging.debug(response)
-        return response
+    if parameters.response is not None:
+        logging.debug(parameters.response)
+        return parameters.response
 
     if pipeline.exchange == 'binance':
 
-        bt = get_binance_trader_instance(binance_account_type, pipeline.paper_trading)
+        bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
-        success = bt.stop_symbol_trading(pipeline.symbol, header=header, pipeline_id=pipeline.id)
+        success = bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
 
         if success:
             return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
@@ -101,11 +109,11 @@ def execute_order():
 
     logging.debug(request_data)
 
-    pipeline, response, header, binance_account_type = extract_and_validate()
+    pipeline, parameters = extract_and_validate()
 
-    if response is not None:
-        logging.debug(response)
-        return response
+    if parameters.response is not None:
+        logging.debug(parameters.response)
+        return parameters.response
 
     signal = request_data.get("signal", None)
     amount = request_data.get("amount", "all")
@@ -118,9 +126,9 @@ def execute_order():
 
     if pipeline.exchange.lower() == 'binance':
 
-        bt = get_binance_trader_instance(binance_account_type, pipeline.paper_trading)
+        bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
-        bt.trade(pipeline.symbol, signal, amount=amount, header=header, pipeline_id=pipeline.id)
+        bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))
 

@@ -15,7 +15,8 @@ RESPONSES = namedtuple(
         "EXCHANGE_INVALID",
         "SIGNAL_REQUIRED",
         "SIGNAL_INVALID",
-        "ORDER_EXECUTION_SUCCESS"
+        "ORDER_EXECUTION_SUCCESS",
+        "EQUITY_REQUIRED"
     ]
 )
 
@@ -32,7 +33,8 @@ ReturnCodes = RESPONSES(
     EXCHANGE_INVALID="EXCHANGE_INVALID",
     SIGNAL_REQUIRED="SIGNAL_REQUIRED",
     SIGNAL_INVALID="SIGNAL_INVALID",
-    ORDER_EXECUTION_SUCCESS="ORDER_EXECUTION_SUCCESS"
+    ORDER_EXECUTION_SUCCESS="ORDER_EXECUTION_SUCCESS",
+    EQUITY_REQUIRED="EQUITY_REQUIRED"
 )
 
 
@@ -65,7 +67,7 @@ Responses = RESPONSES(
     SYMBOL_REQUIRED={
         "code": ReturnCodes.SYMBOL_REQUIRED,
         "success": False,
-        "message": "A symbol must be included in the request."
+        "message": "Parameter 'symbol' is required."
     },
     SYMBOL_INVALID=lambda symbol: {
         "code": ReturnCodes.SYMBOL_INVALID,
@@ -75,7 +77,7 @@ Responses = RESPONSES(
     EXCHANGE_REQUIRED={
         "code": ReturnCodes.EXCHANGE_REQUIRED,
         "success": False,
-        "message": "An exchange must be included in the request."
+        "message": "Parameter 'exchange' is required."
     },
     EXCHANGE_INVALID=lambda exchange: {
         "code": ReturnCodes.EXCHANGE_INVALID,
@@ -96,5 +98,10 @@ Responses = RESPONSES(
         "code": ReturnCodes.ORDER_EXECUTION_SUCCESS,
         "success": True,
         "message": f"{symbol}: Order was sent successfully.",
+    },
+    EQUITY_REQUIRED=lambda symbol: {
+        "code": ReturnCodes.EQUITY_REQUIRED,
+        "success": False,
+        "message": f"{symbol}: Parameter 'equity' is required.",
     },
 )
