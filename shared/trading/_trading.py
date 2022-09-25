@@ -5,6 +5,8 @@ class Trader:
 
     def __init__(self, amount, units=0):
 
+        symbol = "BTCUSDT"
+
         self.initial_balance = amount
         self.current_balance = amount
         self.units = units
@@ -25,26 +27,41 @@ class Trader:
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
         raise NotImplementedError
 
+    def _get_balances(self, symbol):
+        initial_balance = self.initial_balance[symbol] if isinstance(self.initial_balance, dict) else self.initial_balance
+        current_balance = self.current_balance[symbol] if isinstance(self.current_balance, dict) else self.current_balance
+
+        return initial_balance, current_balance
+
+    def _get_units(self, symbol):
+        return self.units[symbol] if isinstance(self.units, dict) else self.units
+
     def go_long(self, symbol, position, date, row, units=None, amount=None, header='', **kwargs):
+
+        existing_units = -self._get_units(symbol)
+
         if position == -1:
-            self.buy_instrument(symbol, date, row, units=-self.units, header=header, **kwargs)  # if short position, go neutral first
+            self.buy_instrument(symbol, date, row, units=existing_units, header=header, **kwargs)  # if short position, go neutral first
 
         if units:
             self.buy_instrument(symbol, date, row, units=units, header=header, **kwargs)
         elif amount:
             if amount == "all":
-                amount = self.current_balance
+                amount = self._get_balances(symbol)[1]
             self.buy_instrument(symbol, date, row, amount=amount, header=header, **kwargs)  # go long
 
     # helper method
     def go_short(self, symbol, position, date, row, units=None, amount=None, header='', **kwargs):
+
+        existing_units = self._get_units(symbol)
+
         if position == 1:
-            self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)  # if long position, go neutral first
+            self.sell_instrument(symbol, date, row, units=existing_units, header=header, **kwargs)  # if long position, go neutral first
         if units:
             self.sell_instrument(symbol, date, row, units=units, header=header, **kwargs)
         elif amount:
             if amount == "all":
-                amount = self.current_balance
+                amount = self._get_balances(symbol)[1]
             self.sell_instrument(symbol, date, row, amount=amount, header=header, **kwargs)  # go short
 
     def trade(self, symbol, signal, date=None, row=None, amount=None, units=None, header='', **kwargs):
@@ -62,10 +79,13 @@ class Trader:
                 self.go_short(symbol, position, date, row, amount=amount, units=units, header=header, **kwargs)
                 self._set_position(symbol, -1, previous_position=position, **kwargs)  # short position
         elif signal == 0:
+
+            units = self.units[symbol] if isinstance(self.units, dict) else self.units
+
             if position == -1:
-                self.buy_instrument(symbol, date, row, units=-self.units, header=header, **kwargs)
+                self.buy_instrument(symbol, date, row, units=-units, header=header, **kwargs)
             elif position == 1:
-                self.sell_instrument(symbol, date, row, units=self.units, header=header, **kwargs)
+                self.sell_instrument(symbol, date, row, units=units, header=header, **kwargs)
 
             self._set_position(symbol, 0, previous_position=position, **kwargs)
 
@@ -74,13 +94,23 @@ class Trader:
 
             logging.info(header + f"Maintaining {verbose_position} position.")
 
-    def print_current_position_value(self, date, price, header=''):
-        cpv = self.units * price
+    def print_current_position_value(self, date, price, header='', **kwargs):
+
+        units = self._get_units(kwargs.get("symbol", ""))
+
+        cpv = units * price
         print(header + f"| {date} | Current Position Value = {round(cpv, 2)}")
 
-    def print_current_nav(self, date, price, header=''):
-        nav = self.current_balance + self.units * price
+    def print_current_nav(self, date, price, header='', **kwargs):
+
+        units = self._get_units(kwargs.get("symbol", ""))
+        current_balance = self._get_balances(kwargs.get("symbol", ""))[1]
+
+        nav = current_balance + units * price
         print(header + f"| {date} | Net Asset Value = {round(nav, 2)}")
 
-    def print_current_balance(self, date, header=''):
-        print(header + f"| {date} | Current Balance: {round(self.current_balance, 2)}")
+    def print_current_balance(self, date, header='', **kwargs):
+
+        current_balance = self._get_balances(kwargs.get("symbol", ""))[1]
+
+        print(header + f"| {date} | Current Balance: {round(current_balance, 2)}")

@@ -112,7 +112,9 @@ class BinanceTrader(BinanceHandler, Trader):
 
         formatted_order = self._format_order(order, pipeline_id)
 
-        Orders.objects.create(**formatted_order)
+        order_created = Orders.objects.create(**formatted_order)
+
+        return formatted_order
 
     def _get_position(self, symbol):
         return self.positions[symbol]
@@ -164,13 +166,17 @@ class BinanceTrader(BinanceHandler, Trader):
 
         return None
 
-    def print_trading_results(self, header, date):
+    def print_trading_results(self, header, date, **kwargs):
+
+        initial_balance = self._get_balances(kwargs.get("symbol", ""))[0]
+        current_balance = self._get_balances(kwargs.get("symbol", ""))[1]
+
         try:
-            perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
+            perf = (current_balance - initial_balance) / initial_balance * 100
         except ZeroDivisionError:
             perf = 0
 
-        self.print_current_balance(date, header=header)
+        self.print_current_balance(date, header=header, **kwargs)
 
         header = header
 
@@ -185,15 +191,15 @@ class BinanceTrader(BinanceHandler, Trader):
         s = sum([float(fill["price"]) * float(fill["qty"]) for fill in order["fills"]])
         return s / float(order["executedQty"])
 
-    def report_trade(self, order, units, going, header=''):
+    def report_trade(self, order, units, going, header='', **kwargs):
         logging.debug(order)
 
         price = order["price"]
 
-        date = datetime.fromtimestamp(order["transactTime"] / 1000).astimezone(pytz.utc)
+        date = order["transact_time"]
 
         logging.info(header + f"" + 100 * "-")
         logging.info(header + f"{date} | {going}")
         logging.info(header + f"units = {units} | price = {price}")
-        self.print_current_nav(date, price)
+        self.print_current_nav(date, price, **kwargs)
         logging.info(header + f"" + 100 * "-")
