@@ -19,6 +19,8 @@ django.setup()
 
 from database.model.models import ExchangeData, StructuredData, Symbol, Pipeline
 
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
 
 class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
@@ -45,7 +47,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         self.raw_data_length = 1
         self.data_length = 1
 
-        self.started = False
+        self.start()
+        self.started = True
 
     def __str__(self):
         return self.__name__
@@ -99,6 +102,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         self._start_kline_websockets(self.symbol, self._websocket_callback, header=header)
 
+    # TODO: Refactor to allow for more than one conn_key
     def stop_data_ingestion(self, header=''):
         """
         Public method which stops the data pipeline for the symbol.
@@ -128,16 +132,10 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         self.conn_key = self.start_multiplex_socket(lambda row: callback(row, header), streams)
 
-        if not self.started:
-            self.start()
-            self.started = True
-
     # TODO: Wrap this in AttributeError exception handling
     def _stop_websocket(self):
 
         self.stop_socket(self.conn_key)
-
-        # self.close()
 
     def _etl_pipeline(
         self,
@@ -180,7 +178,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     # TODO: Add timer to check if it's below 24h
     def _websocket_callback(self, row, header=''):
 
-        logging.debug(row)
+        logging.info(row)
 
         kline_size = row["stream"].split('_')[-1]
 
@@ -213,6 +211,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                         "There was an error processing the signal generation request. Stopping data pipeline."
                     )
                     self.stop_data_ingestion()
+                    # TODO: Should close all positions associated with pipeline
                     Pipeline.objects.filter(id=self.pipeline_id).update(active=False)
 
     def _process_stream(
