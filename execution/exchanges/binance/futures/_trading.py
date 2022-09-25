@@ -33,6 +33,9 @@ class BinanceFuturesTrader(BinanceTrader):
         self.symbols = {}
         self.positions = {}
         self.equity = {}
+        self.initial_balance = {}
+        self.current_balance = {}
+        self.units = {}
 
         self.open_orders = []
         self.filled_orders = []
@@ -48,8 +51,12 @@ class BinanceFuturesTrader(BinanceTrader):
         self.equity[symbol] = equity
 
         if isinstance(leverage, int):
-            self.futures_change_leverage(symbol=symbol, leverage=leverage)
+            try:
+                self.futures_change_leverage(symbol=symbol, leverage=leverage)
+            except BinanceAPIException as e:
+                logging.info(e)
 
+        # TODO: Make call to API to check against existing accounts'
         try:
             symbol_obj = Symbol.objects.get(name=symbol)
             self.symbols[symbol] = {"base": symbol_obj.base.symbol, "quote": symbol_obj.quote.symbol}
@@ -67,7 +74,7 @@ class BinanceFuturesTrader(BinanceTrader):
         if symbol not in self.symbols:
             return False
 
-        logging.info(header + f"Closing positions and repaying loans.")
+        logging.info(header + f"Closing position for symbol: {symbol}")
 
         position_closed = self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
 
@@ -77,17 +84,17 @@ class BinanceFuturesTrader(BinanceTrader):
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 
-        if self.units == 0:
+        if self.units[symbol] == 0:
             return False
 
-        if self.units < 0:
-            self.buy_instrument(symbol, date, row, units=-3*self.units, header=header, reduceOnly=True, **kwargs)
+        if self.units[symbol] < 0:
+            self.buy_instrument(symbol, date, row, units=-3*self.units[symbol], header=header, reduceOnly=True, **kwargs)
         else:
-            self.sell_instrument(symbol, date, row, units=3*self.units, header=header, reduceOnly=True, **kwargs)
+            self.sell_instrument(symbol, date, row, units=3*self.units[symbol], header=header, reduceOnly=True, **kwargs)
 
         self._set_position(symbol, 0, previous_position=1, **kwargs)
 
-        self.print_trading_results(header, date)
+        self.print_trading_results(header, date, symbol=symbol)
 
         return True
 
@@ -105,6 +112,9 @@ class BinanceFuturesTrader(BinanceTrader):
         **kwargs
     ):
 
+        if amount is not None and units is None:
+            units = self._convert_amount_to_units(amount, symbol)
+
         pipeline_id = kwargs["pipeline_id"] if "pipeline_id" in kwargs else None
 
         order = self.futures_create_order(
@@ -118,18 +128,22 @@ class BinanceFuturesTrader(BinanceTrader):
 
         order["price"] = order["avgPrice"]
 
-        self._process_order(order, pipeline_id)
+        order = self._process_order(order, pipeline_id)
 
         factor = 1 if order_side == self.SIDE_SELL else -1
 
-        units = float(order["executedQty"])
+        units = float(order["executed_qty"])
 
-        self.current_balance += factor * float(order['cumQuote'])
-        self.units -= factor * units
+        self.current_balance[symbol] += factor * float(order['cummulative_quote_qty'])
+        self.units[symbol] -= factor * units
 
         self.trades += 1
 
-        self.report_trade(order, units, going, header)
+        self.report_trade(order, units, going, header, symbol=symbol)
+
+    def _convert_amount_to_units(self, amount, symbol):
+        price = float(self.get_symbol_ticker(symbol=symbol)['price'])
+        return round(amount / price, 5)
 
     def _format_order(self, order, pipeline_id):
         return dict(
@@ -154,5 +168,6 @@ class BinanceFuturesTrader(BinanceTrader):
 
         balance = amount * factor
 
-        self.current_balance = balance
-        self.initial_balance = balance
+        self.units[symbol] = 0
+        self.current_balance[symbol] = balance
+        self.initial_balance[symbol] = balance

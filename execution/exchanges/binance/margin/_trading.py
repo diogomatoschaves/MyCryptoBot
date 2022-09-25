@@ -138,14 +138,14 @@ class BinanceMarginTrader(BinanceTrader):
 
         order["price"] = self._get_average_order_price(order)
 
-        self._process_order(order, pipeline_id)
+        order = self._process_order(order, pipeline_id)
 
         # factor = -1 if order_side == self.SIDE_SELL and amount else 1
         factor = 1 if order_side == self.SIDE_SELL else -1
 
-        units = float(order["executedQty"])
+        units = float(order["executed_qty"])
 
-        self.current_balance += factor * float(order['cummulativeQuoteQty'])
+        self.current_balance += factor * float(order['cummulative_quote_qty'])
         self.units -= factor * units
 
         self.trades += 1
