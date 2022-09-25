@@ -18,14 +18,25 @@ class MockBinanceTrader:
 
 
 @pytest.fixture
-def mock_binance_trader_success(mocker):
+def mock_binance_margin_trader_success(mocker):
     return mocker.patch("execution.service.app.binance_margin_trader", MockBinanceTrader())
 
 
 @pytest.fixture
-def mock_binance_trader_fail(mocker):
+def mock_binance_margin_trader_fail(mocker):
     return mocker.patch(
         "execution.service.app.binance_margin_trader", MockBinanceTrader(success=False)
+    )
+
+@pytest.fixture
+def mock_binance_futures_trader_success(mocker):
+    return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader())
+
+
+@pytest.fixture
+def mock_binance_futures_trader_fail(mocker):
+    return mocker.patch(
+        "execution.service.app.binance_futures_trader", MockBinanceTrader(success=False)
     )
 
 
