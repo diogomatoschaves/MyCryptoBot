@@ -79,7 +79,7 @@ export const validatePipelineCreation = async (
 
 
 export const validateParams = (resolve: any, reject: any, params: any, strategy: any) => {
-  [...strategy.params, ...strategy.optional_params].forEach((param) => {
+  [...strategy.paramsOrder, ...strategy.optionalParamsOrder].forEach((param) => {
     if (!params.hasOwnProperty(param) || params[param] === "") {
       return reject()
     }
