@@ -8,7 +8,7 @@ class Momentum(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, window, data=None, **kwargs):
+    def __init__(self, window: int, data=None, **kwargs):
 
         self._window = window
 
