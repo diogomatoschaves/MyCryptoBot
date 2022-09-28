@@ -9,6 +9,13 @@ STRATEGIES_LOCATION = "model.strategies"
 STRATEGIES = {}
 
 
+def map_type(type_):
+    if type_ in ['int', 'float']:
+        return "number"
+    elif type_ == 'str':
+        return "string"
+
+
 for name, cls in inspect.getmembers(importlib.import_module(STRATEGIES_LOCATION), inspect.isclass):
 
     required = {}
@@ -29,13 +36,13 @@ for name, cls in inspect.getmembers(importlib.import_module(STRATEGIES_LOCATION)
             is_required = True
 
         if len(get_args(props.annotation)) != 0:
-             param_info = {
-                "type": type(get_args(props.annotation)[0]),
+            param_info = {
+                "type": map_type(type(get_args(props.annotation)[0]).__name__),
                 "options": get_args(props.annotation),
             }
         else:
             param_info = {
-                "type": props.annotation.__name__
+                 "type": map_type(props.annotation.__name__)
             }
 
         if is_required:
@@ -48,7 +55,7 @@ for name, cls in inspect.getmembers(importlib.import_module(STRATEGIES_LOCATION)
     STRATEGIES[name] = {
         "name": get_extended_name(name),
         "params": required,
-        "optional_params": optional,
-        "params_order": required_ordering,
-        "optional_params_order": optional_ordering
+        "optionalParams": optional,
+        "paramsOrder": required_ordering,
+        "optionalParamsOrder": optional_ordering
     }

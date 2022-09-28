@@ -239,7 +239,7 @@ const NewPipeline = (props: Props) => {
                   <Grid columns={2}>
                     <Grid.Column>
                       <Header as='h5'>Required:</Header>
-                      {strategy &&  strategies[strategiesOptions[strategy - 1].text].params.map((param: string) => (
+                      {strategy &&  strategies[strategiesOptions[strategy - 1].text].paramsOrder.map((param: string) => (
                         <Grid.Row key={param} style={{paddingBottom: '10px'}}>
                           <Grid.Column>
                             <Input
@@ -259,7 +259,7 @@ const NewPipeline = (props: Props) => {
                     <Grid.Column>
                       <Header as='h5'>Optional:</Header>
                       {/*@ts-ignore*/}
-                      {strategies[strategiesOptions[strategy - 1].text].optional_params.map(param => (
+                      {strategies[strategiesOptions[strategy - 1].text].optionalParamsOrder.map(param => (
                         <Grid.Row key={param} style={{paddingBottom: '10px'}}>
                           <Grid.Column>
                             <Input
