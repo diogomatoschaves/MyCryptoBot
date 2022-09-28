@@ -9,7 +9,7 @@ class BollingerBands(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, ma, sd, data=None, **kwargs):
+    def __init__(self, ma: int, sd: int, data=None, **kwargs):
 
         self._ma = ma
         self._sd = sd

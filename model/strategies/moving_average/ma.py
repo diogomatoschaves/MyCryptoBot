@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Literal
 
 import numpy as np
 from ta.trend import sma_indicator, ema_indicator
@@ -10,7 +11,7 @@ class MovingAverage(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, ma, moving_av='sma', data=None, **kwargs):
+    def __init__(self, ma: int, moving_av: Literal["sma", "ema"] = 'sma', data=None, **kwargs):
 
         self._ma = ma
         self._moving_av = moving_av

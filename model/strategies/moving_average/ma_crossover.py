@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Literal
 
 import numpy as np
 from ta.trend import ema_indicator, sma_indicator
@@ -10,7 +11,13 @@ class MovingAverageCrossover(StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, sma_s, sma_l, moving_av='sma', data=None, **kwargs):
+    def __init__(
+        self,
+        sma_s: int,
+        sma_l: int,
+        moving_av: Literal["sma", "ema"] = 'sma',
+        data=None, **kwargs
+    ):
 
         self._sma_s = sma_s
         self._sma_l = sma_l
@@ -42,7 +49,7 @@ class MovingAverageCrossover(StrategyMixin):
             data["SMA_S"] = ema_indicator(close=data[self.price_col], window=self._sma_s)
             data["SMA_L"] = ema_indicator(close=data[self.price_col], window=self._sma_l)
         else:
-            raise('Method not supported')
+            raise ('Method not supported')
 
         self.data = data
 
