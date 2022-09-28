@@ -11,7 +11,14 @@ class MovingAverageConvergenceDivergence(MACD, StrategyMixin):
     """ Class for the vectorized backtesting of SMA-based trading strategies.
     """
 
-    def __init__(self, window_slow=26, window_fast=12, window_signal=9, data=None, **kwargs):
+    def __init__(
+        self,
+        window_slow: int = 26,
+        window_fast: int = 12,
+        window_signal: int = 9,
+        data=None,
+        **kwargs
+    ):
 
         MACD.__init__(self, pd.Series(), window_slow, window_fast, window_signal)
         StrategyMixin.__init__(self, data, **kwargs)
