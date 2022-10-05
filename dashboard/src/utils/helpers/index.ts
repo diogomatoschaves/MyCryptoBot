@@ -78,18 +78,69 @@ export const validatePipelineCreation = async (
 }
 
 
-export const validateParams = (resolve: any, reject: any, params: any, strategy: any) => {
-  [...strategy.paramsOrder, ...strategy.optionalParamsOrder].forEach((param) => {
-    if (!params.hasOwnProperty(param) || params[param] === "") {
-      return reject()
+export const validateParams = (params: any, strategy: any) => {
+  const requiredParams = strategy.paramsOrder.reduce((reduced: any, param: string) => {
+    if (!params.hasOwnProperty(param) || (params[param] === "")) {
+      return {
+        success: reduced.success && false,
+        params: reduced.params
+      }
     }
-  })
-  return resolve()
+
+    const typedParam = eval(strategy.params[param].type.func)(params[param])
+    if (isNaN(typedParam) || typeof(typedParam) !== strategy.params[param].type.type) {
+      return {
+        success: reduced.success && false,
+        params: reduced.params
+      }
+    }
+
+    return {
+      success: reduced.success,
+      params: {
+        ...reduced.params,
+        [param]: typedParam
+      }
+    }
+  }, {success: true, params: {}})
+
+  const optionalParams = strategy.optionalParamsOrder.reduce((reduced: any, param: string) => {
+
+    if (!params.hasOwnProperty(param)) {
+      return {
+        success: reduced.success,
+        params: reduced.params
+      }
+    }
+
+    const paramData = strategy.optionalParams[param]
+    const paramValue = paramData.options ? paramData.options[params[param]] : params[param]
+
+    const typedParam = eval(strategy.optionalParams[param].type.func)(paramValue)
+    if (typedParam !== typedParam || typeof(typedParam) !== paramData.type.type) {
+      return {
+        success: reduced.success && false,
+        params: reduced.params
+      }
+    }
+
+    return {
+      success: reduced.success,
+      params: {
+        ...reduced.params,
+        [param]: typedParam
+      }
+    }
+  }, {success: true, params: {}})
+
+  return {
+    success: requiredParams.success && optionalParams.success,
+    updatedParams: {...requiredParams.params, ...optionalParams.params}
+  }
 }
 
 
 export const organizePipelines = (pipelines: RawPipeline[]): Pipeline[] => {
-
   return pipelines.map((pipeline) => {
     return {
       ...pipeline,
