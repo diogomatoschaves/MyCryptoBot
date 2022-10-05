@@ -11,9 +11,15 @@ STRATEGIES = {}
 
 def map_type(type_):
     if type_ in ['int', 'float']:
-        return "number"
+        return {
+            "type": "number",
+            "func": "Number"
+        }
     elif type_ == 'str':
-        return "string"
+        return {
+            "type": "string",
+            "func": "String"
+        }
 
 
 for name, cls in inspect.getmembers(importlib.import_module(STRATEGIES_LOCATION), inspect.isclass):
