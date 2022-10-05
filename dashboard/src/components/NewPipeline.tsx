@@ -34,6 +34,7 @@ const CLOSE_MODAL = 'CLOSE_MODAL'
 const UPDATE_PARAMS = 'UPDATE_PARAMS'
 const UPDATE_CHECKBOX = 'UPDATE_CHECKBOX'
 const UPDATE_MESSAGE = 'UPDATE_MESSAGE'
+const UPDATE_SECONDARY_MESSAGE = 'UPDATE_SECONDARY_MESSAGE'
 
 
 const reducer = (state: any, action: any) => {
@@ -42,7 +43,8 @@ const reducer = (state: any, action: any) => {
       return {
         ...state,
         secondModalOpen: action.value && state.strategy !== action.value,
-        strategy: action.value
+        strategy: action.value,
+        params: (state.secondModalOpen !== action.value && !state.secondModalOpen) ? {} : state.params
       }
     case UPDATE_SECOND_MODAL_OPEN:
       return {
@@ -52,11 +54,11 @@ const reducer = (state: any, action: any) => {
     case CLOSE_MODAL:
       return {
         ...state,
-        strategy: undefined,
+        strategy: null,
         secondModalOpen: false,
         params: {},
-        liveTrading: false,
-        message: {text: '', success: false}
+        message: {text: '', success: false},
+        secondaryMessage: {text: '', success: false},
       }
     case UPDATE_PARAMS:
       return {
@@ -75,6 +77,11 @@ const reducer = (state: any, action: any) => {
       return {
         ...state,
         message: action.message
+      }
+    case UPDATE_SECONDARY_MESSAGE:
+      return {
+        ...state,
+        secondaryMessage: action.message
       }
     default:
       throw new Error();
@@ -103,15 +110,18 @@ const NewPipeline = (props: Props) => {
   const [allocation, setAllocation] = useState()
   const [exchanges, setExchange] = useState([])
 
-  const [{strategy, secondModalOpen, params, liveTrading, message}, dispatch] = useReducer(
+  const [{strategy, secondModalOpen, params, liveTrading, message, secondaryMessage}, dispatch] = useReducer(
       reducer, {
         strategy: undefined,
         secondModalOpen: false,
         params: {},
         liveTrading: false,
-        message: {text: '', success: false}
+        message: {text: '', success: false},
+        secondaryMessage: {text: '', success: false}
       }
   );
+
+  const chosenStrategy = strategy && strategies[strategiesOptions[strategy - 1].text]
 
   return (
       <Modal
@@ -168,6 +178,7 @@ const NewPipeline = (props: Props) => {
                     search
                     selection
                     options={symbolsOptions}
+                    selectOnBlur={false}
                 />
               </Grid.Column>
               <Grid.Column>
@@ -178,6 +189,7 @@ const NewPipeline = (props: Props) => {
                     search
                     selection
                     options={candleSizeOptions}
+                    selectOnBlur={false}
                 />
               </Grid.Column>
             </Grid.Row>
@@ -191,6 +203,7 @@ const NewPipeline = (props: Props) => {
                     search
                     selection
                     options={exchangeOptions}
+                    selectOnBlur={false}
                 />
               </Grid.Column>
               <Grid.Column>
@@ -204,6 +217,7 @@ const NewPipeline = (props: Props) => {
                     search
                     selection
                     options={strategiesOptions}
+                    selectOnBlur={false}
                 />
               </Grid.Column>
             </Grid.Row>
@@ -223,12 +237,13 @@ const NewPipeline = (props: Props) => {
                     onChange={(e: any, entry: any) => setColor(entry.value)}
                     selection
                     options={colorOptions}
+                    selectOnBlur={false}
                 />
               </Grid.Column>
             </Grid.Row>
             <Modal
               onClose={() => {
-                dispatch({type: CLOSE_MODAL})
+                // dispatch({type: CLOSE_MODAL})
               }}
               open={strategy && secondModalOpen}
               size="small"
@@ -239,19 +254,41 @@ const NewPipeline = (props: Props) => {
                   <Grid columns={2}>
                     <Grid.Column>
                       <Header as='h5'>Required:</Header>
-                      {strategy &&  strategies[strategiesOptions[strategy - 1].text].paramsOrder.map((param: string) => (
+                      {strategy &&  chosenStrategy.paramsOrder.map((param: string) => (
                         <Grid.Row key={param} style={{paddingBottom: '10px'}}>
                           <Grid.Column>
-                            <Input
-                              onChange={(e, {value}) => {
-                                dispatch({
-                                  type: UPDATE_PARAMS,
-                                  value: {
-                                    [param]: value
-                                  }
-                                })
-                              }}
-                              placeholder={param}/>
+                            {chosenStrategy.params[param].options ?
+                              (
+                                <Dropdown
+                                  placeholder={param}
+                                  value={params[param]}
+                                  onChange={(e: any, {value}: {value?: any}) =>
+                                      dispatch({
+                                        type: UPDATE_PARAMS,
+                                        value: {
+                                          [param]: value
+                                        },
+                                      })}
+                                  search
+                                  selection
+                                  selectOnBlur={false}
+                                  options={chosenStrategy.params[param].options.map(
+                                      (p: any, index: number) => ({key: index, text: p, value: index})
+                                  )}
+                                />
+                              ) : (
+                                <Input
+                                  onChange={(e, {value}) => {
+                                    dispatch({
+                                      type: UPDATE_PARAMS,
+                                      value: {
+                                        [param]: value
+                                      }
+                                    })
+                                  }}
+                                  placeholder={param}
+                                />
+                              )}
                           </Grid.Column>
                         </Grid.Row>
                       ))}
@@ -259,19 +296,40 @@ const NewPipeline = (props: Props) => {
                     <Grid.Column>
                       <Header as='h5'>Optional:</Header>
                       {/*@ts-ignore*/}
-                      {strategies[strategiesOptions[strategy - 1].text].optionalParamsOrder.map(param => (
+                      {chosenStrategy.optionalParamsOrder.map(param => (
                         <Grid.Row key={param} style={{paddingBottom: '10px'}}>
                           <Grid.Column>
-                            <Input
-                              onChange={(e, {value}) => {
-                                dispatch({
-                                  type: UPDATE_PARAMS,
-                                  value: {
-                                    [param]: value
-                                  }
-                                })
-                              }}
-                              placeholder={param}/>
+                            {chosenStrategy.optionalParams[param].options ?
+                              (
+                                <Dropdown
+                                  placeholder={param}
+                                  value={params[param]}
+                                  onChange={(e: any, {value}: {value?: any}) =>
+                                      dispatch({
+                                        type: UPDATE_PARAMS,
+                                        value: {
+                                          [param]: value
+                                        },
+                                      })}
+                                  search
+                                  selection
+                                  selectOnBlur={false}
+                                  options={chosenStrategy.optionalParams[param].options.map(
+                                      (p:  any, index: number) => ({key: index, text: p, value: index})
+                                  )}
+                                />
+                              ) : (
+                                <Input
+                                  onChange={(e, {value}) => {
+                                    dispatch({
+                                      type: UPDATE_PARAMS,
+                                      value: {
+                                        [param]: value
+                                      }
+                                    })
+                                  }}
+                                  placeholder={param}/>
+                                )}
                           </Grid.Column>
                         </Grid.Row>
                       ))}
@@ -280,27 +338,57 @@ const NewPipeline = (props: Props) => {
                 )}
               </Modal.Content>
               <Modal.Actions>
-                <Button
-                    icon='check'
-                    content='Validate'
-                    onClick={() => {
-                      new Promise((resolve, reject) => {
-                        validateParams(
-                            resolve,
-                            reject,
-                            params,
-                            strategies[strategiesOptions[strategy - 1].text]
-                        )
+                <div className="flex-row" style={{justifyContent: secondaryMessage.text ? 'space-between' : 'flex-end'}}>
+                  {secondaryMessage.text && (
+                    <div>
+                      <Grid.Row>
+                        <Grid.Column>
+                          <MessageComponent success={secondaryMessage.success} message={secondaryMessage.text}/>
+                        </Grid.Column>
+                      </Grid.Row>
+                    </div>
+                  )}
+                  <div>
+                    <Button color='black' onClick={() => {
+                      dispatch({
+                        type: CLOSE_MODAL,
                       })
-                        .then(() => {
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button
+                      positive
+                      icon='check'
+                      content='Validate'
+                      onClick={() => {
+                        const {success, updatedParams} = validateParams (
+                          params,
+                          strategies[strategiesOptions[strategy - 1].text]
+                        )
+
+                        if (success) {
                           dispatch({
                             type: UPDATE_SECOND_MODAL_OPEN,
                             value: false
                           })
-                        })
-                        .catch(() => {})
-                    }}
-                />
+                          dispatch({
+                            type: UPDATE_PARAMS,
+                            value: updatedParams
+                          })
+                          dispatch({
+                            type: UPDATE_SECONDARY_MESSAGE,
+                            message: {text: '', success: true}
+                          })
+                        } else {
+                          dispatch({
+                            type: UPDATE_SECONDARY_MESSAGE,
+                            message: {text: 'Some of the specified values are not valid.', success: false}
+                          })
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               </Modal.Actions>
             </Modal>
           </Grid>
@@ -326,6 +414,10 @@ const NewPipeline = (props: Props) => {
                 dispatch({
                   type: CLOSE_MODAL,
                 })
+                dispatch({
+                  type: UPDATE_CHECKBOX,
+                  value: false
+                })
                 // @ts-ignore
                 setColor(undefined)
                 // @ts-ignore
@@ -335,6 +427,7 @@ const NewPipeline = (props: Props) => {
                 Cancel
               </Button>
               <Button
+                  positive
                   content="Create trading bot"
                   labelPosition='right'
                   icon='checkmark'
@@ -358,7 +451,6 @@ const NewPipeline = (props: Props) => {
                     })
                     if (success) setOpen(false)
                   }}
-                  positive
               />
             </div>
           </div>
