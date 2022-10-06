@@ -1,9 +1,20 @@
 import React, {useReducer, useState} from 'react';
-import {Button, Checkbox, Dropdown, Form, Grid, Header, Icon, Input, Modal, TextArea} from "semantic-ui-react";
+import {Button, Checkbox, Dropdown, Grid, Header, Icon, Input, Modal} from "semantic-ui-react";
 import {DropdownOptions, StartPipeline, UpdateMessage} from "../types";
 import {validateParams, validatePipelineCreation} from "../utils/helpers";
 import MessageComponent from "./Message";
 import {COLORS_NAMES} from "../utils/constants";
+import {
+  modalReducer,
+  UPDATE_STRATEGY,
+  UPDATE_CHECKBOX,
+  UPDATE_SECONDARY_MESSAGE,
+  UPDATE_MESSAGE,
+  UPDATE_STRATEGY_PARAMS,
+  RESET_MODAL,
+  UPDATE_SECOND_MODAL_OPEN,
+  initialState, UPDATE_PARAMS
+} from "../reducers/modalReducer";
 
 
 interface Props {
@@ -17,7 +28,7 @@ interface Props {
 }
 
 
-const colorOptions = COLORS_NAMES.map((colorName, index) => {
+const colorOptions = COLORS_NAMES.map((colorName) => {
   const name = colorName.toLowerCase()
   return {
     key: name,
@@ -26,68 +37,6 @@ const colorOptions = COLORS_NAMES.map((colorName, index) => {
     label: { className: `light-${name}`, empty: true, circular: true}
   }
 })
-
-
-const UPDATE_STRATEGY = 'UPDATE_STRATEGY'
-const UPDATE_SECOND_MODAL_OPEN = 'UPDATE_SECOND_MODAL_OPEN'
-const CLOSE_MODAL = 'CLOSE_MODAL'
-const UPDATE_PARAMS = 'UPDATE_PARAMS'
-const UPDATE_CHECKBOX = 'UPDATE_CHECKBOX'
-const UPDATE_MESSAGE = 'UPDATE_MESSAGE'
-const UPDATE_SECONDARY_MESSAGE = 'UPDATE_SECONDARY_MESSAGE'
-
-
-const reducer = (state: any, action: any) => {
-  switch (action.type) {
-    case UPDATE_STRATEGY:
-      return {
-        ...state,
-        secondModalOpen: action.value && state.strategy !== action.value,
-        strategy: action.value,
-        params: (state.secondModalOpen !== action.value && !state.secondModalOpen) ? {} : state.params
-      }
-    case UPDATE_SECOND_MODAL_OPEN:
-      return {
-        ...state,
-        secondModalOpen: action.value,
-      }
-    case CLOSE_MODAL:
-      return {
-        ...state,
-        strategy: null,
-        secondModalOpen: false,
-        params: {},
-        message: {text: '', success: false},
-        secondaryMessage: {text: '', success: false},
-      }
-    case UPDATE_PARAMS:
-      return {
-        ...state,
-        params: {
-          ...state.params,
-          ...action.value
-        },
-      }
-    case UPDATE_CHECKBOX:
-      return {
-        ...state,
-        liveTrading: !state.liveTrading
-      }
-    case UPDATE_MESSAGE:
-      return {
-        ...state,
-        message: action.message
-      }
-    case UPDATE_SECONDARY_MESSAGE:
-      return {
-        ...state,
-        secondaryMessage: action.message
-      }
-    default:
-      throw new Error();
-  }
-}
-
 
 
 const NewPipeline = (props: Props) => {
@@ -103,23 +52,20 @@ const NewPipeline = (props: Props) => {
 
   const [open, setOpen] = useState(false)
 
-  const [color, setColor] = useState()
-  const [symbol, setSymbol] = useState()
-  const [candleSize, setCandleSize] = useState()
-  const [name, setName] = useState()
-  const [allocation, setAllocation] = useState()
-  const [exchanges, setExchange] = useState([])
-
-  const [{strategy, secondModalOpen, params, liveTrading, message, secondaryMessage}, dispatch] = useReducer(
-      reducer, {
-        strategy: undefined,
-        secondModalOpen: false,
-        params: {},
-        liveTrading: false,
-        message: {text: '', success: false},
-        secondaryMessage: {text: '', success: false}
-      }
-  );
+  const [{
+    strategy,
+    color,
+    symbol,
+    candleSize,
+    name,
+    allocation,
+    exchanges,
+    secondModalOpen,
+    params,
+    liveTrading,
+    message,
+    secondaryMessage
+  }, dispatch] = useReducer(modalReducer, initialState);
 
   const chosenStrategy = strategy && strategies[strategiesOptions[strategy - 1].text]
 
@@ -127,15 +73,7 @@ const NewPipeline = (props: Props) => {
       <Modal
           closeIcon
           onClose={() => {
-            // @ts-ignore
-            setExchange(undefined)
-            // @ts-ignore
-            setSymbol(undefined)
-            // @ts-ignore
-            setColor(undefined)
-            dispatch({type: CLOSE_MODAL})
-            // @ts-ignore
-            setCandleSize(undefined)
+            dispatch({type: RESET_MODAL})
             setOpen(false)
           }}
           onOpen={() => setOpen(true)}
@@ -158,14 +96,24 @@ const NewPipeline = (props: Props) => {
                 <Input
                     placeholder='Name'
                     value={name}
-                    onChange={(e: any, {value}: {value?: any}) => setName(value)}
+                    onChange={(e: any, {value}: {value?: any}) => {
+                      dispatch({
+                        type: UPDATE_PARAMS,
+                        value: {name: value}
+                      })
+                    }}
                 />
               </Grid.Column>
               <Grid.Column>
                 <Input
                     placeholder='Allocated capital'
                     value={allocation}
-                    onChange={(e: any, {value}: {value?: any}) => setAllocation(value)}
+                    onChange={(e: any, {value}: {value?: any}) => {
+                      dispatch({
+                        type: UPDATE_PARAMS,
+                        value: {allocation: value}
+                      })
+                    }}
                 />
               </Grid.Column>
             </Grid.Row>
@@ -174,7 +122,12 @@ const NewPipeline = (props: Props) => {
                 <Dropdown
                     placeholder='Symbol'
                     value={symbol}
-                    onChange={(e: any, {value}: {value?: any}) => setSymbol(value)}
+                    onChange={(e: any, {value}: {value?: any}) => {
+                      dispatch({
+                        type: UPDATE_PARAMS,
+                        value: {symbol: value}
+                      })
+                    }}
                     search
                     selection
                     options={symbolsOptions}
@@ -185,7 +138,12 @@ const NewPipeline = (props: Props) => {
                 <Dropdown
                     placeholder='Candle size'
                     value={candleSize}
-                    onChange={(e: any, {value}: {value?: any}) => setCandleSize(value)}
+                    onChange={(e: any, {value}: {value?: any}) => {
+                      dispatch({
+                        type: UPDATE_PARAMS,
+                        value: {candleSize: value}
+                      })
+                    }}
                     search
                     selection
                     options={candleSizeOptions}
@@ -198,7 +156,12 @@ const NewPipeline = (props: Props) => {
                 <Dropdown
                     placeholder='Exchange'
                     value={exchanges}
-                    onChange={(e: any, {value}: {value?: any}) => setExchange(value)}
+                    onChange={(e: any, {value}: {value?: any}) => {
+                      dispatch({
+                        type: UPDATE_PARAMS,
+                        value: {exchanges: value}
+                      })
+                    }}
                     multiple
                     search
                     selection
@@ -234,7 +197,12 @@ const NewPipeline = (props: Props) => {
                     className={`light-${color}`}
                     placeholder='Color'
                     value={color}
-                    onChange={(e: any, entry: any) => setColor(entry.value)}
+                    onChange={(e: any, {value}: {value?: any}) => {
+                      dispatch({
+                        type: UPDATE_PARAMS,
+                        value: {color: value}
+                      })
+                    }}
                     selection
                     options={colorOptions}
                     selectOnBlur={false}
@@ -264,7 +232,7 @@ const NewPipeline = (props: Props) => {
                                   value={params[param]}
                                   onChange={(e: any, {value}: {value?: any}) =>
                                       dispatch({
-                                        type: UPDATE_PARAMS,
+                                        type: UPDATE_STRATEGY_PARAMS,
                                         value: {
                                           [param]: value
                                         },
@@ -280,7 +248,7 @@ const NewPipeline = (props: Props) => {
                                 <Input
                                   onChange={(e, {value}) => {
                                     dispatch({
-                                      type: UPDATE_PARAMS,
+                                      type: UPDATE_STRATEGY_PARAMS,
                                       value: {
                                         [param]: value
                                       }
@@ -306,7 +274,7 @@ const NewPipeline = (props: Props) => {
                                   value={params[param]}
                                   onChange={(e: any, {value}: {value?: any}) =>
                                       dispatch({
-                                        type: UPDATE_PARAMS,
+                                        type: UPDATE_STRATEGY_PARAMS,
                                         value: {
                                           [param]: value
                                         },
@@ -322,7 +290,7 @@ const NewPipeline = (props: Props) => {
                                 <Input
                                   onChange={(e, {value}) => {
                                     dispatch({
-                                      type: UPDATE_PARAMS,
+                                      type: UPDATE_STRATEGY_PARAMS,
                                       value: {
                                         [param]: value
                                       }
@@ -351,7 +319,7 @@ const NewPipeline = (props: Props) => {
                   <div>
                     <Button color='black' onClick={() => {
                       dispatch({
-                        type: CLOSE_MODAL,
+                        type: RESET_MODAL,
                       })
                     }}>
                       Cancel
@@ -372,7 +340,7 @@ const NewPipeline = (props: Props) => {
                             value: false
                           })
                           dispatch({
-                            type: UPDATE_PARAMS,
+                            type: UPDATE_STRATEGY_PARAMS,
                             value: updatedParams
                           })
                           dispatch({
@@ -406,22 +374,7 @@ const NewPipeline = (props: Props) => {
             )}
             <div>
               <Button color='black' onClick={() => {
-                // @ts-ignore
-                setExchange(undefined)
-                // @ts-ignore
-                setSymbol(undefined)
-                // @ts-ignore
-                dispatch({
-                  type: CLOSE_MODAL,
-                })
-                dispatch({
-                  type: UPDATE_CHECKBOX,
-                  value: false
-                })
-                // @ts-ignore
-                setColor(undefined)
-                // @ts-ignore
-                setCandleSize(undefined)
+                dispatch({type: RESET_MODAL})
                 setOpen(false)
               }}>
                 Cancel
