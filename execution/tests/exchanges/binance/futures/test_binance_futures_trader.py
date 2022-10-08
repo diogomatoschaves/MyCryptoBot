@@ -141,7 +141,7 @@ class TestBinanceFuturesTrader:
                 0,
                 0,
                 0,
-                False,
+                True,
                 id="NoUnits-False",
             ),
         ]
