@@ -123,7 +123,7 @@ class Jobs(models.Model):
 
 class Orders(models.Model):
 
-    order_id = models.IntegerField(primary_key=True)
+    order_id = models.TextField(primary_key=True)
     client_order_id = models.TextField(null=True)
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     transact_time = models.DateTimeField()
