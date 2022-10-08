@@ -1,13 +1,14 @@
-import json
 import logging
 import os
 
 import requests
 
 from model.service.helpers import EXECUTION_APP_ENDPOINTS
-from shared.utils.decorators.failed_connection import retry_failed_connection
+from shared.utils.decorators import json_error_handler
+from shared.utils.decorators import retry_failed_connection
 
 
+@json_error_handler
 @retry_failed_connection(num_times=3)
 def execute_order(pipeline_id, signal, header=''):
 
