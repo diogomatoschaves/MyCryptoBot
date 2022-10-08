@@ -121,6 +121,11 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
     def _start_kline_websockets(self, symbol, callback, header=''):
 
+        # streams = [
+        #     f"{symbol.lower()}_perpetual@continuousKline_{self.base_candle_size}",
+        #     f"{symbol.lower()}_perpetual@continuousKline_{self.candle_size}"
+        # ]
+
         streams = [
             f"{symbol.lower()}@kline_{self.base_candle_size}",
             f"{symbol.lower()}@kline_{self.candle_size}"
@@ -132,9 +137,10 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         self.conn_key = self.start_multiplex_socket(lambda row: callback(row, header), streams)
 
+        self.join()
+
     # TODO: Wrap this in AttributeError exception handling
     def _stop_websocket(self):
-
         self.stop_socket(self.conn_key)
 
     def _etl_pipeline(

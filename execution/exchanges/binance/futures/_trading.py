@@ -85,7 +85,7 @@ class BinanceFuturesTrader(BinanceTrader):
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 
         if self.units[symbol] == 0:
-            return False
+            return True
 
         if self.units[symbol] < 0:
             self.buy_instrument(symbol, date, row, units=-3*self.units[symbol], header=header, reduceOnly=True, **kwargs)
@@ -143,7 +143,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
     def _convert_amount_to_units(self, amount, symbol):
         price = float(self.get_symbol_ticker(symbol=symbol)['price'])
-        return round(amount / price, 5)
+        return round(amount / price, 4)
 
     def _format_order(self, order, pipeline_id):
         return dict(
