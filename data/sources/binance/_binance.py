@@ -137,8 +137,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         self.conn_key = self.start_multiplex_socket(lambda row: callback(row, header), streams)
 
-        self.join()
-
     # TODO: Wrap this in AttributeError exception handling
     def _stop_websocket(self):
         self.stop_socket(self.conn_key)
