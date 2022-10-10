@@ -64,6 +64,11 @@ def mock_binance_websocket_start(mocker):
 
 
 @pytest.fixture
+def mock_binance_websocket_stop(mocker):
+    mocker.patch.object(BinanceDataHandler, "_stop_websocket", lambda self: None)
+
+
+@pytest.fixture
 def mock_binance_handler_start_data_ingestion(mocker):
     mocker.patch.object(
         BinanceDataHandler,
