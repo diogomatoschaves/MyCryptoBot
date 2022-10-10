@@ -75,6 +75,8 @@ class TestBinanceDataHandler:
         mock_binance_client_ping,
         mock_binance_handler_websocket,
         mock_binance_websocket_start,
+        mock_binance_websocket_stop,
+        mock_binance_threaded_websocket,
         mock_trigger_signal_successfully,
         trigger_signal_spy,
         exchange_data
@@ -127,6 +129,8 @@ class TestBinanceDataHandler:
         mock_binance_client_ping,
         mock_binance_handler_websocket,
         mock_binance_websocket_start,
+        mock_binance_websocket_stop,
+        mock_binance_threaded_websocket,
         mock_trigger_signal_fail,
         trigger_signal_spy,
         exchange_data,
@@ -167,6 +171,7 @@ class TestBinanceDataHandler:
         mock_binance_client_init,
         mock_binance_client_ping,
         mock_binance_handler_websocket,
+        mock_binance_threaded_websocket,
         exchange_data
     ):
 

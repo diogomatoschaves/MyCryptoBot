@@ -18,32 +18,32 @@ class TestExternalRequests:
         [
             pytest.param(
                 [
-                    {"status": "finished"},
+                    {"code": "FINISHED", "status": "finished"},
                 ],
                 True,
                 id="STATUS_FINISHED",
             ),
             pytest.param(
                 [
-                    {"status": "in-queue"},
-                    {"status": "waiting"},
-                    {"status": "waiting"},
-                    {"status": "finished"},
+                    {"code": "IN_QUEUE", "status": "in-queue"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "FINISHED", "status": "finished"},
                 ],
                 True,
                 id="STATUS_WAITING_IN-QUEUE",
             ),
             pytest.param(
                 [
-                    {"status": "failed"},
+                    {"code": "FAILED", "status": "failed"},
                 ],
                 False,
                 id="STATUS_FAILED",
             ),
             pytest.param(
                 [
-                    {"status": "job not found"},
-                    {"status": "finished"},
+                    {"code": "JOB_NOT_FOUND", "status": "job not found"},
+                    {"code": "FINISHED", "status": "finished"},
                 ],
                 True,
                 id="STATUS_NOT_FOUND",
@@ -90,12 +90,12 @@ class TestExternalRequests:
         mock_generate_signal.return_value = {"success": True, "job_id": 'abcdef'}
 
         mock_check_job_status_response.side_effect = [
-            {"status": "job not found"},
-            {"status": "job not found"},
-            {"status": "job not found"},
-            {"status": "job not found"},
-            {"status": "job not found"},
-            {"status": "finished"},
+            {"code": "JOB_NOT_FOUND", "status": "job not found"},
+            {"code": "JOB_NOT_FOUND", "status": "job not found"},
+            {"code": "JOB_NOT_FOUND", "status": "job not found"},
+            {"code": "JOB_NOT_FOUND", "status": "job not found"},
+            {"code": "JOB_NOT_FOUND", "status": "job not found"},
+            {"code": "FINISHED", "status": "finished"},
         ]
 
         params = {
