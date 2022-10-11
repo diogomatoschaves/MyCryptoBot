@@ -286,3 +286,32 @@ class TestExecutionService:
         res = client.post(f"/execute_order", json=payload)
 
         assert res.json == expected_value
+
+    @pytest.mark.parametrize(
+        "params,expected_value",
+        [
+            pytest.param(
+                {
+                    "pipeline_id": 1,
+                    "signal": 1
+                },
+                Responses.API_ERROR("BTCUSDT", "Precision is over the maximum defined for this asset."),
+                id="API_ERROR",
+            ),
+        ]
+    )
+    def test_failed_execute_order(
+        self,
+        params,
+        expected_value,
+        mock_binance_futures_trader_trade_exception,
+        mock_redis_connection,
+        client,
+        exchange_data,
+        create_pipeline,
+        create_inactive_pipeline,
+    ):
+
+        res = client.post(f"/execute_order", json=params)
+
+        assert res.json == expected_value

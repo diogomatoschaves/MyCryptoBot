@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 
+from binance.exceptions import BinanceAPIException
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
@@ -128,7 +129,12 @@ def execute_order():
 
         bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
-        bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
+        try:
+            bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
+        except BinanceAPIException as e:
+            bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
+            message = e.message
+            return jsonify(Responses.API_ERROR(pipeline.symbol, message))
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))
 

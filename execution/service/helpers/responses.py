@@ -16,7 +16,8 @@ RESPONSES = namedtuple(
         "SIGNAL_REQUIRED",
         "SIGNAL_INVALID",
         "ORDER_EXECUTION_SUCCESS",
-        "EQUITY_REQUIRED"
+        "EQUITY_REQUIRED",
+        "API_ERROR"
     ]
 )
 
@@ -34,7 +35,8 @@ ReturnCodes = RESPONSES(
     SIGNAL_REQUIRED="SIGNAL_REQUIRED",
     SIGNAL_INVALID="SIGNAL_INVALID",
     ORDER_EXECUTION_SUCCESS="ORDER_EXECUTION_SUCCESS",
-    EQUITY_REQUIRED="EQUITY_REQUIRED"
+    EQUITY_REQUIRED="EQUITY_REQUIRED",
+    API_ERROR="API_ERROR",
 )
 
 
@@ -103,5 +105,10 @@ Responses = RESPONSES(
         "code": ReturnCodes.EQUITY_REQUIRED,
         "success": False,
         "message": f"{symbol}: Parameter 'equity' is required.",
+    },
+    API_ERROR=lambda symbol, message: {
+        "code": ReturnCodes.API_ERROR,
+        "success": False,
+        "message": f"{symbol}: {message}. Closing pipeline.",
     },
 )
