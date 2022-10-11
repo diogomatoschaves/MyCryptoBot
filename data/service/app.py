@@ -28,7 +28,7 @@ from data.service.helpers import check_input, get_or_create_pipeline
 from database.model.models import Pipeline
 from shared.utils.logger import configure_logger
 
-configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
+configure_logger(os.getenv("LOGGER_LEVEL", logging.INFO))
 
 executor = ThreadPoolExecutor(16)
 
