@@ -100,6 +100,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
             header=header
         )
 
+        self.generate_new_signal(header)
+
         self._start_kline_websockets(self.symbol, self._websocket_callback, header=header)
 
     # TODO: Refactor to allow for more than one conn_key
@@ -179,6 +181,18 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         return new_entries
 
+    def generate_new_signal(self, header):
+        success = trigger_signal(self.pipeline_id, header=header)
+
+        if not success:
+            logging.warning(
+                header +
+                "There was an error processing the signal generation request. Stopping data pipeline."
+            )
+            self.stop_data_ingestion()
+            # TODO: Should close all positions associated with pipeline
+            Pipeline.objects.filter(id=self.pipeline_id).update(active=False)
+
     # TODO: Add timer to check if it's below 24h
     def _websocket_callback(self, row, header=''):
 
@@ -207,16 +221,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
             )
 
             if new_entry:
-                success = trigger_signal(self.pipeline_id, header=header)
-
-                if not success:
-                    logging.warning(
-                        header +
-                        "There was an error processing the signal generation request. Stopping data pipeline."
-                    )
-                    self.stop_data_ingestion()
-                    # TODO: Should close all positions associated with pipeline
-                    Pipeline.objects.filter(id=self.pipeline_id).update(active=False)
+                self.generate_new_signal(header)
 
     def _process_stream(
         self,
