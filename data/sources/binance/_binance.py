@@ -41,6 +41,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         self.exchange = 'binance'
 
         self.conn_key = ''
+        self.streams = []
 
         self.raw_data = pd.DataFrame()
         self.data = pd.DataFrame()
