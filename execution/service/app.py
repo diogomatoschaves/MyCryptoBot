@@ -6,12 +6,12 @@ from binance.exceptions import BinanceAPIException
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from execution.exchanges.binance.futures import BinanceFuturesTrader
-from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_input, extract_and_validate
 from execution.service.helpers.responses import Responses
+from execution.exchanges.binance.margin import BinanceMarginTrader
+from execution.exchanges.binance.futures import BinanceFuturesTrader
 from shared.utils.logger import configure_logger
 
 module_path = os.path.abspath(os.path.join('..'))
