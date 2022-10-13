@@ -3,10 +3,11 @@ import os
 import django
 import pytest
 
+from execution.service.helpers.responses import Responses
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Orders, Position, Trade
 from execution.exchanges.binance.futures import BinanceFuturesTrader
 from execution.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
@@ -22,6 +23,7 @@ METHODS = [
     ("ping", "ping"),
     ("futures_change_leverage", "futures_change_leverage"),
     ("futures_create_order", "futures_create_order"),
+    ("futures_exchange_info", "futures_exchange_info"),
     ("get_symbol_ticker", "get_symbol_ticker")
 ]
 
@@ -40,36 +42,29 @@ class TestBinanceFuturesTrader:
             pytest.param(
                 {"symbol": "BTCUSDT", "equity": 100},
                 {},
-                (0, 0),
+                (0, 1, 0),
                 {"return_value": True, "balance": 100},
                 id="SymbolStarted-True",
             ),
             pytest.param(
                 {"symbol": "BTCUSDT",  "equity": 100, "leverage": 10},
                 {},
-                (1, 0),
+                (1, 1, 0),
                 {"return_value": True, "balance": 100},
                 id="SymbolStarted-ChangeLeverage-True",
             ),
             pytest.param(
-                {"symbol": "BNBUSDT", "equity": 100},
-                {},
-                (0, 0),
-                {"return_value": False, "balance": 0},
-                id="TradingAccountDoesntExist-False",
-            ),
-            pytest.param(
                 {"symbol": "BTCUSDT", "equity": 100},
                 {"BTCUSDT"},
-                (0, 0),
+                (0, 0, 0),
                 {"return_value": True, "balance": 0},
                 id="SymbolIsAlreadyBeingTraded-True",
             ),
             pytest.param(
                 {"symbol": "XRPBTC", "equity": 100},
                 {},
-                (0, 0),
-                {"return_value": False, "balance": 0},
+                (0, 1, 0),
+                {"return_value": Responses.SYMBOL_DOESNT_EXIST("XRPBTC"), "balance": 0},
                 id="SymbolDoesNotExist-False",
             ),
         ]
@@ -87,6 +82,8 @@ class TestBinanceFuturesTrader:
         futures_change_leverage,
         futures_change_leverage_spy,
         futures_create_order,
+        futures_exchange_info,
+        futures_exchange_info_spy,
         futures_create_order_spy,
         get_symbol_ticker
     ):
@@ -100,7 +97,8 @@ class TestBinanceFuturesTrader:
         assert return_value == expected_value["return_value"]
 
         assert futures_change_leverage_spy.call_count == times_called[0]
-        assert futures_create_order_spy.call_count == times_called[1]
+        assert futures_exchange_info_spy.call_count == times_called[1]
+        assert futures_create_order_spy.call_count == times_called[2]
 
         assert binance_trader.current_balance[parameters["symbol"]] == expected_value["balance"]
         assert binance_trader.initial_balance[parameters["symbol"]] == expected_value["balance"]
@@ -110,7 +108,14 @@ class TestBinanceFuturesTrader:
         [
             pytest.param(
                 "BTCUSDT",
-                {"BTCUSDT": {}},
+                {
+                    "BTCUSDT": {
+                        "price_precision": 2,
+                        "quantity_precision": 3,
+                        "baseAsset": "BTC",
+                        "quoteAsset": "USDT"
+                    }
+                },
                 1,
                 0.1,
                 1,
@@ -119,7 +124,14 @@ class TestBinanceFuturesTrader:
             ),
             pytest.param(
                 "BTCUSDT",
-                {"BTCUSDT": {}},
+                {
+                    "BTCUSDT": {
+                        "price_precision": 2,
+                        "quantity_precision": 3,
+                        "baseAsset": "BTC",
+                        "quoteAsset": "USDT"
+                    }
+                },
                 -1,
                 -0.1,
                 1,
@@ -132,12 +144,19 @@ class TestBinanceFuturesTrader:
                 0,
                 0.1,
                 0,
-                False,
+                Responses.SYMBOL_DOESNT_EXIST("BTCUSDT"),
                 id="SymbolDoesNotExist-False",
             ),
             pytest.param(
                 "BTCUSDT",
-                {"BTCUSDT": {}},
+                {
+                    "BTCUSDT": {
+                        "price_precision": 2,
+                        "quantity_precision": 3,
+                        "baseAsset": "BTC",
+                        "quoteAsset": "USDT"
+                    }
+                },
                 0,
                 0,
                 0,
@@ -192,6 +211,7 @@ class TestBinanceFuturesTrader:
         create_position,
         futures_change_leverage,
         futures_create_order,
+        futures_exchange_info,
         futures_create_order_spy,
         get_symbol_ticker
     ):
@@ -248,6 +268,7 @@ class TestBinanceFuturesTrader:
         create_orders,
         futures_change_leverage,
         futures_change_leverage_spy,
+        futures_exchange_info,
         futures_create_order,
         futures_create_order_spy,
         get_symbol_ticker

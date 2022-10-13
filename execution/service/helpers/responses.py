@@ -17,7 +17,8 @@ RESPONSES = namedtuple(
         "SIGNAL_INVALID",
         "ORDER_EXECUTION_SUCCESS",
         "EQUITY_REQUIRED",
-        "API_ERROR"
+        "API_ERROR",
+        "SYMBOL_DOESNT_EXIST"
     ]
 )
 
@@ -37,6 +38,7 @@ ReturnCodes = RESPONSES(
     ORDER_EXECUTION_SUCCESS="ORDER_EXECUTION_SUCCESS",
     EQUITY_REQUIRED="EQUITY_REQUIRED",
     API_ERROR="API_ERROR",
+    SYMBOL_DOESNT_EXIST="SYMBOL_DOESNT_EXIST",
 )
 
 
@@ -111,4 +113,9 @@ Responses = RESPONSES(
         "success": False,
         "message": f"{symbol}: {message}. Closing pipeline.",
     },
+    SYMBOL_DOESNT_EXIST=lambda symbol: {
+        "code": ReturnCodes.SYMBOL_DOESNT_EXIST,
+        "success": False,
+        "message": f"{symbol}: {symbol} does not exist"
+    }
 )
