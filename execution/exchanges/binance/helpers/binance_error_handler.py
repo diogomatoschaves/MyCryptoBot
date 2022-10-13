@@ -13,7 +13,7 @@ def binance_error_handler(_func=None, *, num_times=3):
                 return func(*args, **kwargs)
             except BinanceAPIException as e:
                 logging.warning(e)
-                pass
+                return False
 
         return wrapper
 
