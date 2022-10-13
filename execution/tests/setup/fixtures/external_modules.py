@@ -6,7 +6,7 @@ import execution
 from execution.tests.setup.test_data.binance_api_responses import (
     isolated_account_info,
     trading_fees,
-    margin_order_creation, futures_order_creation,
+    margin_order_creation, futures_order_creation, exchange_info,
 )
 
 
@@ -63,6 +63,9 @@ def binance_client_mock_factory(method, type_='mock', account_type='margin'):
 
         def get_symbol_ticker(self, symbol):
             return {'symbol': symbol, 'price': '19084.75000000'}
+
+        def futures_exchange_info(self):
+            return exchange_info
 
     @pytest.fixture
     def mock_binance_margin_client(mocker):

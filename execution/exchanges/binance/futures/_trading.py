@@ -16,8 +16,6 @@ from shared.utils.decorators.failed_connection import retry_failed_connection
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol
-
 
 class BinanceFuturesTrader(BinanceTrader):
 
@@ -54,14 +52,13 @@ class BinanceFuturesTrader(BinanceTrader):
             try:
                 self.futures_change_leverage(symbol=symbol, leverage=leverage)
             except BinanceAPIException as e:
-                logging.info(e)
+                logging.warning(e)
 
-        # TODO: Make call to API to check against existing accounts'
-        try:
-            symbol_obj = Symbol.objects.get(name=symbol)
-            self.symbols[symbol] = {"base": symbol_obj.base.symbol, "quote": symbol_obj.quote.symbol}
-        except Symbol.DoesNotExist:
-            return False
+        # Make call to get price and quantity precision
+        response = self._get_symbol_info(symbol)
+
+        if response:
+            return response
 
         self._set_initial_position(symbol, header)
 
@@ -72,7 +69,8 @@ class BinanceFuturesTrader(BinanceTrader):
     def stop_symbol_trading(self, symbol, header='', **kwargs):
 
         if symbol not in self.symbols:
-            return False
+            from execution.service.helpers.responses import Responses
+            return Responses.SYMBOL_DOESNT_EXIST(symbol)
 
         logging.info(header + f"Closing position for symbol: {symbol}")
 
@@ -112,8 +110,7 @@ class BinanceFuturesTrader(BinanceTrader):
         **kwargs
     ):
 
-        if amount is not None and units is None:
-            units = self._convert_amount_to_units(amount, symbol)
+        units = self._convert_units(amount, units, symbol)
 
         pipeline_id = kwargs["pipeline_id"] if "pipeline_id" in kwargs else None
 
@@ -141,9 +138,15 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self.report_trade(order, units, going, header, symbol=symbol)
 
-    def _convert_amount_to_units(self, amount, symbol):
-        price = float(self.get_symbol_ticker(symbol=symbol)['price'])
-        return round(amount / price, 4)
+    def _convert_units(self, amount, units, symbol):
+        price_precision = self.symbols[symbol]["price_precision"]
+        quantity_precision = self.symbols[symbol]["quantity_precision"]
+
+        if amount is not None and units is None:
+            price = round(float(self.get_symbol_ticker(symbol=symbol)['price']), price_precision)
+            return round(amount / price, quantity_precision)
+        else:
+            return round(units, quantity_precision)
 
     def _format_order(self, order, pipeline_id):
         return dict(
@@ -171,3 +174,24 @@ class BinanceFuturesTrader(BinanceTrader):
         self.units[symbol] = 0
         self.current_balance[symbol] = balance
         self.initial_balance[symbol] = balance
+
+    def _get_symbol_info(self, symbol):
+        exchange_info = self.futures_exchange_info()
+
+        target_symbol = None
+        for symbol_info in exchange_info["symbols"]:
+            if symbol_info['symbol'] == symbol:
+                target_symbol = symbol_info
+
+        if not target_symbol:
+            from execution.service.helpers.responses import Responses
+            return Responses.SYMBOL_DOESNT_EXIST(symbol)
+
+        self.symbols[symbol] = {
+            "base": target_symbol["baseAsset"],
+            "quote": target_symbol["quoteAsset"],
+            "price_precision": target_symbol["pricePrecision"],
+            "quantity_precision": target_symbol["quantityPrecision"]
+        }
+
+        return None
