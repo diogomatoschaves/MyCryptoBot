@@ -6,6 +6,7 @@ from binance.exceptions import BinanceAPIException
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+from execution.exchanges.binance.helpers import binance_error_handler
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_input, extract_and_validate
@@ -55,9 +56,12 @@ def hello_world():
 
 
 @app.route('/start_symbol_trading', methods=['POST'])
+@binance_error_handler(request_obj=request)
 def start_symbol_trading():
 
-    pipeline, parameters = extract_and_validate()
+    request_data = request.get_json(force=True)
+
+    pipeline, parameters = extract_and_validate(request_data)
 
     if parameters.response is not None:
         logging.debug(parameters.response)
@@ -84,8 +88,12 @@ def start_symbol_trading():
 
 
 @app.route('/stop_symbol_trading', methods=['POST'])
+@binance_error_handler(request_obj=request)
 def stop_symbol_trading():
-    pipeline, parameters = extract_and_validate()
+
+    request_data = request.get_json(force=True)
+
+    pipeline, parameters = extract_and_validate(request_data)
 
     if parameters.response is not None:
         logging.debug(parameters.response)
@@ -103,6 +111,7 @@ def stop_symbol_trading():
             return jsonify(Responses.TRADING_SYMBOL_NO_ACCOUNT(pipeline.symbol))
 
 
+@binance_error_handler
 @app.route('/execute_order', methods=['POST'])
 def execute_order():
 
@@ -110,7 +119,7 @@ def execute_order():
 
     logging.debug(request_data)
 
-    pipeline, parameters = extract_and_validate()
+    pipeline, parameters = extract_and_validate(request_data)
 
     if parameters.response is not None:
         logging.debug(parameters.response)

@@ -5,18 +5,33 @@ from binance.exceptions import BinanceAPIException
 
 
 class MockBinanceTrader:
-    def __init__(self, success=True, raise_trade_error=False):
+    def __init__(self, success=True, raise_error_trade=False, raise_error_start_stop=False):
         self._success = success
-        self.raise_trade_error = raise_trade_error
+        self.raise_error_trade = raise_error_trade
+        self.raise_error_start_stop = raise_error_start_stop
 
     def start_symbol_trading(self, symbol, header='', **kwargs):
+        if self.raise_error_start_stop:
+            print("gonna raise that exception")
+            raise BinanceAPIException(
+                '',
+                400,
+                '{"msg": "ReduceOnly Order is rejected.", "code": -2022}'
+            )
         return self._success
 
     def stop_symbol_trading(self, symbol, header='', **kwargs):
+        if self.raise_error_start_stop:
+            print("gonna raise that exception")
+            raise BinanceAPIException(
+                '',
+                400,
+                '{"msg": "ReduceOnly Order is rejected.", "code": -2022}'
+            )
         return self._success
 
     def trade(self, symbol, signal, amount, header='', **kwargs):
-        if self.raise_trade_error:
+        if self.raise_error_trade:
             raise BinanceAPIException(
                 '',
                 400,
@@ -34,6 +49,7 @@ def mock_binance_margin_trader_fail(mocker):
     return mocker.patch(
         "execution.service.app.binance_margin_trader", MockBinanceTrader(success=False)
     )
+
 
 @pytest.fixture
 def mock_binance_futures_trader_success(mocker):
@@ -71,5 +87,13 @@ def mock_redis_connection(mocker):
 
 
 @pytest.fixture
-def mock_binance_futures_trader_trade_exception(mocker):
-    return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader(raise_trade_error=True))
+def mock_binance_futures_trader_raise_exception_trade(mocker):
+    return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader(raise_error_trade=True))
+
+
+@pytest.fixture
+def mock_binance_futures_trader_raise_exception_start_stop(mocker):
+    return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader(raise_error_start_stop=True))
+
+
+

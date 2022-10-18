@@ -53,7 +53,7 @@ def get_pipeline_data(pipeline_id):
     try:
         pipeline = Pipeline.objects.get(id=pipeline_id)
     except Pipeline.DoesNotExist:
-        return None, None
+        return False, None
 
     pipeline = PIPELINE(
         id=pipeline_id,
