@@ -54,7 +54,6 @@ class BinanceFuturesTrader(BinanceTrader):
             except BinanceAPIException as e:
                 logging.warning(e)
 
-        # Make call to get price and quantity precision
         response = self._get_symbol_info(symbol)
 
         if response:

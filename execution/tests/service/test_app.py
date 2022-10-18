@@ -296,7 +296,7 @@ class TestExecutionService:
                     "signal": 1
                 },
                 Responses.API_ERROR("BTCUSDT", "Precision is over the maximum defined for this asset."),
-                id="API_ERROR",
+                id="API_ERROR-execute_order",
             ),
         ]
     )
@@ -304,7 +304,7 @@ class TestExecutionService:
         self,
         params,
         expected_value,
-        mock_binance_futures_trader_trade_exception,
+        mock_binance_futures_trader_raise_exception_trade,
         mock_redis_connection,
         client,
         exchange_data,
@@ -313,5 +313,44 @@ class TestExecutionService:
     ):
 
         res = client.post(f"/execute_order", json=params)
+
+        assert res.json == expected_value
+
+    @pytest.mark.parametrize(
+        "route,params,expected_value",
+        [
+            pytest.param(
+                "start_symbol_trading",
+                {
+                    "pipeline_id": 1,
+                    "equity": 2
+                },
+                Responses.API_ERROR("BTCUSDT", "ReduceOnly Order is rejected."),
+                id="API_ERROR-start_symbol_trading",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "pipeline_id": 1,
+                },
+                Responses.API_ERROR("BTCUSDT", "ReduceOnly Order is rejected."),
+                id="API_ERROR-stop_symbol_trading",
+            ),
+        ]
+    )
+    def test_failed_start_stop_symbol_trading(
+        self,
+        route,
+        params,
+        expected_value,
+        mock_binance_futures_trader_raise_exception_start_stop,
+        mock_redis_connection,
+        client,
+        exchange_data,
+        create_pipeline,
+        create_inactive_pipeline,
+    ):
+
+        res = client.post(f"{route}", json=params)
 
         assert res.json == expected_value
