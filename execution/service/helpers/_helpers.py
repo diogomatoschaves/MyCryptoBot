@@ -46,11 +46,7 @@ def validate_input(**kwargs):
     return None
 
 
-def extract_and_validate():
-
-    request_data = request.get_json(force=True)
-
-    logging.debug(request_data)
+def extract_and_validate(request_data):
 
     binance_account_type = request_data.get('binance_account_type', 'futures')
     equity = request_data.get('equity', None)
