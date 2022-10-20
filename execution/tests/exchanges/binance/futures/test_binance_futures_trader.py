@@ -3,6 +3,7 @@ import os
 import django
 import pytest
 
+from execution.service.helpers.exceptions import SymbolInvalid, SymbolNotBeingTraded, NoUnits, SymbolAlreadyTraded
 from execution.service.helpers.responses import Responses
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -37,35 +38,21 @@ class TestBinanceFuturesTrader:
     symbol = "BTCUSDT"
 
     @pytest.mark.parametrize(
-        "parameters,symbols,times_called,expected_value",
+        "parameters,symbols,times_called,balance",
         [
             pytest.param(
                 {"symbol": "BTCUSDT", "equity": 100},
                 {},
                 (0, 1, 0),
-                {"return_value": True, "balance": 100},
-                id="SymbolStarted-True",
+                100,
+                id="SymbolStarted",
             ),
             pytest.param(
                 {"symbol": "BTCUSDT",  "equity": 100, "leverage": 10},
                 {},
                 (1, 1, 0),
-                {"return_value": True, "balance": 100},
-                id="SymbolStarted-ChangeLeverage-True",
-            ),
-            pytest.param(
-                {"symbol": "BTCUSDT", "equity": 100},
-                {"BTCUSDT"},
-                (0, 0, 0),
-                {"return_value": True, "balance": 0},
-                id="SymbolIsAlreadyBeingTraded-True",
-            ),
-            pytest.param(
-                {"symbol": "XRPBTC", "equity": 100},
-                {},
-                (0, 1, 0),
-                {"return_value": Responses.SYMBOL_DOESNT_EXIST("XRPBTC"), "balance": 0},
-                id="SymbolDoesNotExist-False",
+                100,
+                id="SymbolStarted-ChangeLeverage",
             ),
         ]
     )
@@ -74,7 +61,7 @@ class TestBinanceFuturesTrader:
         parameters,
         symbols,
         times_called,
-        expected_value,
+        balance,
         create_symbol,
         create_exchange,
         ping,
@@ -87,27 +74,20 @@ class TestBinanceFuturesTrader:
         futures_create_order_spy,
         get_symbol_ticker
     ):
-        binance_trader = BinanceFuturesTrader()
-        binance_trader.symbols = symbols
-        binance_trader.current_balance = {parameters["symbol"]: 0}
-        binance_trader.initial_balance = {parameters["symbol"]: 0}
-
-        return_value = binance_trader.start_symbol_trading(**parameters)
-
-        assert return_value == expected_value["return_value"]
+        binance_trader = self.start_symbol_trading(parameters, symbols)
 
         assert futures_change_leverage_spy.call_count == times_called[0]
         assert futures_exchange_info_spy.call_count == times_called[1]
         assert futures_create_order_spy.call_count == times_called[2]
 
-        assert binance_trader.current_balance[parameters["symbol"]] == expected_value["balance"]
-        assert binance_trader.initial_balance[parameters["symbol"]] == expected_value["balance"]
+        assert binance_trader.current_balance[parameters["symbol"]] == balance
+        assert binance_trader.initial_balance[parameters["symbol"]] == balance
 
     @pytest.mark.parametrize(
-        "symbol,symbols,position,units,times_called,expected_value",
+        "parameters,symbols,position,units,times_called",
         [
             pytest.param(
-                "BTCUSDT",
+                {"symbol": "BTCUSDT", "pipeline_id": 1},
                 {
                     "BTCUSDT": {
                         "price_precision": 2,
@@ -119,11 +99,10 @@ class TestBinanceFuturesTrader:
                 1,
                 0.1,
                 1,
-                True,
                 id="SymbolExists-PositiveUnits-True",
             ),
             pytest.param(
-                "BTCUSDT",
+                {"symbol": "BTCUSDT", "pipeline_id": 1},
                 {
                     "BTCUSDT": {
                         "price_precision": 2,
@@ -135,44 +114,17 @@ class TestBinanceFuturesTrader:
                 -1,
                 -0.1,
                 1,
-                True,
                 id="SymbolExists-NegativeUnits-True",
-            ),
-            pytest.param(
-                "BTCUSDT",
-                {},
-                0,
-                0.1,
-                0,
-                Responses.SYMBOL_DOESNT_EXIST("BTCUSDT"),
-                id="SymbolDoesNotExist-False",
-            ),
-            pytest.param(
-                "BTCUSDT",
-                {
-                    "BTCUSDT": {
-                        "price_precision": 2,
-                        "quantity_precision": 3,
-                        "baseAsset": "BTC",
-                        "quoteAsset": "USDT"
-                    }
-                },
-                0,
-                0,
-                0,
-                True,
-                id="NoUnits-False",
             ),
         ]
     )
     def test_stop_symbol_trading(
         self,
-        symbol,
+        parameters,
         symbols,
         position,
         units,
         times_called,
-        expected_value,
         create_symbol,
         create_exchange,
         create_orders,
@@ -183,17 +135,16 @@ class TestBinanceFuturesTrader:
         futures_create_order_spy,
         get_symbol_ticker
     ):
-        binance_trader = BinanceFuturesTrader()
-        binance_trader.symbols = symbols
 
-        binance_trader._set_position(symbol, position, pipeline_id=1)
-        binance_trader.units[symbol] = units
-        binance_trader.initial_balance[symbol] = 100
-        binance_trader.current_balance[symbol] = 100
+        binance_trader = self.stop_symbol_trading(
+            parameters,
+            symbols,
+            position,
+            units,
+        )
 
-        return_value = binance_trader.stop_symbol_trading(symbol, pipeline_id=1)
+        symbol = parameters["symbol"]
 
-        assert return_value == expected_value
         assert binance_trader.positions[symbol] == 0
         assert futures_create_order_spy.call_count == times_called
 
@@ -291,3 +242,142 @@ class TestBinanceFuturesTrader:
         assert len(trades) == 1
         assert all(trade.amount == float(margin_order_creation["executedQty"]) for trade in trades)
         assert all(trade.open_price == float(margin_order_creation["price"]) for trade in trades)
+
+    @pytest.mark.parametrize(
+        "parameters,symbols,times_called,balance,expected_exception",
+        [
+            pytest.param(
+                {"symbol": "BTCUSDT", "equity": 100},
+                {"BTCUSDT"},
+                (0, 0, 0),
+                0,
+                SymbolAlreadyTraded,
+                id="SymbolIsAlreadyBeingTraded",
+            ),
+            pytest.param(
+                {"symbol": "XRPBTC", "equity": 100},
+                {},
+                (0, 1, 0),
+                0,
+                SymbolInvalid,
+                id="SymbolInvalid",
+            ),
+        ]
+    )
+    def test_exception_start_symbol_trading(
+        self,
+        parameters,
+        symbols,
+        times_called,
+        balance,
+        expected_exception,
+        create_symbol,
+        create_exchange,
+        ping,
+        init_session,
+        futures_change_leverage,
+        futures_change_leverage_spy,
+        futures_create_order,
+        futures_exchange_info,
+        futures_exchange_info_spy,
+        futures_create_order_spy,
+        get_symbol_ticker
+    ):
+        with pytest.raises(Exception) as exception:
+            binance_trader = self.start_symbol_trading(parameters, symbols)
+
+            assert exception.type == expected_exception
+            assert futures_change_leverage_spy.call_count == times_called[0]
+            assert futures_exchange_info_spy.call_count == times_called[1]
+            assert futures_create_order_spy.call_count == times_called[2]
+
+            assert binance_trader.current_balance[parameters["symbol"]] == balance
+            assert binance_trader.initial_balance[parameters["symbol"]] == balance
+
+    @staticmethod
+    def start_symbol_trading(parameters, symbols):
+        binance_trader = BinanceFuturesTrader()
+        binance_trader.symbols = symbols
+        binance_trader.current_balance = {parameters["symbol"]: 0}
+        binance_trader.initial_balance = {parameters["symbol"]: 0}
+
+        binance_trader.start_symbol_trading(**parameters)
+
+        return binance_trader
+
+    @pytest.mark.parametrize(
+        "parameters,symbols,position,units,times_called,expected_value",
+        [
+            pytest.param(
+                {"symbol": "BTCUSDT", "pipeline_id": 1},
+                {},
+                0,
+                0.1,
+                0,
+                SymbolNotBeingTraded,
+                id="SymbolNotBeingTraded",
+            ),
+            pytest.param(
+                {"symbol": "BTCUSDT", "pipeline_id": 1},
+                {
+                    "BTCUSDT": {
+                        "price_precision": 2,
+                        "quantity_precision": 3,
+                        "baseAsset": "BTC",
+                        "quoteAsset": "USDT"
+                    }
+                },
+                0,
+                0,
+                0,
+                NoUnits,
+                id="NoUnits",
+            )
+        ]
+    )
+    def test_exception_stop_symbol_trading(
+        self,
+        parameters,
+        symbols,
+        position,
+        units,
+        times_called,
+        expected_value,
+        create_symbol,
+        create_exchange,
+        create_orders,
+        ping,
+        init_session,
+        futures_change_leverage,
+        futures_create_order,
+        futures_create_order_spy,
+        futures_exchange_info,
+        get_symbol_ticker
+    ):
+        with pytest.raises(Exception) as exception:
+            bt = self.stop_symbol_trading(
+                parameters,
+                symbols,
+                position,
+                units,
+            )
+
+            assert exception.type == expected_value
+            assert bt.positions[parameters["symbol"]] == 0
+            assert futures_create_order_spy.call_count == times_called
+
+    @staticmethod
+    def stop_symbol_trading(parameters, symbols, position, units):
+        binance_trader = BinanceFuturesTrader()
+        binance_trader.symbols = symbols
+
+        symbol = parameters["symbol"]
+
+        binance_trader._set_position(symbol, position, pipeline_id=1)
+        binance_trader.units[symbol] = units
+        binance_trader.initial_balance[symbol] = 100
+        binance_trader.current_balance[symbol] = 100
+
+        return_value = binance_trader.stop_symbol_trading(**parameters)
+
+        return binance_trader

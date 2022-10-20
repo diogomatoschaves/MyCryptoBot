@@ -5,7 +5,6 @@ RESPONSES = namedtuple(
     'Responses',
     [
         "TRADING_SYMBOL_START",
-        "TRADING_SYMBOL_NO_ACCOUNT",
         "TRADING_SYMBOL_STOP",
         "PIPELINE_NOT_ACTIVE",
         "NO_SUCH_PIPELINE",
@@ -18,14 +17,14 @@ RESPONSES = namedtuple(
         "ORDER_EXECUTION_SUCCESS",
         "EQUITY_REQUIRED",
         "API_ERROR",
-        "SYMBOL_DOESNT_EXIST"
+        "SYMBOL_ALREADY_TRADED",
+        "SYMBOL_NOT_BEING_TRADED"
     ]
 )
 
 
 ReturnCodes = RESPONSES(
     TRADING_SYMBOL_START="TRADING_SYMBOL_START",
-    TRADING_SYMBOL_NO_ACCOUNT="TRADING_SYMBOL_NO_ACCOUNT",
     TRADING_SYMBOL_STOP="TRADING_SYMBOL_STOP",
     PIPELINE_NOT_ACTIVE="PIPELINE_NOT_ACTIVE",
     NO_SUCH_PIPELINE="NO_SUCH_PIPELINE",
@@ -38,7 +37,8 @@ ReturnCodes = RESPONSES(
     ORDER_EXECUTION_SUCCESS="ORDER_EXECUTION_SUCCESS",
     EQUITY_REQUIRED="EQUITY_REQUIRED",
     API_ERROR="API_ERROR",
-    SYMBOL_DOESNT_EXIST="SYMBOL_DOESNT_EXIST",
+    SYMBOL_ALREADY_TRADED="SYMBOL_ALREADY_TRADED",
+    SYMBOL_NOT_BEING_TRADED="SYMBOL_NOT_BEING_TRADED",
 )
 
 
@@ -48,24 +48,19 @@ Responses = RESPONSES(
         "success": True,
         "message": f"{symbol}: Trading symbol successfully started."
     },
-    TRADING_SYMBOL_NO_ACCOUNT=lambda symbol: {
-        "code": ReturnCodes.TRADING_SYMBOL_NO_ACCOUNT,
-        "success": False,
-        "message":  f"{symbol}: Trading account does not exist."
-    },
     TRADING_SYMBOL_STOP=lambda symbol: {
         "code": ReturnCodes.TRADING_SYMBOL_STOP,
         "success": True,
         "message": f"{symbol}: Trading symbol successfully stopped."
     },
-    PIPELINE_NOT_ACTIVE=lambda symbol, pipeline_id: {
+    PIPELINE_NOT_ACTIVE=lambda message: {
         "code": ReturnCodes.PIPELINE_NOT_ACTIVE,
         "success": False,
-        "message":  f"{symbol}: Pipeline {pipeline_id} not active."
+        "message":  message
     },
-    NO_SUCH_PIPELINE=lambda pipeline_id: {
+    NO_SUCH_PIPELINE=lambda message: {
         "code": ReturnCodes.NO_SUCH_PIPELINE,
-        "message": f"Pipeline {pipeline_id} was not found.",
+        "message": message,
         "success": False
     },
     SYMBOL_REQUIRED={
@@ -73,10 +68,10 @@ Responses = RESPONSES(
         "success": False,
         "message": "Parameter 'symbol' is required."
     },
-    SYMBOL_INVALID=lambda symbol: {
+    SYMBOL_INVALID=lambda message: {
         "code": ReturnCodes.SYMBOL_INVALID,
         "success": False,
-        "message": f"{symbol} is not a valid symbol."
+        "message": message
     },
     EXCHANGE_REQUIRED={
         "code": ReturnCodes.EXCHANGE_REQUIRED,
@@ -103,19 +98,24 @@ Responses = RESPONSES(
         "success": True,
         "message": f"{symbol}: Order was sent successfully.",
     },
-    EQUITY_REQUIRED=lambda symbol: {
+    EQUITY_REQUIRED=lambda message: {
         "code": ReturnCodes.EQUITY_REQUIRED,
         "success": False,
-        "message": f"{symbol}: Parameter 'equity' is required.",
+        "message": message,
     },
     API_ERROR=lambda symbol, message: {
         "code": ReturnCodes.API_ERROR,
         "success": False,
         "message": f"{symbol}: {message}. Closing pipeline.",
     },
-    SYMBOL_DOESNT_EXIST=lambda symbol: {
-        "code": ReturnCodes.SYMBOL_DOESNT_EXIST,
+    SYMBOL_ALREADY_TRADED=lambda message: {
+        "code": ReturnCodes.SYMBOL_ALREADY_TRADED,
         "success": False,
-        "message": f"{symbol}: {symbol} does not exist"
-    }
+        "message":  message
+    },
+    SYMBOL_NOT_BEING_TRADED=lambda message: {
+        "code": ReturnCodes.SYMBOL_NOT_BEING_TRADED,
+        "success": False,
+        "message":  message
+    },
 )

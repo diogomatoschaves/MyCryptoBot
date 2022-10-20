@@ -46,8 +46,8 @@ class TestExecutionService:
                     "binance_account_type": "margin",
                     "equity": 100
                 },
-                Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
-                id="TRADING_SYMBOL_NO_ACCOUNT_MARGIN",
+                Responses.SYMBOL_ALREADY_TRADED('BTCUSDT is already being traded.'),
+                id="SymbolAlreadyTraded-MARGIN",
             ),
             pytest.param(
                 {
@@ -55,28 +55,28 @@ class TestExecutionService:
                     "binance_account_type": "futures",
                     "equity": 100
                 },
-                Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
-                id="TRADING_SYMBOL_NO_ACCOUNT_FUTURES",
+                Responses.SYMBOL_ALREADY_TRADED('BTCUSDT is already being traded.'),
+                id="SymbolAlreadyTraded-FUTURES",
             ),
             pytest.param(
                 {
                     "pipeline_id": 1,
                 },
-                Responses.EQUITY_REQUIRED("BTCUSDT"),
+                Responses.EQUITY_REQUIRED("Parameter 'equity' is required."),
                 id="TRADING_SYMBOL_NO_EQUITY",
             ),
             pytest.param(
                 {
                     "pipeline_id": 2
                 },
-                Responses.NO_SUCH_PIPELINE(2),
+                Responses.NO_SUCH_PIPELINE("Pipeline 2 was not found."),
                 id="NO_SUCH_PIPELINE",
             ),
             pytest.param(
                 {
                     "pipeline_id": 3
                 },
-                Responses.PIPELINE_NOT_ACTIVE("BTCUSDT", 3),
+                Responses.PIPELINE_NOT_ACTIVE('Pipeline 3 is not active.'),
                 id="TRADING_SYMBOL_NOT_ACTIVE",
             ),
         ],
@@ -106,8 +106,8 @@ class TestExecutionService:
                     "binance_account_type": "margin",
                     "equity": 100
                 },
-                Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
-                id="TRADING_SYMBOL_NO_ACCOUNT_MARGIN",
+                Responses.SYMBOL_NOT_BEING_TRADED('BTCUSDT is not being traded.'),
+                id="SymbolNotBeingTraded-MARGIN",
             ),
             pytest.param(
                 {
@@ -115,21 +115,21 @@ class TestExecutionService:
                     "binance_account_type": "futures",
                     "equity": 100
                 },
-                Responses.TRADING_SYMBOL_NO_ACCOUNT("BTCUSDT"),
-                id="TRADING_SYMBOL_NO_ACCOUNT_FUTURES",
+                Responses.SYMBOL_NOT_BEING_TRADED('BTCUSDT is not being traded.'),
+                id="SymbolNotBeingTraded-FUTURES",
             ),
             pytest.param(
                 {
                     "pipeline_id": 2
                 },
-                Responses.NO_SUCH_PIPELINE(2),
+                Responses.NO_SUCH_PIPELINE("Pipeline 2 was not found."),
                 id="NO_SUCH_PIPELINE",
             ),
             pytest.param(
                 {
                     "pipeline_id": 3
                 },
-                Responses.PIPELINE_NOT_ACTIVE("BTCUSDT", 3),
+                Responses.PIPELINE_NOT_ACTIVE('Pipeline 3 is not active.'),
                 id="TRADING_SYMBOL_NOT_ACTIVE",
             ),
         ],
@@ -228,7 +228,7 @@ class TestExecutionService:
                     "pipeline_id": 2,
                     "signal": 1
                 },
-                Responses.NO_SUCH_PIPELINE(2),
+                Responses.NO_SUCH_PIPELINE("Pipeline 2 was not found."),
                 id="NO_SUCH_PIPELINE",
             ),
             pytest.param(
@@ -236,7 +236,7 @@ class TestExecutionService:
                     "pipeline_id": 3,
                     "signal": 1,
                 },
-                Responses.PIPELINE_NOT_ACTIVE("BTCUSDT", 3),
+                Responses.PIPELINE_NOT_ACTIVE('Pipeline 3 is not active.'),
                 id="TRADING_SYMBOL_NOT_ACTIVE",
             ),
             pytest.param(

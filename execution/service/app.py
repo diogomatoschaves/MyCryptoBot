@@ -6,10 +6,11 @@ from binance.exceptions import BinanceAPIException
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from execution.exchanges.binance.helpers import binance_error_handler
+from execution.service.helpers.decorators import binance_error_handler, handle_app_errors
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_input, extract_and_validate
+from execution.service.helpers.exceptions import EquityRequired
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.exchanges.binance.futures import BinanceFuturesTrader
@@ -56,6 +57,7 @@ def hello_world():
 
 
 @app.route('/start_symbol_trading', methods=['POST'])
+@handle_app_errors
 @binance_error_handler(request_obj=request)
 def start_symbol_trading():
 
@@ -68,26 +70,24 @@ def start_symbol_trading():
         return parameters.response
 
     if parameters.equity is None:
-        return jsonify(Responses.EQUITY_REQUIRED(pipeline.symbol))
+        raise EquityRequired
 
     if pipeline.exchange == 'binance':
 
         bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
-        success = bt.start_symbol_trading(
+        bt.start_symbol_trading(
             pipeline.symbol,
             equity=parameters.equity,
             header=parameters.header,
             pipeline_id=pipeline.id
         )
 
-        if success:
-            return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
-        else:
-            return jsonify(Responses.TRADING_SYMBOL_NO_ACCOUNT(pipeline.symbol))
+        return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
 
 
 @app.route('/stop_symbol_trading', methods=['POST'])
+@handle_app_errors
 @binance_error_handler(request_obj=request)
 def stop_symbol_trading():
 
@@ -103,16 +103,14 @@ def stop_symbol_trading():
 
         bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
-        success = bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
+        bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
 
-        if success:
-            return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
-        else:
-            return jsonify(Responses.TRADING_SYMBOL_NO_ACCOUNT(pipeline.symbol))
+        return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
 
 
-@binance_error_handler
 @app.route('/execute_order', methods=['POST'])
+@binance_error_handler
+@handle_app_errors
 def execute_order():
 
     request_data = request.get_json(force=True)

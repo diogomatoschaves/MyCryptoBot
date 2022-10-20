@@ -3,32 +3,41 @@ import os
 import pytest
 from binance.exceptions import BinanceAPIException
 
+from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded
+
 
 class MockBinanceTrader:
-    def __init__(self, success=True, raise_error_trade=False, raise_error_start_stop=False):
-        self._success = success
+    def __init__(
+        self,
+        raise_error_trade=False,
+        raise_error_start_stop=False,
+        raise_symbol_not_being_traded=False,
+        raise_symbol_already_traded=False
+    ):
         self.raise_error_trade = raise_error_trade
         self.raise_error_start_stop = raise_error_start_stop
+        self.raise_symbol_not_being_traded = raise_symbol_not_being_traded
+        self.raise_symbol_already_traded = raise_symbol_already_traded
 
     def start_symbol_trading(self, symbol, header='', **kwargs):
         if self.raise_error_start_stop:
-            print("gonna raise that exception")
             raise BinanceAPIException(
                 '',
                 400,
                 '{"msg": "ReduceOnly Order is rejected.", "code": -2022}'
             )
-        return self._success
+        elif self.raise_symbol_already_traded:
+            raise SymbolAlreadyTraded(symbol)
 
     def stop_symbol_trading(self, symbol, header='', **kwargs):
         if self.raise_error_start_stop:
-            print("gonna raise that exception")
             raise BinanceAPIException(
                 '',
                 400,
                 '{"msg": "ReduceOnly Order is rejected.", "code": -2022}'
             )
-        return self._success
+        if self.raise_symbol_not_being_traded:
+            raise SymbolNotBeingTraded(symbol)
 
     def trade(self, symbol, signal, amount, header='', **kwargs):
         if self.raise_error_trade:
@@ -47,7 +56,8 @@ def mock_binance_margin_trader_success(mocker):
 @pytest.fixture
 def mock_binance_margin_trader_fail(mocker):
     return mocker.patch(
-        "execution.service.app.binance_margin_trader", MockBinanceTrader(success=False)
+        "execution.service.app.binance_margin_trader",
+        MockBinanceTrader(raise_symbol_not_being_traded=True, raise_symbol_already_traded=True)
     )
 
 
@@ -59,7 +69,8 @@ def mock_binance_futures_trader_success(mocker):
 @pytest.fixture
 def mock_binance_futures_trader_fail(mocker):
     return mocker.patch(
-        "execution.service.app.binance_futures_trader", MockBinanceTrader(success=False)
+        "execution.service.app.binance_futures_trader",
+        MockBinanceTrader(raise_symbol_not_being_traded=True, raise_symbol_already_traded=True)
     )
 
 
