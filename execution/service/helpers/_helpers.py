@@ -5,8 +5,9 @@ from collections import namedtuple
 
 import django
 import redis
-from flask import jsonify, request
+from flask import jsonify
 
+from execution.service.helpers.exceptions import NoSuchPipeline, PipelineNotActive
 from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -56,9 +57,9 @@ def extract_and_validate(request_data):
 
     if pipeline_exists:
         if not pipeline.active:
-            return pipeline, Parameters(jsonify(Responses.PIPELINE_NOT_ACTIVE(pipeline.symbol, pipeline_id)))
+            raise PipelineNotActive(pipeline_id)
     else:
-        return pipeline, Parameters(jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id)))
+        raise NoSuchPipeline(pipeline_id)
 
     header = json.loads(get_item_from_cache(cache, pipeline_id))
 
