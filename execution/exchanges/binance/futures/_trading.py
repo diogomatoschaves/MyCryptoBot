@@ -8,9 +8,10 @@ import django
 from binance.exceptions import BinanceAPIException
 
 from execution.exchanges.binance import BinanceTrader
+from execution.service.helpers.exceptions import SymbolInvalid, SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits
 from shared.exchanges import BinanceHandler
 from shared.trading import Trader
-from execution.exchanges.binance.helpers import binance_error_handler
+from execution.service.helpers.decorators import binance_error_handler
 from shared.utils.decorators.failed_connection import retry_failed_connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -44,7 +45,7 @@ class BinanceFuturesTrader(BinanceTrader):
     def start_symbol_trading(self, symbol, equity=0, leverage=None, header='', **kwargs):
 
         if symbol in self.symbols:
-            return True
+            raise SymbolAlreadyTraded(symbol)
 
         self.equity[symbol] = equity
 
@@ -54,35 +55,27 @@ class BinanceFuturesTrader(BinanceTrader):
             except BinanceAPIException as e:
                 logging.warning(e)
 
-        response = self._get_symbol_info(symbol)
-
-        if response:
-            return response
+        self._get_symbol_info(symbol)
 
         self._set_initial_position(symbol, header)
 
         self._set_initial_balance(symbol, equity, header=header)
 
-        return True
-
     def stop_symbol_trading(self, symbol, header='', **kwargs):
 
         if symbol not in self.symbols:
-            from execution.service.helpers.responses import Responses
-            return Responses.SYMBOL_DOESNT_EXIST(symbol)
+            raise SymbolNotBeingTraded(symbol)
 
         logging.info(header + f"Closing position for symbol: {symbol}")
 
-        position_closed = self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
+        self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
 
         self.symbols.pop(symbol)
-
-        return position_closed
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 
         if self.units[symbol] == 0:
-            return True
+            raise NoUnits
 
         if self.units[symbol] < 0:
             self.buy_instrument(symbol, date, row, units=-3*self.units[symbol], header=header, reduceOnly=True, **kwargs)
@@ -92,8 +85,6 @@ class BinanceFuturesTrader(BinanceTrader):
         self._set_position(symbol, 0, previous_position=1, **kwargs)
 
         self.print_trading_results(header, date, symbol=symbol)
-
-        return True
 
     @retry_failed_connection(num_times=2)
     @binance_error_handler
@@ -183,8 +174,7 @@ class BinanceFuturesTrader(BinanceTrader):
                 target_symbol = symbol_info
 
         if not target_symbol:
-            from execution.service.helpers.responses import Responses
-            return Responses.SYMBOL_DOESNT_EXIST(symbol)
+            raise SymbolInvalid(symbol)
 
         self.symbols[symbol] = {
             "base": target_symbol["baseAsset"],
@@ -192,5 +182,3 @@ class BinanceFuturesTrader(BinanceTrader):
             "price_precision": target_symbol["pricePrecision"],
             "quantity_precision": target_symbol["quantityPrecision"]
         }
-
-        return None

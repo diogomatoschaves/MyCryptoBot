@@ -8,7 +8,7 @@ import django
 from binance.exceptions import BinanceAPIException
 
 from execution.exchanges.binance import BinanceTrader
-from execution.exchanges.binance.helpers import binance_error_handler
+from execution.service.helpers.decorators import binance_error_handler
 from shared.utils.decorators.failed_connection import retry_failed_connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
