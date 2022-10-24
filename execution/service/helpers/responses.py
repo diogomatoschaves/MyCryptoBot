@@ -83,15 +83,15 @@ Responses = RESPONSES(
         "success": False,
         "message": f"{exchange} is not a valid exchange."
     },
-    SIGNAL_REQUIRED={
+    SIGNAL_REQUIRED=lambda message: {
         "code": ReturnCodes.SIGNAL_REQUIRED,
         "success": False,
-        "message": "A signal must be included in the request."
+        "message": message
     },
-    SIGNAL_INVALID=lambda signal: {
+    SIGNAL_INVALID=lambda message: {
         "code": ReturnCodes.SIGNAL_INVALID,
         "success": False,
-        "message": f"{signal} is not a valid signal."
+        "message": message
     },
     ORDER_EXECUTION_SUCCESS=lambda symbol: {
         "code": ReturnCodes.ORDER_EXECUTION_SUCCESS,
