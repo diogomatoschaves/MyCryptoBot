@@ -1,5 +1,4 @@
 import functools
-import logging
 
 from flask import jsonify
 
@@ -28,6 +27,10 @@ def handle_app_errors(_func=None):
                 return jsonify((Responses.SYMBOL_ALREADY_TRADED(e.message)))
             except SymbolNotBeingTraded as e:
                 return jsonify((Responses.SYMBOL_NOT_BEING_TRADED(e.message)))
+            except SignalRequired as e:
+                return jsonify(Responses.SIGNAL_REQUIRED(e.message))
+            except SignalInvalid as e:
+                return jsonify(Responses.SIGNAL_INVALID(e.message))
 
         return wrapper
 

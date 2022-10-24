@@ -252,14 +252,14 @@ class TestExecutionService:
                     "pipeline_id": 1,
                     "signal": "abc"
                 },
-                Responses.SIGNAL_INVALID("abc"),
+                Responses.SIGNAL_INVALID('abc is not a valid signal.'),
                 id="SIGNAL_INVALID",
             ),
             pytest.param(
                 {
                     "pipeline_id": 1,
                 },
-                Responses.SIGNAL_REQUIRED,
+                Responses.SIGNAL_REQUIRED("Parameter 'signal' is required."),
                 id="SIGNAL_REQUIRED",
             ),
         ],
