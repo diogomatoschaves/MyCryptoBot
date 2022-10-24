@@ -1,19 +1,15 @@
 import json
-import logging
 import os
 from collections import namedtuple
 
 import django
 import redis
-from flask import jsonify
 
-from execution.service.helpers.exceptions import NoSuchPipeline, PipelineNotActive
+from execution.service.helpers.exceptions import NoSuchPipeline, PipelineNotActive, SignalRequired, SignalInvalid
 from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
-
-from execution.service.helpers.responses import Responses
 
 
 fields = [
@@ -39,10 +35,10 @@ def validate_input(**kwargs):
         signal = kwargs["signal"]
 
         if signal is None:
-            return jsonify(Responses.SIGNAL_REQUIRED)
+            raise SignalRequired
 
         if signal not in [-1, 0, 1]:
-            return jsonify(Responses.SIGNAL_INVALID(signal))
+            raise SignalInvalid(signal)
 
     return None
 

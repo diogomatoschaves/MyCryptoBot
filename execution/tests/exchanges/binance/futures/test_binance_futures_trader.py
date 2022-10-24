@@ -4,7 +4,6 @@ import django
 import pytest
 
 from execution.service.helpers.exceptions import SymbolInvalid, SymbolNotBeingTraded, NoUnits, SymbolAlreadyTraded
-from execution.service.helpers.responses import Responses
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
