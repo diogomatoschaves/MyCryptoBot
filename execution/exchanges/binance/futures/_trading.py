@@ -8,7 +8,7 @@ import django
 from binance.exceptions import BinanceAPIException
 
 from execution.exchanges.binance import BinanceTrader
-from execution.service.helpers.exceptions import SymbolInvalid, SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits
+from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits
 from shared.exchanges import BinanceHandler
 from shared.trading import Trader
 from execution.service.helpers.decorators import binance_error_handler
@@ -166,19 +166,12 @@ class BinanceFuturesTrader(BinanceTrader):
         self.initial_balance[symbol] = balance
 
     def _get_symbol_info(self, symbol):
-        exchange_info = self.futures_exchange_info()
 
-        target_symbol = None
-        for symbol_info in exchange_info["symbols"]:
-            if symbol_info['symbol'] == symbol:
-                target_symbol = symbol_info
-
-        if not target_symbol:
-            raise SymbolInvalid(symbol)
+        symbol_info = self.validate_symbol(symbol)
 
         self.symbols[symbol] = {
-            "base": target_symbol["baseAsset"],
-            "quote": target_symbol["quoteAsset"],
-            "price_precision": target_symbol["pricePrecision"],
-            "quantity_precision": target_symbol["quantityPrecision"]
+            "base": symbol_info["baseAsset"],
+            "quote": symbol_info["quoteAsset"],
+            "price_precision": symbol_info["pricePrecision"],
+            "quantity_precision": symbol_info["quantityPrecision"]
         }

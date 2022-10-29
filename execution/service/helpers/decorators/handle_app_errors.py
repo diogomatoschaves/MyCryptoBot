@@ -3,6 +3,7 @@ import functools
 from flask import jsonify
 
 from execution.service.helpers.exceptions import *
+from shared.utils.exceptions import SymbolInvalid
 
 
 def handle_app_errors(_func=None):
