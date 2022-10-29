@@ -1,8 +1,9 @@
+from data.service.helpers.exceptions import CandleSizeInvalid
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
 from data.tests.setup.fixtures.app import mock_client_env_vars
 from data.tests.setup.test_data.sample_data import processed_historical_data
-from shared.utils.exceptions import InvalidInput
+from shared.utils.exceptions import SymbolInvalid
 from shared.utils.tests.test_setup import get_fixtures
 from shared.utils.tests.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
@@ -73,6 +74,7 @@ class TestBinanceDataHandler:
         mock_binance_handler_klines,
         mock_binance_client_init,
         mock_binance_client_ping,
+        mock_binance_client_exchange_info,
         mock_binance_handler_websocket,
         mock_binance_websocket_start,
         mock_binance_websocket_stop,
@@ -127,6 +129,7 @@ class TestBinanceDataHandler:
         mock_binance_client_init,
         mock_client_env_vars,
         mock_binance_client_ping,
+        mock_binance_client_exchange_info,
         mock_binance_handler_websocket,
         mock_binance_websocket_start,
         mock_binance_websocket_stop,
@@ -154,22 +157,33 @@ class TestBinanceDataHandler:
         assert pipeline.active is False
 
     @pytest.mark.parametrize(
-        "input_value",
+        "input_value,exception",
         [
             pytest.param(
                 {
                     "symbol": "BTCUSD",
                     "candle_size": "5m"
                 },
-                id="InvalidSymbol",
+                SymbolInvalid,
+                id="SymbolInvalid",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "candle_size": "ewrfe"
+                },
+                CandleSizeInvalid,
+                id="CandleSizeInvalid",
             ),
         ],
     )
     def test_exception(
         self,
         input_value,
+        exception,
         mock_binance_client_init,
         mock_binance_client_ping,
+        mock_binance_client_exchange_info,
         mock_binance_handler_websocket,
         mock_binance_threaded_websocket,
         exchange_data
@@ -177,7 +191,5 @@ class TestBinanceDataHandler:
 
         with pytest.raises(Exception) as excinfo:
             binance_data_handler = BinanceDataHandler(**input_value)
-            binance_data_handler.start_data_ingestion()
-            binance_data_handler.stop_data_ingestion()
 
-        assert excinfo.type == InvalidInput
+        assert excinfo.type == exception

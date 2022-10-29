@@ -5,13 +5,15 @@ import os
 
 import django
 import pytz
-from flask import jsonify
+
+from data.service.helpers.exceptions import *
+from data.service.helpers.exceptions.data_pipeline_ongoing import DataPipelineOngoing
+from shared.utils.helpers import get_symbol_or_raise_exception
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from data.service.helpers.responses import Responses
-from database.model.models import Symbol, Exchange, Pipeline
+from database.model.models import Exchange, Pipeline
 import shared.exchanges.binance.constants as const
 
 MODEL_APP_ENDPOINTS = {
@@ -26,49 +28,43 @@ EXECUTION_APP_ENDPOINTS = {
 }
 
 
-def check_input(strategies, **kwargs):
+def check_input(binance_client, strategies, **kwargs):
 
     if "symbol" in kwargs:
         symbol = kwargs["symbol"]
 
         if symbol is None:
-            return jsonify(Responses.SYMBOL_REQUIRED)
+            raise SymbolRequired
 
-        try:
-            Symbol.objects.get(name=symbol)
-        except Symbol.DoesNotExist as e:
-            logging.debug(symbol)
-            logging.debug(e)
-            return jsonify(Responses.SYMBOL_INVALID(symbol))
+        exchange_info = binance_client.futures_exchange_info()
+
+        get_symbol_or_raise_exception(exchange_info, symbol)
 
     if "exchange" in kwargs:
         exchange = kwargs["exchange"]
 
         if exchange is None:
-            return jsonify(Responses.EXCHANGE_REQUIRED)
+            raise ExchangeRequired
 
         try:
             Exchange.objects.get(name=exchange.lower())
         except (Exchange.DoesNotExist, AttributeError) as e:
-            logging.debug(exchange)
-            logging.debug(e)
-            return jsonify(Responses.EXCHANGE_INVALID(exchange))
+            raise ExchangeInvalid(exchange)
 
     if "candle_size" in kwargs:
         candle_size = kwargs["candle_size"]
 
         if candle_size is None:
-            return jsonify(Responses.CANDLE_SIZE_REQUIRED)
+            raise CandleSizeRequired
 
         if candle_size not in const.CANDLE_SIZES_MAPPER:
-            logging.debug(candle_size)
-            return jsonify(Responses.CANDLE_SIZE_INVALID(candle_size))
+            raise CandleSizeInvalid(candle_size)
 
     if "strategy" in kwargs:
         strategy = kwargs["strategy"]
 
         if strategy is None:
-            return jsonify(Responses.STRATEGY_REQUIRED)
+            raise StrategyRequired
 
         if strategy in strategies:
             if "params" in kwargs:
@@ -81,7 +77,7 @@ def check_input(strategies, **kwargs):
                         invalid_params.append(key)
 
                 if len(invalid_params) > 0:
-                    return jsonify(Responses.PARAMS_INVALID(', '.join(invalid_params)))
+                    raise ParamsInvalid(', '.join(invalid_params))
 
             required_params = []
             for param in strategies[strategy]["params"]:
@@ -89,24 +85,19 @@ def check_input(strategies, **kwargs):
                     required_params.append(param)
 
             if len(required_params) > 0:
-                response = Responses.PARAMS_REQUIRED(', '.join(required_params))
-                logging.debug(response)
-                return jsonify(response)
+                raise ParamsRequired(', '.join(required_params))
         else:
-            logging.debug(strategy)
-            return jsonify(Responses.STRATEGY_INVALID(strategy))
+            raise StrategyInvalid(strategy)
 
     if "name" not in kwargs or kwargs["name"] is None:
-        return jsonify(Responses.NAME_REQUIRED)
+        raise NameRequired
     else:
         name = kwargs["name"]
         if not isinstance(name, str):
-            return jsonify(Responses.NAME_INVALID(kwargs["name"]))
+            raise NameInvalid(name)
 
     if "color" not in kwargs or kwargs["name"] is None:
-        return jsonify(Responses.COLOR_REQUIRED)
-
-    return None
+        raise ColorRequired
 
 
 def get_or_create_pipeline(
@@ -137,18 +128,18 @@ def get_or_create_pipeline(
         pipeline = Pipeline.objects.get(**columns)
 
         if pipeline.active:
-            return pipeline, jsonify(Responses.DATA_PIPELINE_ONGOING(pipeline.id))
+            raise DataPipelineOngoing(pipeline.id)
         else:
             pipeline.active = True
             pipeline.open_time = datetime.datetime.now(pytz.utc)
 
-        pipeline.save()
+            pipeline.save()
 
     except Pipeline.DoesNotExist:
-        print("we got here")
         pipeline = Pipeline.objects.create(**columns)
+        logging.info(f"Successfully created new pipeline ({pipeline.id})")
 
-    return pipeline, None
+    return pipeline
 
 
 def convert_queryset_to_dict(queryset):

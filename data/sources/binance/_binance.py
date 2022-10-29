@@ -1,18 +1,17 @@
 import logging
 import os
-from datetime import datetime
 
 import pandas as pd
 import django
 from binance import ThreadedWebsocketManager
 
 import shared.exchanges.binance.constants as const
+from data.service.helpers.exceptions import CandleSizeInvalid
 from data.sources import trigger_signal
 from data.sources.binance.extract import extract_data
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.exchanges.binance import BinanceHandler
-from shared.utils.exceptions import InvalidInput
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -35,7 +34,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         BinanceHandler.__init__(self)
         ThreadedWebsocketManager.__init__(self, self.binance_api_key, self.binance_api_secret)
 
-        self._check_symbol(symbol)
+        self._validate_input(symbol, candle_size)
+
         self.candle_size = candle_size
         self.pipeline_id = pipeline_id
         self.exchange = 'binance'
@@ -54,7 +54,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     def __str__(self):
         return self.__name__
 
-    def _check_symbol(self, symbol):
+    def _validate_input(self, symbol, candle_size):
         """
         Checks if requested symbol exists.
 
@@ -68,15 +68,14 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         sets instance parameters: symbol, quote, base
 
         """
-        try:
-            symbol_obj = Symbol.objects.get(name=symbol)
-        except Symbol.DoesNotExist:
-            logging.info(f"{symbol} is not valid.")
-            raise InvalidInput(f"{symbol} is not a valid symbol.")
+        symbol_info = self.validate_symbol(symbol)
+
+        if candle_size not in const.CANDLE_SIZES_MAPPER:
+            raise CandleSizeInvalid(candle_size)
 
         self.symbol = symbol
-        self.base = symbol_obj.base.symbol,
-        self.quote = symbol_obj.quote.symbol,
+        self.base = symbol_info["baseAsset"],
+        self.quote = symbol_info["quoteAsset"],
 
     def start_data_ingestion(self, header=''):
         """

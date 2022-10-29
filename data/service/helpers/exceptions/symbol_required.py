@@ -1,7 +1,7 @@
 class SymbolRequired(Exception):
     def __init__(self, *args):
 
-        self.message = "Parameter 'symbol' is required."
+        self.message = "A symbol must be included in the request."
 
     def __str__(self):
         return f"{self.message}"

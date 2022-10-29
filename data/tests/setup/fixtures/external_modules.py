@@ -3,6 +3,7 @@ import redis
 from binance import ThreadedWebsocketManager
 from binance.client import Client
 
+from data.tests.setup.test_data.binance_api_responses import exchange_info
 from data.tests.setup.test_data.sample_data import binance_api_historical_data
 from shared.exchanges import BinanceHandler
 
@@ -38,3 +39,8 @@ def mock_binance_client_ping(mocker):
 @pytest.fixture
 def mock_binance_threaded_websocket(mocker):
     mocker.patch.object(ThreadedWebsocketManager, "__init__", lambda self, api_key, api_secret: None)
+
+
+@pytest.fixture
+def mock_binance_client_exchange_info(mocker):
+    mocker.patch.object(Client, "futures_exchange_info", lambda self: exchange_info)
