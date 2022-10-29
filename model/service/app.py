@@ -9,6 +9,7 @@ from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
+from model.service.helpers.decorators.handle_app_errors import handle_app_errors
 from model.service.helpers.responses import Responses
 from model.service.helpers.signal_generator import get_signal
 from model.strategies.properties import STRATEGIES
@@ -48,6 +49,7 @@ def hello_world():
 
 
 @app.route('/generate_signal', methods=['POST'])
+@handle_app_errors
 def generate_signal():
 
     request_data = request.get_json(force=True)
@@ -56,10 +58,7 @@ def generate_signal():
 
     pipeline_id = request_data.get("pipeline_id", None)
 
-    pipeline_exists, pipeline = get_pipeline_data(pipeline_id)
-
-    if not pipeline_exists:
-        return jsonify(Responses.NO_SUCH_PIPELINE(pipeline_id))
+    pipeline = get_pipeline_data(pipeline_id)
 
     header = json.loads(get_item_from_cache(cache, pipeline_id))
 

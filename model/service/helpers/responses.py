@@ -40,10 +40,10 @@ Responses = RESPONSES(
         "message": f"Signal generation process started.",
         "job_id": job_id
     },
-    NO_SUCH_PIPELINE=lambda pipeline_id: {
+    NO_SUCH_PIPELINE=lambda message: {
         "code": ReturnCodes.NO_SUCH_PIPELINE,
         "success": False,
-        "message": f"Pipeline {pipeline_id} was not found.",
+        "message": message,
     },
     FINISHED=lambda result: {
         "code": ReturnCodes.FINISHED,
