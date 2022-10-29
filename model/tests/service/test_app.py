@@ -140,7 +140,7 @@ class TestModelService:
             ),
             pytest.param(
                 {},
-                Responses.NO_SUCH_PIPELINE(None),
+                Responses.NO_SUCH_PIPELINE('Pipeline None was not found.'),
                 id="NO_SUCH_PIPELINE",
             ),
         ],
