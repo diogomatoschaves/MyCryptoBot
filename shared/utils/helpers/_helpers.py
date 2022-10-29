@@ -5,7 +5,7 @@ from collections import namedtuple
 
 import django
 
-from shared.utils.exceptions import SymbolInvalid
+from shared.utils.exceptions import SymbolInvalid, NoSuchPipeline
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -55,7 +55,7 @@ def get_pipeline_data(pipeline_id):
     try:
         pipeline = Pipeline.objects.get(id=pipeline_id)
     except Pipeline.DoesNotExist:
-        return False, None
+        raise NoSuchPipeline(pipeline_id)
 
     pipeline = PIPELINE(
         id=pipeline_id,
@@ -68,7 +68,7 @@ def get_pipeline_data(pipeline_id):
         active=pipeline.active
     )
 
-    return True, pipeline
+    return pipeline
 
 
 def get_extended_name(name):

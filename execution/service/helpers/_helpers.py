@@ -5,7 +5,8 @@ from collections import namedtuple
 import django
 import redis
 
-from execution.service.helpers.exceptions import NoSuchPipeline, PipelineNotActive, SignalRequired, SignalInvalid
+from execution.service.helpers.exceptions import PipelineNotActive, SignalRequired, SignalInvalid
+from shared.utils.exceptions import NoSuchPipeline
 from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -46,13 +47,7 @@ def extract_and_validate(request_data):
     equity = request_data.get('equity', None)
     pipeline_id = request_data.get("pipeline_id", None)
 
-    pipeline_exists, pipeline = get_pipeline_data(pipeline_id)
-
-    if pipeline_exists:
-        if not pipeline.active:
-            raise PipelineNotActive(pipeline_id)
-    else:
-        raise NoSuchPipeline(pipeline_id)
+    pipeline = get_pipeline_data(pipeline_id)
 
     header = json.loads(get_item_from_cache(cache, pipeline_id))
 

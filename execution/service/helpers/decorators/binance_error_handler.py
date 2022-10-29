@@ -20,7 +20,7 @@ def binance_error_handler(_func=None, *, request_obj=None, num_times=3):
                 symbol = ""
                 if request_obj is not None:
                     pipeline_id = request_obj.get_json(force=True).get("pipeline_id", None)
-                    pipeline_exists, pipeline = get_pipeline_data(pipeline_id)
+                    pipeline = get_pipeline_data(pipeline_id)
                     symbol = pipeline.symbol
 
                 from execution.service.helpers.responses import Responses
