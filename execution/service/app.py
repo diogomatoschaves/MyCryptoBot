@@ -10,7 +10,7 @@ from execution.service.helpers.decorators import binance_error_handler, handle_a
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_signal, extract_and_validate
-from execution.service.helpers.exceptions import EquityRequired
+from execution.service.helpers.exceptions import EquityRequired, PipelineNotActive
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.exchanges.binance.futures import BinanceFuturesTrader
@@ -91,6 +91,9 @@ def stop_symbol_trading():
 
     pipeline, parameters = extract_and_validate(request_data)
 
+    if not pipeline.active:
+        raise PipelineNotActive(pipeline.id)
+
     if pipeline.exchange == 'binance':
 
         bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
@@ -101,8 +104,8 @@ def stop_symbol_trading():
 
 
 @app.route('/execute_order', methods=['POST'])
-@binance_error_handler
 @handle_app_errors
+@binance_error_handler
 def execute_order():
 
     request_data = request.get_json(force=True)
@@ -110,6 +113,9 @@ def execute_order():
     logging.debug(request_data)
 
     pipeline, parameters = extract_and_validate(request_data)
+
+    if not pipeline.active:
+        raise PipelineNotActive(pipeline.id)
 
     signal = request_data.get("signal", None)
     amount = request_data.get("amount", "all")

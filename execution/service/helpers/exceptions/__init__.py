@@ -2,7 +2,6 @@ from execution.service.helpers.exceptions.equity_required import EquityRequired
 from execution.service.helpers.exceptions.equity_invalid import EquityInvalid
 from execution.service.helpers.exceptions.signal_required import SignalRequired
 from execution.service.helpers.exceptions.signal_invalid import SignalInvalid
-from execution.service.helpers.exceptions.no_such_pipeline import NoSuchPipeline
 from execution.service.helpers.exceptions.no_such_symbol import NoSuchSymbol
 from execution.service.helpers.exceptions.pipeline_not_active import PipelineNotActive
 from execution.service.helpers.exceptions.symbol_already_traded import SymbolAlreadyTraded

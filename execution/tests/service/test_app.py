@@ -2,6 +2,7 @@ from execution.service.helpers.responses import Responses
 from execution.tests.setup.fixtures.app import *
 from execution.tests.setup.fixtures.external_modules import *
 from execution.tests.setup.fixtures.internal_modules import *
+from shared.utils.exceptions import NoSuchPipeline
 from shared.utils.tests.fixtures.models import *
 
 
@@ -71,13 +72,6 @@ class TestExecutionService:
                 },
                 Responses.NO_SUCH_PIPELINE("Pipeline 2 was not found."),
                 id="NO_SUCH_PIPELINE",
-            ),
-            pytest.param(
-                {
-                    "pipeline_id": 3
-                },
-                Responses.PIPELINE_NOT_ACTIVE('Pipeline 3 is not active.'),
-                id="TRADING_SYMBOL_NOT_ACTIVE",
             ),
         ],
     )
