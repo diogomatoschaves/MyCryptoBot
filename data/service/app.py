@@ -13,8 +13,11 @@ import redis
 
 from data.service.blueprints.dashboard import dashboard
 from data.service.external_requests import start_stop_symbol_trading, get_strategies
+from data.service.helpers.decorators.handle_app_errors import handle_app_errors
+from data.service.helpers.exceptions.data_pipeline_does_not_exist import DataPipelineDoesNotExist
 from data.service.helpers.responses import Responses
 from data.sources._sources import DataHandler
+from shared.exchanges import BinanceHandler
 from shared.utils.helpers import get_logging_row_header, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -39,6 +42,8 @@ app.register_blueprint(dashboard)
 CORS(app)
 
 binance_instances = []
+
+binance_client = BinanceHandler()
 
 cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
@@ -76,6 +81,7 @@ def hello_world():
 
 
 @app.route('/start_bot', methods=['PUT'])
+@handle_app_errors
 def start_bot():
 
     if "STRATEGIES" not in globals():
@@ -96,7 +102,8 @@ def start_bot():
     exchange = data.get("exchanges", None)
     paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
 
-    response = check_input(
+    check_input(
+        binance_client,
         STRATEGIES,
         name=name,
         color=color,
@@ -108,14 +115,10 @@ def start_bot():
         exchange=exchange,
     )
 
-    if response is not None:
-        logging.debug(response)
-        return response
-
     exchange = exchange.lower()
     candle_size = candle_size.lower()
 
-    pipeline, response = get_or_create_pipeline(
+    pipeline = get_or_create_pipeline(
         name=name,
         color=color,
         allocation=allocation,
@@ -126,10 +129,6 @@ def start_bot():
         params=params,
         paper_trading=paper_trading
     )
-
-    if response is not None:
-        logging.debug(response)
-        return response
 
     header = get_logging_row_header(symbol, strategy, params, candle_size, exchange, paper_trading)
 
@@ -166,6 +165,7 @@ def start_bot():
 
 
 @app.route('/stop_bot', methods=['PUT'])
+@handle_app_errors
 def stop_bot():
 
     # Stops the data collection stream
@@ -193,7 +193,7 @@ def stop_bot():
 
         return jsonify(Responses.DATA_PIPELINE_STOPPED(pipeline))
     except Pipeline.DoesNotExist:
-        return jsonify(Responses.DATA_PIPELINE_INEXISTENT)
+        raise DataPipelineDoesNotExist(pipeline_id)
 
 
 if __name__ == "__main__":
