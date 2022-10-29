@@ -9,7 +9,7 @@ from flask_cors import CORS
 from execution.service.helpers.decorators import binance_error_handler, handle_app_errors
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
-from execution.service.helpers import validate_input, extract_and_validate
+from execution.service.helpers import validate_signal, extract_and_validate
 from execution.service.helpers.exceptions import EquityRequired
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.margin import BinanceMarginTrader
@@ -65,10 +65,6 @@ def start_symbol_trading():
 
     pipeline, parameters = extract_and_validate(request_data)
 
-    if parameters.response is not None:
-        logging.debug(parameters.response)
-        return parameters.response
-
     if parameters.equity is None:
         raise EquityRequired
 
@@ -95,10 +91,6 @@ def stop_symbol_trading():
 
     pipeline, parameters = extract_and_validate(request_data)
 
-    if parameters.response is not None:
-        logging.debug(parameters.response)
-        return parameters.response
-
     if pipeline.exchange == 'binance':
 
         bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
@@ -119,18 +111,10 @@ def execute_order():
 
     pipeline, parameters = extract_and_validate(request_data)
 
-    if parameters.response is not None:
-        logging.debug(parameters.response)
-        return parameters.response
-
     signal = request_data.get("signal", None)
     amount = request_data.get("amount", "all")
 
-    response = validate_input(signal=signal)
-
-    if response is not None:
-        logging.debug(response)
-        return response
+    validate_signal(signal=signal)
 
     if pipeline.exchange.lower() == 'binance':
 
