@@ -3,7 +3,7 @@ import functools
 from flask import jsonify
 
 from execution.service.helpers.exceptions import *
-from shared.utils.exceptions import SymbolInvalid
+from shared.utils.exceptions import SymbolInvalid, NoSuchPipeline
 
 
 def handle_app_errors(_func=None):
