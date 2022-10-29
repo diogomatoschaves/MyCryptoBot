@@ -1,7 +1,7 @@
-class ExchangeRequired(Exception):
+class ColorRequired(Exception):
     def __init__(self, *args):
 
-        self.message = "An exchange must be included in the request."
+        self.message = "Parameter 'color' is required."
 
     def __str__(self):
         return f"{self.message}"

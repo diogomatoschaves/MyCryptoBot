@@ -68,7 +68,7 @@ class TestDataService:
         assert res.status_code == 405
 
     @pytest.mark.parametrize(
-        "input_params,response,get_response",
+        "input_params,response,message",
         [
             pytest.param(
                 {
@@ -79,7 +79,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "SYMBOL_REQUIRED",
-                lambda response: response,
+                'A symbol must be included in the request.',
                 id="SYMBOL_REQUIRED",
             ),
             pytest.param(
@@ -91,7 +91,7 @@ class TestDataService:
                     "candleSize": "1h",
                 },
                 "EXCHANGE_REQUIRED",
-                lambda response: response,
+                'An exchange must be included in the request.',
                 id="EXCHANGE_REQUIRED",
             ),
             pytest.param(
@@ -103,7 +103,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "CANDLE_SIZE_REQUIRED",
-                lambda response: response,
+                'A candle size must be included in the request.',
                 id="CANDLE_SIZE_REQUIRED",
             ),
             pytest.param(
@@ -115,7 +115,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "STRATEGY_REQUIRED",
-                lambda response: response,
+                'A strategy must be included in the request.',
                 id="STRATEGY_REQUIRED",
             ),
             pytest.param(
@@ -127,7 +127,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "PARAMS_REQUIRED",
-                lambda response: response("SMA_S, SMA_L"),
+                'SMA_S, SMA_L are required parameters of the selected strategy.',
                 id="PARAMS_REQUIRED",
             ),
             pytest.param(
@@ -139,7 +139,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "NAME_REQUIRED",
-                lambda response: response,
+                'A name must be included in the request.',
                 id="NAME_REQUIRED",
             ),
         ],
@@ -148,10 +148,11 @@ class TestDataService:
         self,
         input_params,
         response,
-        get_response,
+        message,
         client,
         mock_settings_env_vars,
         mock_redis_connection,
+        mock_binance_client_exchange_info,
         mock_get_strategies,
         create_exchange,
         create_assets,
@@ -166,10 +167,10 @@ class TestDataService:
 
         res = client.put('/start_bot', json=input_params)
 
-        assert res.json == get_response(getattr(Responses, response))
+        assert res.json == getattr(Responses, response)(message)
 
     @pytest.mark.parametrize(
-        "input_params,response,get_param",
+        "input_params,response,get_message",
         [
             pytest.param(
                 {
@@ -180,7 +181,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "SYMBOL_INVALID",
-                lambda input_params: input_params["symbol"],
+                lambda input_params: f'{input_params["symbol"]} is not a valid symbol.',
                 id="SYMBOL_INVALID",
             ),
             pytest.param(
@@ -192,7 +193,7 @@ class TestDataService:
                     "exchanges": "Coinbase"
                 },
                 "EXCHANGE_INVALID",
-                lambda input_params: input_params["exchanges"],
+                lambda input_params: f'{input_params["exchanges"]} is not a valid exchange.',
                 id="EXCHANGE_INVALID",
             ),
             pytest.param(
@@ -204,7 +205,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "CANDLE_SIZE_INVALID",
-                lambda input_params: input_params["candleSize"],
+                lambda input_params: f'{input_params["candleSize"]} is not a valid candle size.',
                 id="CANDLE_SIZE_INVALID",
             ),
             pytest.param(
@@ -216,7 +217,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "STRATEGY_INVALID",
-                lambda input_params: input_params["strategy"],
+                lambda input_params: f'{input_params["strategy"]} is not a valid strategy.',
                 id="STRATEGY_INVALID",
             ),
             pytest.param(
@@ -228,7 +229,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "PARAMS_INVALID",
-                lambda input_params: "sma",
+                lambda input_params: f'sma are not valid parameters.',
                 id="PARAMS_INVALID",
             ),
             pytest.param(
@@ -241,7 +242,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "NAME_INVALID",
-                lambda input_params: input_params["name"],
+                lambda input_params: f'{input_params["name"]} is not a valid name.',
                 id="NAME_INVALID",
             ),
         ],
@@ -250,8 +251,9 @@ class TestDataService:
         self,
         input_params,
         response,
-        get_param,
+        get_message,
         client,
+        mock_binance_client_exchange_info,
         mock_settings_env_vars,
         mock_redis_connection,
         mock_get_strategies,
@@ -268,7 +270,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=input_params)
 
-        assert res.json == getattr(Responses, response)(get_param(input_params))
+        assert res.json == getattr(Responses, response)(get_message(input_params))
 
     @pytest.mark.parametrize(
         "params,response",
@@ -293,6 +295,7 @@ class TestDataService:
         params,
         response,
         client,
+        mock_binance_client_exchange_info,
         mock_settings_env_vars,
         mock_redis_connection,
         mock_get_strategies,
@@ -310,7 +313,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        assert res.json == getattr(Responses, response)(1)
+        assert res.json == getattr(Responses, response)('Data pipeline 1 is already ongoing.', 1)
 
     @pytest.mark.parametrize(
         "params,response",
@@ -336,6 +339,7 @@ class TestDataService:
         response,
         mock_start_stop_symbol_trading_success_true,
         client,
+        mock_binance_client_exchange_info,
         mock_settings_env_vars,
         mock_redis_connection,
         mock_get_strategies,
@@ -391,6 +395,7 @@ class TestDataService:
         params,
         mock_start_stop_symbol_trading_success_false,
         client,
+        mock_binance_client_exchange_info,
         mock_settings_env_vars,
         mock_binance_handler_start_data_ingestion,
         mock_get_strategies,
@@ -428,6 +433,7 @@ class TestDataService:
         response,
         client,
         mock_settings_env_vars,
+        mock_binance_client_exchange_info,
         mock_binance_handler_stop_data_ingestion,
         mock_binance_threaded_websocket,
         mock_binance_websocket_start,
@@ -468,16 +474,17 @@ class TestDataService:
                 {
                     "pipelineId": 1
                 },
-                "DATA_PIPELINE_INEXISTENT",
-                id="DATA_PIPELINE_INEXISTENT",
+                "DATA_PIPELINE_DOES_NOT_EXIST",
+                id="DATA_PIPELINE_DOES_NOT_EXIST",
             ),
         ],
     )
-    def test_stop_bot_data_pipeline_inexistent(
+    def test_stop_bot_data_pipeline_does_not_exist(
         self,
         params,
         response,
         client,
+        mock_binance_client_exchange_info,
         mock_settings_env_vars,
         mock_redis_connection,
         mock_get_strategies,
@@ -494,4 +501,4 @@ class TestDataService:
 
         res = client.put('/stop_bot', json=params)
 
-        assert res.json == getattr(Responses, response)
+        assert res.json == getattr(Responses, response)(f'Data pipeline {params["pipelineId"]} does not exist.')

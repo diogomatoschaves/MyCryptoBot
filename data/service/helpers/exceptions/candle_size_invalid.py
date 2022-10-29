@@ -1,9 +1,9 @@
-class ExchangeInvalid(Exception):
+class CandleSizeInvalid(Exception):
     def __init__(self, *args):
         if not args:
-            self.message = f"Exchange is not valid."
+            self.message = f"The candle size is not valid."
         else:
-            self.message = f"{args[0]} is not a valid exchange."
+            self.message = f"{args[0]} is not a valid candle size."
 
     def __str__(self):
         return f"{self.message}"

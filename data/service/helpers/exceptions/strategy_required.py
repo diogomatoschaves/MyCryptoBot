@@ -1,7 +1,7 @@
-class ExchangeRequired(Exception):
+class StrategyRequired(Exception):
     def __init__(self, *args):
 
-        self.message = "An exchange must be included in the request."
+        self.message = "A strategy must be included in the request."
 
     def __str__(self):
         return f"{self.message}"

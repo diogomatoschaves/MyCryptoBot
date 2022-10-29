@@ -5,7 +5,6 @@ from data.sources import trigger_signal
 from shared.utils.tests.fixtures.external_modules import mock_time_sleep
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
-from shared.utils.exceptions import FailedSignalGeneration
 
 from pytest_mock import mocker
 import pytest

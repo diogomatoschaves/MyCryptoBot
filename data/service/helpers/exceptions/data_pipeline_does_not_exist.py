@@ -1,9 +1,9 @@
-class ExchangeInvalid(Exception):
+class DataPipelineDoesNotExist(Exception):
     def __init__(self, *args):
         if not args:
-            self.message = f"Exchange is not valid."
+            self.message = f"Provided data pipeline does not exist."
         else:
-            self.message = f"{args[0]} is not a valid exchange."
+            self.message = f"Data pipeline {args[0]} does not exist."
 
     def __str__(self):
         return f"{self.message}"
