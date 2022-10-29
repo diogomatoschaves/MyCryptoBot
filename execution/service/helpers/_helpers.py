@@ -13,7 +13,6 @@ django.setup()
 
 
 fields = [
-    "response",
     "header",
     "binance_account_type",
     "equity"
@@ -29,7 +28,7 @@ Parameters = namedtuple(
 cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 
-def validate_input(**kwargs):
+def validate_signal(**kwargs):
 
     if "signal" in kwargs:
         signal = kwargs["signal"]
@@ -39,8 +38,6 @@ def validate_input(**kwargs):
 
         if signal not in [-1, 0, 1]:
             raise SignalInvalid(signal)
-
-    return None
 
 
 def extract_and_validate(request_data):
@@ -59,4 +56,4 @@ def extract_and_validate(request_data):
 
     header = json.loads(get_item_from_cache(cache, pipeline_id))
 
-    return pipeline, Parameters(None, header, binance_account_type, equity)
+    return pipeline, Parameters(header, binance_account_type, equity)

@@ -2,10 +2,10 @@ from os import environ as env
 
 from dotenv import load_dotenv, find_dotenv
 from binance.client import Client
-from requests import ReadTimeout, ConnectionError
 
 import shared.exchanges.binance.constants as const
 from shared.utils.decorators.failed_connection import retry_failed_connection
+from shared.utils.helpers import get_symbol_or_raise_exception
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -38,3 +38,11 @@ class BinanceHandler(Client):
         else:
             self.binance_api_key = env.get(const.BINANCE_API_KEY)
             self.binance_api_secret = env.get(const.BINANCE_API_SECRET)
+
+    def validate_symbol(self, symbol):
+
+        exchange_info = self.futures_exchange_info()
+
+        print(symbol)
+
+        return get_symbol_or_raise_exception(exchange_info, symbol)

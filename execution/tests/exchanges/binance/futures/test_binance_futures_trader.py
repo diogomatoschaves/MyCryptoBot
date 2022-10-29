@@ -3,7 +3,8 @@ import os
 import django
 import pytest
 
-from execution.service.helpers.exceptions import SymbolInvalid, SymbolNotBeingTraded, NoUnits, SymbolAlreadyTraded
+from execution.service.helpers.exceptions import SymbolNotBeingTraded, NoUnits, SymbolAlreadyTraded
+from shared.utils.exceptions import SymbolInvalid
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
