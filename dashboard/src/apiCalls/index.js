@@ -103,6 +103,25 @@ export const getPrice = async (symbol) => {
 }
 
 
+export const getFuturesAccountBalance = async () => {
+
+  const url = `${executionAPIHost}/futures_account_balance`
+
+  return await fetch(url, {
+    method: 'GET',
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+    }
+  })
+    .then(res => {
+      if (res.status >= 400) {
+      } else {
+        return res.json()
+      }
+    })
+}
+
+
 export const startBot = async (requestData) => {
 
   const url = `${dataAPIHost}/start_bot`

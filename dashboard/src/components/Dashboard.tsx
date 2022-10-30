@@ -3,94 +3,34 @@ import {MenuOption, Position, Trade} from "../types";
 import {StyledSegment} from "../styledComponents";
 import {useEffect, useReducer, useRef} from "react";
 import {timeFormatterDate, timeFormatterDiff} from "../utils/helpers";
-import { PieChart } from 'react-minimal-pie-chart';
+import {PieChart} from 'react-minimal-pie-chart';
 import {COLORS, GREEN, RED} from "../utils/constants";
+import {
+  tradesReducer,
+  tradesReducerCallback,
+  tradesReducerInitialState,
+  UPDATE_TRADES_STATISTICS
+} from "../reducers/tradesReducer";
+import {
+  positionsReducer,
+  positionsReducerCallback,
+  positionsReducerInitialState,
+  UPDATE_POSITIONS_STATISTICS
+} from "../reducers/positionsReducer";
 
 
 interface Props {
-  menuOption: MenuOption
+  menuOption: MenuOption,
+  balances: Object,
   trades: Trade[],
   positions: Position[],
   currentPrices: Object
 }
 
-const UPDATE_TRADES_STATISTICS = 'UPDATE_TRADES_STATISTICS'
-const UPDATE_POSITIONS_STATISTICS = 'UPDATE_POSITIONS_STATISTICS'
-
-
-const tradesReducerCallback = (metrics: any, trade: Trade) => {
-  return {
-    numberTrades: metrics.numberTrades + 1,
-    maxTradeDuration: trade.openTime < metrics.maxTradeDuration ? trade.openTime : metrics.maxTradeDuration,
-    totalTradeDuration: trade.closeTime ? trade.closeTime.getTime() - trade.openTime.getTime()
-        : new Date().getTime() - trade.openTime.getTime(),
-    winningTrades: trade.profitLoss && trade.profitLoss > 0 ? metrics.winningTrades + 1 : metrics.winningTrades,
-    closedTrades: trade.profitLoss ? metrics.closedTrades + 1 : metrics.closedTrades,
-    bestTrade: metrics.bestTrade ? trade.profitLoss && trade.profitLoss > metrics.bestTrade
-        ? trade.profitLoss : metrics.bestTrade : trade.profitLoss,
-    worstTrade: metrics.worstTrade ? trade.profitLoss && trade.profitLoss < metrics.bestTrade
-        ? trade.profitLoss : metrics.worstTrade : trade.profitLoss
-  }
-}
-
-const tradesReducerInitialState = {
-  numberTrades: 0,
-  maxTradeDuration: 1E20,
-  totalTradeDuration: 0,
-  winningTrades: 0,
-  closedTrades: 0,
-  bestTrade: null,
-  worstTrade: null
-}
-
-const tradesReducer = (state: any, action: any) => {
-  switch (action.type) {
-    case UPDATE_TRADES_STATISTICS:
-      return {
-        ...state,
-        ...action.trades.reduce(tradesReducerCallback, tradesReducerInitialState),
-      }
-    default:
-      throw new Error();
-  }
-}
-
-const positionsReducerCallback = (currentPrices: Object) => (metrics: any, position: Position) => {
-  return {
-    openPositions: metrics.openPositions + 1,
-    // @ts-ignore
-    totalEquityPositions: metrics.totalEquityPositions + position.amount * currentPrices[position.symbol],
-    totalInitialEquity: metrics.totalEquityPositions + position.amount * position.price,
-    symbolsCount: {
-      ...metrics.symbolsCount,
-      [position.symbol]: metrics.symbolsCount[position.symbol] ? metrics.symbolsCount[position.symbol] + 1 : 1
-    }
-  }
-}
-
-const positionsReducerInitialState = {
-  openPositions: 0,
-  totalEquityPositions: 0,
-  totalInitialEquity: 0,
-  symbolsCount: {},
-}
-
-const positionsReducer = (state: any, action: any) => {
-  switch (action.type) {
-    case UPDATE_POSITIONS_STATISTICS:
-      return {
-        ...state,
-        ...action.positions.reduce(positionsReducerCallback(action.currentPrices), positionsReducerInitialState),
-      }
-    default:
-      throw new Error();
-  }
-}
-
 
 function Dashboard(props: Props) {
 
-  const { menuOption, trades, positions, currentPrices } = props
+  const { menuOption, balances, trades, positions, currentPrices } = props
 
   const previous = useRef({trades, positions, currentPrices}).current;
 
@@ -140,8 +80,15 @@ function Dashboard(props: Props) {
   const avgTradeDuration = totalTradeDuration / numberTrades
   const winRate = winningTrades / closedTrades * 100
 
-  const totalPnl = ((totalEquityPositions - totalInitialEquity) / totalInitialEquity * 100)
-  const pnlColor = totalPnl > 0 ? GREEN : RED
+  let totalPnl, pnlColor
+  if (totalInitialEquity !== 0) {
+    totalPnl = ((totalEquityPositions - totalInitialEquity) / totalInitialEquity * 100)
+    pnlColor = totalPnl > 0 ? GREEN : RED
+    totalPnl = `${totalPnl.toFixed(2)}%`
+  } else {
+    totalPnl = '-'
+    pnlColor = '#6435C9'
+  }
 
   const pieChartData = Object.keys(symbolsCount).map((symbol, index) => ({
     title: symbol,
@@ -149,120 +96,166 @@ function Dashboard(props: Props) {
     color: COLORS[index],
   }))
 
+
   return (
       <StyledSegment basic className="flex-column">
         <Header size={'large'} dividing>
           <span style={{marginRight: 10}}>{menuOption.emoji}</span>
           {menuOption.text}
         </Header>
-        <Segment secondary raised>
-          <Header size={'medium'} color="purple">
-            Trades
-          </Header>
-          <Grid columns={3}>
-            <Grid.Row>
-              <Grid.Column>
-                <Grid.Column style={styles.tradesHeader}>
-                  # trades
-                </Grid.Column>
-                <Grid.Column style={styles.tradesColumn} >
-                  {numberTrades}
-                </Grid.Column>
-              </Grid.Column>
-              <Grid.Column>
-                <Grid.Column floated='left' style={styles.tradesHeader}>
-                  Max trade duration
-                </Grid.Column>
-                <Grid.Column floated='right' style={styles.tradesColumn}>
-                  {timeFormatterDate(maxTradeDuration)}
-                </Grid.Column>
-              </Grid.Column>
-              <Grid.Column>
-                <Grid.Column floated='left' style={styles.tradesHeader}>
-                  Avg trade duration
-                </Grid.Column>
-                <Grid.Column floated='right' style={styles.tradesColumn} >
-                  {timeFormatterDiff(avgTradeDuration)}
-                </Grid.Column>
-              </Grid.Column>
+        <Grid style={{width: '100%'}}>
+          <Grid.Column style={{width: '100%'}} className="flex-column">
+            <Grid.Row style={{width: '100%'}} className="flex-row">
+              <Segment secondary raised style={styles.rowSegment}>
+                <Header size={'medium'} color="blue">
+                  Balance
+                </Header>
+                <Grid columns={3}>
+                  {Object.keys(balances).map(account => (
+                    <Grid.Row>
+                      <Grid.Column style={styles.balanceTitle}>
+                        <Label color='blue' size="large">
+                          {account}
+                        </Label>
+                      </Grid.Column>
+                      <Grid.Column>
+                        <Grid.Column style={styles.balanceHeader}>
+                          Total Equity
+                        </Grid.Column>
+                        <Grid.Column style={styles.balanceColumn} >
+                          {/*@ts-ignore*/}
+                          {`${balances[account].USDT.totalBalance.toFixed(1)} $USDT`}
+                        </Grid.Column>
+                      </Grid.Column>
+                      <Grid.Column>
+                        <Grid.Column style={styles.balanceHeader}>
+                          Available Equity
+                        </Grid.Column>
+                        <Grid.Column style={styles.balanceColumn} >
+                          {/*@ts-ignore*/}
+                          {`${balances[account].USDT.availableBalance.toFixed(1)} $USDT`}
+                        </Grid.Column>
+                      </Grid.Column>
+                    </Grid.Row>
+                  ))}
+                </Grid>
+              </Segment>
+              <div style={{...styles.rowSegment}}>
+              </div>
             </Grid.Row>
-            <Grid.Row>
-              <Grid.Column>
-                <Grid.Column style={styles.tradesHeader}>
-                  Win Rate
-                </Grid.Column>
-                <Grid.Column style={styles.tradesColumn} >
-                  {winRate.toFixed(0)}%
-                </Grid.Column>
-              </Grid.Column>
-              <Grid.Column>
-                <Grid.Column style={styles.tradesHeader}>
-                  Best Trade
-                </Grid.Column>
-                <Grid.Column style={styles.tradesColumn} >
-                  {(bestTrade * 100).toFixed(2)}%
-                </Grid.Column>
-              </Grid.Column>
-              <Grid.Column>
-                <Grid.Column style={styles.tradesHeader}>
-                  Worst Trade
-                </Grid.Column>
-                <Grid.Column style={styles.tradesColumn} >
-                  {(worstTrade * 100).toFixed(2)}%
-                </Grid.Column>
-              </Grid.Column>
+            <Grid.Row style={{width: '100%'}} className="flex-row">
+              <Segment secondary raised style={{...styles.rowSegment}}>
+                <Header size={'medium'} color="pink">
+                  Positions
+                </Header>
+                <Grid columns={3}>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <Grid.Column style={styles.positionsHeader}>
+                        # positions
+                      </Grid.Column>
+                      <Grid.Column style={styles.positionsColumn} >
+                        {openPositions}
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column floated='left' style={styles.positionsHeader}>
+                        Total Equity
+                      </Grid.Column>
+                      <Grid.Column floated='right' style={styles.positionsColumn} >
+                        {totalEquityPositions.toFixed(0)} USDT
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column floated='left' style={styles.positionsHeader}>
+                        Net profit
+                      </Grid.Column>
+                      <Grid.Column floated='right' style={{...styles.positionsColumn, color: pnlColor}} >
+                        {totalPnl}
+                      </Grid.Column>
+                    </Grid.Column>
+                  </Grid.Row>
+                  <Grid.Row>
+                  </Grid.Row>
+                </Grid>
+                {positions.length > 0 &&
+                <PieChart
+                  viewBoxSize={[100, 65]}
+                  center={[50, 25]}
+                  data={pieChartData}
+                  label={({dataEntry}) => `${dataEntry.title}`}
+                  labelStyle={(index) => ({
+                    fill: pieChartData[index].color,
+                    fontSize: '3px',
+                    fontFamily: 'sans-serif',
+                  })}
+                  lineWidth={65}
+                  radius={27}
+                  labelPosition={110}
+                />}
+              </Segment>
+              <Segment secondary raised style={styles.rowSegment}>
+                <Header size={'medium'} color="purple">
+                  Trades
+                </Header>
+                <Grid columns={3}>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <Grid.Column style={styles.tradesHeader}>
+                        # trades
+                      </Grid.Column>
+                      <Grid.Column style={styles.tradesColumn} >
+                        {numberTrades}
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column floated='left' style={styles.tradesHeader}>
+                        Max trade duration
+                      </Grid.Column>
+                      <Grid.Column floated='right' style={styles.tradesColumn}>
+                        {timeFormatterDate(maxTradeDuration)}
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column floated='left' style={styles.tradesHeader}>
+                        Avg trade duration
+                      </Grid.Column>
+                      <Grid.Column floated='right' style={styles.tradesColumn} >
+                        {timeFormatterDiff(avgTradeDuration)}
+                      </Grid.Column>
+                    </Grid.Column>
+                  </Grid.Row>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <Grid.Column style={styles.tradesHeader}>
+                        Win Rate
+                      </Grid.Column>
+                      <Grid.Column style={styles.tradesColumn} >
+                        {winRate.toFixed(0)}%
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column style={styles.tradesHeader}>
+                        Best Trade
+                      </Grid.Column>
+                      <Grid.Column style={styles.tradesColumn} >
+                        {(bestTrade * 100).toFixed(2)}%
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column style={styles.tradesHeader}>
+                        Worst Trade
+                      </Grid.Column>
+                      <Grid.Column style={styles.tradesColumn} >
+                        {(worstTrade * 100).toFixed(2)}%
+                      </Grid.Column>
+                    </Grid.Column>
+                  </Grid.Row>
+                </Grid>
+              </Segment>
             </Grid.Row>
-          </Grid>
-        </Segment>
-        <Segment secondary raised style={{width: '70%'}}>
-          <Header size={'medium'} color="pink">
-            Open Positions
-          </Header>
-          <Grid columns={3}>
-            <Grid.Row>
-              <Grid.Column>
-                <Grid.Column style={styles.positionsHeader}>
-                  # positions
-                </Grid.Column>
-                <Grid.Column style={styles.positionsColumn} >
-                  {openPositions}
-                </Grid.Column>
-              </Grid.Column>
-              <Grid.Column>
-                <Grid.Column floated='left' style={styles.positionsHeader}>
-                  Total Equity
-                </Grid.Column>
-                <Grid.Column floated='right' style={styles.positionsColumn} >
-                  {totalEquityPositions.toFixed(0)} USDT
-                </Grid.Column>
-              </Grid.Column>
-              <Grid.Column>
-                <Grid.Column floated='left' style={styles.positionsHeader}>
-                  Net profit
-                </Grid.Column>
-                <Grid.Column floated='right' style={{...styles.positionsColumn, color: pnlColor}} >
-                  {totalPnl.toFixed(2)}%
-                </Grid.Column>
-              </Grid.Column>
-            </Grid.Row>
-            <Grid.Row>
-            </Grid.Row>
-          </Grid>
-          <PieChart
-              viewBoxSize={[100, 65]}
-              center={[50, 25]}
-              data={pieChartData}
-              label={({dataEntry}) => `${dataEntry.title}`}
-              labelStyle={(index) => ({
-                fill: pieChartData[index].color,
-                fontSize: '3px',
-                fontFamily: 'sans-serif',
-              })}
-              lineWidth={65}
-              radius={27}
-              labelPosition={110}
-          />
-        </Segment>
+          </Grid.Column>
+        </Grid>
       </StyledSegment>
   );
 }
@@ -276,6 +269,18 @@ const styles = {
       padding: '30px 30px 20px',
       marginBottom: '40px'
     },
+    balanceTitle: {
+      alignSelf: 'center'
+    },
+    rowSegment: {
+      margin: '20px 10px',
+      width: '50%',
+      minHeight: '200px'
+    },
+    balanceHeader: {
+      fontSize: '1.0em',
+      color: 'rgb(119,137,220)',
+    },
     tradesHeader: {
       fontSize: '1.0em',
       color: 'rgb(169,142,227)',
@@ -284,13 +289,18 @@ const styles = {
       fontSize: '1.0em',
       color: 'rgb(184,126,206)',
     },
+    balanceColumn: {
+      fontSize: '1.2em',
+      color: '#3555c9',
+      fontWeight: '600',
+    },
     tradesColumn: {
-      fontSize: '1.4em',
+      fontSize: '1.2em',
       color: '#6435C9',
       fontWeight: '600',
     },
     positionsColumn: {
-      fontSize: '1.4em',
+      fontSize: '1.2em',
       color: '#A333C8',
       fontWeight: '600',
     },
