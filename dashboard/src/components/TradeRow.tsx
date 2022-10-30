@@ -42,7 +42,7 @@ function TradeRow(props: Props) {
   return (
         <Table.Row key={index} >
             <Table.Cell style={styles.defaultCell}>
-              <Label ribbon>{trade.mock ? "Demo" : "Live"}</Label>
+              <Label ribbon>{trade.mock ? "Test" : "Live"}</Label>
             </Table.Cell>
             <Table.Cell collapsing style={{...styles.defaultCell, color: DARK_YELLOW, fontWeight: '600'}}>
               {trade.symbol}

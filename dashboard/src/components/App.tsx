@@ -8,7 +8,17 @@ import {
     StartPipeline,
     StopPipeline, GetCurrentPrices, Message, UpdateMessage, DeletePipeline
 } from "../types";
-import {getTrades, getPipelines, getPositions, getResources, startBot, stopBot, getPrice, deleteBot} from "../apiCalls";
+import {
+    getTrades,
+    getPipelines,
+    getPositions,
+    getResources,
+    getFuturesAccountBalance,
+    startBot,
+    stopBot,
+    getPrice,
+    deleteBot,
+} from "../apiCalls";
 import {GREEN, RED, RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
 import MessageComponent from "./Message";
@@ -46,6 +56,7 @@ interface State {
     trades: Trade[];
     pipelines: Pipeline[];
     positions: Position[];
+    balances: Object
     menuOption: MenuOption,
     strategies: any
     symbols: string[],
@@ -67,6 +78,7 @@ class App extends Component<any, State> {
         pipelines: [],
         positions: [],
         strategies: {},
+        balances: {},
         menuOption: {
             icon: 'line graph',
             emoji: '📈',
@@ -102,15 +114,7 @@ class App extends Component<any, State> {
             })
             .catch()
 
-        getTrades()
-            .then(response => {
-                this.setState(state => {
-                    return {
-                        ...state,
-                        trades: organizeTrades(response.trades)
-                    }
-                })
-            })
+        this.updateTrades()
 
         getPipelines()
             .then(response => {
@@ -123,7 +127,7 @@ class App extends Component<any, State> {
                     }
                 })
 
-                this.getCurrentPrices()
+                // this.getCurrentPrices()
             })
 
         getPositions()
@@ -135,6 +139,8 @@ class App extends Component<any, State> {
                     }
                 })
             })
+
+        this.getAccountBalance()
 
         setInterval(() => {
             getTrades()
@@ -177,7 +183,7 @@ class App extends Component<any, State> {
         }
 
         if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'trades') {
-            this.getCurrentPrices()
+            this.updateTrades()
         }
     }
 
@@ -259,7 +265,7 @@ class App extends Component<any, State> {
     }
 
     getCurrentPrices: GetCurrentPrices = () => {
-        Promise.allSettled(
+        Array.isArray(this.state.symbols) && Promise.allSettled(
             this.state.symbols.map(symbol => getPrice(symbol))
         ).then(results => {
             this.setState({
@@ -270,6 +276,44 @@ class App extends Component<any, State> {
                 }, {})
             })
         })
+    }
+
+    balanceReducer = (balance: any, coin: { asset: string; balance: string; withdrawAvailable: string; }) => {
+        return {
+            ...balance,
+            [coin.asset]: {
+                totalBalance: Number(coin.balance),
+                availableBalance: Number(coin.withdrawAvailable)
+            }
+        }
+    }
+
+    getAccountBalance = () => {
+        getFuturesAccountBalance()
+          .then(response => {
+              this.setState(state => {
+                  return {
+                      ...state,
+                      balances: {
+                          live: response.live.reduce(this.balanceReducer, {}),
+                          test: response.testnet.reduce(this.balanceReducer, {})
+                      }
+                  }
+              })
+          })
+    }
+
+    updateTrades = () => {
+        getTrades()
+          .then(response => {
+              this.setState(state => {
+                  return {
+                      ...state,
+                      trades: organizeTrades(response.trades)
+                  }
+              })
+              this.getCurrentPrices()
+          })
     }
 
     updateMessage: UpdateMessage = (text, success) => {
@@ -283,13 +327,14 @@ class App extends Component<any, State> {
         }))
     }
 
-    render(){
+    render() {
 
         const {
             symbolsOptions,
             strategiesOptions,
             candleSizeOptions,
             exchangeOptions,
+            balances,
             trades,
             pipelines,
             positions,
@@ -329,6 +374,7 @@ class App extends Component<any, State> {
                     ) : menuOption.code === 'dashboard' && (
                         <Dashboard
                             menuOption={menuOption}
+                            balances={balances}
                             trades={trades}
                             positions={positions}
                             currentPrices={currentPrices}

@@ -46,7 +46,7 @@ function PipelineItem(props: Props) {
     const [open, setOpen] = useState(false)
 
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
-    const liveStr = pipeline.paperTrading ? "Demo" : "Live"
+    const liveStr = pipeline.paperTrading ? "Test" : "Live"
 
     const age = pipeline.openTime ? timeFormatterDate(pipeline.openTime) : "-"
 

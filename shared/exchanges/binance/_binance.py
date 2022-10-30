@@ -43,6 +43,4 @@ class BinanceHandler(Client):
 
         exchange_info = self.futures_exchange_info()
 
-        print(symbol)
-
         return get_symbol_or_raise_exception(exchange_info, symbol)

@@ -144,7 +144,7 @@ function PipelinePanel(props: Props) {
                         Live
                     </Button>
                     <Button onClick={() => filterLive(false)} secondary={!live}>
-                        Demo
+                        Test
                     </Button>
                 </Button.Group>
                 <NewPipeline
