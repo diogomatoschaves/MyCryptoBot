@@ -156,10 +156,10 @@ export const organizeTrades = (trades: RawTrade[]): Trade[] => {
     return {
       ...trade,
       openTime: new Date(Date.parse(trade.openTime)),
-      closeTime: trade.closeTime ? new Date(Date.parse(trade.closeTime)) : null,
+      closeTime: new Date(Date.parse(trade.closeTime)),
     }
   }).sort((a, b) => {
-    return b.openTime.getTime() - a.openTime.getTime()
+    return b.closeTime.getTime() - a.closeTime.getTime()
   })
 }
 

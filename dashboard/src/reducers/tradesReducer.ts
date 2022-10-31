@@ -3,11 +3,13 @@ import {Trade} from "../types";
 export const UPDATE_TRADES_STATISTICS = 'UPDATE_TRADES_STATISTICS'
 
 export const tradesReducerCallback = (metrics: any, trade: Trade) => {
+
+  const tradeTime = trade.closeTime.getTime() - trade.openTime.getTime()
+
   return {
     numberTrades: metrics.numberTrades + 1,
-    maxTradeDuration: trade.openTime < metrics.maxTradeDuration ? trade.openTime : metrics.maxTradeDuration,
-    totalTradeDuration: trade.closeTime ? trade.closeTime.getTime() - trade.openTime.getTime()
-      : new Date().getTime() - trade.openTime.getTime(),
+    maxTradeDuration: tradeTime > metrics.maxTradeDuration ? new Date(tradeTime) : metrics.maxTradeDuration,
+    totalTradeDuration: metrics.totalTradeDuration + tradeTime,
     winningTrades: trade.profitLoss && trade.profitLoss > 0 ? metrics.winningTrades + 1 : metrics.winningTrades,
     closedTrades: trade.profitLoss ? metrics.closedTrades + 1 : metrics.closedTrades,
     bestTrade: metrics.bestTrade ? trade.profitLoss && trade.profitLoss > metrics.bestTrade
@@ -18,7 +20,7 @@ export const tradesReducerCallback = (metrics: any, trade: Trade) => {
 }
 export const tradesReducerInitialState = {
   numberTrades: 0,
-  maxTradeDuration: 1E20,
+  maxTradeDuration: 0,
   totalTradeDuration: 0,
   winningTrades: 0,
   closedTrades: 0,
