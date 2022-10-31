@@ -285,7 +285,7 @@ function Dashboard(props: Props) {
                         Max trade duration
                       </Grid.Column>
                       <Grid.Column floated='right' style={styles.tradesColumn}>
-                        {timeFormatterDate(maxTradeDuration)}
+                        {timeFormatterDiff(maxTradeDuration)}
                       </Grid.Column>
                     </Grid.Column>
                     <Grid.Column>
