@@ -145,7 +145,7 @@ function Dashboard(props: Props) {
                   {Object.keys(balances).map(account => (
                     <Grid.Row>
                       <Grid.Column style={styles.balanceTitle}>
-                        <Label color='blue' size="large">
+                        <Label basic color='blue' size="large">
                           {account}
                         </Label>
                       </Grid.Column>
