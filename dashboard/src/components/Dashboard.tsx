@@ -1,5 +1,5 @@
 import {Grid, Header, Label, Segment} from "semantic-ui-react";
-import {MenuOption, Position, Trade} from "../types";
+import {MenuOption, Pipeline, Position, Trade} from "../types";
 import {StyledSegment} from "../styledComponents";
 import {useEffect, useReducer, useRef} from "react";
 import {timeFormatterDate, timeFormatterDiff} from "../utils/helpers";
@@ -17,11 +17,18 @@ import {
   positionsReducerInitialState,
   UPDATE_POSITIONS_STATISTICS
 } from "../reducers/positionsReducer";
+import {
+  pipelinesReducer,
+  pipelinesReducerCallback,
+  pipelinesReducerInitialState,
+  UPDATE_PIPELINES_STATISTICS
+} from "../reducers/pipelinesReducer";
 
 
 interface Props {
   menuOption: MenuOption,
   balances: Object,
+  pipelines: Pipeline[],
   trades: Trade[],
   positions: Position[],
   currentPrices: Object
@@ -30,9 +37,9 @@ interface Props {
 
 function Dashboard(props: Props) {
 
-  const { menuOption, balances, trades, positions, currentPrices } = props
+  const { menuOption, balances, pipelines, trades, positions, currentPrices } = props
 
-  const previous = useRef({trades, positions, currentPrices}).current;
+  const previous = useRef({trades, positions, pipelines, currentPrices}).current;
 
   const [{
     numberTrades,
@@ -55,10 +62,25 @@ function Dashboard(props: Props) {
       positionsReducer, positions.reduce(positionsReducerCallback(currentPrices), positionsReducerInitialState)
   );
 
+  const [{
+    totalPipelines,
+    activePipelines,
+    bestWinRate,
+    mostTrades
+  }, pipelinesDispatch] = useReducer(
+    pipelinesReducer, pipelines.reduce(pipelinesReducerCallback(trades), pipelinesReducerInitialState)
+  )
+
   useEffect(() => {
     if (trades !== previous.trades) {
       tradesDispatch({
         type: UPDATE_TRADES_STATISTICS,
+        trades
+      })
+
+      pipelinesDispatch({
+        type: UPDATE_PIPELINES_STATISTICS,
+        pipelines,
         trades
       })
     }
@@ -70,12 +92,21 @@ function Dashboard(props: Props) {
         currentPrices
       })
     }
+
+    if (pipelines != previous.pipelines) {
+      pipelinesDispatch({
+        type: UPDATE_PIPELINES_STATISTICS,
+        pipelines,
+        trades
+      })
+    }
     return () => {
       previous.trades = trades
       previous.positions = positions
+      previous.pipelines = pipelines
       previous.currentPrices = currentPrices
     };
-  }, [trades, positions, currentPrices]);
+  }, [trades, positions, pipelines, currentPrices]);
 
   const avgTradeDuration = totalTradeDuration / numberTrades
   const winRate = winningTrades / closedTrades * 100
@@ -140,8 +171,49 @@ function Dashboard(props: Props) {
                   ))}
                 </Grid>
               </Segment>
-              <div style={{...styles.rowSegment}}>
-              </div>
+              <Segment secondary raised style={styles.rowSegment}>
+                <Header size={'medium'} color="purple">
+                  Trading Bots
+                </Header>
+                <Grid columns={2}>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <Grid.Column style={styles.tradesHeader}>
+                        # trading bots
+                      </Grid.Column>
+                      <Grid.Column style={styles.tradesColumn} >
+                        {totalPipelines}
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column floated='left' style={styles.tradesHeader}>
+                        # active trading bots
+                      </Grid.Column>
+                      <Grid.Column floated='right' style={styles.tradesColumn}>
+                        {activePipelines}
+                      </Grid.Column>
+                    </Grid.Column>
+                  </Grid.Row>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <Grid.Column floated='left' style={styles.tradesHeader}>
+                        Best Win Rate
+                      </Grid.Column>
+                      <Grid.Column floated='right' style={styles.tradesColumn} >
+                        <Label color={bestWinRate.color}>{bestWinRate.name}</Label>
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column style={styles.tradesHeader}>
+                        Most Trades
+                      </Grid.Column>
+                      <Grid.Column style={styles.tradesColumn}>
+                        <Label color={mostTrades.color}>{mostTrades.name}</Label>
+                      </Grid.Column>
+                    </Grid.Column>
+                  </Grid.Row>
+                </Grid>
+              </Segment>
             </Grid.Row>
             <Grid.Row style={{width: '100%'}} className="flex-row">
               <Segment secondary raised style={{...styles.rowSegment}}>
