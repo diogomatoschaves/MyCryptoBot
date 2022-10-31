@@ -245,5 +245,5 @@ class Trade(models.Model):
             amount=self.amount,
             side=self.side,
             mock=self.mock,
-            pipeline_id=self.pipeline.id if self.pipeline else None,
+            pipelineId=self.pipeline.id if self.pipeline else None,
         )
