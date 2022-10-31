@@ -375,6 +375,7 @@ class App extends Component<any, State> {
                         <Dashboard
                             menuOption={menuOption}
                             balances={balances}
+                            pipelines={pipelines}
                             trades={trades}
                             positions={positions}
                             currentPrices={currentPrices}
