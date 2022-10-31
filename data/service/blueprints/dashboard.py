@@ -48,7 +48,7 @@ def get_trades(page):
 
     response = {}
 
-    orders = Trade.objects.all().order_by('open_time')
+    orders = Trade.objects.filter(close_time__isnull=False).order_by('open_time')
 
     paginator = Paginator(orders, 20)
 
