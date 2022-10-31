@@ -26,16 +26,21 @@ function TradeRow(props: Props) {
   const color = negative ? RED : GREEN
 
   const amount = Number(trade.amount)
-  const price = Number(trade.openPrice)
+  const openPrice = Number(trade.openPrice)
+  const closePrice = Number(trade.closePrice)
 
-  const pnl = trade.profitLoss ?
-      (trade.profitLoss * 100).toFixed(2) :
-      // @ts-ignore
-      currentPrices[trade.symbol] ? getPnl(trade.openPrice, currentPrices[trade.symbol], trade.side) : 0
+  let pnl, pnlColor
+  if (trade.profitLoss !== null) {
+    pnlColor = trade.profitLoss > 0 ? GREEN : RED
+    pnl = (trade.profitLoss * 100).toFixed(2)
+  } else {
+    pnlColor = '#000000'
+    pnl = '-'
+  }
 
-  const pnlColor = pnl > 0 ? GREEN : RED
-
-  const decimalPlaces = 3
+  // TODO: In the future receive this information from the database
+  const quoteDecimal = 1
+  const baseDecimal = 3
 
   const duration = timeFormatterDate(trade.openTime, trade.closeTime && trade.closeTime)
 
@@ -56,10 +61,15 @@ function TradeRow(props: Props) {
             </Table.Cell>
             <Table.Cell style={{color, fontWeight: '600'}}>{side}</Table.Cell>
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell}}>
-              {amount.toFixed(decimalPlaces)}
+              {amount.toFixed(baseDecimal)}
+            </Table.Cell>
+            <Table.Cell>
             </Table.Cell>
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell}}>
-              {price.toFixed(decimalPlaces)}
+              {openPrice.toFixed(quoteDecimal)}
+            </Table.Cell>
+            <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell}}>
+              {closePrice.toFixed(quoteDecimal)}
             </Table.Cell>
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell, color: pnlColor}}>
               {pnl && `${pnl}%`}

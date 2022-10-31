@@ -23,6 +23,7 @@ const StyledDiv = styled.div`
 `
 
 const FILTER_TRADES = 'FILTER_TRADES'
+const TOGGLE_OPTIONS = 'TOGGLE_OPTIONS'
 
 
 const reducer = (state: any, action: any) => {
@@ -30,13 +31,29 @@ const reducer = (state: any, action: any) => {
         case FILTER_TRADES:
             return {
                 ...state,
-                openTrades: action.trades.filter((trade: Trade) => !trade.closeTime),
-                closedTrades: action.trades.filter((trade: Trade) => trade.closeTime),
+                liveTrades: action.trades.filter((trade: Trade) => !trade.mock),
+                testTrades: action.trades.filter((trade: Trade) => trade.mock),
+            }
+        case TOGGLE_OPTIONS:
+            console.log(action)
+            return {
+                ...state,
+                options: {
+                    live: action.live !== undefined ? action.live : state.options.live,
+                    test: action.test !== undefined ? action.test : state.options.test,
+                }
             }
         default:
             throw new Error();
     }
 }
+
+
+const initialOptions = {
+    live: true,
+    test: true
+}
+
 
 function TradesPanel(props: Props) {
 
@@ -44,12 +61,11 @@ function TradesPanel(props: Props) {
 
     const previous = useRef({trades}).current;
 
-    const [open, setOpenOrClosed] = useState(true)
-
-    const [{openTrades, closedTrades}, dispatch] = useReducer(
+    const [{liveTrades, testTrades, options}, dispatch] = useReducer(
         reducer, {
-            openTrades: trades.filter((trade: Trade) => !trade.closeTime),
-            closedTrades: trades.filter((trade: Trade) => trade.closeTime),
+          liveTrades: trades.filter((trade: Trade) => !trade.mock),
+          testTrades: trades.filter((trade: Trade) => trade.mock),
+          options: initialOptions
         }
     );
 
@@ -72,32 +88,44 @@ function TradesPanel(props: Props) {
                 {menuOption.text}
             </Header>
             <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                <Button onClick={() => setOpenOrClosed(true)} secondary={open}>Open</Button>
-                <Button onClick={() => setOpenOrClosed(false)} secondary={!open}>Closed</Button>
+                {Object.keys(initialOptions).map(option =>
+                    <Button onClick={() => dispatch({
+                        type: TOGGLE_OPTIONS,
+                        [option]: !options[option]
+                    })} color={options && options[option] && 'grey'}>
+                        {option}
+                    </Button>
+                )}
             </Button.Group>
             <Table basic='very' size="small" compact striped>
                 <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>Type </Table.HeaderCell>
-                        <Table.HeaderCell>Asset</Table.HeaderCell>
+                        <Table.HeaderCell>Symbol</Table.HeaderCell>
                         <Table.HeaderCell>Opened</Table.HeaderCell>
                         <Table.HeaderCell>Duration</Table.HeaderCell>
                         <Table.HeaderCell>Side</Table.HeaderCell>
                         <Table.HeaderCell>Amount</Table.HeaderCell>
-                        <Table.HeaderCell>Buying Price</Table.HeaderCell>
+                        <Table.HeaderCell>Leverage</Table.HeaderCell>
+                        <Table.HeaderCell>Entry Price</Table.HeaderCell>
+                        <Table.HeaderCell>Exit Price</Table.HeaderCell>
                         <Table.HeaderCell>Net Profit</Table.HeaderCell>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {open ? (
-                        openTrades.map((trade: Trade, index: number) => {
+                    {options.live && options.test ? (
+                        trades.map((trade: Trade, index: number) => {
                             return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
                         })
-                    ) : (
-                        closedTrades.map((trade: Trade, index: number) => {
+                    ) : options.live ? (
+                        liveTrades.map((trade: Trade, index: number) => {
                             return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
                         })
-                    )}
+                    ) : options.test ? (
+                        testTrades.map((trade: Trade, index: number) => {
+                            return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
+                        })
+                    ) : (<div/>)}
                 </Table.Body>
             </Table>
         </StyledDiv>
