@@ -28,8 +28,6 @@ interface Props {
     startPipeline: StartPipeline
     stopPipeline: StopPipeline
     deletePipeline: DeletePipeline
-    live: boolean
-    active: boolean
 }
 
 
@@ -40,7 +38,6 @@ function PipelineItem(props: Props) {
         startPipeline,
         stopPipeline,
         deletePipeline,
-        active
     } = props
 
     const [open, setOpen] = useState(false)
@@ -86,7 +83,7 @@ function PipelineItem(props: Props) {
                                 </Grid.Column>
                                 <Grid.Column width={3}>
                                     <Grid.Column floated='left' style={styles.header}>
-                                        Time running {!active && '(All time)'}
+                                        Time running {!pipeline.active && '(All time)'}
                                     </Grid.Column>
                                     <Grid.Column floated='right' style={styles.rightColumn} >
                                         {age}
@@ -165,7 +162,7 @@ function PipelineItem(props: Props) {
                                 </Grid.Column>
                                 <Grid.Column width={3}>
                                     <Grid.Column floated='left' style={styles.header}>
-                                        Profit / Loss {!active && '(All time)'}
+                                        Profit / Loss {!pipeline.active && '(All time)'}
                                     </Grid.Column>
                                     <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
                                         {pnl}
@@ -195,7 +192,7 @@ function PipelineItem(props: Props) {
                                 </Grid.Column>
                                 <Grid.Column width={4}>
                                     <Grid.Column floated='right' style={{...styles.rightColumn, fontSize: '1.2em'}} >
-                                        <Label>{liveStr}</Label>
+                                        <Label color='blue' basic>{liveStr}</Label>
                                     </Grid.Column>
                                 </Grid.Column>
                                 <Grid.Column width={3}>
