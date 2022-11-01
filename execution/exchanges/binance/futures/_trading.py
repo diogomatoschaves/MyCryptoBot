@@ -68,7 +68,10 @@ class BinanceFuturesTrader(BinanceTrader):
 
         logging.info(header + f"Closing position for symbol: {symbol}")
 
-        self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
+        try:
+            self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
+        except NoUnits:
+            pass
 
         self.symbols.pop(symbol)
 
