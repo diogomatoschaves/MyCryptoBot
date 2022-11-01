@@ -12,7 +12,7 @@ import {
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
 import styled from "styled-components";
-import {useEffect, useReducer, useRef, useState} from "react";
+import {useEffect, useReducer, useRef} from "react";
 
 
 interface Props {
@@ -37,30 +37,42 @@ const ButtonWrapper = styled.div`
 `
 
 const FILTER_PIPELINES = 'FILTER_PIPELINES'
+const TOGGLE_OPTIONS = 'TOGGLE_OPTIONS'
 
 
 const reducer = (state: any, action: any) => {
     switch (action.type) {
         case FILTER_PIPELINES:
-            const { pipelines } = action
+            const { pipelines, options: {active, stopped, live, test} } = action
+
             return {
                 ...state,
-                liveActivePipelines: pipelines.filter(
-                    (pipeline: Pipeline) => pipeline.active && !pipeline.paperTrading
-                ),
-                demoActivePipelines: pipelines.filter(
-                    (pipeline: Pipeline) => pipeline.active && pipeline.paperTrading
-                ),
-                liveStoppedPipelines: pipelines.filter(
-                    (pipeline: Pipeline) => !pipeline.active && !pipeline.paperTrading)
-                ,
-                demoStoppedPipelines: pipelines.filter(
-                    (pipeline: Pipeline) => !pipeline.active && pipeline.paperTrading
-                ),
+                filteredPipelines: pipelines.filter((pipeline: Pipeline) => {
+                    return ((pipeline.active === active && active) || (pipeline.active === !stopped && stopped))
+                    && ((pipeline.paperTrading === test && test) || (pipeline.paperTrading === !live && live))
+                })
+            }
+        case TOGGLE_OPTIONS:
+            return {
+                ...state,
+                options: {
+                    live: action.live !== undefined ? action.live : state.options.live,
+                    test: action.test !== undefined ? action.test : state.options.test,
+                    active: action.active !== undefined ? action.active : state.options.active,
+                    stopped: action.stopped !== undefined ? action.stopped : state.options.stopped,
+                }
             }
         default:
             throw new Error();
     }
+}
+
+
+const initialOptions = {
+    live: true,
+    test: true,
+    active: true,
+    stopped: true
 }
 
 function PipelinePanel(props: Props) {
@@ -79,50 +91,33 @@ function PipelinePanel(props: Props) {
         menuOption
     } = props
 
-    const previous = useRef({ pipelines }).current;
-
-    const [live, filterLive] = useState(true)
-    const [active, filterActive] = useState(true)
-
     const [
         {
-            liveActivePipelines,
-            demoActivePipelines,
-            liveStoppedPipelines,
-            demoStoppedPipelines,
+            filteredPipelines,
+            options
         }, dispatch
     ] = useReducer(
         reducer, {
-            liveActivePipelines: pipelines.filter(
-                (pipeline: Pipeline) => pipeline.active && !pipeline.paperTrading
-            ),
-            demoActivePipelines: pipelines.filter(
-                (pipeline: Pipeline) => pipeline.active && pipeline.paperTrading
-            ),
-            liveStoppedPipelines: pipelines.filter(
-                (pipeline: Pipeline) => !pipeline.active && !pipeline.paperTrading)
-            ,
-            demoStoppedPipelines: pipelines.filter(
-                (pipeline: Pipeline) => !pipeline.active && pipeline.paperTrading
-            ),
+            filteredPipelines: pipelines,
+            options: initialOptions
         }
     );
 
+    const previous = useRef({ pipelines, options }).current;
+
     useEffect(() => {
-        if (pipelines !== previous.pipelines) {
-            console.log("pipelines updated")
+        if (pipelines !== previous.pipelines || options !== previous.options) {
             dispatch({
                 type: FILTER_PIPELINES,
-                pipelines
+                pipelines,
+                options
             })
         }
         return () => {
             previous.pipelines = pipelines
+            previous.options = options
         };
-    }, [pipelines]);
-
-    const filteredPipelines = (live && active) ? liveActivePipelines : (live && !active) ? liveStoppedPipelines :
-        (!live && active) ? demoActivePipelines : demoStoppedPipelines
+    }, [pipelines, options]);
 
     return (
         <StyledSegment basic className="flex-column">
@@ -132,20 +127,24 @@ function PipelinePanel(props: Props) {
             </Header>
             <ButtonWrapper className="flex-row">
                 <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                    <Button onClick={() => filterActive(true)} secondary={active}>
-                        Running
-                    </Button>
-                    <Button onClick={() => filterActive(false)} secondary={!active}>
-                        Stopped
-                    </Button>
+                    {['live', 'test'].map((option, index) => (
+                        <Button key={index} onClick={() => dispatch({
+                            type: TOGGLE_OPTIONS,
+                            [option]: !options[option]
+                        })} color={options && options[option] && 'grey'}>
+                            {option}
+                        </Button>
+                    ))}
                 </Button.Group>
                 <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                    <Button onClick={() => filterLive(true)} secondary={live}>
-                        Live
-                    </Button>
-                    <Button onClick={() => filterLive(false)} secondary={!live}>
-                        Test
-                    </Button>
+                    {['active', 'stopped'].map((option, index) => (
+                      <Button key={index} onClick={() => dispatch({
+                          type: TOGGLE_OPTIONS,
+                          [option]: !options[option]
+                      })} color={options && options[option] && 'grey'}>
+                          {option}
+                      </Button>
+                    ))}
                 </Button.Group>
                 <NewPipeline
                     strategies={strategies}
@@ -157,14 +156,13 @@ function PipelinePanel(props: Props) {
                     updateMessage={updateMessage}
                 />
             </ButtonWrapper>
-            {filteredPipelines.map((pipeline: Pipeline) => (
+            {filteredPipelines.map((pipeline: Pipeline, index: number) => (
                 <PipelineItem
+                    key={index}
                     startPipeline={startPipeline}
                     stopPipeline={stopPipeline}
                     deletePipeline={deletePipeline}
                     pipeline={pipeline}
-                    live={live}
-                    active={active}
                 />
             ))}
             {filteredPipelines.length === 0 && (

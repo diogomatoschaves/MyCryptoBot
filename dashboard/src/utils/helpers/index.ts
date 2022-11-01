@@ -139,14 +139,16 @@ export const validateParams = (params: any, strategy: any) => {
   }
 }
 
+export const organizePipeline = (pipeline: RawPipeline) => {
+  return {
+    ...pipeline,
+    openTime: pipeline.openTime ? new Date(Date.parse(pipeline.openTime)) : null,
+  }
+}
+
 
 export const organizePipelines = (pipelines: RawPipeline[]): Pipeline[] => {
-  return pipelines.map((pipeline) => {
-    return {
-      ...pipeline,
-      openTime: pipeline.openTime ? new Date(Date.parse(pipeline.openTime)) : null,
-    }
-  })
+  return pipelines.map(organizePipeline)
 }
 
 
