@@ -24,7 +24,7 @@ import Menu from "./Menu";
 import MessageComponent from "./Message";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
-import {organizeTrades, organizePositions, organizePipelines} from "../utils/helpers";
+import {organizeTrades, organizePositions, organizePipelines, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import {Box, Wrapper} from "../styledComponents";
 import Dashboard from "./Dashboard";
@@ -203,7 +203,7 @@ class App extends Component<any, State> {
                             state.pipelines.reduce((pipelines: Pipeline[], pipeline: Pipeline) => {
                                 return [
                                     ...pipelines,
-                                    pipeline.id === response.pipeline.id ? response.pipeline : pipeline]
+                                    pipeline.id === response.pipeline.id ? organizePipeline(response.pipeline) : pipeline]
                             }, [])) : (
                                 [...state.pipelines, ...organizePipelines([response.pipeline])]
                             ) : state.pipelines
@@ -363,7 +363,11 @@ class App extends Component<any, State> {
                             updateMessage={this.updateMessage}
                         />
                     ) : menuOption.code === 'trades' ? (
-                        <TradesPanel menuOption={menuOption} trades={trades} currentPrices={currentPrices}/>
+                        <TradesPanel
+                          menuOption={menuOption}
+                          trades={trades}
+                          pipelines={pipelines}
+                          currentPrices={currentPrices}/>
                     ) : menuOption.code === 'positions' ? (
                         <PositionsPanel
                             menuOption={menuOption}
