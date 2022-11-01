@@ -1,12 +1,13 @@
-import {MenuOption, Trade} from "../types";
-import {Button, Divider, Header, Icon, Table} from "semantic-ui-react";
+import {MenuOption, Pipeline, Trade} from "../types";
+import {Button, Header, Table} from "semantic-ui-react";
 import TradeRow from './TradeRow'
 import styled from "styled-components";
-import {useEffect, useReducer, useRef, useState} from "react";
+import {useEffect, useReducer, useRef} from "react";
 
 
 interface Props {
     trades: Trade[]
+    pipelines: Pipeline[]
     menuOption: MenuOption
     currentPrices: Object
 }
@@ -24,24 +25,39 @@ const StyledDiv = styled.div`
 
 const FILTER_TRADES = 'FILTER_TRADES'
 const TOGGLE_OPTIONS = 'TOGGLE_OPTIONS'
+const UPDATE_PIPELINES_OBJECT = 'UPDATE_PIPELINES_OBJECT'
 
 
 const reducer = (state: any, action: any) => {
     switch (action.type) {
         case FILTER_TRADES:
+
+            const { trades, options: {test, live} } = action
+
             return {
                 ...state,
-                liveTrades: action.trades.filter((trade: Trade) => !trade.mock),
-                testTrades: action.trades.filter((trade: Trade) => trade.mock),
+                filteredTrades: trades.filter((trade: Trade) => {
+                    return (trade.mock === test && test) || (trade.mock === !live && live)
+                })
             }
         case TOGGLE_OPTIONS:
-            console.log(action)
             return {
                 ...state,
                 options: {
                     live: action.live !== undefined ? action.live : state.options.live,
                     test: action.test !== undefined ? action.test : state.options.test,
                 }
+            }
+        case UPDATE_PIPELINES_OBJECT:
+            const {pipelines} = action
+            return {
+                ...state,
+                pipelinesObject: pipelines.reduce((pipelinesObject: Object, pipeline: Pipeline) => {
+                    return {
+                        ...pipelinesObject,
+                        [pipeline.id]: pipeline
+                    }
+                }, {})
             }
         default:
             throw new Error();
@@ -57,29 +73,44 @@ const initialOptions = {
 
 function TradesPanel(props: Props) {
 
-    const { trades, menuOption, currentPrices } = props
+    const { trades, pipelines, menuOption, currentPrices } = props
 
-    const previous = useRef({trades}).current;
-
-    const [{liveTrades, testTrades, options}, dispatch] = useReducer(
+    const [{filteredTrades, options, pipelinesObject}, dispatch] = useReducer(
         reducer, {
-          liveTrades: trades.filter((trade: Trade) => !trade.mock),
-          testTrades: trades.filter((trade: Trade) => trade.mock),
-          options: initialOptions
+          filteredTrades: trades,
+          options: initialOptions,
+          pipelinesObject: pipelines.reduce((pipelinesObject: Object, pipeline: Pipeline) => {
+              return {
+                  ...pipelinesObject,
+                  [pipeline.id]: pipeline
+              }
+          }, {})
         }
     );
 
+    const previous = useRef({trades, options, pipelines}).current;
+
     useEffect(() => {
-        if (trades !== previous.trades) {
+        if (trades !== previous.trades || options !== previous.options) {
             dispatch({
                 type: FILTER_TRADES,
-                trades
+                trades,
+                options
+            })
+        }
+
+        if (pipelines !== previous.pipelines) {
+            dispatch({
+                type: UPDATE_PIPELINES_OBJECT,
+                pipelines
             })
         }
         return () => {
             previous.trades = trades
+            previous.options = options
+            previous.pipelines = pipelines
         };
-    }, [trades]);
+    }, [trades, options, pipelines]);
 
     return (
         <StyledDiv className="flex-column">
@@ -100,9 +131,10 @@ function TradesPanel(props: Props) {
             <Table basic='very' size="small" compact striped>
                 <Table.Header>
                     <Table.Row>
-                        <Table.HeaderCell>Type </Table.HeaderCell>
+                        <Table.HeaderCell>Mode</Table.HeaderCell>
+                        <Table.HeaderCell>Trading Bot</Table.HeaderCell>
                         <Table.HeaderCell>Symbol</Table.HeaderCell>
-                        <Table.HeaderCell>Opened</Table.HeaderCell>
+                        <Table.HeaderCell>Opened On</Table.HeaderCell>
                         <Table.HeaderCell>Duration</Table.HeaderCell>
                         <Table.HeaderCell>Side</Table.HeaderCell>
                         <Table.HeaderCell>Amount</Table.HeaderCell>
@@ -113,19 +145,15 @@ function TradesPanel(props: Props) {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {options.live && options.test ? (
-                        trades.map((trade: Trade, index: number) => {
-                            return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
-                        })
-                    ) : options.live ? (
-                        liveTrades.map((trade: Trade, index: number) => {
-                            return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
-                        })
-                    ) : options.test ? (
-                        testTrades.map((trade: Trade, index: number) => {
-                            return <TradeRow index={index} trade={trade} currentPrices={currentPrices}/>
-                        })
-                    ) : (<div/>)}
+                    {filteredTrades.map((trade: Trade, index: number) => (
+                      <TradeRow
+                        key={index}
+                        index={index}
+                        trade={trade}
+                        pipeline={pipelinesObject[trade.pipelineId]}
+                        currentPrices={currentPrices}
+                      />
+                    ))}
                 </Table.Body>
             </Table>
         </StyledDiv>
