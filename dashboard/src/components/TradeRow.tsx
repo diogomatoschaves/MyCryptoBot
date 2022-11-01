@@ -1,4 +1,4 @@
-import {Trade} from "../types";
+import {Pipeline, Trade} from "../types";
 import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import {getPnl, timeFormatterDate} from "../utils/helpers";
@@ -8,6 +8,7 @@ import React from "react";
 interface Props {
     index: number
     trade: Trade,
+    pipeline: Pipeline
     currentPrices: Object
 }
 
@@ -17,7 +18,7 @@ const dateStringOptions = {day: 'numeric', month: 'short', year: 'numeric', hour
 
 function TradeRow(props: Props) {
 
-  const { trade, index, currentPrices } = props
+  const { trade, pipeline, index } = props
 
   const negative = trade.side === -1
 
@@ -49,6 +50,12 @@ function TradeRow(props: Props) {
             <Table.Cell style={styles.defaultCell}>
               <Label ribbon>{trade.mock ? "Test" : "Live"}</Label>
             </Table.Cell>
+          <Table.Cell style={styles.defaultCell}>
+              {/*@ts-ignore*/}
+            {pipeline && (
+              <Label color={pipeline.color as any}>{pipeline.name}</Label>
+            )}
+          </Table.Cell>
             <Table.Cell collapsing style={{...styles.defaultCell, color: DARK_YELLOW, fontWeight: '600'}}>
               {trade.symbol}
             </Table.Cell>
