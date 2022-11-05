@@ -1,5 +1,5 @@
-import React, {useReducer, useState} from 'react';
-import {Button, Checkbox, Dropdown, Grid, Header, Icon, Input, Modal} from "semantic-ui-react";
+import React, {useReducer, useState, Fragment} from 'react';
+import {Button, Checkbox, Dropdown, Grid, Header, Icon, Input, Modal, Popup} from "semantic-ui-react";
 import {DropdownOptions, StartPipeline, UpdateMessage} from "../types";
 import {validateParams, validatePipelineCreation} from "../utils/helpers";
 import MessageComponent from "./Message";
@@ -216,7 +216,19 @@ const NewPipeline = (props: Props) => {
               open={strategy && secondModalOpen}
               size="small"
             >
-              <Modal.Header>{strategy && strategiesOptions[strategy - 1].text}</Modal.Header>
+              <Modal.Header>
+                {strategy && (
+                  <Fragment>
+                    {strategiesOptions[strategy - 1].text}
+                    <Popup
+                      content={chosenStrategy.info}
+                      header={`${chosenStrategy.name} Strategy`}
+                      position='right center'
+                      trigger={<Icon name='info circle' style={{marginLeft: '10px'}}/>}
+                    />
+                  </Fragment>
+                )}
+              </Modal.Header>
               <Modal.Content scrolling>
                 {strategy && (
                   <Grid columns={2}>
