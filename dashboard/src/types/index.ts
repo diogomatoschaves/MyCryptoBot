@@ -102,7 +102,6 @@ export type Position = {
     closeTime: Date
 }
 
-
 export type RawPosition = {
     position: number,
     symbol: string,
@@ -132,6 +131,21 @@ export type Message = {
     bottomProp: number,
     color: string,
     success: boolean
+}
+
+
+export type Balance = {
+    availableBalance: number,
+    totalBalance: number
+}
+
+export type BalanceObj = {
+    live: {
+        USDT: Balance
+    },
+    test: {
+        USDT: Balance
+    }
 }
 
 export type StartPipeline = (pipelineParams: PipelineParams) => void

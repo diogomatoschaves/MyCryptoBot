@@ -7,7 +7,7 @@ import {
     Pipeline,
     MenuOption,
     UpdateMessage,
-    DeletePipeline
+    DeletePipeline, BalanceObj
 } from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
@@ -21,6 +21,7 @@ interface Props {
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
     pipelines: Pipeline[];
+    balances: BalanceObj;
     startPipeline: StartPipeline;
     stopPipeline: StopPipeline;
     deletePipeline: DeletePipeline;
@@ -81,6 +82,7 @@ function PipelinePanel(props: Props) {
         symbolsOptions,
         strategiesOptions,
         pipelines,
+        balances,
         strategies,
         candleSizeOptions,
         exchangeOptions,
@@ -148,6 +150,7 @@ function PipelinePanel(props: Props) {
                 </Button.Group>
                 <NewPipeline
                     strategies={strategies}
+                    balances={balances}
                     symbolsOptions={symbolsOptions}
                     strategiesOptions={strategiesOptions}
                     candleSizeOptions={candleSizeOptions}
