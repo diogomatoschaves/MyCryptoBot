@@ -347,14 +347,14 @@ STRATEGIES = {
     'BollingerBands': {
         "name": "Bollinger Bands",
         "params": ["ma", "sd"],
-        "optional_params": []
+        "optionalParams": []
     },
     'MachineLearning': {
         "name": "Machine Learning",
         "params": [
             "estimator",
         ],
-        "optional_params": [
+        "optionalParams": [
             "lag_features",
             "rolling_features",
             "excluded_features",
@@ -368,21 +368,21 @@ STRATEGIES = {
     'Momentum': {
         "name": "Momentum",
         "params": ["window"],
-        "optional_params": []
+        "optionalParams": []
     },
     'MovingAverageConvergenceDivergence': {
         "name": "Moving Average Convergence Divergence",
         "params": ["window_slow", "window_fast", "window_signal"],
-        "optional_params": []
+        "optionalParams": []
     },
     'MovingAverage': {
         "name": "Moving Average",
         "params": ["ma"],
-        "optional_params": ["moving_av"]
+        "optionalParams": ["moving_av"]
     },
     'MovingAverageCrossover': {
         "name": "Moving Average Crossover",
         "params": ["SMA_S", "SMA_L"],
-        "optional_params": ["moving_av"]
+        "optionalParams": ["moving_av"]
     },
 }
