@@ -1,6 +1,7 @@
 import functools
 import logging
 
+from binance.exceptions import BinanceAPIException
 from requests import ReadTimeout, ConnectionError
 
 
@@ -32,6 +33,9 @@ def retry_failed_connection(_func=None, *, num_times=3):
                 except ReadTimeout as e:
                     logging.warning(e)
                     retries = process_retry(retries, num_times, e, ReadTimeout)
+                except BinanceAPIException as e:
+                    logging.warning(e)
+                    retries = process_retry(retries, num_times, e, BinanceAPIException)
         return wrapper
 
     if _func is None:

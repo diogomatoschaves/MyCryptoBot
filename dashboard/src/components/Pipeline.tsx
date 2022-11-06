@@ -54,7 +54,7 @@ function PipelineItem(props: Props) {
     return (
         <PipelineDiv className="flex-row">
             <Segment
-                className={`light-${pipeline.color}`}
+                className={`light-pipeline-${pipeline.color}`}
                 style={styles.segment}
                 raised
             >
