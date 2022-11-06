@@ -6,7 +6,7 @@ import {
     DropdownOptions, MenuOption,
     Trade, Pipeline, PipelineParams, Position,
     StartPipeline,
-    StopPipeline, GetCurrentPrices, Message, UpdateMessage, DeletePipeline
+    StopPipeline, GetCurrentPrices, Message, UpdateMessage, DeletePipeline, BalanceObj
 } from "../types";
 import {
     getTrades,
@@ -56,7 +56,7 @@ interface State {
     trades: Trade[];
     pipelines: Pipeline[];
     positions: Position[];
-    balances: Object
+    balances: BalanceObj
     menuOption: MenuOption,
     strategies: any
     symbols: string[],
@@ -78,7 +78,10 @@ class App extends Component<any, State> {
         pipelines: [],
         positions: [],
         strategies: {},
-        balances: {},
+        balances: {
+            test: {USDT: {availableBalance: 0, totalBalance: 0}},
+            live: {USDT: {availableBalance: 0, totalBalance: 0}}
+        },
         menuOption: {
             icon: 'line graph',
             emoji: '📈',
@@ -357,6 +360,7 @@ class App extends Component<any, State> {
                             exchangeOptions={exchangeOptions}
                             pipelines={pipelines}
                             strategies={strategies}
+                            balances={balances}
                             startPipeline={this.startPipeline}
                             stopPipeline={this.stopPipeline}
                             deletePipeline={this.deletePipeline}
