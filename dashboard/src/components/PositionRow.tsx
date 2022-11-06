@@ -1,8 +1,9 @@
-import {Pipeline, Position} from "../types";
-import {Label, Table} from "semantic-ui-react";
+import {Decimals, Pipeline, Position} from "../types";
+import {Label, Table, Image} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import React from "react";
 import {getPnl, timeFormatterDate} from "../utils/helpers";
+import binanceLogo from '../utils/resources/binance.png'
 
 
 interface Props {
@@ -10,11 +11,12 @@ interface Props {
   position: Position;
   pipelines: Pipeline[]
   currentPrices: Object
+  decimals: Decimals
 }
 
 function PositionRow(props: Props) {
 
-  const { position, index, currentPrices, pipelines } = props
+  const { position, index, currentPrices, pipelines, decimals: {quoteDecimal, baseDecimal} } = props
 
   const negative = position.position === -1
   const positive = position.position === 1
@@ -23,10 +25,11 @@ function PositionRow(props: Props) {
 
   const age = timeFormatterDate(position.openTime)
 
-  const decimalPlaces = 3
+  // @ts-ignore
+  const markPrice = currentPrices[position.symbol]
 
   // @ts-ignore
-  const pnl = currentPrices[position.symbol] ? getPnl(position.price, currentPrices[position.symbol], position.position)
+  const pnl = markPrice ? getPnl(position.price, currentPrices[position.symbol], position.position)
       : 0
 
   const pnlColor = pnl > 0 ? GREEN : RED
@@ -37,7 +40,7 @@ function PositionRow(props: Props) {
   return (
       <Table.Row key={index}>
         <Table.Cell style={styles.defaultCell}>
-          <Label ribbon>{position.paperTrading ? "Demo" : "Live"}</Label>
+          <Label ribbon>{position.paperTrading ? "test" : "live"}</Label>
         </Table.Cell>
         <Table.Cell style={{...styles.defaultCell, fontWeight: 600}}>
           {/*@ts-ignore*/}
@@ -46,12 +49,14 @@ function PositionRow(props: Props) {
         <Table.Cell style={{fontWeight: 600, color: DARK_YELLOW}}>{position.symbol}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{age}</Table.Cell>
         <Table.Cell style={{color, fontWeight: '600'}}>{positionSide}</Table.Cell>
-        <Table.Cell style={styles.defaultCell}>{Number(position.amount).toFixed(decimalPlaces)}</Table.Cell>
-        <Table.Cell style={styles.defaultCell}>{Number(position.price).toFixed(decimalPlaces)}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{Number(position.amount).toFixed(baseDecimal)}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{Number(position.price).toFixed(quoteDecimal)}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{markPrice ? markPrice.toFixed(quoteDecimal) : '-'}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}></Table.Cell>
         <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell, color: pnlColor}}>
           {pnl && `${pnl}%`}
         </Table.Cell>
-        <Table.Cell style={styles.defaultCell}>{position.exchange}</Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{position.exchange === 'binance' && <Image src={binanceLogo} size='tiny'/>}</Table.Cell>
       </Table.Row>
   );
 }

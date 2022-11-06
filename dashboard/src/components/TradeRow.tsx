@@ -1,4 +1,4 @@
-import {Pipeline, Trade} from "../types";
+import {Decimals, Pipeline, Trade} from "../types";
 import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import {getPnl, timeFormatterDate} from "../utils/helpers";
@@ -10,6 +10,7 @@ interface Props {
     trade: Trade,
     pipeline: Pipeline
     currentPrices: Object
+    decimals: Decimals
 }
 
 
@@ -18,7 +19,7 @@ const dateStringOptions = {day: 'numeric', month: 'short', year: 'numeric', hour
 
 function TradeRow(props: Props) {
 
-  const { trade, pipeline, index } = props
+  const { trade, pipeline, index, decimals: {quoteDecimal, baseDecimal} } = props
 
   const negative = trade.side === -1
 
@@ -38,10 +39,6 @@ function TradeRow(props: Props) {
     pnlColor = '#000000'
     pnl = '-'
   }
-
-  // TODO: In the future receive this information from the database
-  const quoteDecimal = 1
-  const baseDecimal = 3
 
   const duration = timeFormatterDate(trade.openTime, trade.closeTime && trade.closeTime)
 
