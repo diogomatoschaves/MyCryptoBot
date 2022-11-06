@@ -1,5 +1,5 @@
 import {Grid, Header, Label, Segment} from "semantic-ui-react";
-import {MenuOption, Pipeline, Position, Trade} from "../types";
+import {BalanceObj, MenuOption, Pipeline, Position, Trade} from "../types";
 import {StyledSegment} from "../styledComponents";
 import {useEffect, useReducer, useRef} from "react";
 import {timeFormatterDate, timeFormatterDiff} from "../utils/helpers";
@@ -27,7 +27,7 @@ import {
 
 interface Props {
   menuOption: MenuOption,
-  balances: Object,
+  balances: BalanceObj,
   pipelines: Pipeline[],
   trades: Trade[],
   positions: Position[],

@@ -2,7 +2,7 @@ import importlib
 import inspect
 from typing import get_args
 
-from shared.utils.helpers import get_extended_name
+from shared.utils.helpers import get_extended_name, clean_docstring
 
 STRATEGIES_LOCATION = "model.strategies"
 
@@ -60,6 +60,7 @@ for name, cls in inspect.getmembers(importlib.import_module(STRATEGIES_LOCATION)
 
     STRATEGIES[name] = {
         "name": get_extended_name(name),
+        "info": clean_docstring(cls.__doc__),
         "params": required,
         "optionalParams": optional,
         "paramsOrder": required_ordering,
