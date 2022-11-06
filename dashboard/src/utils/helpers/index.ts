@@ -1,4 +1,5 @@
 import {
+  BalanceObj,
   DropdownOptions,
   Pipeline,
   Position,
@@ -8,6 +9,7 @@ import {
   StartPipeline,
   Trade
 } from "../../types";
+import {UPDATE_MESSAGE} from "../../reducers/modalReducer";
 
 export const validatePipelineCreation = async (
     {
@@ -25,7 +27,8 @@ export const validatePipelineCreation = async (
       startPipeline,
       dispatch,
       params,
-      liveTrading
+      liveTrading,
+      balance
     }: {
       name: string | undefined,
       allocation: string | undefined,
@@ -41,11 +44,12 @@ export const validatePipelineCreation = async (
       startPipeline: StartPipeline,
       dispatch: any,
       params: Object,
-      liveTrading: boolean
+      liveTrading: boolean,
+      balance: number
     }) => {
   if (!name || !color || !allocation || !symbol || !strategy || !candleSize || exchanges.length === 0) {
     dispatch({
-      type: "UPDATE_MESSAGE",
+      type: UPDATE_MESSAGE,
       message: {text: "All parameters must be specified.", success: false}
     })
     return false
@@ -55,11 +59,20 @@ export const validatePipelineCreation = async (
 
   if (!allocationNumber) {
     dispatch({
-      type: "UPDATE_MESSAGE",
-      message: {text: "Allocated capital must be a number.", success: false}
+      type: UPDATE_MESSAGE,
+      message: {text: "Equity must be a number.", success: false}
     })
     return false
   }
+
+  if (allocationNumber > balance) {
+    dispatch({
+      type: UPDATE_MESSAGE,
+      message: {text: `Chosen equity must be smaller than ${balance.toFixed(1)} USDT`, success: false}
+    })
+    return false
+  }
+
 
   startPipeline({
     symbol: symbol ? symbolsOptions[symbol - 1].text : "",

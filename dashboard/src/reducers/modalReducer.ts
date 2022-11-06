@@ -13,9 +13,9 @@ export const modalReducer = (state: any, action: any) => {
     case UPDATE_STRATEGY:
       return {
         ...state,
-        secondModalOpen: action.value && state.strategy !== action.value,
+        secondModalOpen: action.value !== null,
         strategy: action.value,
-        params: (state.secondModalOpen !== action.value && !state.secondModalOpen) ? {} : state.params
+        params: action.value === null ? {} : state.params
       }
     case UPDATE_SECOND_MODAL_OPEN:
       return {
@@ -52,9 +52,11 @@ export const modalReducer = (state: any, action: any) => {
         },
       }
     case UPDATE_CHECKBOX:
+      const liveTrading = action.value ? action.value : !state.liveTrading
       return {
         ...state,
-        liveTrading: action.value ? action.value : !state.liveTrading
+        liveTrading,
+        allocation: ""
       }
     case UPDATE_MESSAGE:
       return {
