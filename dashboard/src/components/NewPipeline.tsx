@@ -1,6 +1,6 @@
 import React, {useReducer, useState, Fragment} from 'react';
-import {Button, Checkbox, Dropdown, Grid, Header, Icon, Input, Modal, Popup} from "semantic-ui-react";
-import {DropdownOptions, StartPipeline, UpdateMessage} from "../types";
+import {Button, Checkbox, Dropdown, Grid, Header, Icon, Input, Modal, Popup, Form} from "semantic-ui-react";
+import {BalanceObj, DropdownOptions, StartPipeline, UpdateMessage} from "../types";
 import {validateParams, validatePipelineCreation} from "../utils/helpers";
 import MessageComponent from "./Message";
 import {COLORS_NAMES} from "../utils/constants";
@@ -25,6 +25,7 @@ interface Props {
   startPipeline: StartPipeline;
   updateMessage: UpdateMessage;
   strategies: any;
+  balances: BalanceObj
 }
 
 
@@ -47,7 +48,8 @@ const NewPipeline = (props: Props) => {
     candleSizeOptions,
     exchangeOptions,
     startPipeline,
-    strategies
+    strategies,
+    balances
   } = props
 
   const [open, setOpen] = useState(false)
@@ -66,6 +68,8 @@ const NewPipeline = (props: Props) => {
     message,
     secondaryMessage
   }, dispatch] = useReducer(modalReducer, initialState);
+
+  const availableBalance = liveTrading ? balances.live.USDT.availableBalance : balances.test.USDT.availableBalance
 
   const chosenStrategy = strategy && strategies[strategiesOptions[strategy - 1].text]
 
@@ -90,125 +94,123 @@ const NewPipeline = (props: Props) => {
       >
         <Modal.Header>New Trading Bot <span>🤖</span></Modal.Header>
         <Modal.Content >
-          <Grid columns={2}>
-            <Grid.Row >
-              <Grid.Column>
-                <Input
-                    placeholder='Name'
-                    value={name}
-                    onChange={(e: any, {value}: {value?: any}) => {
-                      dispatch({
-                        type: UPDATE_PARAMS,
-                        value: {name: value}
-                      })
-                    }}
-                />
-              </Grid.Column>
-              <Grid.Column>
-                <Input
-                    placeholder='Allocated capital'
-                    value={allocation}
-                    onChange={(e: any, {value}: {value?: any}) => {
-                      dispatch({
-                        type: UPDATE_PARAMS,
-                        value: {allocation: value}
-                      })
-                    }}
-                />
-              </Grid.Column>
-            </Grid.Row>
-            <Grid.Row>
-              <Grid.Column>
-                <Dropdown
-                    placeholder='Symbol'
-                    value={symbol}
-                    onChange={(e: any, {value}: {value?: any}) => {
-                      dispatch({
-                        type: UPDATE_PARAMS,
-                        value: {symbol: value}
-                      })
-                    }}
-                    search
-                    selection
-                    options={symbolsOptions}
-                    selectOnBlur={false}
-                />
-              </Grid.Column>
-              <Grid.Column>
-                <Dropdown
-                    placeholder='Candle size'
-                    value={candleSize}
-                    onChange={(e: any, {value}: {value?: any}) => {
-                      dispatch({
-                        type: UPDATE_PARAMS,
-                        value: {candleSize: value}
-                      })
-                    }}
-                    search
-                    selection
-                    options={candleSizeOptions}
-                    selectOnBlur={false}
-                />
-              </Grid.Column>
-            </Grid.Row>
-            <Grid.Row>
-              <Grid.Column>
-                <Dropdown
-                    placeholder='Exchange'
-                    value={exchanges}
-                    onChange={(e: any, {value}: {value?: any}) => {
-                      dispatch({
-                        type: UPDATE_PARAMS,
-                        value: {exchanges: value}
-                      })
-                    }}
-                    multiple
-                    search
-                    selection
-                    options={exchangeOptions}
-                    selectOnBlur={false}
-                />
-              </Grid.Column>
-              <Grid.Column>
-                <Dropdown
-                    placeholder='Strategy'
-                    value={strategy}
-                    onChange={(e: any, {value}: {value?: any}) => dispatch({
-                      type: UPDATE_STRATEGY,
-                      value,
-                    })}
-                    search
-                    selection
-                    options={strategiesOptions}
-                    selectOnBlur={false}
-                />
-              </Grid.Column>
-            </Grid.Row>
-            <Grid.Row>
-              <Grid.Column>
-                <Checkbox
-                  label={'📡 Live trading'}
-                  onChange={() => dispatch({type: UPDATE_CHECKBOX})}
-                  checked={liveTrading}
-                />
-              </Grid.Column>
-              <Grid.Column>
-                <Dropdown
-                    className={`light-${color}`}
-                    placeholder='Color'
-                    value={color}
-                    onChange={(e: any, {value}: {value?: any}) => {
-                      dispatch({
-                        type: UPDATE_PARAMS,
-                        value: {color: value}
-                      })
-                    }}
-                    selection
-                    options={colorOptions}
-                    selectOnBlur={false}
-                />
-              </Grid.Column>
-            </Grid.Row>
+          <Form>
+            <Form.Group widths={'equal'}>
+              <Form.Input
+                label={'Name'}
+                // placeholder='Name'
+                value={name}
+                onChange={(e: any, {value}: {value?: any}) => {
+                  dispatch({
+                    type: UPDATE_PARAMS,
+                    value: {name: value}
+                  })
+                }}
+                style={{width: '80%'}}
+              />
+              <Form.Input
+                label={'Equity'}
+                placeholder={`${availableBalance.toFixed(1)} USDT available`}
+                value={allocation}
+                onChange={(e: any, {value}: {value?: any}) => {
+                  dispatch({
+                    type: UPDATE_PARAMS,
+                    value: {allocation: value}
+                  })
+                }}
+                style={{width: '80%'}}
+              />
+            </Form.Group>
+            <Form.Group widths={'equal'}>
+              <Form.Select
+                label={'Symbol'}
+                // placeholder='Symbol'
+                value={symbol}
+                onChange={(e: any, {value}: {value?: any}) => {
+                  dispatch({
+                    type: UPDATE_PARAMS,
+                    value: {symbol: value}
+                  })
+                }}
+                search
+                selection
+                options={symbolsOptions}
+                selectOnBlur={false}
+                style={{width: '80%'}}
+              />
+              <Form.Select
+                label={'Candle Size'}
+                // placeholder='Candle size'
+                value={candleSize}
+                onChange={(e: any, {value}: {value?: any}) => {
+                  dispatch({
+                    type: UPDATE_PARAMS,
+                    value: {candleSize: value}
+                  })
+                }}
+                search
+                selection
+                options={candleSizeOptions}
+                selectOnBlur={false}
+                style={{width: '80%'}}
+              />
+            </Form.Group>
+            <Form.Group widths={'equal'}>
+              <Form.Select
+                label={'Exchange'}
+                value={exchanges}
+                onChange={(e: any, {value}: {value?: any}) => {
+                  dispatch({
+                    type: UPDATE_PARAMS,
+                    value: {exchanges: value}
+                  })
+                }}
+                multiple
+                search
+                selection
+                options={exchangeOptions}
+                selectOnBlur={false}
+                style={{width: '80%'}}
+              />
+              <Form.Select
+                label={'Strategy'}
+                value={strategy}
+                onChange={(e: any, {value}: {value?: any}) => dispatch({
+                  type: UPDATE_STRATEGY,
+                  value,
+                })}
+                search
+                selection
+                options={strategiesOptions}
+                selectOnBlur={false}
+                style={{width: '80%'}}
+              />
+            </Form.Group>
+            <Form.Group widths={'equal'}>
+              <Form.Checkbox
+                label={'📡 Live trading'}
+                onChange={() => dispatch({type: UPDATE_CHECKBOX})}
+                checked={liveTrading}
+                style={{alignSelf: 'center'}}
+              />
+              <Form.Select
+                label={'Color'}
+                className={`light-${color}`}
+                placeholder='Color'
+                value={color}
+                onChange={(e: any, {value}: {value?: any}) => {
+                  dispatch({
+                    type: UPDATE_PARAMS,
+                    value: {color: value}
+                  })
+                }}
+                selection
+                options={colorOptions}
+                selectOnBlur={false}
+                style={{width: '80%'}}
+              />
+            </Form.Group>
+          </Form>
             <Modal
               onClose={() => {
                 // dispatch({type: CLOSE_MODAL})
@@ -331,7 +333,8 @@ const NewPipeline = (props: Props) => {
                   <div>
                     <Button color='black' onClick={() => {
                       dispatch({
-                        type: RESET_MODAL,
+                        type: UPDATE_STRATEGY,
+                        value: null
                       })
                     }}>
                       Cancel
@@ -371,7 +374,6 @@ const NewPipeline = (props: Props) => {
                 </div>
               </Modal.Actions>
             </Modal>
-          </Grid>
         </Modal.Content>
         <Modal.Actions>
           <div className="flex-row" style={{justifyContent: message.text ? 'space-between' : 'flex-end'}}>
@@ -412,7 +414,8 @@ const NewPipeline = (props: Props) => {
                       startPipeline,
                       dispatch,
                       params,
-                      liveTrading
+                      liveTrading,
+                      balance: balances[liveTrading ? 'live': 'test'].USDT.availableBalance
                     })
                     if (success) setOpen(false)
                   }}

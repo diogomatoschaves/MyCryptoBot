@@ -72,7 +72,7 @@ def check_input(binance_client, strategies, **kwargs):
 
                 invalid_params = []
                 for key in params:
-                    if key not in strategies[strategy]["params"] and key not in strategies[strategy]["optional_params"]:
+                    if key not in strategies[strategy]["params"] and key not in strategies[strategy]["optionalParams"]:
                         logging.debug(key)
                         invalid_params.append(key)
 

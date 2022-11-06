@@ -46,42 +46,42 @@
 
 
 
-.light-purple {
+.light-pipeline-purple, .light-purple > .ui.dropdown{
   background-color: rgba(163, 51, 200, 0.06) !important;
   border-color: rgba(163, 51, 200, 0.8) !important
 }
 
-.light-violet {
+.light-pipeline-violet, .light-violet > .ui.dropdown{
   background-color: rgba(100, 53, 201, 0.06) !important;
   border-color: rgba(100, 53, 201, 0.8) !important
 }
 
-.light-pink {
+.light-pipeline-pink, .light-pink > .ui.dropdown{
   background-color: rgba(224, 57, 151, 0.06) !important;
   border-color: rgba(224, 57, 151, 0.8) !important
 }
 
-.light-blue {
+.light-pipeline-blue, .light-blue > .ui.dropdown{
   background-color: rgba(33, 133, 208, 0.06) !important;
   border-color: rgba(33, 133, 208, 0.8) !important
 }
 
-.light-teal {
+.light-pipeline-teal, .light-teal > .ui.dropdown {
   background-color: rgba(0, 181, 173, 0.06) !important;
   border-color: rgba(0, 181, 173, 0.8) !important
 }
 
-.light-green {
+.light-pipeline-green, .light-green > .ui.dropdown{
   background-color: rgba(33, 186, 69, 0.06) !important;
   border-color: rgba(33, 186, 69, 0.8) !important
 }
 
-.light-red {
+.light-pipeline-red, .light-red > .ui.dropdown {
   background-color: rgba(219, 40, 40, 0.06) !important;
   border-color: rgba(219, 40, 40, 0.8) !important
 }
 
-.light-yellow {
+.light-pipeline-yellow, .light-yellow > .ui.dropdown {
   background-color: rgba(251, 189, 8, 0.06) !important;
   border-color: rgba(251, 189, 8, 0.8) !important
 }
@@ -117,4 +117,8 @@
 
 .dark-yellow {
   background-color: rgba(251, 189, 8, 0.8) !important
+}
+
+.ui.form .field > label {
+  color: rgb(100, 100, 100)
 }
