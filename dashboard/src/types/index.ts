@@ -148,6 +148,11 @@ export type BalanceObj = {
     }
 }
 
+export type Decimals = {
+    quoteDecimal: number,
+    baseDecimal: number
+}
+
 export type StartPipeline = (pipelineParams: PipelineParams) => void
 export type StopPipeline = (pipelineId: number) => Promise<void>
 export type DeletePipeline = (pipelineId: number) => void

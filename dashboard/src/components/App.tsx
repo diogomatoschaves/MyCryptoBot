@@ -6,7 +6,7 @@ import {
     DropdownOptions, MenuOption,
     Trade, Pipeline, PipelineParams, Position,
     StartPipeline,
-    StopPipeline, GetCurrentPrices, Message, UpdateMessage, DeletePipeline, BalanceObj
+    StopPipeline, GetCurrentPrices, Message, UpdateMessage, DeletePipeline, BalanceObj, Decimals
 } from "../types";
 import {
     getTrades,
@@ -64,10 +64,21 @@ interface State {
     message: Message
 }
 
+interface Props {
+    decimals: Decimals
+}
 
-class App extends Component<any, State> {
+
+class App extends Component<Props, State> {
 
     messageTimeout: any
+
+    static defaultProps = {
+        decimals: {
+            quoteDecimal: 1,
+            baseDecimal: 3
+        }
+    }
 
     state = {
         symbolsOptions: [],
@@ -119,29 +130,9 @@ class App extends Component<any, State> {
 
         this.updateTrades()
 
-        getPipelines()
-            .then(response => {
-                this.setState(state => {
-                    return {
-                        ...state,
-                        pipelines: organizePipelines(response.pipelines),
-                        // @ts-ignore
-                        symbols: [...new Set(response.pipelines.map(pipeline => pipeline.symbol))]
-                    }
-                })
+        this.updatePipelines()
 
-                // this.getCurrentPrices()
-            })
-
-        getPositions()
-            .then(positions => {
-                this.setState(state => {
-                    return {
-                        ...state,
-                        positions: organizePositions(positions.positions)
-                    }
-                })
-            })
+        this.updatePositions()
 
         this.getAccountBalance()
 
@@ -187,6 +178,16 @@ class App extends Component<any, State> {
 
         if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'trades') {
             this.updateTrades()
+        }
+
+        if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'pipelines') {
+            this.updatePipelines()
+            this.getCurrentPrices()
+        }
+
+        if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'positions') {
+            this.updatePositions()
+            this.getCurrentPrices()
         }
     }
 
@@ -319,6 +320,32 @@ class App extends Component<any, State> {
           })
     }
 
+    updatePipelines = () => {
+        getPipelines()
+          .then(response => {
+              this.setState(state => {
+                  return {
+                      ...state,
+                      pipelines: organizePipelines(response.pipelines),
+                      // @ts-ignore
+                      symbols: [...new Set(response.pipelines.map(pipeline => pipeline.symbol))]
+                  }
+              })
+          })
+    }
+
+    updatePositions = () => {
+        getPositions()
+          .then(positions => {
+              this.setState(state => {
+                  return {
+                      ...state,
+                      positions: organizePositions(positions.positions)
+                  }
+              })
+          })
+    }
+
     updateMessage: UpdateMessage = (text, success) => {
         this.setState(state => ({
             message: {
@@ -347,6 +374,8 @@ class App extends Component<any, State> {
             message
         } = this.state
 
+        const { decimals } = this.props
+
         return (
             <AppDiv className="flex-row">
                 <Menu menuOption={menuOption} changeMenu={this.changeMenu}/>
@@ -371,13 +400,16 @@ class App extends Component<any, State> {
                           menuOption={menuOption}
                           trades={trades}
                           pipelines={pipelines}
-                          currentPrices={currentPrices}/>
+                          currentPrices={currentPrices}
+                          decimals={decimals}
+                        />
                     ) : menuOption.code === 'positions' ? (
                         <PositionsPanel
                             menuOption={menuOption}
                             positions={positions}
                             pipelines={pipelines}
                             currentPrices={currentPrices}
+                            decimals={decimals}
                         />
                     ) : menuOption.code === 'dashboard' && (
                         <Dashboard
@@ -399,5 +431,6 @@ class App extends Component<any, State> {
         );
     }
 }
+
 
 export default App;

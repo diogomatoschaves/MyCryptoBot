@@ -172,42 +172,42 @@ function Dashboard(props: Props) {
                 </Grid>
               </Segment>
               <Segment secondary raised style={styles.rowSegment}>
-                <Header size={'medium'} color="purple">
+                <Header size={'medium'} color="teal">
                   Trading Bots
                 </Header>
                 <Grid columns={2}>
                   <Grid.Row>
                     <Grid.Column>
-                      <Grid.Column style={styles.tradesHeader}>
+                      <Grid.Column style={styles.pipelinesHeader}>
                         # trading bots
                       </Grid.Column>
-                      <Grid.Column style={styles.tradesColumn} >
+                      <Grid.Column style={styles.pipelinesColumn} >
                         {totalPipelines}
                       </Grid.Column>
                     </Grid.Column>
                     <Grid.Column>
-                      <Grid.Column floated='left' style={styles.tradesHeader}>
+                      <Grid.Column floated='left' style={styles.pipelinesHeader}>
                         # active trading bots
                       </Grid.Column>
-                      <Grid.Column floated='right' style={styles.tradesColumn}>
+                      <Grid.Column floated='right' style={styles.pipelinesColumn}>
                         {activePipelines}
                       </Grid.Column>
                     </Grid.Column>
                   </Grid.Row>
                   <Grid.Row>
                     <Grid.Column>
-                      <Grid.Column floated='left' style={styles.tradesHeader}>
+                      <Grid.Column floated='left' style={styles.pipelinesHeader}>
                         Best Win Rate
                       </Grid.Column>
-                      <Grid.Column floated='right' style={styles.tradesColumn} >
+                      <Grid.Column floated='right' style={styles.pipelinesColumn} >
                         <Label color={bestWinRate.color}>{bestWinRate.name}</Label>
                       </Grid.Column>
                     </Grid.Column>
                     <Grid.Column>
-                      <Grid.Column style={styles.tradesHeader}>
+                      <Grid.Column style={styles.pipelinesHeader}>
                         Most Trades
                       </Grid.Column>
-                      <Grid.Column style={styles.tradesColumn}>
+                      <Grid.Column style={styles.pipelinesColumn}>
                         <Label color={mostTrades.color}>{mostTrades.name}</Label>
                       </Grid.Column>
                     </Grid.Column>
@@ -232,10 +232,10 @@ function Dashboard(props: Props) {
                     </Grid.Column>
                     <Grid.Column>
                       <Grid.Column floated='left' style={styles.positionsHeader}>
-                        Total Equity
+                        Exposure
                       </Grid.Column>
                       <Grid.Column floated='right' style={styles.positionsColumn} >
-                        {totalEquityPositions.toFixed(0)} USDT
+                        {totalEquityPositions.toFixed(1)} USDT
                       </Grid.Column>
                     </Grid.Column>
                     <Grid.Column>
@@ -250,21 +250,21 @@ function Dashboard(props: Props) {
                   <Grid.Row>
                   </Grid.Row>
                 </Grid>
-                {positions.length > 0 &&
-                <PieChart
-                  viewBoxSize={[100, 65]}
-                  center={[50, 25]}
-                  data={pieChartData}
-                  label={({dataEntry}) => `${dataEntry.title}`}
-                  labelStyle={(index) => ({
-                    fill: pieChartData[index].color,
-                    fontSize: '3px',
-                    fontFamily: 'sans-serif',
-                  })}
-                  lineWidth={65}
-                  radius={27}
-                  labelPosition={110}
-                />}
+                {/*{positions.length > 0 &&*/}
+                {/*<PieChart*/}
+                {/*  viewBoxSize={[100, 65]}*/}
+                {/*  center={[50, 25]}*/}
+                {/*  data={pieChartData}*/}
+                {/*  label={({dataEntry}) => `${dataEntry.title}`}*/}
+                {/*  labelStyle={(index) => ({*/}
+                {/*    fill: pieChartData[index].color,*/}
+                {/*    fontSize: '3px',*/}
+                {/*    fontFamily: 'sans-serif',*/}
+                {/*  })}*/}
+                {/*  lineWidth={65}*/}
+                {/*  radius={27}*/}
+                {/*  labelPosition={110}*/}
+                {/*/>}*/}
               </Segment>
               <Segment secondary raised style={styles.rowSegment}>
                 <Header size={'medium'} color="purple">
@@ -310,7 +310,7 @@ function Dashboard(props: Props) {
                       <Grid.Column style={styles.tradesHeader}>
                         Best Trade
                       </Grid.Column>
-                      <Grid.Column style={styles.tradesColumn} >
+                      <Grid.Column style={{...styles.tradesColumn, color: bestTrade > 0 ? GREEN : RED}} >
                         {(bestTrade * 100).toFixed(2)}%
                       </Grid.Column>
                     </Grid.Column>
@@ -318,7 +318,7 @@ function Dashboard(props: Props) {
                       <Grid.Column style={styles.tradesHeader}>
                         Worst Trade
                       </Grid.Column>
-                      <Grid.Column style={styles.tradesColumn} >
+                      <Grid.Column style={{...styles.tradesColumn, color: worstTrade > 0 ? GREEN : RED}} >
                         {(worstTrade * 100).toFixed(2)}%
                       </Grid.Column>
                     </Grid.Column>
@@ -359,7 +359,11 @@ const styles = {
     },
     positionsHeader: {
       fontSize: '1.0em',
-      color: 'rgb(184,126,206)',
+      color: 'rgb(198,104,206)',
+    },
+    pipelinesHeader: {
+      fontSize: '1.0em',
+      color: 'rgb(94,182,182)'
     },
     balanceColumn: {
       fontSize: '1.2em',
@@ -373,7 +377,12 @@ const styles = {
     },
     positionsColumn: {
       fontSize: '1.2em',
-      color: '#A333C8',
+      color: '#9235ad',
+      fontWeight: '600',
+    },
+    pipelinesColumn: {
+      fontSize: '1.2em',
+      color: '#0e6972',
       fontWeight: '600',
     },
     buttonDiv: {

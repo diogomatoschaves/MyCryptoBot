@@ -1,4 +1,4 @@
-import {MenuOption, Pipeline, Trade} from "../types";
+import {Decimals, MenuOption, Pipeline, Trade} from "../types";
 import {Button, Header, Table} from "semantic-ui-react";
 import TradeRow from './TradeRow'
 import styled from "styled-components";
@@ -10,6 +10,7 @@ interface Props {
     pipelines: Pipeline[]
     menuOption: MenuOption
     currentPrices: Object
+    decimals: Decimals
 }
 
 
@@ -73,7 +74,7 @@ const initialOptions = {
 
 function TradesPanel(props: Props) {
 
-    const { trades, pipelines, menuOption, currentPrices } = props
+    const { trades, pipelines, menuOption, currentPrices, decimals } = props
 
     const [{filteredTrades, options, pipelinesObject}, dispatch] = useReducer(
         reducer, {
@@ -152,6 +153,7 @@ function TradesPanel(props: Props) {
                         trade={trade}
                         pipeline={pipelinesObject[trade.pipelineId]}
                         currentPrices={currentPrices}
+                        decimals={decimals}
                       />
                     ))}
                 </Table.Body>
