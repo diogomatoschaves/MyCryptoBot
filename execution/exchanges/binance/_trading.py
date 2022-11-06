@@ -76,7 +76,9 @@ class BinanceTrader(BinanceHandler, Trader):
                 ).update(
                     position=position,
                     open=False,
-                    close_time=datetime.now(tz=pytz.UTC)
+                    close_time=datetime.now(tz=pytz.UTC),
+                    buying_price=new_trade.buying_price,
+                    amount=new_trade.amount
                 )
             else:
                 Position.objects.filter(
@@ -85,7 +87,10 @@ class BinanceTrader(BinanceHandler, Trader):
                 ).update(
                     position=position,
                     open=True,
-                    close_time=None
+                    open_time=datetime.now(tz=pytz.UTC),
+                    close_time=None,
+                    buying_price=new_trade.buying_price,
+                    amount=new_trade.amount
                 )
         elif new_trade:
             Position.objects.create(
