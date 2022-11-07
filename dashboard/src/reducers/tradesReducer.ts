@@ -2,7 +2,10 @@ import {Trade} from "../types";
 
 export const UPDATE_TRADES_STATISTICS = 'UPDATE_TRADES_STATISTICS'
 
-export const tradesReducerCallback = (metrics: any, trade: Trade) => {
+export const tradesReducerCallback = (trades: Object) => (metrics: any, tradeId: string) => {
+
+  // @ts-ignore
+  const trade = trades[tradeId]
 
   const tradeTime = trade.closeTime.getTime() - trade.openTime.getTime()
 
@@ -32,7 +35,7 @@ export const tradesReducer = (state: any, action: any) => {
     case UPDATE_TRADES_STATISTICS:
       return {
         ...state,
-        ...action.trades.reduce(tradesReducerCallback, tradesReducerInitialState),
+        ...Object.keys(action.trades).reduce(tradesReducerCallback(action.trades), tradesReducerInitialState),
       }
     default:
       throw new Error();

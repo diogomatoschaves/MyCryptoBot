@@ -6,7 +6,7 @@ import {
     DropdownOptions, MenuOption,
     Trade, Pipeline, PipelineParams, Position,
     StartPipeline,
-    StopPipeline, GetCurrentPrices, Message, UpdateMessage, DeletePipeline, BalanceObj, Decimals
+    StopPipeline, GetCurrentPrices, Message, UpdateMessage, DeletePipeline, BalanceObj, Decimals, RawTrade
 } from "../types";
 import {
     getTrades,
@@ -24,7 +24,7 @@ import Menu from "./Menu";
 import MessageComponent from "./Message";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
-import {organizeTrades, organizePositions, organizePipelines, organizePipeline} from "../utils/helpers";
+import {parseTrade, organizePositions, organizePipelines, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import {Box, Wrapper} from "../styledComponents";
 import Dashboard from "./Dashboard";
@@ -101,7 +101,7 @@ class App extends Component<Props, State> {
         },
         symbols: [],
         currentPrices: {},
-        message: {show: false, bottomProp: -300, text: null, color: "#000000", success: true}
+        message: {show: false, bottomProp: -300, text: null, color: "#000000", success: true},
     }
 
     componentDidMount() {
@@ -137,15 +137,7 @@ class App extends Component<Props, State> {
         this.getAccountBalance()
 
         setInterval(() => {
-            getTrades()
-                .then(response => {
-                    this.setState(state => {
-                        return {
-                            ...state,
-                            trades: organizeTrades(response.trades)
-                        }
-                    })
-                })
+            this.updateTrades()
         }, 60 * 1000)
     }
 
@@ -178,6 +170,7 @@ class App extends Component<Props, State> {
 
         if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'trades') {
             this.updateTrades()
+            this.getCurrentPrices()
         }
 
         if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'pipelines') {
@@ -307,16 +300,20 @@ class App extends Component<Props, State> {
           })
     }
 
-    updateTrades = () => {
-        getTrades()
+    updateTrades = (page?: number) => {
+        getTrades(page)
           .then(response => {
               this.setState(state => {
                   return {
                       ...state,
-                      trades: organizeTrades(response.trades)
+                      trades: {...state.trades, ...response.trades.reduce((trades: Object, trade: RawTrade) => {
+                          return {
+                              ...trades,
+                              [trade.id]: parseTrade(trade)
+                          }
+                      }, {})},
                   }
               })
-              this.getCurrentPrices()
           })
     }
 
@@ -371,7 +368,7 @@ class App extends Component<Props, State> {
             menuOption,
             strategies,
             currentPrices,
-            message
+            message,
         } = this.state
 
         const { decimals } = this.props
@@ -379,9 +376,10 @@ class App extends Component<Props, State> {
         return (
             <AppDiv className="flex-row">
                 <Menu menuOption={menuOption} changeMenu={this.changeMenu}/>
-                <Wrapper>
-                    {menuOption.code === 'pipelines' ? (
-                        <PipelinePanel
+                {menuOption.code !== 'trades' ? (
+                    <Wrapper>
+                        {menuOption.code === 'pipelines' ? (
+                          <PipelinePanel
                             menuOption={menuOption}
                             symbolsOptions={symbolsOptions}
                             strategiesOptions={strategiesOptions}
@@ -394,34 +392,36 @@ class App extends Component<Props, State> {
                             stopPipeline={this.stopPipeline}
                             deletePipeline={this.deletePipeline}
                             updateMessage={this.updateMessage}
-                        />
-                    ) : menuOption.code === 'trades' ? (
-                        <TradesPanel
-                          menuOption={menuOption}
-                          trades={trades}
-                          pipelines={pipelines}
-                          currentPrices={currentPrices}
-                          decimals={decimals}
-                        />
-                    ) : menuOption.code === 'positions' ? (
-                        <PositionsPanel
+                          />
+                        ) : menuOption.code === 'positions' ? (
+                          <PositionsPanel
                             menuOption={menuOption}
                             positions={positions}
                             pipelines={pipelines}
                             currentPrices={currentPrices}
                             decimals={decimals}
-                        />
-                    ) : menuOption.code === 'dashboard' && (
-                        <Dashboard
+                          />
+                        ) : menuOption.code === 'dashboard' && (
+                          <Dashboard
                             menuOption={menuOption}
                             balances={balances}
                             pipelines={pipelines}
                             trades={trades}
                             positions={positions}
                             currentPrices={currentPrices}
-                        />
-                    )}
-                </Wrapper>
+                          />
+                        )}
+                    </Wrapper>
+                ) : (
+                  <TradesPanel
+                    menuOption={menuOption}
+                    trades={trades}
+                    pipelines={pipelines}
+                    currentPrices={currentPrices}
+                    decimals={decimals}
+                    updateTrades={this.updateTrades}
+                  />
+                )}
                 {message.text && (
                     <StyledBox align="center" bottom={message.bottomProp}>
                         <MessageComponent success={message.success} message={message.text} color={message.color}/>

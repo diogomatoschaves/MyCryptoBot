@@ -165,17 +165,12 @@ export const organizePipelines = (pipelines: RawPipeline[]): Pipeline[] => {
 }
 
 
-export const organizeTrades = (trades: RawTrade[]): Trade[] => {
-
-  return trades.map((trade) => {
+export const parseTrade = (trade: RawTrade): Trade => {
     return {
       ...trade,
       openTime: new Date(Date.parse(trade.openTime)),
       closeTime: new Date(Date.parse(trade.closeTime)),
     }
-  }).sort((a, b) => {
-    return b.closeTime.getTime() - a.closeTime.getTime()
-  })
 }
 
 
