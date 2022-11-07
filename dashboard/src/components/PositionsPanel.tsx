@@ -26,8 +26,8 @@ const PositionsPanel = (props: Props) => {
         <Table basic='very' striped>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell>Trading</Table.HeaderCell>
-              <Table.HeaderCell width={3}>Trading Bot</Table.HeaderCell>
+              <Table.HeaderCell width={2}>Trading Bot</Table.HeaderCell>
+              <Table.HeaderCell>Mode</Table.HeaderCell>
               <Table.HeaderCell>Symbol</Table.HeaderCell>
               <Table.HeaderCell>Open since</Table.HeaderCell>
               <Table.HeaderCell>Position</Table.HeaderCell>
