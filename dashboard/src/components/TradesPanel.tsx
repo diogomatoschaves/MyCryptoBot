@@ -132,8 +132,8 @@ function TradesPanel(props: Props) {
             <Table basic='very' size="small" compact striped>
                 <Table.Header>
                     <Table.Row>
-                        <Table.HeaderCell>Mode</Table.HeaderCell>
                         <Table.HeaderCell>Trading Bot</Table.HeaderCell>
+                        <Table.HeaderCell>Mode</Table.HeaderCell>
                         <Table.HeaderCell>Symbol</Table.HeaderCell>
                         <Table.HeaderCell>Opened On</Table.HeaderCell>
                         <Table.HeaderCell>Duration</Table.HeaderCell>

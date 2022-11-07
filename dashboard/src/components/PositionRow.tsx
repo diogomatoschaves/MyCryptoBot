@@ -40,11 +40,11 @@ function PositionRow(props: Props) {
   return (
       <Table.Row key={index}>
         <Table.Cell style={styles.defaultCell}>
-          <Label ribbon>{position.paperTrading ? "test" : "live"}</Label>
+          {/*@ts-ignore*/}
+          <Label ribbon color={pipelineColor}>{position.pipelineName}</Label>
         </Table.Cell>
         <Table.Cell style={{...styles.defaultCell, fontWeight: 600}}>
-          {/*@ts-ignore*/}
-          <Label color={pipelineColor}>{position.pipelineName}</Label>
+          <Label basic color='blue'>{position.paperTrading ? "test" : "live"}</Label>
         </Table.Cell>
         <Table.Cell style={{fontWeight: 600, color: DARK_YELLOW}}>{position.symbol}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{age}</Table.Cell>

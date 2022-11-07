@@ -45,13 +45,12 @@ function TradeRow(props: Props) {
   return (
         <Table.Row key={index} >
             <Table.Cell style={styles.defaultCell}>
-              <Label ribbon>{trade.mock ? "Test" : "Live"}</Label>
+              {pipeline && (
+                <Label ribbon color={pipeline.color as any}>{pipeline.name}</Label>
+              )}
             </Table.Cell>
           <Table.Cell style={styles.defaultCell}>
-              {/*@ts-ignore*/}
-            {pipeline && (
-              <Label color={pipeline.color as any}>{pipeline.name}</Label>
-            )}
+            <Label basic color='blue'>{trade.mock ? "test" : "live"}</Label>
           </Table.Cell>
             <Table.Cell collapsing style={{...styles.defaultCell, color: DARK_YELLOW, fontWeight: '600'}}>
               {trade.symbol}
