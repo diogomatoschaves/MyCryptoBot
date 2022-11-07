@@ -50,7 +50,7 @@ function Dashboard(props: Props) {
     bestTrade,
     worstTrade,
   }, tradesDispatch] = useReducer(
-      tradesReducer, trades.reduce(tradesReducerCallback, tradesReducerInitialState),
+      tradesReducer, Object.keys(trades).reduce(tradesReducerCallback(trades), tradesReducerInitialState),
   );
 
   const [{

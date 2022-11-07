@@ -8,9 +8,13 @@ type TradesMetrics = {
   win: number
 }
 
-export const pipelinesReducerCallback = (trades: Trade[]) => (metrics: any, pipeline: Pipeline) => {
+export const pipelinesReducerCallback = (trades: Object) => (metrics: any, pipeline: Pipeline) => {
 
-  const tradesMetrics = trades.reduce((tradesMetrics: TradesMetrics, trade: Trade) => {
+  const tradesMetrics = Object.keys(trades).reduce((tradesMetrics: TradesMetrics, tradeId: string) => {
+
+    // @ts-ignore
+    const trade = trades[tradeId]
+
     if (trade.pipelineId === pipeline.id) {
       return {
         totalTrades: tradesMetrics.totalTrades + 1,

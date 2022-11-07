@@ -56,9 +56,13 @@ def get_trades(page):
         page_obj = paginator.get_page(1)
         response["trades"] = list(page_obj)
 
-    elif isinstance(page, int):
-        page_obj = paginator.get_page(page)
-        response["trades"] = list(page_obj)
+    else:
+        try:
+            page_number = int(page)
+            page_obj = paginator.get_page(page_number)
+            response["trades"] = list(page_obj)
+        except ValueError:
+            return jsonify(response)
 
     response["trades"] = [trade.as_json() for trade in response["trades"]]
 
