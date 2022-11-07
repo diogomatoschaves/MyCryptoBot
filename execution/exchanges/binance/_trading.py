@@ -77,8 +77,6 @@ class BinanceTrader(BinanceHandler, Trader):
                     position=position,
                     open=False,
                     close_time=datetime.now(tz=pytz.UTC),
-                    buying_price=new_trade.buying_price,
-                    amount=new_trade.amount
                 )
             else:
                 Position.objects.filter(
@@ -89,7 +87,7 @@ class BinanceTrader(BinanceHandler, Trader):
                     open=True,
                     open_time=datetime.now(tz=pytz.UTC),
                     close_time=None,
-                    buying_price=new_trade.buying_price,
+                    buying_price=new_trade.open_price,
                     amount=new_trade.amount
                 )
         elif new_trade:
