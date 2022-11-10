@@ -3,10 +3,22 @@ import {Component} from 'react'
 import styled, {css} from 'styled-components'
 import {
     ChangeMenu,
-    DropdownOptions, MenuOption,
-    Trade, Pipeline, PipelineParams, Position,
+    DropdownOptions,
+    MenuOption,
+    Trade,
+    Pipeline,
+    PipelineParams,
+    Position,
     StartPipeline,
-    StopPipeline, GetCurrentPrices, Message, UpdateMessage, DeletePipeline, BalanceObj, Decimals, RawTrade
+    StopPipeline,
+    GetCurrentPrices,
+    Message,
+    UpdateMessage,
+    DeletePipeline,
+    BalanceObj,
+    Decimals,
+    RawTrade,
+    PipelinesMetrics
 } from "../types";
 import {
     getTrades,
@@ -17,7 +29,7 @@ import {
     startBot,
     stopBot,
     getPrice,
-    deleteBot,
+    deleteBot, getPipelinesMetrics,
 } from "../apiCalls";
 import {GREEN, RED, RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
@@ -62,6 +74,7 @@ interface State {
     symbols: string[],
     currentPrices: Object
     message: Message
+    pipelinesMetrics: PipelinesMetrics
 }
 
 interface Props {
@@ -102,6 +115,12 @@ class App extends Component<Props, State> {
         symbols: [],
         currentPrices: {},
         message: {show: false, bottomProp: -300, text: null, color: "#000000", success: true},
+        pipelinesMetrics: {
+            totalPipelines: 0,
+            activePipelines: 0,
+            bestWinRate: {winRate: 0},
+            mostTrades: {totalTrades: 0}
+        }
     }
 
     componentDidMount() {
@@ -317,6 +336,16 @@ class App extends Component<Props, State> {
           })
     }
 
+
+    updatePipelinesMetrics = () => {
+        getPipelinesMetrics()
+          .then(response => {
+              this.setState({
+                  pipelinesMetrics: response
+              })
+          })
+    }
+
     updatePipelines = () => {
         getPipelines()
           .then(response => {
@@ -369,6 +398,7 @@ class App extends Component<Props, State> {
             strategies,
             currentPrices,
             message,
+            pipelinesMetrics
         } = this.state
 
         const { decimals } = this.props
@@ -409,6 +439,8 @@ class App extends Component<Props, State> {
                             trades={trades}
                             positions={positions}
                             currentPrices={currentPrices}
+                            pipelinesMetrics={pipelinesMetrics}
+                            updatePipelinesMetrics={this.updatePipelinesMetrics}
                           />
                         )}
                     </Wrapper>

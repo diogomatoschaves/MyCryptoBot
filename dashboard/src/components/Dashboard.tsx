@@ -1,28 +1,17 @@
 import {Grid, Header, Label, Segment} from "semantic-ui-react";
-import {BalanceObj, MenuOption, Pipeline, Position, Trade} from "../types";
+import {BalanceObj, MenuOption, Pipeline, PipelinesMetrics, Position, Trade, UpdatePipelinesMetrics} from "../types";
 import {StyledSegment} from "../styledComponents";
-import {useEffect, useReducer, useRef} from "react";
-import {timeFormatterDate, timeFormatterDiff} from "../utils/helpers";
+import {useEffect, useReducer, useRef, useState} from "react";
+import {timeFormatterDiff} from "../utils/helpers";
 import {PieChart} from 'react-minimal-pie-chart';
 import {COLORS, GREEN, RED} from "../utils/constants";
-import {
-  tradesReducer,
-  tradesReducerCallback,
-  tradesReducerInitialState,
-  UPDATE_TRADES_STATISTICS
-} from "../reducers/tradesReducer";
 import {
   positionsReducer,
   positionsReducerCallback,
   positionsReducerInitialState,
   UPDATE_POSITIONS_STATISTICS
 } from "../reducers/positionsReducer";
-import {
-  pipelinesReducer,
-  pipelinesReducerCallback,
-  pipelinesReducerInitialState,
-  UPDATE_PIPELINES_STATISTICS
-} from "../reducers/pipelinesReducer";
+import {getTradesMetrics} from "../apiCalls";
 
 
 interface Props {
@@ -32,26 +21,20 @@ interface Props {
   trades: Trade[],
   positions: Position[],
   currentPrices: Object
+  pipelinesMetrics: PipelinesMetrics
+  updatePipelinesMetrics: UpdatePipelinesMetrics
 }
 
 
 function Dashboard(props: Props) {
 
-  const { menuOption, balances, pipelines, trades, positions, currentPrices } = props
+  const { menuOption, balances, pipelines, trades, positions, currentPrices, pipelinesMetrics: {
+    totalPipelines,
+    activePipelines,
+    bestWinRate,
+    mostTrades}, updatePipelinesMetrics} = props
 
   const previous = useRef({trades, positions, pipelines, currentPrices}).current;
-
-  const [{
-    numberTrades,
-    maxTradeDuration,
-    totalTradeDuration,
-    winningTrades,
-    closedTrades,
-    bestTrade,
-    worstTrade,
-  }, tradesDispatch] = useReducer(
-      tradesReducer, Object.keys(trades).reduce(tradesReducerCallback(trades), tradesReducerInitialState),
-  );
 
   const [{
     openPositions,
@@ -63,26 +46,32 @@ function Dashboard(props: Props) {
   );
 
   const [{
-    totalPipelines,
-    activePipelines,
-    bestWinRate,
-    mostTrades
-  }, pipelinesDispatch] = useReducer(
-    pipelinesReducer, pipelines.reduce(pipelinesReducerCallback(trades), pipelinesReducerInitialState)
-  )
+    numberTrades,
+    maxTradeDuration,
+    avgTradeDuration,
+    winningTrades,
+    bestTrade,
+    worstTrade,
+  }, setTradesMetrics] = useState({
+    numberTrades: 0,
+    maxTradeDuration: 0,
+    avgTradeDuration: 0,
+    winningTrades: 0,
+    losingTrades: 0,
+    bestTrade: 0,
+    worstTrade: 0
+  })
 
   useEffect(() => {
     if (trades !== previous.trades) {
-      tradesDispatch({
-        type: UPDATE_TRADES_STATISTICS,
-        trades
-      })
+      const fetchTradesData = async () => {
+        const tradesMetrics = await getTradesMetrics()
+        setTradesMetrics(tradesMetrics)
+      }
 
-      pipelinesDispatch({
-        type: UPDATE_PIPELINES_STATISTICS,
-        pipelines,
-        trades
-      })
+      fetchTradesData()
+
+      updatePipelinesMetrics()
     }
 
     if (positions !== previous.positions || currentPrices !== previous.currentPrices) {
@@ -94,11 +83,7 @@ function Dashboard(props: Props) {
     }
 
     if (pipelines != previous.pipelines) {
-      pipelinesDispatch({
-        type: UPDATE_PIPELINES_STATISTICS,
-        pipelines,
-        trades
-      })
+      updatePipelinesMetrics()
     }
     return () => {
       previous.trades = trades
@@ -108,8 +93,7 @@ function Dashboard(props: Props) {
     };
   }, [trades, positions, pipelines, currentPrices]);
 
-  const avgTradeDuration = totalTradeDuration / numberTrades
-  const winRate = winningTrades / closedTrades * 100
+  const winRate = winningTrades / numberTrades * 100
 
   let totalPnl, pnlColor
   if (totalInitialEquity !== 0) {
@@ -199,7 +183,8 @@ function Dashboard(props: Props) {
                       <Grid.Column floated='left' style={styles.pipelinesHeader}>
                         Best Win Rate
                       </Grid.Column>
-                      <Grid.Column floated='right' style={styles.pipelinesColumn} >
+                      <Grid.Column floated='right' style={styles.pipelinesColumn}>
+                        {/*@ts-ignore*/}
                         <Label color={bestWinRate.color}>{bestWinRate.name}</Label>
                       </Grid.Column>
                     </Grid.Column>
@@ -208,6 +193,7 @@ function Dashboard(props: Props) {
                         Most Trades
                       </Grid.Column>
                       <Grid.Column style={styles.pipelinesColumn}>
+                        {/*@ts-ignore*/}
                         <Label color={mostTrades.color}>{mostTrades.name}</Label>
                       </Grid.Column>
                     </Grid.Column>

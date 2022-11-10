@@ -157,3 +157,20 @@ export const deleteBot = async (pipelineId) => {
 
   return await response.json()
 }
+
+export const getTradesMetrics = async () => {
+  const url = `${dataAPIHost}/trades-metrics`
+
+  const response = await fetch(url, {method: 'GET'})
+
+  return await response.json()
+}
+
+
+export const getPipelinesMetrics = async () => {
+  const url = `${dataAPIHost}/pipelines-metrics`
+
+  const response = await fetch(url, {method: 'GET'})
+
+  return await response.json()
+}
