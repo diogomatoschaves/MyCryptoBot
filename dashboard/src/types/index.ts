@@ -153,6 +153,14 @@ export type Decimals = {
     baseDecimal: number
 }
 
+
+export type PipelinesMetrics = {
+    totalPipelines: number,
+    activePipelines: number,
+    bestWinRate: Partial<Pipeline> & {winRate: number},
+    mostTrades: Partial<Pipeline> & {totalTrades: number},
+}
+
 export type StartPipeline = (pipelineParams: PipelineParams) => void
 export type StopPipeline = (pipelineId: number) => Promise<void>
 export type DeletePipeline = (pipelineId: number) => void
@@ -160,3 +168,4 @@ export type ChangeMenu = (option: MenuOption) => void
 export type GetCurrentPrices = () => void
 export type UpdateMessage = (text: string, success: boolean)  => void
 export type UpdateTrades = (page?: number)  => void
+export type UpdatePipelinesMetrics = ()  => void

@@ -1,11 +1,13 @@
 import os
+from functools import reduce
 
 import django
 from django.core.paginator import Paginator
+from django.db.models import Count, Max, Avg, F, Min, Q, Sum
 from flask import Blueprint, jsonify, request
 
 from data.service.external_requests import get_strategies
-from data.service.helpers._helpers import convert_queryset_to_dict
+from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -131,3 +133,68 @@ def get_positions(page):
 
     return jsonify(response)
 
+
+@dashboard.route('/trades-metrics', methods=["GET"])
+def get_trades_metrics():
+
+    aggregate_values = Trade.objects.annotate(
+        duration=F('close_time') - F('open_time'),
+        winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
+        losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
+    ).aggregate(
+        Max('duration'),
+        Avg('duration'),
+        Count('id'),
+        Max('profit_loss'),
+        Min('profit_loss'),
+        Sum('winning_trade'),
+        Sum('losing_trade'),
+    )
+
+    aggregate_values = convert_trades_to_dict(aggregate_values)
+
+    return jsonify(aggregate_values)
+
+
+@dashboard.route('/pipelines-metrics', methods=["GET"])
+def get_pipelines_metrics():
+
+    def reduce_pipelines(accum, pipeline):
+
+        trades_metrics = convert_trades_to_dict(pipeline.trade_set.all().annotate(
+            duration=F('close_time') - F('open_time'),
+            winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
+            losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
+        ).aggregate(
+            Max('duration'),
+            Avg('duration'),
+            Count('id'),
+            Max('profit_loss'),
+            Min('profit_loss'),
+            Sum('winning_trade'),
+            Sum('losing_trade'),
+        ))
+
+        win_rate = trades_metrics["winningTrades"] / trades_metrics["numberTrades"]
+
+        return {
+            **accum,
+            str(pipeline.id): trades_metrics,
+            "totalPipelines": accum["totalPipelines"] + 1,
+            "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
+            "bestWinRate": {**pipeline.as_json(), "winRate": win_rate}
+            if win_rate > accum["bestWinRate"]["winRate"] else accum["bestWinRate"],
+            "mostTrades": {**pipeline.as_json(), "totalTrades": trades_metrics["numberTrades"]}
+            if trades_metrics["numberTrades"] > accum["mostTrades"]["totalTrades"] else accum["mostTrades"],
+        }
+
+    pipelines = Pipeline.objects.all()
+
+    pipelines_metrics = reduce(reduce_pipelines, pipelines, {
+        "totalPipelines": 0,
+        "activePipelines": 0,
+        "bestWinRate": {"winRate": 0},
+        "mostTrades": {"totalTrades": 0},
+    })
+
+    return jsonify(pipelines_metrics)
