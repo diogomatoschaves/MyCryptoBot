@@ -145,3 +145,14 @@ def get_or_create_pipeline(
 def convert_queryset_to_dict(queryset):
     return {res["name"]: res for res in queryset}
 
+
+def convert_trades_to_dict(trades_metrics):
+    return {
+        'numberTrades': trades_metrics['id__count'],
+        'maxTradeDuration': trades_metrics['duration__max'].seconds * 1000,
+        'avgTradeDuration': trades_metrics['duration__avg'].seconds * 1000,
+        'bestTrade': round(trades_metrics['profit_loss__max'], 5),
+        'worstTrade': round(trades_metrics['profit_loss__min'], 5),
+        'winningTrades': trades_metrics['winning_trade__sum'],
+        'losingTrades': trades_metrics['losing_trade__sum'],
+    }
