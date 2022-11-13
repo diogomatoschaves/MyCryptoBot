@@ -6,7 +6,6 @@ import PositionRow from "./PositionRow";
 
 
 interface Props {
-  menuOption: MenuOption;
   positions: Position[];
   pipelines: Pipeline[];
   currentPrices: Object;
@@ -15,14 +14,10 @@ interface Props {
 
 const PositionsPanel = (props: Props) => {
 
-  const { menuOption, positions, currentPrices, pipelines, decimals } = props
+  const { positions, currentPrices, pipelines, decimals } = props
 
   return (
       <StyledSegment basic className="flex-column">
-        <Header size={'large'} dividing>
-          <span style={{marginRight: 10}}>{menuOption.emoji}</span>
-          {menuOption.text}
-        </Header>
         <Table basic='very' striped>
           <Table.Header>
             <Table.Row>

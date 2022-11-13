@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import {BrowserRouter as Router, Route} from 'react-router-dom';
 import './index.css';
 import 'semantic-ui-css/semantic.css';
 import App from './components/App';
@@ -7,7 +8,12 @@ import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <Route render={({location, match}) => (
+        <App location={location}/>
+      )}>
+      </Route>
+    </Router>
   </React.StrictMode>,
   document.getElementById('root')
 );

@@ -1,11 +1,13 @@
 import styled from "styled-components";
 import {Menu} from "semantic-ui-react";
+import {Link} from 'react-router-dom'
 import {ChangeMenu, MenuOption} from "../types";
 
 
 interface Props {
-    menuOption: MenuOption
+    menuOption: MenuOption | undefined
     changeMenu: ChangeMenu
+    menuProperties: MenuOption[]
 }
 
 
@@ -19,32 +21,29 @@ const Column = styled.div`
     box-shadow: 0px 0px 5px 3px rgba(0, 0, 0, 0.2);
 `
 
-const menuProperties = [
-    {icon: 'line graph', emoji: '📈', text: 'Dashboard', code: "dashboard"},
-    {icon: 'play', emoji: '🤖', text: 'Trading Bots', code: "pipelines"},
-    {icon: 'list', emoji: '📒', text: 'Positions', code: "positions"},
-    {icon: 'dollar', emoji: '💵', text: 'Trades', code: "trades"},
-]
+
 
 
 function AppMenu(props: Props) {
 
-    const { changeMenu, menuOption } = props
+    const { changeMenu, menuOption, menuProperties } = props
 
     return (
         <Column>
             <Menu style={{paddingTop: '40px'}} secondary vertical>
                 {menuProperties.map(menuItem => (
+                  <Link to={menuItem.code}>
                     <Menu.Item
                         style={styles}
-                        onClick={() => changeMenu(menuItem)}
-                        active={menuOption.code === menuItem.code}
+                        // onClick={() => changeMenu(menuItem)}
+                        active={menuOption && menuOption.code === menuItem.code}
                     >
                         <div className="flex-row" style={{justifyContent: 'space-between'}}>
                             <span>{menuItem.text}</span>
                             <span>{menuItem.emoji}</span>
                         </div>
                     </Menu.Item>
+                  </Link>
                 ))}
             </Menu>
         </Column>
