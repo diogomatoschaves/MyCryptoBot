@@ -21,6 +21,7 @@ RESPONSES = namedtuple(
         "NAME_INVALID",
         "NAME_REQUIRED",
         "COLOR_REQUIRED",
+        "LEVERAGE_INVALID"
     ]
 )
 
@@ -43,6 +44,7 @@ ReturnCodes = RESPONSES(
     NAME_INVALID="NAME_INVALID",
     NAME_REQUIRED="NAME_REQUIRED",
     COLOR_REQUIRED="COLOR_REQUIRED",
+    LEVERAGE_INVALID="LEVERAGE_INVALID"
 )
 
 
@@ -84,4 +86,6 @@ Responses = RESPONSES(
                                    "message": message, "success": False},
     COLOR_REQUIRED=lambda message: {"code": ReturnCodes.COLOR_REQUIRED,
                                     "message": message, "success": False},
+    LEVERAGE_INVALID=lambda message: {"code": ReturnCodes.LEVERAGE_INVALID,
+                                      "message": message, "success": False}
 )

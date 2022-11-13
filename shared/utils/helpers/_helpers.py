@@ -27,7 +27,9 @@ PIPELINE = namedtuple(
         "candle_size",
         "exchange",
         "paper_trading",
-        "active"
+        "active",
+        "equity",
+        "leverage"
     ]
 )
 
@@ -69,7 +71,9 @@ def get_pipeline_data(pipeline_id):
         candle_size=pipeline.interval,
         exchange=pipeline.exchange.name,
         paper_trading=pipeline.paper_trading,
-        active=pipeline.active
+        active=pipeline.active,
+        equity=pipeline.allocation,
+        leverage=pipeline.leverage
     )
 
     return pipeline

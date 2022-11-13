@@ -9,7 +9,6 @@ import {
   UPDATE_STRATEGY,
   UPDATE_CHECKBOX,
   UPDATE_SECONDARY_MESSAGE,
-  UPDATE_MESSAGE,
   UPDATE_STRATEGY_PARAMS,
   RESET_MODAL,
   UPDATE_SECOND_MODAL_OPEN,
@@ -39,6 +38,12 @@ const colorOptions = COLORS_NAMES.map((colorName) => {
   }
 })
 
+const leverageOptions = Array.from({length: 20}, (x, i) => ({
+  key: i,
+  text: i + 1,
+  value: i + 1
+}))
+
 
 const NewPipeline = (props: Props) => {
 
@@ -61,6 +66,7 @@ const NewPipeline = (props: Props) => {
     candleSize,
     name,
     allocation,
+    leverage,
     exchanges,
     secondModalOpen,
     params,
@@ -108,16 +114,19 @@ const NewPipeline = (props: Props) => {
                 }}
                 style={{width: '80%'}}
               />
-              <Form.Input
-                label={'Equity'}
-                placeholder={`${availableBalance.toFixed(1)} USDT available`}
-                value={allocation}
+              <Form.Select
+                label={'Color'}
+                className={`light-${color}`}
+                value={color}
                 onChange={(e: any, {value}: {value?: any}) => {
                   dispatch({
                     type: UPDATE_PARAMS,
-                    value: {allocation: value}
+                    value: {color: value}
                   })
                 }}
+                selection
+                options={colorOptions}
+                selectOnBlur={false}
                 style={{width: '80%'}}
               />
             </Form.Group>
@@ -187,27 +196,43 @@ const NewPipeline = (props: Props) => {
               />
             </Form.Group>
             <Form.Group widths={'equal'}>
+              <Form.Select
+                label={'Leverage'}
+                value={leverage}
+                onChange={(e: any, {value}: {value?: any}) => {
+                  dispatch({
+                    type: UPDATE_PARAMS,
+                    value: {leverage: value}
+                  })
+                }}
+                selection
+                options={leverageOptions}
+                selectOnBlur={false}
+                style={{width: '80%'}}
+              />
+              <Form.Field>
+                <label>Equity</label>
+                <Input
+                  onChange={(e: any, {value}: {value?: any}) => {
+                    dispatch({
+                      type: UPDATE_PARAMS,
+                      value: {allocation: value}
+                    })
+                  }}
+                  style={{width: '80%'}}
+                  value={allocation}
+                  placeholder={
+                    `Avbl: ${availableBalance.toFixed(1)} USDT Max: ${(availableBalance * leverage).toFixed(1)} USDT)
+                  `}
+                />
+              </Form.Field>
+            </Form.Group>
+            <Form.Group widths={'equal'}>
               <Form.Checkbox
                 label={'📡 Live trading'}
                 onChange={() => dispatch({type: UPDATE_CHECKBOX})}
                 checked={liveTrading}
                 style={{alignSelf: 'center'}}
-              />
-              <Form.Select
-                label={'Color'}
-                className={`light-${color}`}
-                placeholder='Color'
-                value={color}
-                onChange={(e: any, {value}: {value?: any}) => {
-                  dispatch({
-                    type: UPDATE_PARAMS,
-                    value: {color: value}
-                  })
-                }}
-                selection
-                options={colorOptions}
-                selectOnBlur={false}
-                style={{width: '80%'}}
               />
             </Form.Group>
           </Form>
@@ -415,6 +440,7 @@ const NewPipeline = (props: Props) => {
                       dispatch,
                       params,
                       liveTrading,
+                      leverage,
                       balance: balances[liveTrading ? 'live': 'test'].USDT.availableBalance
                     })
                     if (success) setOpen(false)

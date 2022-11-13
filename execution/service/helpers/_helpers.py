@@ -5,8 +5,7 @@ from collections import namedtuple
 import django
 import redis
 
-from execution.service.helpers.exceptions import PipelineNotActive, SignalRequired, SignalInvalid
-from shared.utils.exceptions import NoSuchPipeline
+from execution.service.helpers.exceptions import SignalRequired, SignalInvalid
 from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -16,7 +15,8 @@ django.setup()
 fields = [
     "header",
     "binance_account_type",
-    "equity"
+    "equity",
+    "leverage",
 ]
 
 Parameters = namedtuple(
@@ -44,11 +44,10 @@ def validate_signal(**kwargs):
 def extract_and_validate(request_data):
 
     binance_account_type = request_data.get('binance_account_type', 'futures')
-    equity = request_data.get('equity', None)
     pipeline_id = request_data.get("pipeline_id", None)
 
     pipeline = get_pipeline_data(pipeline_id)
 
     header = json.loads(get_item_from_cache(cache, pipeline_id))
 
-    return pipeline, Parameters(header, binance_account_type, equity)
+    return pipeline, Parameters(header, binance_account_type, pipeline.equity, pipeline.leverage)

@@ -75,6 +75,7 @@ def start_symbol_trading():
         bt.start_symbol_trading(
             pipeline.symbol,
             equity=parameters.equity,
+            leverage=parameters.leverage,
             header=parameters.header,
             pipeline_id=pipeline.id
         )

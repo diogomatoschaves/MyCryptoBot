@@ -308,6 +308,7 @@ class Pipeline(models.Model):
     active = models.BooleanField(default=True, blank=True)
     open_time = models.DateTimeField(auto_now_add=True, null=True)
     color = models.TextField()
+    leverage = models.IntegerField(blank=True, default=1)
 
     def get_profit_loss(self):
         result = reduce(
@@ -336,7 +337,8 @@ class Pipeline(models.Model):
             openTime=self.open_time.isoformat() if self.open_time else None,
             numberTrades=self.trade_set.count(),
             profitLoss=self.get_profit_loss(),
-            color=self.color
+            color=self.color,
+            leverage=self.leverage
         )
 
     class Meta:
@@ -369,7 +371,8 @@ class Position(models.Model):
             amount=self.amount,
             open=self.open,
             openTime=self.open_time,
-            closeTime=self.close_time
+            closeTime=self.close_time,
+            leverage=self.pipeline.leverage if self.pipeline else None,
         )
 
 
@@ -401,4 +404,5 @@ class Trade(models.Model):
             side=self.side,
             mock=self.mock,
             pipelineId=self.pipeline.id if self.pipeline else None,
+            leverage=self.pipeline.leverage if self.pipeline else None,
         )

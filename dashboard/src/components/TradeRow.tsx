@@ -66,7 +66,8 @@ function TradeRow(props: Props) {
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell}}>
               {amount.toFixed(baseDecimal)}
             </Table.Cell>
-            <Table.Cell>
+            <Table.Cell style={styles.defaultCell}>
+              {trade.leverage}
             </Table.Cell>
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell}}>
               {openPrice.toFixed(quoteDecimal)}

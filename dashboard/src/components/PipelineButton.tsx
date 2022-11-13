@@ -43,7 +43,8 @@ function PipelineButton(props: Props) {
                 exchanges: pipeline.exchange,
                 params: pipeline.params,
                 paperTrading: pipeline.paperTrading,
-                color: pipeline.color
+                color: pipeline.color,
+                leverage: pipeline.leverage,
               })}
               style={styles.button}
               color={'green'}

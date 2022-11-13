@@ -1,5 +1,5 @@
 import React from 'react';
-import {Header, Table} from "semantic-ui-react";
+import {Table} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
 import {Decimals, MenuOption, Pipeline, Position} from "../types";
 import PositionRow from "./PositionRow";

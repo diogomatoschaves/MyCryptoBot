@@ -21,6 +21,7 @@ export type Trade = {
     side: number
     mock: boolean
     pipelineId: number
+    leverage: number
 }
 
 export type RawTrade = {
@@ -38,6 +39,7 @@ export type RawTrade = {
     side: number
     mock: boolean
     pipelineId: number
+    leverage: number
 }
 
 
@@ -56,6 +58,7 @@ export type Pipeline = {
     numberTrades: number
     profitLoss: number
     color: string
+    leverage: number
 }
 
 
@@ -74,11 +77,13 @@ export type RawPipeline = {
     numberTrades: number
     profitLoss: number
     color: string
+    leverage: number
 }
 
 export type PipelineParams = {
     name: string,
     allocation: number,
+    leverage: number,
     symbol: string
     strategy: string
     candleSize: string
@@ -100,6 +105,7 @@ export type Position = {
     open: boolean,
     openTime: Date,
     closeTime: Date
+    leverage: number
 }
 
 export type RawPosition = {
@@ -113,7 +119,8 @@ export type RawPosition = {
     amount: number,
     open: boolean,
     openTime: string,
-    closeTime: string
+    closeTime: string,
+    leverage: number
 }
 
 

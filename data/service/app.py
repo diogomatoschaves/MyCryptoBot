@@ -101,6 +101,7 @@ def start_bot():
     candle_size = data.get("candleSize", None)
     exchange = data.get("exchanges", None)
     paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
+    leverage = data.get("leverage", 1)
 
     check_input(
         binance_client,
@@ -113,6 +114,7 @@ def start_bot():
         params=params,
         candle_size=candle_size,
         exchange=exchange,
+        leverage=leverage
     )
 
     exchange = exchange.lower()
@@ -127,7 +129,8 @@ def start_bot():
         strategy=strategy,
         exchange=exchange,
         params=params,
-        paper_trading=paper_trading
+        paper_trading=paper_trading,
+        leverage=leverage
     )
 
     header = get_logging_row_header(symbol, strategy, params, candle_size, exchange, paper_trading)
@@ -139,8 +142,7 @@ def start_bot():
 
     payload = {
         "pipeline_id": pipeline.id,
-        "equity": allocation,
-        "binance_trader_type": "futures"  # TODO: Get this value from the user
+        "binance_trader_type": "futures",
     }
 
     response = start_stop_symbol_trading(payload, 'start')
