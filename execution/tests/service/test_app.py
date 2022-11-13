@@ -45,7 +45,6 @@ class TestExecutionService:
                 {
                     "pipeline_id": 1,
                     "binance_account_type": "margin",
-                    "equity": 100
                 },
                 Responses.SYMBOL_ALREADY_TRADED('BTCUSDT is already being traded.'),
                 id="SymbolAlreadyTraded-MARGIN",
@@ -54,17 +53,9 @@ class TestExecutionService:
                 {
                     "pipeline_id": 1,
                     "binance_account_type": "futures",
-                    "equity": 100
                 },
                 Responses.SYMBOL_ALREADY_TRADED('BTCUSDT is already being traded.'),
                 id="SymbolAlreadyTraded-FUTURES",
-            ),
-            pytest.param(
-                {
-                    "pipeline_id": 1,
-                },
-                Responses.EQUITY_REQUIRED("Parameter 'equity' is required."),
-                id="TRADING_SYMBOL_NO_EQUITY",
             ),
             pytest.param(
                 {
@@ -164,7 +155,6 @@ class TestExecutionService:
                 "start_symbol_trading",
                 {
                     "pipeline_id": 1,
-                    "equity": 100
                 },
                 Responses.TRADING_SYMBOL_START("BTCUSDT"),
                 id="START_SYMBOL_TRADING_VALID",

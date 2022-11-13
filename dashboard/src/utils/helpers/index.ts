@@ -28,7 +28,8 @@ export const validatePipelineCreation = async (
       dispatch,
       params,
       liveTrading,
-      balance
+      balance,
+      leverage,
     }: {
       name: string | undefined,
       allocation: string | undefined,
@@ -45,7 +46,8 @@ export const validatePipelineCreation = async (
       dispatch: any,
       params: Object,
       liveTrading: boolean,
-      balance: number
+      balance: number,
+      leverage: number,
     }) => {
   if (!name || !color || !allocation || !symbol || !strategy || !candleSize || exchanges.length === 0) {
     dispatch({
@@ -55,9 +57,9 @@ export const validatePipelineCreation = async (
     return false
   }
 
-  const allocationNumber = Number(allocation)
+  const allocationFloat = Number(allocation)
 
-  if (!allocationNumber) {
+  if (!allocationFloat) {
     dispatch({
       type: UPDATE_MESSAGE,
       message: {text: "Equity must be a number.", success: false}
@@ -65,10 +67,10 @@ export const validatePipelineCreation = async (
     return false
   }
 
-  if (allocationNumber > balance) {
+  if (allocationFloat > (balance * leverage)) {
     dispatch({
       type: UPDATE_MESSAGE,
-      message: {text: `Chosen equity must be smaller than ${balance.toFixed(1)} USDT`, success: false}
+      message: {text: `Chosen equity must be smaller than ${(balance * leverage).toFixed(1)} USDT`, success: false}
     })
     return false
   }
@@ -82,7 +84,8 @@ export const validatePipelineCreation = async (
     exchanges: exchanges.length > 0 ? exchangeOptions[exchanges[0] - 1].text : "",
     params,
     name,
-    allocation: allocationNumber,
+    allocation: allocationFloat,
+    leverage,
     paperTrading: !liveTrading,
     color
   })

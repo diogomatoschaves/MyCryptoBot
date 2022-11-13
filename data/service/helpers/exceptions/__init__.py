@@ -10,3 +10,4 @@ from data.service.helpers.exceptions.params_required import ParamsRequired
 from data.service.helpers.exceptions.strategy_invalid import StrategyInvalid
 from data.service.helpers.exceptions.strategy_required import StrategyRequired
 from data.service.helpers.exceptions.symbol_required import SymbolRequired
+from data.service.helpers.exceptions.leverage_invalid import LeverageInvalid

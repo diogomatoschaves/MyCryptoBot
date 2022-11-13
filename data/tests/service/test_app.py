@@ -245,6 +245,20 @@ class TestDataService:
                 lambda input_params: f'{input_params["name"]} is not a valid name.',
                 id="NAME_INVALID",
             ),
+            pytest.param(
+                {
+                    "name": "TEST",
+                    "symbol": "BTCUSDT",
+                    "strategy": "MovingAverage",
+                    "params": {"ma": 30},
+                    "candleSize": "1h",
+                    "exchanges": "Binance",
+                    "leverage": "20"
+                },
+                "LEVERAGE_INVALID",
+                lambda input_params: f'{input_params["leverage"]} is not a valid leverage.',
+                id="LEVERAGE_INVALID",
+            ),
         ],
     )
     def test_start_bot_invalid_input_response(
@@ -326,7 +340,8 @@ class TestDataService:
                     "strategy": "MovingAverage",
                     "params": {"ma": 30},
                     "candleSize": "1h",
-                    "exchanges": "Binance"
+                    "exchanges": "Binance",
+                    "leverage": 3
                 },
                 "DATA_PIPELINE_START_OK",
                 id="DATA_PIPELINE_START_OK",
