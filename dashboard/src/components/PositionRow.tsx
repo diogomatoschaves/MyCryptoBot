@@ -52,7 +52,7 @@ function PositionRow(props: Props) {
         <Table.Cell style={styles.defaultCell}>{Number(position.amount).toFixed(baseDecimal)}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{Number(position.price).toFixed(quoteDecimal)}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{markPrice ? markPrice.toFixed(quoteDecimal) : '-'}</Table.Cell>
-        <Table.Cell style={styles.defaultCell}></Table.Cell>
+        <Table.Cell style={styles.defaultCell}>{position.leverage}</Table.Cell>
         <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell, color: pnlColor}}>
           {pnl && `${pnl}%`}
         </Table.Cell>

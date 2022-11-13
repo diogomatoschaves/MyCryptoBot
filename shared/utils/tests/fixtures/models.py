@@ -53,7 +53,9 @@ def create_pipeline(db, create_exchange, create_symbol):
         params='{"ma": 30}',
         exchange_id='binance',
         interval="1h",
-        active=True
+        active=True,
+        allocation=100,
+        leverage=1
     )
 
 

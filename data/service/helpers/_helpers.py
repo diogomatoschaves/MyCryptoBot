@@ -99,6 +99,10 @@ def check_input(binance_client, strategies, **kwargs):
     if "color" not in kwargs or kwargs["name"] is None:
         raise ColorRequired
 
+    if "leverage" in kwargs:
+        if not isinstance(kwargs["leverage"], int):
+            raise LeverageInvalid(kwargs["leverage"])
+
 
 def get_or_create_pipeline(
     name,
@@ -109,7 +113,8 @@ def get_or_create_pipeline(
     strategy,
     exchange,
     params,
-    paper_trading
+    paper_trading,
+    leverage
 ):
 
     columns = dict(
@@ -121,7 +126,8 @@ def get_or_create_pipeline(
         strategy=strategy,
         exchange_id=exchange,
         params=json.dumps(params),
-        paper_trading=paper_trading
+        paper_trading=paper_trading,
+        leverage=leverage
     )
 
     try:
