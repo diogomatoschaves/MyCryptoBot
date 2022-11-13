@@ -1,5 +1,7 @@
 import '../App.css';
 import {Component} from 'react'
+import {Route, Switch, Redirect} from 'react-router-dom'
+import {Location} from 'history'
 import styled, {css} from 'styled-components'
 import {
     ChangeMenu,
@@ -38,8 +40,9 @@ import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
 import {parseTrade, organizePositions, organizePipelines, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
-import {Box, Wrapper} from "../styledComponents";
+import {Box, StyledSegment, Wrapper} from "../styledComponents";
 import Dashboard from "./Dashboard";
+import {Header} from "semantic-ui-react";
 
 
 const AppDiv = styled.div`
@@ -79,6 +82,8 @@ interface State {
 
 interface Props {
     decimals: Decimals
+    location: Location
+    menuProperties: MenuOption[]
 }
 
 
@@ -90,7 +95,13 @@ class App extends Component<Props, State> {
         decimals: {
             quoteDecimal: 1,
             baseDecimal: 3
-        }
+        },
+        menuProperties: [
+            {icon: 'line graph', emoji: '📈', text: 'Dashboard', code: "/dashboard"},
+            {icon: 'play', emoji: '🤖', text: 'Trading Bots', code: "/pipelines"},
+            {icon: 'list', emoji: '📒', text: 'Positions', code: "/positions"},
+            {icon: 'dollar', emoji: '💵', text: 'Trades', code: "/trades"},
+        ]
     }
 
     state = {
@@ -110,7 +121,7 @@ class App extends Component<Props, State> {
             icon: 'line graph',
             emoji: '📈',
             text: 'Dashboard',
-            code: 'dashboard'
+            code: '/dashboard'
         },
         symbols: [],
         currentPrices: {},
@@ -394,71 +405,85 @@ class App extends Component<Props, State> {
             trades,
             pipelines,
             positions,
-            menuOption,
             strategies,
             currentPrices,
             message,
             pipelinesMetrics
         } = this.state
 
-        const { decimals } = this.props
+
+        const { decimals, menuProperties, location } = this.props
+
+        const menuOption = menuProperties.find(option => location.pathname.includes(option.code))
 
         return (
             <AppDiv className="flex-row">
-                <Menu menuOption={menuOption} changeMenu={this.changeMenu}/>
-                {menuOption.code !== 'trades' ? (
-                    <Wrapper>
-                        {menuOption.code === 'pipelines' ? (
-                          <PipelinePanel
-                            menuOption={menuOption}
-                            symbolsOptions={symbolsOptions}
-                            strategiesOptions={strategiesOptions}
-                            candleSizeOptions={candleSizeOptions}
-                            exchangeOptions={exchangeOptions}
-                            pipelines={pipelines}
-                            strategies={strategies}
-                            balances={balances}
-                            startPipeline={this.startPipeline}
-                            stopPipeline={this.stopPipeline}
-                            deletePipeline={this.deletePipeline}
-                            updateMessage={this.updateMessage}
-                          />
-                        ) : menuOption.code === 'positions' ? (
-                          <PositionsPanel
-                            menuOption={menuOption}
-                            positions={positions}
-                            pipelines={pipelines}
-                            currentPrices={currentPrices}
-                            decimals={decimals}
-                          />
-                        ) : menuOption.code === 'dashboard' && (
-                          <Dashboard
-                            menuOption={menuOption}
-                            balances={balances}
-                            pipelines={pipelines}
-                            trades={trades}
-                            positions={positions}
-                            currentPrices={currentPrices}
-                            pipelinesMetrics={pipelinesMetrics}
-                            updatePipelinesMetrics={this.updatePipelinesMetrics}
-                          />
-                        )}
-                    </Wrapper>
-                ) : (
-                  <TradesPanel
-                    menuOption={menuOption}
-                    trades={trades}
-                    pipelines={pipelines}
-                    currentPrices={currentPrices}
-                    decimals={decimals}
-                    updateTrades={this.updateTrades}
-                  />
-                )}
-                {message.text && (
-                    <StyledBox align="center" bottom={message.bottomProp}>
-                        <MessageComponent success={message.success} message={message.text} color={message.color}/>
-                    </StyledBox>
-                )}
+                <Menu menuOption={menuOption} changeMenu={this.changeMenu} menuProperties={menuProperties}/>
+                <StyledSegment basic paddingTop="10px" padding="0" className="flex-column">
+                    {menuOption && (<Header size={'large'} dividing>
+                        <span style={{marginRight: 10}}>{menuOption.emoji}</span>
+                        {menuOption.text}
+                    </Header>)}
+                    <Switch>
+                        <Route path='/trades' exact={true}>
+                            <TradesPanel
+                              trades={trades}
+                              pipelines={pipelines}
+                              currentPrices={currentPrices}
+                              decimals={decimals}
+                              updateTrades={this.updateTrades}
+                            />
+                        </Route>
+                        <Route path="/">
+                            <Wrapper>
+                                <Switch>
+                                    <Route path="/pipelines">
+                                        <PipelinePanel
+                                          symbolsOptions={symbolsOptions}
+                                          strategiesOptions={strategiesOptions}
+                                          candleSizeOptions={candleSizeOptions}
+                                          exchangeOptions={exchangeOptions}
+                                          pipelines={pipelines}
+                                          strategies={strategies}
+                                          balances={balances}
+                                          startPipeline={this.startPipeline}
+                                          stopPipeline={this.stopPipeline}
+                                          deletePipeline={this.deletePipeline}
+                                          updateMessage={this.updateMessage}
+                                        />
+                                    </Route>
+                                    <Route path="/dashboard">
+                                        <Dashboard
+                                          balances={balances}
+                                          pipelines={pipelines}
+                                          trades={trades}
+                                          positions={positions}
+                                          currentPrices={currentPrices}
+                                          pipelinesMetrics={pipelinesMetrics}
+                                          updatePipelinesMetrics={this.updatePipelinesMetrics}
+                                        />
+                                    </Route>
+                                    <Route path="/positions">
+                                        <PositionsPanel
+                                          positions={positions}
+                                          pipelines={pipelines}
+                                          currentPrices={currentPrices}
+                                          decimals={decimals}
+                                        />
+                                    </Route>
+                                    <Route path="*">
+                                        <Redirect to="/dashboard" />
+                                    </Route>
+                                </Switch>
+                            </Wrapper>
+                        </Route>
+                    </Switch>
+                    {message.text && (
+                      <StyledBox align="center" bottom={message.bottomProp}>
+                          <MessageComponent success={message.success} message={message.text} color={message.color}/>
+                      </StyledBox>
+                    )}
+                </StyledSegment>
             </AppDiv>
         );
     }

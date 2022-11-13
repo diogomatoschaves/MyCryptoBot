@@ -5,7 +5,6 @@ import {
     StartPipeline,
     StopPipeline,
     Pipeline,
-    MenuOption,
     UpdateMessage,
     DeletePipeline, BalanceObj
 } from "../types";
@@ -26,7 +25,6 @@ interface Props {
     stopPipeline: StopPipeline;
     deletePipeline: DeletePipeline;
     updateMessage: UpdateMessage;
-    menuOption: MenuOption;
     strategies: any
 }
 
@@ -90,7 +88,6 @@ function PipelinePanel(props: Props) {
         stopPipeline,
         deletePipeline,
         updateMessage,
-        menuOption
     } = props
 
     const [
@@ -123,10 +120,6 @@ function PipelinePanel(props: Props) {
 
     return (
         <StyledSegment basic className="flex-column">
-            <Header size={'large'} dividing>
-                <span style={{marginRight: 10}}>{menuOption.emoji}</span>
-                {menuOption.text}
-            </Header>
             <ButtonWrapper className="flex-row">
                 <Button.Group size="mini" style={{alignSelf: 'center'}}>
                     {['live', 'test'].map((option, index) => (
