@@ -10,7 +10,6 @@ import { debounce, throttle } from 'lodash'
 interface Props {
     trades: Trade[]
     pipelines: Pipeline[]
-    menuOption: MenuOption
     currentPrices: Object
     decimals: Decimals
     updateTrades: UpdateTrades
@@ -88,7 +87,7 @@ function TradesPanel(props: Props) {
 
     const [bottomed, setBottomed] = useState(false)
 
-    const { trades, pipelines, menuOption, currentPrices, decimals, updateTrades } = props
+    const { trades, pipelines, currentPrices, decimals, updateTrades } = props
 
     const [{filteredTrades, options, pipelinesObject, page}, dispatch] = useReducer(
         reducer, {
@@ -157,10 +156,10 @@ function TradesPanel(props: Props) {
     return (
       <Wrapper onScroll={(e) => handleScroll(e)}>
         <StyledDiv className="flex-column" >
-            <Header size={'large'} dividing>
-                <span style={{marginRight: 10}}>{menuOption.emoji}</span>
-                {menuOption.text}
-            </Header>
+            {/*<Header size={'large'} dividing>*/}
+            {/*    <span style={{marginRight: 10}}>{menuOption.emoji}</span>*/}
+            {/*    {menuOption.text}*/}
+            {/*</Header>*/}
             <Button.Group size="mini" style={{alignSelf: 'center'}}>
                 {Object.keys(initialOptions).map(option =>
                     <Button onClick={() => dispatch({
