@@ -9,8 +9,8 @@ const StyledSegment = styled(Segment)`
     align-items: center;
     
     &.ui.segment {
-        padding: 25px;
-        padding-top: 0;
+        padding: ${(props: any) => props.padding ? props.padding : '25px'};
+        padding-top: ${(props: any) => props.paddingTop ? props.paddingTop : 0};;
     }
 `
 

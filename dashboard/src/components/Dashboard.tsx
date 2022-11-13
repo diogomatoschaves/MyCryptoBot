@@ -15,7 +15,6 @@ import {getTradesMetrics} from "../apiCalls";
 
 
 interface Props {
-  menuOption: MenuOption,
   balances: BalanceObj,
   pipelines: Pipeline[],
   trades: Trade[],
@@ -28,7 +27,7 @@ interface Props {
 
 function Dashboard(props: Props) {
 
-  const { menuOption, balances, pipelines, trades, positions, currentPrices, pipelinesMetrics: {
+  const { balances, pipelines, trades, positions, currentPrices, pipelinesMetrics: {
     totalPipelines,
     activePipelines,
     bestWinRate,
@@ -62,15 +61,20 @@ function Dashboard(props: Props) {
     worstTrade: 0
   })
 
+  const fetchTradesData = async () => {
+    const tradesMetrics = await getTradesMetrics()
+    setTradesMetrics(tradesMetrics)
+  }
+
+  useEffect(() =>{
+    fetchTradesData()
+    updatePipelinesMetrics()
+  }, [])
+
   useEffect(() => {
     if (trades !== previous.trades) {
-      const fetchTradesData = async () => {
-        const tradesMetrics = await getTradesMetrics()
-        setTradesMetrics(tradesMetrics)
-      }
 
       fetchTradesData()
-
       updatePipelinesMetrics()
     }
 
@@ -114,10 +118,6 @@ function Dashboard(props: Props) {
 
   return (
       <StyledSegment basic className="flex-column">
-        <Header size={'large'} dividing>
-          <span style={{marginRight: 10}}>{menuOption.emoji}</span>
-          {menuOption.text}
-        </Header>
         <Grid style={{width: '100%'}}>
           <Grid.Column style={{width: '100%'}} className="flex-column">
             <Grid.Row style={{width: '100%'}} className="flex-row">
