@@ -298,6 +298,8 @@ class TestDataService:
                     "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance",
+                    "allocation": 100,
+                    "leverage": 1
                 },
                 "DATA_PIPELINE_ONGOING",
                 id="DATA_PIPELINE_ONGOING",
