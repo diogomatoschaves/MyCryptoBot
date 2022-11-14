@@ -142,6 +142,7 @@ def get_or_create_pipeline(
             pipeline.save()
 
     except Pipeline.DoesNotExist:
+        print(columns)
         pipeline = Pipeline.objects.create(**columns)
         logging.info(f"Successfully created new pipeline ({pipeline.id})")
 
