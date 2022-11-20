@@ -23,9 +23,9 @@ export const getResources = async (resources) => {
 }
 
 
-export const getTrades = async (page) => {
+export const getTrades = async (page, pipelineId) => {
 
-  const url = `${dataAPIHost}/trades${page ? '/' + page : ''}`
+  const url = `${dataAPIHost}/trades${page ? '/' + page : ''}${pipelineId ? '?pipelineId=' + pipelineId : ''}`
 
   return await fetch(url, {
     method: 'GET',

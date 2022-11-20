@@ -7,8 +7,6 @@ import {
     ChangeMenu,
     DropdownOptions,
     MenuOption,
-    Trade,
-    Pipeline,
     PipelineParams,
     Position,
     StartPipeline,
@@ -20,7 +18,9 @@ import {
     BalanceObj,
     Decimals,
     RawTrade,
-    PipelinesMetrics
+    PipelinesMetrics,
+    RawPipeline,
+    PipelinesObject, TradesObject
 } from "../types";
 import {
     getTrades,
@@ -33,16 +33,16 @@ import {
     getPrice,
     deleteBot, getPipelinesMetrics,
 } from "../apiCalls";
-import {GREEN, RED, RESOURCES_MAPPING} from "../utils/constants";
+import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
 import MessageComponent from "./Message";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
-import {parseTrade, organizePositions, organizePipelines, organizePipeline} from "../utils/helpers";
+import {parseTrade, organizePositions, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import {Box, StyledSegment, Wrapper} from "../styledComponents";
 import Dashboard from "./Dashboard";
-import {Header} from "semantic-ui-react";
+import {Grid, Header} from "semantic-ui-react";
 
 
 const AppDiv = styled.div`
@@ -63,13 +63,34 @@ const StyledBox = styled(Box)`
     `}
 `
 
+const MenuColumn = styled.div`
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    top: 0;
+    width: 25vw;
+`
+
+const AppColumn = styled.div`
+    position: absolute;
+    left: 25vw;
+    bottom: 0;
+    top: 0;
+    right: 0;
+    // margin-left: 25vw;
+    width: 75vw;
+    height: 100vh;
+    padding: 10px 50px;
+    overflow: hidden
+`
+
 interface State {
     symbolsOptions: DropdownOptions[];
     strategiesOptions: DropdownOptions[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
-    trades: Trade[];
-    pipelines: Pipeline[];
+    trades: TradesObject;
+    pipelines: PipelinesObject;
     positions: Position[];
     balances: BalanceObj
     menuOption: MenuOption,
@@ -109,8 +130,8 @@ class App extends Component<Props, State> {
         strategiesOptions: [],
         candleSizeOptions: [],
         exchangeOptions: [],
-        trades: [],
-        pipelines: [],
+        trades: {},
+        pipelines: {},
         positions: [],
         strategies: {},
         balances: {
@@ -166,6 +187,8 @@ class App extends Component<Props, State> {
 
         this.getAccountBalance()
 
+        this.updatePipelinesMetrics()
+
         setInterval(() => {
             this.updateTrades()
         }, 60 * 1000)
@@ -218,7 +241,6 @@ class App extends Component<Props, State> {
         startBot(pipelineParams)
             .then(response => {
                 this.setState(state => {
-                    const pipelineIds = state.pipelines.map((pipe: Pipeline) => pipe.id)
                     return {
                         message: {
                             ...state.message,
@@ -226,14 +248,10 @@ class App extends Component<Props, State> {
                             show: true,
                             success: response.success,
                         },
-                        pipelines: response.success ? pipelineIds.includes(response.pipeline.id) ? (
-                            state.pipelines.reduce((pipelines: Pipeline[], pipeline: Pipeline) => {
-                                return [
-                                    ...pipelines,
-                                    pipeline.id === response.pipeline.id ? organizePipeline(response.pipeline) : pipeline]
-                            }, [])) : (
-                                [...state.pipelines, ...organizePipelines([response.pipeline])]
-                            ) : state.pipelines
+                        pipelines: response.success ? {
+                            ...state.pipelines,
+                            [response.pipeline.id]: organizePipeline(response.pipeline)
+                        } : state.pipelines
                     }
                 })
             })
@@ -249,14 +267,10 @@ class App extends Component<Props, State> {
                         show: true,
                         success: response.success
                     },
-                    pipelines: response.success ? state.pipelines.reduce(
-                        (newArray: Pipeline[], pipeline: Pipeline) => {
-                            if (pipelineId === pipeline.id) {
-                                return [...newArray, ...organizePipelines([response.pipeline])]
-                            } else return [...newArray, pipeline]
-                        },
-                        []
-                    ) : state.pipelines
+                    pipelines: response.success ? {
+                        ...state.pipelines,
+                        [pipelineId]: organizePipeline(response.pipeline)
+                    } : state.pipelines
                 }))
             })
     }
@@ -264,26 +278,24 @@ class App extends Component<Props, State> {
     deletePipeline: DeletePipeline = (pipelineId) => {
         deleteBot(pipelineId)
             .then(response => {
-                this.setState(state => ({
-                    message: {
+                this.setState(state => {
+                    const {id, ...pipelines} = state.pipelines
+                    return {
+                        message: {
                         ...state.message,
-                        text: response.message,
-                        show: true,
-                        success: response.success
-                    },
-                    pipelines: response.success ? state.pipelines.reduce(
-                        (newArray: Pipeline[], pipeline: Pipeline) => {
-                            return pipelineId === pipeline.id ? newArray : [...newArray, pipeline]
+                              text: response.message,
+                              show: true,
+                              success: response.success
                         },
-                        []
-                    ) : state.pipelines,
-                    positions: response.success ? state.positions.reduce(
+                        pipelines: response.success ? pipelines : state.pipelines,
+                        positions: response.success ? state.positions.reduce(
                         (newPositions: Position[], position: Position) => {
-                            return position.pipelineId === pipelineId ? newPositions : [...newPositions, position]
+                          return position.pipelineId === pipelineId ? newPositions : [...newPositions, position]
                         },
                         []
-                    ) : state.positions
-                }))
+                        ) : state.positions
+                    }
+                })
             })
     }
 
@@ -330,8 +342,17 @@ class App extends Component<Props, State> {
           })
     }
 
-    updateTrades = (page?: number) => {
-        getTrades(page)
+    updatePipelinesMetrics = () => {
+        getPipelinesMetrics()
+          .then(response => {
+              this.setState({
+                  pipelinesMetrics: response
+              })
+          })
+    }
+
+    updateTrades = (page?: number, pipelineId?: string) => {
+        getTrades(page, pipelineId)
           .then(response => {
               this.setState(state => {
                   return {
@@ -347,23 +368,18 @@ class App extends Component<Props, State> {
           })
     }
 
-
-    updatePipelinesMetrics = () => {
-        getPipelinesMetrics()
-          .then(response => {
-              this.setState({
-                  pipelinesMetrics: response
-              })
-          })
-    }
-
     updatePipelines = () => {
         getPipelines()
           .then(response => {
               this.setState(state => {
                   return {
                       ...state,
-                      pipelines: organizePipelines(response.pipelines),
+                      pipelines: {...state.pipelines, ...response.pipelines.reduce((pipelines: PipelinesObject, pipeline: RawPipeline) => {
+                          return {
+                              ...pipelines,
+                              [pipeline.id]: organizePipeline(pipeline)
+                          }
+                      }, {})},
                       // @ts-ignore
                       symbols: [...new Set(response.pipelines.map(pipeline => pipeline.symbol))]
                   }
@@ -418,72 +434,84 @@ class App extends Component<Props, State> {
 
         return (
             <AppDiv className="flex-row">
-                <Menu menuOption={menuOption} changeMenu={this.changeMenu} menuProperties={menuProperties}/>
-                <StyledSegment basic paddingTop="10px" padding="0" className="flex-column">
-                    {menuOption && (<Header size={'large'} dividing>
-                        <span style={{marginRight: 10}}>{menuOption.emoji}</span>
-                        {menuOption.text}
-                    </Header>)}
-                    <Switch>
-                        <Route path='/trades' exact={true}>
-                            <TradesPanel
-                              trades={trades}
-                              pipelines={pipelines}
-                              currentPrices={currentPrices}
-                              decimals={decimals}
-                              updateTrades={this.updateTrades}
-                            />
-                        </Route>
-                        <Route path="/">
-                            <Wrapper>
-                                <Switch>
-                                    <Route path="/pipelines">
-                                        <PipelinePanel
-                                          symbolsOptions={symbolsOptions}
-                                          strategiesOptions={strategiesOptions}
-                                          candleSizeOptions={candleSizeOptions}
-                                          exchangeOptions={exchangeOptions}
-                                          pipelines={pipelines}
-                                          strategies={strategies}
-                                          balances={balances}
-                                          startPipeline={this.startPipeline}
-                                          stopPipeline={this.stopPipeline}
-                                          deletePipeline={this.deletePipeline}
-                                          updateMessage={this.updateMessage}
-                                        />
-                                    </Route>
-                                    <Route path="/dashboard">
-                                        <Dashboard
-                                          balances={balances}
-                                          pipelines={pipelines}
-                                          trades={trades}
-                                          positions={positions}
-                                          currentPrices={currentPrices}
-                                          pipelinesMetrics={pipelinesMetrics}
-                                          updatePipelinesMetrics={this.updatePipelinesMetrics}
-                                        />
-                                    </Route>
-                                    <Route path="/positions">
-                                        <PositionsPanel
-                                          positions={positions}
-                                          pipelines={pipelines}
-                                          currentPrices={currentPrices}
-                                          decimals={decimals}
-                                        />
-                                    </Route>
-                                    <Route path="*">
-                                        <Redirect to="/dashboard" />
-                                    </Route>
-                                </Switch>
-                            </Wrapper>
-                        </Route>
-                    </Switch>
-                    {message.text && (
-                      <StyledBox align="center" bottom={message.bottomProp}>
-                          <MessageComponent success={message.success} message={message.text} color={message.color}/>
-                      </StyledBox>
-                    )}
-                </StyledSegment>
+                <MenuColumn>
+                    <Menu menuOption={menuOption} changeMenu={this.changeMenu} menuProperties={menuProperties}/>
+                </MenuColumn>
+                <AppColumn>
+                    <StyledSegment basic paddingTop="10px" padding="0" className="flex-column">
+                        {menuOption && (
+                          <Header size={'large'} dividing style={{height: '40px'}}>
+                            <span style={{marginRight: 10}}>{menuOption.emoji}</span>
+                            {menuOption.text}
+                          </Header>
+                        )}
+                        <Switch>
+                            <Route path='/trades' exact={true}>
+                                <TradesPanel
+                                  trades={trades}
+                                  pipelines={pipelines}
+                                  currentPrices={currentPrices}
+                                  decimals={decimals}
+                                  updateTrades={this.updateTrades}
+                                />
+                            </Route>
+                            <Route path="/">
+                                {/*<Wrapper>*/}
+                                    <Switch>
+                                        <Route path="/pipelines/:pipelineId?" render={({match}) => (
+                                            <PipelinePanel
+                                              match={match}
+                                              symbolsOptions={symbolsOptions}
+                                              strategiesOptions={strategiesOptions}
+                                              candleSizeOptions={candleSizeOptions}
+                                              exchangeOptions={exchangeOptions}
+                                              pipelines={pipelines}
+                                              strategies={strategies}
+                                              balances={balances}
+                                              startPipeline={this.startPipeline}
+                                              stopPipeline={this.stopPipeline}
+                                              deletePipeline={this.deletePipeline}
+                                              updateMessage={this.updateMessage}
+                                              pipelinesMetrics={pipelinesMetrics}
+                                              decimals={decimals}
+                                              trades={trades}
+                                              currentPrices={currentPrices}
+                                              updateTrades={this.updateTrades}
+                                            />
+                                          )}/>
+                                        <Route path="/dashboard">
+                                            <Dashboard
+                                              balances={balances}
+                                              pipelines={pipelines}
+                                              trades={trades}
+                                              positions={positions}
+                                              currentPrices={currentPrices}
+                                              pipelinesMetrics={pipelinesMetrics}
+                                              updatePipelinesMetrics={this.updatePipelinesMetrics}
+                                            />
+                                        </Route>
+                                        <Route path="/positions">
+                                            <PositionsPanel
+                                              positions={positions}
+                                              pipelines={pipelines}
+                                              currentPrices={currentPrices}
+                                              decimals={decimals}
+                                            />
+                                        </Route>
+                                        <Route path="*">
+                                            <Redirect to="/dashboard" />
+                                        </Route>
+                                    </Switch>
+                                {/*</Wrapper>*/}
+                            </Route>
+                        </Switch>
+                        {message.text && (
+                          <StyledBox align="center" bottom={message.bottomProp}>
+                              <MessageComponent success={message.success} message={message.text} color={message.color}/>
+                          </StyledBox>
+                        )}
+                    </StyledSegment>
+                </AppColumn>
             </AppDiv>
         );
     }
