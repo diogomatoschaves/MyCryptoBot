@@ -1,37 +1,37 @@
 import {
   Decimals,
   DeletePipeline,
-  Pipeline,
-  PipelinesMetrics,
   PipelinesObject,
   StartPipeline,
   StopPipeline,
-  TradesMetrics, TradesObject
+  TradesMetrics, TradesObject, UpdateTrades
 } from "../types";
-import {Button, Grid, Header, Icon, Label, Modal, Segment} from "semantic-ui-react";
-import {COLORS, GREEN, RED} from "../utils/constants";
+import {Grid, Icon} from "semantic-ui-react";
 import styled from "styled-components";
-import PipelineButton from "./PipelineButton";
-import {timeFormatterDate} from "../utils/helpers";
-import {useState} from "react";
 import TradesStats from "./TradesStats";
 import TradesTable from "./TradesTable";
 import PipelineItem from "./Pipeline";
 
 
-
-const PipelineDiv = styled.div`
+const Container = styled.div`
     width: 100%;
+    top: 60px;
+    height: calc(100% - 50px);
+    position: absolute;
 `
 
-const StyledColumn = styled(Grid.Column)`
-    display: flex !important;
+const TradesContainer = styled(Grid.Row)`
+  width: 100%;
+  height: 70vh;
+  padding-top: 0 !important;
+  margin-top: 10px;
 `
 
-const StyledRow = styled(Grid.Row)`
-    & .ui.grid.row {
-        padding: 0.9rem;
-    }
+const StatsContainer = styled(Grid.Row)`
+  width: 100%;
+  height: 30%;
+  minHeight: 300px;
+  position: relative;
 `
 
 interface Props {
@@ -44,6 +44,7 @@ interface Props {
   decimals: Decimals
   trades: TradesObject
   currentPrices: Object
+  updateTrades: UpdateTrades
 }
 
 
@@ -58,39 +59,43 @@ function PipelineDetail(props: Props) {
     pipelineMetrics,
     decimals,
     trades,
-    currentPrices
+    currentPrices,
+    updateTrades
   } = props
 
   const pipeline = pipelines[pipelineId]
 
   return (
-    <PipelineDiv className="flex-row">
-        <Grid columns={2}>
-          <Grid.Row>
-            <Grid.Column width={10}>
-              <PipelineItem
-                pipeline={pipeline}
-                startPipeline={startPipeline}
-                stopPipeline={stopPipeline}
-                deletePipeline={deletePipeline}
-                segmentStyle={styles.segment}
-              />
-            </Grid.Column>
-            <Grid.Column width={6}>
-              <TradesStats tradesMetrics={pipelineMetrics}/>
-            </Grid.Column>
-          </Grid.Row>
-          <Grid.Row>
-            <TradesTable
-              filteredTrades={Object.keys(trades).filter((tradeId) => trades[tradeId].pipelineId === Number(pipelineId))}
-              trades={trades}
-              decimals={decimals}
-              currentPrices={currentPrices}
-              pipelines={pipelines}
+    <Container>
+      <Grid columns={2}>
+        <StatsContainer>
+          <Grid.Column width={10}>
+            <PipelineItem
+              pipeline={pipeline}
+              startPipeline={startPipeline}
+              stopPipeline={stopPipeline}
+              deletePipeline={deletePipeline}
+              segmentStyle={styles.segment}
             />
-          </Grid.Row>
-        </Grid>
-    </PipelineDiv>
+          </Grid.Column>
+          <Grid.Column width={6}>
+            <TradesStats tradesMetrics={pipelineMetrics}/>
+          </Grid.Column>
+        </StatsContainer>
+        <TradesContainer>
+          <TradesTable
+            filteredTrades={Object.keys(trades).filter((tradeId) => trades[tradeId].pipelineId === Number(pipelineId))}
+            trades={trades}
+            decimals={decimals}
+            currentPrices={currentPrices}
+            pipelines={pipelines}
+            updateTrades={updateTrades}
+            maxHeight={'90%'}
+            pipelineId={pipelineId}
+          />
+        </TradesContainer>
+      </Grid>
+    </Container>
   );
 }
 

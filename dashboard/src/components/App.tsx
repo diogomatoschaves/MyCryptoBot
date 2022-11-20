@@ -42,7 +42,7 @@ import {parseTrade, organizePositions, organizePipeline} from "../utils/helpers"
 import PositionsPanel from "./PositionsPanel";
 import {Box, StyledSegment, Wrapper} from "../styledComponents";
 import Dashboard from "./Dashboard";
-import {Header} from "semantic-ui-react";
+import {Grid, Header} from "semantic-ui-react";
 
 
 const AppDiv = styled.div`
@@ -61,6 +61,27 @@ const StyledBox = styled(Box)`
     css`
       bottom: ${props.bottom}px;
     `}
+`
+
+const MenuColumn = styled.div`
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    top: 0;
+    width: 25vw;
+`
+
+const AppColumn = styled.div`
+    position: absolute;
+    left: 25vw;
+    bottom: 0;
+    top: 0;
+    right: 0;
+    // margin-left: 25vw;
+    width: 75vw;
+    height: 100vh;
+    padding: 10px 50px;
+    overflow: hidden
 `
 
 interface State {
@@ -330,8 +351,8 @@ class App extends Component<Props, State> {
           })
     }
 
-    updateTrades = (page?: number) => {
-        getTrades(page)
+    updateTrades = (page?: number, pipelineId?: string) => {
+        getTrades(page, pipelineId)
           .then(response => {
               this.setState(state => {
                   return {
@@ -413,77 +434,84 @@ class App extends Component<Props, State> {
 
         return (
             <AppDiv className="flex-row">
-                <Menu menuOption={menuOption} changeMenu={this.changeMenu} menuProperties={menuProperties}/>
-                <StyledSegment basic paddingTop="10px" padding="0" className="flex-column">
-                    {menuOption && (<Header size={'large'} dividing>
-                        <span style={{marginRight: 10}}>{menuOption.emoji}</span>
-                        {menuOption.text}
-                    </Header>)}
-                    <Switch>
-                        <Route path='/trades' exact={true}>
-                            <TradesPanel
-                              trades={trades}
-                              pipelines={pipelines}
-                              currentPrices={currentPrices}
-                              decimals={decimals}
-                              updateTrades={this.updateTrades}
-                            />
-                        </Route>
-                        <Route path="/">
-                            <Wrapper>
-                                <Switch>
-                                    <Route path="/pipelines/:pipelineId?" render={({match}) => (
-                                        <PipelinePanel
-                                          match={match}
-                                          symbolsOptions={symbolsOptions}
-                                          strategiesOptions={strategiesOptions}
-                                          candleSizeOptions={candleSizeOptions}
-                                          exchangeOptions={exchangeOptions}
-                                          pipelines={pipelines}
-                                          strategies={strategies}
-                                          balances={balances}
-                                          startPipeline={this.startPipeline}
-                                          stopPipeline={this.stopPipeline}
-                                          deletePipeline={this.deletePipeline}
-                                          updateMessage={this.updateMessage}
-                                          pipelinesMetrics={pipelinesMetrics}
-                                          decimals={decimals}
-                                          trades={trades}
-                                          currentPrices={currentPrices}
-                                        />
-                                      )}/>
-                                    <Route path="/dashboard">
-                                        <Dashboard
-                                          balances={balances}
-                                          pipelines={pipelines}
-                                          trades={trades}
-                                          positions={positions}
-                                          currentPrices={currentPrices}
-                                          pipelinesMetrics={pipelinesMetrics}
-                                          updatePipelinesMetrics={this.updatePipelinesMetrics}
-                                        />
-                                    </Route>
-                                    <Route path="/positions">
-                                        <PositionsPanel
-                                          positions={positions}
-                                          pipelines={pipelines}
-                                          currentPrices={currentPrices}
-                                          decimals={decimals}
-                                        />
-                                    </Route>
-                                    <Route path="*">
-                                        <Redirect to="/dashboard" />
-                                    </Route>
-                                </Switch>
-                            </Wrapper>
-                        </Route>
-                    </Switch>
-                    {message.text && (
-                      <StyledBox align="center" bottom={message.bottomProp}>
-                          <MessageComponent success={message.success} message={message.text} color={message.color}/>
-                      </StyledBox>
-                    )}
-                </StyledSegment>
+                <MenuColumn>
+                    <Menu menuOption={menuOption} changeMenu={this.changeMenu} menuProperties={menuProperties}/>
+                </MenuColumn>
+                <AppColumn>
+                    <StyledSegment basic paddingTop="10px" padding="0" className="flex-column">
+                        {menuOption && (
+                          <Header size={'large'} dividing style={{height: '40px'}}>
+                            <span style={{marginRight: 10}}>{menuOption.emoji}</span>
+                            {menuOption.text}
+                          </Header>
+                        )}
+                        <Switch>
+                            <Route path='/trades' exact={true}>
+                                <TradesPanel
+                                  trades={trades}
+                                  pipelines={pipelines}
+                                  currentPrices={currentPrices}
+                                  decimals={decimals}
+                                  updateTrades={this.updateTrades}
+                                />
+                            </Route>
+                            <Route path="/">
+                                {/*<Wrapper>*/}
+                                    <Switch>
+                                        <Route path="/pipelines/:pipelineId?" render={({match}) => (
+                                            <PipelinePanel
+                                              match={match}
+                                              symbolsOptions={symbolsOptions}
+                                              strategiesOptions={strategiesOptions}
+                                              candleSizeOptions={candleSizeOptions}
+                                              exchangeOptions={exchangeOptions}
+                                              pipelines={pipelines}
+                                              strategies={strategies}
+                                              balances={balances}
+                                              startPipeline={this.startPipeline}
+                                              stopPipeline={this.stopPipeline}
+                                              deletePipeline={this.deletePipeline}
+                                              updateMessage={this.updateMessage}
+                                              pipelinesMetrics={pipelinesMetrics}
+                                              decimals={decimals}
+                                              trades={trades}
+                                              currentPrices={currentPrices}
+                                              updateTrades={this.updateTrades}
+                                            />
+                                          )}/>
+                                        <Route path="/dashboard">
+                                            <Dashboard
+                                              balances={balances}
+                                              pipelines={pipelines}
+                                              trades={trades}
+                                              positions={positions}
+                                              currentPrices={currentPrices}
+                                              pipelinesMetrics={pipelinesMetrics}
+                                              updatePipelinesMetrics={this.updatePipelinesMetrics}
+                                            />
+                                        </Route>
+                                        <Route path="/positions">
+                                            <PositionsPanel
+                                              positions={positions}
+                                              pipelines={pipelines}
+                                              currentPrices={currentPrices}
+                                              decimals={decimals}
+                                            />
+                                        </Route>
+                                        <Route path="*">
+                                            <Redirect to="/dashboard" />
+                                        </Route>
+                                    </Switch>
+                                {/*</Wrapper>*/}
+                            </Route>
+                        </Switch>
+                        {message.text && (
+                          <StyledBox align="center" bottom={message.bottomProp}>
+                              <MessageComponent success={message.success} message={message.text} color={message.color}/>
+                          </StyledBox>
+                        )}
+                    </StyledSegment>
+                </AppColumn>
             </AppDiv>
         );
     }
