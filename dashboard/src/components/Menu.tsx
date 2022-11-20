@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import {Menu} from "semantic-ui-react";
+import {Grid, Menu} from "semantic-ui-react";
 import {Link} from 'react-router-dom'
 import {ChangeMenu, MenuOption} from "../types";
 
@@ -11,9 +11,8 @@ interface Props {
 }
 
 
-const Column = styled.div`
+const Column = styled(Grid.Column)`
     height: 100%;
-    width: 25%;
     flex-direction: column;
     justify-content: flex-start;
     padding: 20px;
@@ -26,16 +25,15 @@ const Column = styled.div`
 
 function AppMenu(props: Props) {
 
-    const { changeMenu, menuOption, menuProperties } = props
+    const { menuOption, menuProperties } = props
 
     return (
-        <Column>
+        <Column width={4}>
             <Menu style={{paddingTop: '40px'}} secondary vertical>
                 {menuProperties.map(menuItem => (
                   <Link to={menuItem.code}>
                     <Menu.Item
                         style={styles}
-                        // onClick={() => changeMenu(menuItem)}
                         active={menuOption && menuOption.code === menuItem.code}
                     >
                         <div className="flex-row" style={{justifyContent: 'space-between'}}>

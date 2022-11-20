@@ -19,7 +19,7 @@ interface Props {
 
 const StyledDiv = styled.div`
     width: 100%;
-    height: 100%;
+    height: calc(100% - 50px);
     justify-content: flex-start;
     align-items: center;
     padding: 30px;
@@ -54,12 +54,6 @@ const reducer = (state: any, action: any) => {
                     test: action.test !== undefined ? action.test : state.options.test,
                 }
             }
-        case UPDATE_PAGE:
-            console.log('updating page: ' + action.page)
-            return {
-                ...state,
-                page: action.page
-            }
         default:
             throw new Error();
     }
@@ -74,24 +68,14 @@ const initialOptions = {
 
 function TradesPanel(props: Props) {
 
-    const [bottomed, setBottomed] = useState(false)
-
     const { trades, pipelines, currentPrices, decimals, updateTrades } = props
 
-    const [{filteredTrades, options, page}, dispatch] = useReducer(
+    const [{filteredTrades, options}, dispatch] = useReducer(
         reducer, {
           filteredTrades: Object.keys(trades),
           options: initialOptions,
-          page: 2
         }
     );
-
-    const handleScroll = useRef(throttle((event: any) => {
-        const element = event.target;
-        if (Math.round(element.scrollHeight - element.scrollTop) <= element.clientHeight) {
-            setBottomed(true)
-        }
-    }, 200)).current
 
     const previous = useRef({trades, options}).current;
 
@@ -110,48 +94,27 @@ function TradesPanel(props: Props) {
         };
     }, [trades, options]);
 
-    useEffect(() => {
-        if (!bottomed) return
-        fetchMoreTrades(page);
-        dispatch({
-            type: UPDATE_PAGE,
-            page: page + 1
-        })
-
-    }, [bottomed])
-
-    const fetchMoreTrades = (page: number) => {
-        fetchData(page);
-        setBottomed(false)
-    };
-
-    const fetchData = useRef(debounce(async (page: number) => {
-        updateTrades(page)
-    }, 500)).current
-
     return (
-      <Wrapper onScroll={(e) => handleScroll(e)}>
-        <StyledDiv className="flex-column" >
-            <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                {Object.keys(initialOptions).map(option =>
-                    <Button onClick={() => dispatch({
-                        type: TOGGLE_OPTIONS,
-                        [option]: !options[option]
-                    })} color={options && options[option] && 'grey'}>
-                        {option}
-                    </Button>
-                )}
-            </Button.Group>
-            <TradesTable
-              filteredTrades={filteredTrades}
-              trades={trades}
-              decimals={decimals}
-              currentPrices={currentPrices}
-              pipelines={pipelines}
-            />
-            {bottomed && <h1>Fetching more list items...</h1>}
-        </StyledDiv>
-      </Wrapper>
+      <StyledDiv className="flex-column" >
+          <Button.Group size="mini" style={{alignSelf: 'center'}}>
+              {Object.keys(initialOptions).map(option =>
+                <Button onClick={() => dispatch({
+                    type: TOGGLE_OPTIONS,
+                    [option]: !options[option]
+                })} color={options && options[option] && 'grey'}>
+                    {option}
+                </Button>
+              )}
+          </Button.Group>
+                <TradesTable
+                  filteredTrades={filteredTrades}
+                  trades={trades}
+                  decimals={decimals}
+                  currentPrices={currentPrices}
+                  pipelines={pipelines}
+                  updateTrades={updateTrades}
+                />
+      </StyledDiv>
     );
 }
 

@@ -10,6 +10,8 @@ interface Props {
 
 const TradesStats = (props: Props) => {
 
+  if (!props.tradesMetrics) return <div></div>
+
   const { winningTrades, numberTrades, maxTradeDuration, avgTradeDuration, bestTrade, worstTrade } = props.tradesMetrics;
 
   const winRate = winningTrades / numberTrades * 100
@@ -82,7 +84,7 @@ export default TradesStats
 
 const styles = {
   rowSegment: {
-    margin: '20px 10px',
+    // margin: '20px 10px',
     // width: '50%',
     minHeight: '200px'
   },
