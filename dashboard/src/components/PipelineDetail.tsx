@@ -17,6 +17,7 @@ const Container = styled.div`
     width: 100%;
     top: 60px;
     height: calc(100% - 50px);
+    padding: 0 20px 0 30px;
     position: absolute;
 `
 

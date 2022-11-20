@@ -77,10 +77,8 @@ const AppColumn = styled.div`
     bottom: 0;
     top: 0;
     right: 0;
-    // margin-left: 25vw;
     width: 75vw;
     height: 100vh;
-    padding: 10px 50px;
     overflow: hidden
 `
 
@@ -455,54 +453,48 @@ class App extends Component<Props, State> {
                                   updateTrades={this.updateTrades}
                                 />
                             </Route>
-                            <Route path="/">
-                                {/*<Wrapper>*/}
-                                    <Switch>
-                                        <Route path="/pipelines/:pipelineId?" render={({match}) => (
-                                            <PipelinePanel
-                                              match={match}
-                                              symbolsOptions={symbolsOptions}
-                                              strategiesOptions={strategiesOptions}
-                                              candleSizeOptions={candleSizeOptions}
-                                              exchangeOptions={exchangeOptions}
-                                              pipelines={pipelines}
-                                              strategies={strategies}
-                                              balances={balances}
-                                              startPipeline={this.startPipeline}
-                                              stopPipeline={this.stopPipeline}
-                                              deletePipeline={this.deletePipeline}
-                                              updateMessage={this.updateMessage}
-                                              pipelinesMetrics={pipelinesMetrics}
-                                              decimals={decimals}
-                                              trades={trades}
-                                              currentPrices={currentPrices}
-                                              updateTrades={this.updateTrades}
-                                            />
-                                          )}/>
-                                        <Route path="/dashboard">
-                                            <Dashboard
-                                              balances={balances}
-                                              pipelines={pipelines}
-                                              trades={trades}
-                                              positions={positions}
-                                              currentPrices={currentPrices}
-                                              pipelinesMetrics={pipelinesMetrics}
-                                              updatePipelinesMetrics={this.updatePipelinesMetrics}
-                                            />
-                                        </Route>
-                                        <Route path="/positions">
-                                            <PositionsPanel
-                                              positions={positions}
-                                              pipelines={pipelines}
-                                              currentPrices={currentPrices}
-                                              decimals={decimals}
-                                            />
-                                        </Route>
-                                        <Route path="*">
-                                            <Redirect to="/dashboard" />
-                                        </Route>
-                                    </Switch>
-                                {/*</Wrapper>*/}
+                            <Route path="/pipelines/:pipelineId?" render={({match}) => (
+                                <PipelinePanel
+                                  match={match}
+                                  symbolsOptions={symbolsOptions}
+                                  strategiesOptions={strategiesOptions}
+                                  candleSizeOptions={candleSizeOptions}
+                                  exchangeOptions={exchangeOptions}
+                                  pipelines={pipelines}
+                                  strategies={strategies}
+                                  balances={balances}
+                                  startPipeline={this.startPipeline}
+                                  stopPipeline={this.stopPipeline}
+                                  deletePipeline={this.deletePipeline}
+                                  updateMessage={this.updateMessage}
+                                  pipelinesMetrics={pipelinesMetrics}
+                                  decimals={decimals}
+                                  trades={trades}
+                                  currentPrices={currentPrices}
+                                  updateTrades={this.updateTrades}
+                                />
+                              )}/>
+                            <Route path="/dashboard">
+                                <Dashboard
+                                  balances={balances}
+                                  pipelines={pipelines}
+                                  trades={trades}
+                                  positions={positions}
+                                  currentPrices={currentPrices}
+                                  pipelinesMetrics={pipelinesMetrics}
+                                  updatePipelinesMetrics={this.updatePipelinesMetrics}
+                                />
+                            </Route>
+                            <Route path="/positions">
+                                <PositionsPanel
+                                  positions={positions}
+                                  pipelines={pipelines}
+                                  currentPrices={currentPrices}
+                                  decimals={decimals}
+                                />
+                            </Route>
+                            <Route path="*">
+                                <Redirect to="/dashboard" />
                             </Route>
                         </Switch>
                         {message.text && (
