@@ -1,6 +1,5 @@
 import {Fragment} from 'react'
 import {Button, Message} from "semantic-ui-react";
-import StyledSegment from "../styledComponents/StyledSegment";
 import {Link} from 'react-router-dom';
 import {
     DropdownOptions,
@@ -154,7 +153,6 @@ function PipelinePanel(props: Props) {
                 updateTrades={updateTrades}
               />
             ) : (
-              // <StyledSegment basic className="flex-column" paddingBottom={'20px'}>
               <Wrapper>
                 <ButtonWrapper className="flex-row">
                     <Button.Group size="mini" style={{alignSelf: 'center'}}>
@@ -189,7 +187,7 @@ function PipelinePanel(props: Props) {
                     />
                 </ButtonWrapper>
                 {filteredPipelines.map((pipelineId: string, index: number) => (
-                  <Link to={`/pipelines/${pipelineId}`} className="flex-row">
+                  <Link to={`/pipelines/${pipelineId}`} className="flex-row" style={{padding: '0 30px'}}>
                     <PipelineItem
                         key={index}
                         startPipeline={startPipeline}

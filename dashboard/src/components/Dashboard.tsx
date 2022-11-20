@@ -249,7 +249,7 @@ function Dashboard(props: Props) {
                 {/*  labelPosition={110}*/}
                 {/*/>}*/}
               </Segment>
-              <TradesStats tradesMetrics={tradesMetrics}/>
+              <TradesStats tradesMetrics={tradesMetrics} style={styles.tradesStatsStyle}/>
             </Grid.Row>
           </Grid.Column>
         </Grid>
@@ -261,6 +261,10 @@ function Dashboard(props: Props) {
 export default Dashboard;
 
 const styles = {
+    tradesStatsStyle: {
+      margin: '20px 10px',
+      width: '50%',
+    },
     segment: {
       width: '80%',
       padding: '30px 30px 20px',
