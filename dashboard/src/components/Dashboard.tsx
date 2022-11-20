@@ -1,8 +1,14 @@
 import {Grid, Header, Label, Segment} from "semantic-ui-react";
-import {BalanceObj, MenuOption, Pipeline, PipelinesMetrics, Position, Trade, UpdatePipelinesMetrics} from "../types";
+import {
+  BalanceObj,
+  PipelinesMetrics,
+  PipelinesObject,
+  Position,
+  TradesObject,
+  UpdatePipelinesMetrics
+} from "../types";
 import {StyledSegment} from "../styledComponents";
 import {useEffect, useReducer, useRef, useState} from "react";
-import {timeFormatterDiff} from "../utils/helpers";
 import {PieChart} from 'react-minimal-pie-chart';
 import {COLORS, GREEN, RED} from "../utils/constants";
 import {
@@ -12,12 +18,13 @@ import {
   UPDATE_POSITIONS_STATISTICS
 } from "../reducers/positionsReducer";
 import {getTradesMetrics} from "../apiCalls";
+import TradesStats from "./TradesStats";
 
 
 interface Props {
   balances: BalanceObj,
-  pipelines: Pipeline[],
-  trades: Trade[],
+  pipelines: PipelinesObject,
+  trades: TradesObject,
   positions: Position[],
   currentPrices: Object
   pipelinesMetrics: PipelinesMetrics
@@ -44,14 +51,7 @@ function Dashboard(props: Props) {
       positionsReducer, positions.reduce(positionsReducerCallback(currentPrices), positionsReducerInitialState)
   );
 
-  const [{
-    numberTrades,
-    maxTradeDuration,
-    avgTradeDuration,
-    winningTrades,
-    bestTrade,
-    worstTrade,
-  }, setTradesMetrics] = useState({
+  const [tradesMetrics, setTradesMetrics] = useState({
     numberTrades: 0,
     maxTradeDuration: 0,
     avgTradeDuration: 0,
@@ -73,7 +73,6 @@ function Dashboard(props: Props) {
 
   useEffect(() => {
     if (trades !== previous.trades) {
-
       fetchTradesData()
       updatePipelinesMetrics()
     }
@@ -96,8 +95,6 @@ function Dashboard(props: Props) {
       previous.currentPrices = currentPrices
     };
   }, [trades, positions, pipelines, currentPrices]);
-
-  const winRate = winningTrades / numberTrades * 100
 
   let totalPnl, pnlColor
   if (totalInitialEquity !== 0) {
@@ -252,65 +249,7 @@ function Dashboard(props: Props) {
                 {/*  labelPosition={110}*/}
                 {/*/>}*/}
               </Segment>
-              <Segment secondary raised style={styles.rowSegment}>
-                <Header size={'medium'} color="purple">
-                  Trades
-                </Header>
-                <Grid columns={3}>
-                  <Grid.Row>
-                    <Grid.Column>
-                      <Grid.Column style={styles.tradesHeader}>
-                        # trades
-                      </Grid.Column>
-                      <Grid.Column style={styles.tradesColumn} >
-                        {numberTrades}
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.tradesHeader}>
-                        Max trade duration
-                      </Grid.Column>
-                      <Grid.Column floated='right' style={styles.tradesColumn}>
-                        {timeFormatterDiff(maxTradeDuration)}
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.tradesHeader}>
-                        Avg trade duration
-                      </Grid.Column>
-                      <Grid.Column floated='right' style={styles.tradesColumn} >
-                        {timeFormatterDiff(avgTradeDuration)}
-                      </Grid.Column>
-                    </Grid.Column>
-                  </Grid.Row>
-                  <Grid.Row>
-                    <Grid.Column>
-                      <Grid.Column style={styles.tradesHeader}>
-                        Win Rate
-                      </Grid.Column>
-                      <Grid.Column style={styles.tradesColumn} >
-                        {winRate.toFixed(0)}%
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column style={styles.tradesHeader}>
-                        Best Trade
-                      </Grid.Column>
-                      <Grid.Column style={{...styles.tradesColumn, color: bestTrade > 0 ? GREEN : RED}} >
-                        {(bestTrade * 100).toFixed(2)}%
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column style={styles.tradesHeader}>
-                        Worst Trade
-                      </Grid.Column>
-                      <Grid.Column style={{...styles.tradesColumn, color: worstTrade > 0 ? GREEN : RED}} >
-                        {(worstTrade * 100).toFixed(2)}%
-                      </Grid.Column>
-                    </Grid.Column>
-                  </Grid.Row>
-                </Grid>
-              </Segment>
+              <TradesStats tradesMetrics={tradesMetrics}/>
             </Grid.Row>
           </Grid.Column>
         </Grid>

@@ -44,15 +44,19 @@ def get_resources(resources):
     return jsonify(response)
 
 
-@dashboard.route('/trades', defaults={'page': None})
+@dashboard.route('/trades', defaults={'page': None}, methods=["GET"])
 @dashboard.route('/trades/<page>')
 def get_trades(page):
 
+    args = request.args
+
     response = {}
 
-    orders = Trade.objects.filter(close_time__isnull=False).order_by('-open_time')
+    trades = Trade.objects.filter(close_time__isnull=False).order_by('-open_time')
+    if "pipelineId" in args:
+        trades = trades.filter(pipeline__id=args["pipelineId"])
 
-    paginator = Paginator(orders, 20)
+    paginator = Paginator(trades, 20)
 
     if page is None:
         page_obj = paginator.get_page(1)
