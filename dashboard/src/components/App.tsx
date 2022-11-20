@@ -7,8 +7,6 @@ import {
     ChangeMenu,
     DropdownOptions,
     MenuOption,
-    Trade,
-    Pipeline,
     PipelineParams,
     Position,
     StartPipeline,
@@ -20,7 +18,9 @@ import {
     BalanceObj,
     Decimals,
     RawTrade,
-    PipelinesMetrics
+    PipelinesMetrics,
+    RawPipeline,
+    PipelinesObject, TradesObject
 } from "../types";
 import {
     getTrades,
@@ -33,12 +33,12 @@ import {
     getPrice,
     deleteBot, getPipelinesMetrics,
 } from "../apiCalls";
-import {GREEN, RED, RESOURCES_MAPPING} from "../utils/constants";
+import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
 import MessageComponent from "./Message";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
-import {parseTrade, organizePositions, organizePipelines, organizePipeline} from "../utils/helpers";
+import {parseTrade, organizePositions, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import {Box, StyledSegment, Wrapper} from "../styledComponents";
 import Dashboard from "./Dashboard";
@@ -68,8 +68,8 @@ interface State {
     strategiesOptions: DropdownOptions[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
-    trades: Trade[];
-    pipelines: Pipeline[];
+    trades: TradesObject;
+    pipelines: PipelinesObject;
     positions: Position[];
     balances: BalanceObj
     menuOption: MenuOption,
@@ -109,8 +109,8 @@ class App extends Component<Props, State> {
         strategiesOptions: [],
         candleSizeOptions: [],
         exchangeOptions: [],
-        trades: [],
-        pipelines: [],
+        trades: {},
+        pipelines: {},
         positions: [],
         strategies: {},
         balances: {
@@ -166,6 +166,8 @@ class App extends Component<Props, State> {
 
         this.getAccountBalance()
 
+        this.updatePipelinesMetrics()
+
         setInterval(() => {
             this.updateTrades()
         }, 60 * 1000)
@@ -218,7 +220,6 @@ class App extends Component<Props, State> {
         startBot(pipelineParams)
             .then(response => {
                 this.setState(state => {
-                    const pipelineIds = state.pipelines.map((pipe: Pipeline) => pipe.id)
                     return {
                         message: {
                             ...state.message,
@@ -226,14 +227,10 @@ class App extends Component<Props, State> {
                             show: true,
                             success: response.success,
                         },
-                        pipelines: response.success ? pipelineIds.includes(response.pipeline.id) ? (
-                            state.pipelines.reduce((pipelines: Pipeline[], pipeline: Pipeline) => {
-                                return [
-                                    ...pipelines,
-                                    pipeline.id === response.pipeline.id ? organizePipeline(response.pipeline) : pipeline]
-                            }, [])) : (
-                                [...state.pipelines, ...organizePipelines([response.pipeline])]
-                            ) : state.pipelines
+                        pipelines: response.success ? {
+                            ...state.pipelines,
+                            [response.pipeline.id]: organizePipeline(response.pipeline)
+                        } : state.pipelines
                     }
                 })
             })
@@ -249,14 +246,10 @@ class App extends Component<Props, State> {
                         show: true,
                         success: response.success
                     },
-                    pipelines: response.success ? state.pipelines.reduce(
-                        (newArray: Pipeline[], pipeline: Pipeline) => {
-                            if (pipelineId === pipeline.id) {
-                                return [...newArray, ...organizePipelines([response.pipeline])]
-                            } else return [...newArray, pipeline]
-                        },
-                        []
-                    ) : state.pipelines
+                    pipelines: response.success ? {
+                        ...state.pipelines,
+                        [pipelineId]: organizePipeline(response.pipeline)
+                    } : state.pipelines
                 }))
             })
     }
@@ -264,26 +257,24 @@ class App extends Component<Props, State> {
     deletePipeline: DeletePipeline = (pipelineId) => {
         deleteBot(pipelineId)
             .then(response => {
-                this.setState(state => ({
-                    message: {
+                this.setState(state => {
+                    const {id, ...pipelines} = state.pipelines
+                    return {
+                        message: {
                         ...state.message,
-                        text: response.message,
-                        show: true,
-                        success: response.success
-                    },
-                    pipelines: response.success ? state.pipelines.reduce(
-                        (newArray: Pipeline[], pipeline: Pipeline) => {
-                            return pipelineId === pipeline.id ? newArray : [...newArray, pipeline]
+                              text: response.message,
+                              show: true,
+                              success: response.success
                         },
-                        []
-                    ) : state.pipelines,
-                    positions: response.success ? state.positions.reduce(
+                        pipelines: response.success ? pipelines : state.pipelines,
+                        positions: response.success ? state.positions.reduce(
                         (newPositions: Position[], position: Position) => {
-                            return position.pipelineId === pipelineId ? newPositions : [...newPositions, position]
+                          return position.pipelineId === pipelineId ? newPositions : [...newPositions, position]
                         },
                         []
-                    ) : state.positions
-                }))
+                        ) : state.positions
+                    }
+                })
             })
     }
 
@@ -330,6 +321,15 @@ class App extends Component<Props, State> {
           })
     }
 
+    updatePipelinesMetrics = () => {
+        getPipelinesMetrics()
+          .then(response => {
+              this.setState({
+                  pipelinesMetrics: response
+              })
+          })
+    }
+
     updateTrades = (page?: number) => {
         getTrades(page)
           .then(response => {
@@ -347,23 +347,18 @@ class App extends Component<Props, State> {
           })
     }
 
-
-    updatePipelinesMetrics = () => {
-        getPipelinesMetrics()
-          .then(response => {
-              this.setState({
-                  pipelinesMetrics: response
-              })
-          })
-    }
-
     updatePipelines = () => {
         getPipelines()
           .then(response => {
               this.setState(state => {
                   return {
                       ...state,
-                      pipelines: organizePipelines(response.pipelines),
+                      pipelines: {...state.pipelines, ...response.pipelines.reduce((pipelines: PipelinesObject, pipeline: RawPipeline) => {
+                          return {
+                              ...pipelines,
+                              [pipeline.id]: organizePipeline(pipeline)
+                          }
+                      }, {})},
                       // @ts-ignore
                       symbols: [...new Set(response.pipelines.map(pipeline => pipeline.symbol))]
                   }
@@ -437,8 +432,9 @@ class App extends Component<Props, State> {
                         <Route path="/">
                             <Wrapper>
                                 <Switch>
-                                    <Route path="/pipelines">
+                                    <Route path="/pipelines/:pipelineId?" render={({match}) => (
                                         <PipelinePanel
+                                          match={match}
                                           symbolsOptions={symbolsOptions}
                                           strategiesOptions={strategiesOptions}
                                           candleSizeOptions={candleSizeOptions}
@@ -450,8 +446,12 @@ class App extends Component<Props, State> {
                                           stopPipeline={this.stopPipeline}
                                           deletePipeline={this.deletePipeline}
                                           updateMessage={this.updateMessage}
+                                          pipelinesMetrics={pipelinesMetrics}
+                                          decimals={decimals}
+                                          trades={trades}
+                                          currentPrices={currentPrices}
                                         />
-                                    </Route>
+                                      )}/>
                                     <Route path="/dashboard">
                                         <Dashboard
                                           balances={balances}
