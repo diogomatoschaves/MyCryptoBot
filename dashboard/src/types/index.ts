@@ -166,6 +166,28 @@ export type PipelinesMetrics = {
     activePipelines: number,
     bestWinRate: Partial<Pipeline> & {winRate: number},
     mostTrades: Partial<Pipeline> & {totalTrades: number},
+    [key: string]: any;
+}
+
+
+export interface PipelinesObject {
+    [key: string]: Pipeline
+}
+
+
+export interface TradesObject {
+    [key: string]: Trade
+}
+
+
+export type TradesMetrics = {
+    avgTradeDuration: number
+    maxTradeDuration: number
+    bestTrade: number
+    worstTrade: number
+    numberTrades: number
+    winningTrades: number
+    losingTrades: number
 }
 
 export type StartPipeline = (pipelineParams: PipelineParams) => void

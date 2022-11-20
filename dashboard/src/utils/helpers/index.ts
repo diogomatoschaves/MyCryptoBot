@@ -155,7 +155,7 @@ export const validateParams = (params: any, strategy: any) => {
   }
 }
 
-export const organizePipeline = (pipeline: RawPipeline) => {
+export const organizePipeline = (pipeline: RawPipeline): Pipeline => {
   return {
     ...pipeline,
     openTime: pipeline.openTime ? new Date(Date.parse(pipeline.openTime)) : null,

@@ -1,4 +1,4 @@
-import {Decimals, Pipeline, Position} from "../types";
+import {Decimals, Pipeline, PipelinesObject, Position} from "../types";
 import {Label, Table, Image} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import React from "react";
@@ -9,7 +9,7 @@ import binanceLogo from '../utils/resources/binance.png'
 interface Props {
   index: number
   position: Position;
-  pipelines: Pipeline[]
+  pipelines: PipelinesObject
   currentPrices: Object
   decimals: Decimals
 }
@@ -34,7 +34,7 @@ function PositionRow(props: Props) {
 
   const pnlColor = pnl > 0 ? GREEN : RED
 
-  const pipeline = pipelines.find(pipe => pipe.id === position.pipelineId)
+  const pipeline = pipelines[position.pipelineId]
   const pipelineColor = pipeline ? pipeline.color : undefined
 
   return (

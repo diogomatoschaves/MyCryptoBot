@@ -1,13 +1,13 @@
 import React from 'react';
 import {Table} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
-import {Decimals, MenuOption, Pipeline, Position} from "../types";
+import {Decimals, PipelinesObject, Position} from "../types";
 import PositionRow from "./PositionRow";
 
 
 interface Props {
   positions: Position[];
-  pipelines: Pipeline[];
+  pipelines: PipelinesObject;
   currentPrices: Object;
   decimals: Decimals
 }
@@ -36,13 +36,15 @@ const PositionsPanel = (props: Props) => {
           </Table.Header>
           <Table.Body>
             {positions.map((position, index) => {
-              return <PositionRow
+              return (
+                <PositionRow
                   index={index}
                   position={position}
                   pipelines={pipelines}
                   currentPrices={currentPrices}
                   decimals={decimals}
-              />
+                />
+              )
             })}
           </Table.Body>
         </Table>
