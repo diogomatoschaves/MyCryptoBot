@@ -22,14 +22,13 @@ const StyledDiv = styled.div`
     height: calc(100% - 50px);
     justify-content: flex-start;
     align-items: center;
-    padding: 30px;
+    padding-left: 30px;
     padding-top: 0;
     position: relative;
 `
 
 const FILTER_TRADES = 'FILTER_TRADES'
 const TOGGLE_OPTIONS = 'TOGGLE_OPTIONS'
-const UPDATE_PAGE = 'UPDATE_PAGE'
 
 
 const reducer = (state: any, action: any) => {
@@ -106,14 +105,14 @@ function TradesPanel(props: Props) {
                 </Button>
               )}
           </Button.Group>
-                <TradesTable
-                  filteredTrades={filteredTrades}
-                  trades={trades}
-                  decimals={decimals}
-                  currentPrices={currentPrices}
-                  pipelines={pipelines}
-                  updateTrades={updateTrades}
-                />
+            <TradesTable
+              filteredTrades={filteredTrades}
+              trades={trades}
+              decimals={decimals}
+              currentPrices={currentPrices}
+              pipelines={pipelines}
+              updateTrades={updateTrades}
+            />
       </StyledDiv>
     );
 }

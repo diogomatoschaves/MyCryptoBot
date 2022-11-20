@@ -6,6 +6,7 @@ import {TradesMetrics} from "../types";
 
 interface Props {
   tradesMetrics: TradesMetrics
+  style?: Object
 }
 
 const TradesStats = (props: Props) => {
@@ -13,11 +14,12 @@ const TradesStats = (props: Props) => {
   if (!props.tradesMetrics) return <div></div>
 
   const { winningTrades, numberTrades, maxTradeDuration, avgTradeDuration, bestTrade, worstTrade } = props.tradesMetrics;
+  const { style } = props
 
   const winRate = winningTrades / numberTrades * 100
 
   return (
-    <Segment secondary raised style={styles.rowSegment}>
+    <Segment secondary raised style={{...styles.rowSegment, ...(style && style)}}>
       <Header size={'medium'} color="purple">
         Trades
       </Header>
