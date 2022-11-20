@@ -29,6 +29,7 @@ interface Props {
     stopPipeline: StopPipeline
     deletePipeline: DeletePipeline
     segmentStyle?: Object
+    lastRow?: boolean
 }
 
 
@@ -39,7 +40,8 @@ function PipelineItem(props: Props) {
         startPipeline,
         stopPipeline,
         deletePipeline,
-        segmentStyle
+        segmentStyle,
+        lastRow
     } = props
 
     const [open, setOpen] = useState(false)
@@ -177,7 +179,8 @@ function PipelineItem(props: Props) {
                         </div>
                     </StyledColumn>
                 </StyledRow>
-                <StyledRow>
+                {lastRow && (
+                  <StyledRow>
                     <Grid.Column width={3}>
                         <Grid.Column floated='right' style={{...styles.rightColumn, fontSize: '1.2em'}} >
                             <span >
@@ -199,7 +202,8 @@ function PipelineItem(props: Props) {
                             {pipeline.numberTrades}
                         </Grid.Column>
                     </Grid.Column>
-                </StyledRow>
+                  </StyledRow>
+                )}
             </Grid>
         </Segment>
     );

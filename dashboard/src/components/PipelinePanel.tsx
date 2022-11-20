@@ -7,13 +7,14 @@ import {
     StartPipeline,
     StopPipeline,
     UpdateMessage,
-    DeletePipeline, BalanceObj, PipelinesMetrics, PipelinesObject, Decimals, TradesObject
+    DeletePipeline, BalanceObj, PipelinesMetrics, PipelinesObject, Decimals, TradesObject, UpdateTrades
 } from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
 import styled from "styled-components";
 import {useEffect, useReducer, useRef} from "react";
 import PipelineDetail from "./PipelineDetail";
+import {Wrapper} from "../styledComponents";
 
 
 interface Props {
@@ -33,6 +34,7 @@ interface Props {
     decimals: Decimals
     trades: TradesObject
     currentPrices: Object
+    updateTrades: UpdateTrades
 }
 
 
@@ -102,6 +104,7 @@ function PipelinePanel(props: Props) {
         trades,
         decimals,
         currentPrices,
+        updateTrades,
         match: {params: {pipelineId}}
     } = props
 
@@ -136,7 +139,7 @@ function PipelinePanel(props: Props) {
     const pipelineMatch = Object.keys(pipelines).find(pipeline => pipeline === pipelineId)
 
     return (
-        <StyledSegment basic className="flex-column">
+        <Fragment>
             {pipelineMatch ? (
               <PipelineDetail
                 pipelines={pipelines}
@@ -148,9 +151,11 @@ function PipelinePanel(props: Props) {
                 decimals={decimals}
                 trades={trades}
                 currentPrices={currentPrices}
+                updateTrades={updateTrades}
               />
             ) : (
-              <Fragment>
+              // <StyledSegment basic className="flex-column" paddingBottom={'20px'}>
+              <Wrapper>
                 <ButtonWrapper className="flex-row">
                     <Button.Group size="mini" style={{alignSelf: 'center'}}>
                         {['live', 'test'].map((option, index) => (
@@ -191,6 +196,7 @@ function PipelinePanel(props: Props) {
                         stopPipeline={stopPipeline}
                         deletePipeline={deletePipeline}
                         pipeline={pipelines[pipelineId]}
+                        lastRow={true}
                     />
                   </Link>
                 ))}
@@ -201,9 +207,9 @@ function PipelinePanel(props: Props) {
                         </Message.Header>
                     </Message>
                 )}
-              </Fragment>
+              </Wrapper>
             )}
-        </StyledSegment>
+        </Fragment>
     );
 }
 
