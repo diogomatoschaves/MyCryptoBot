@@ -1,17 +1,20 @@
-import {Button, Divider, Header, Message} from "semantic-ui-react";
+import {Fragment} from 'react'
+import {Button, Message} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
+import {Link} from 'react-router-dom';
 import {
     DropdownOptions,
     StartPipeline,
     StopPipeline,
-    Pipeline,
     UpdateMessage,
-    DeletePipeline, BalanceObj
+    DeletePipeline, BalanceObj, PipelinesMetrics, PipelinesObject, Decimals, TradesObject, UpdateTrades
 } from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
 import styled from "styled-components";
 import {useEffect, useReducer, useRef} from "react";
+import PipelineDetail from "./PipelineDetail";
+import {Wrapper} from "../styledComponents";
 
 
 interface Props {
@@ -19,13 +22,19 @@ interface Props {
     strategiesOptions: DropdownOptions[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
-    pipelines: Pipeline[];
+    pipelines: PipelinesObject;
     balances: BalanceObj;
     startPipeline: StartPipeline;
     stopPipeline: StopPipeline;
     deletePipeline: DeletePipeline;
     updateMessage: UpdateMessage;
     strategies: any
+    match: any
+    pipelinesMetrics: PipelinesMetrics
+    decimals: Decimals
+    trades: TradesObject
+    currentPrices: Object
+    updateTrades: UpdateTrades
 }
 
 
@@ -46,7 +55,10 @@ const reducer = (state: any, action: any) => {
 
             return {
                 ...state,
-                filteredPipelines: pipelines.filter((pipeline: Pipeline) => {
+                filteredPipelines: Object.keys(pipelines).filter((pipelineId: string) => {
+
+                    const pipeline = pipelines[pipelineId]
+
                     return ((pipeline.active === active && active) || (pipeline.active === !stopped && stopped))
                     && ((pipeline.paperTrading === test && test) || (pipeline.paperTrading === !live && live))
                 })
@@ -88,6 +100,12 @@ function PipelinePanel(props: Props) {
         stopPipeline,
         deletePipeline,
         updateMessage,
+        pipelinesMetrics,
+        trades,
+        decimals,
+        currentPrices,
+        updateTrades,
+        match: {params: {pipelineId}}
     } = props
 
     const [
@@ -97,7 +115,7 @@ function PipelinePanel(props: Props) {
         }, dispatch
     ] = useReducer(
         reducer, {
-            filteredPipelines: pipelines,
+            filteredPipelines: Object.keys(pipelines),
             options: initialOptions
         }
     );
@@ -118,58 +136,82 @@ function PipelinePanel(props: Props) {
         };
     }, [pipelines, options]);
 
+    const pipelineMatch = Object.keys(pipelines).find(pipeline => pipeline === pipelineId)
+
     return (
-        <StyledSegment basic className="flex-column">
-            <ButtonWrapper className="flex-row">
-                <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                    {['live', 'test'].map((option, index) => (
-                        <Button key={index} onClick={() => dispatch({
-                            type: TOGGLE_OPTIONS,
-                            [option]: !options[option]
-                        })} color={options && options[option] && 'grey'}>
-                            {option}
-                        </Button>
-                    ))}
-                </Button.Group>
-                <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                    {['active', 'stopped'].map((option, index) => (
-                      <Button key={index} onClick={() => dispatch({
-                          type: TOGGLE_OPTIONS,
-                          [option]: !options[option]
-                      })} color={options && options[option] && 'grey'}>
-                          {option}
-                      </Button>
-                    ))}
-                </Button.Group>
-                <NewPipeline
-                    strategies={strategies}
-                    balances={balances}
-                    symbolsOptions={symbolsOptions}
-                    strategiesOptions={strategiesOptions}
-                    candleSizeOptions={candleSizeOptions}
-                    exchangeOptions={exchangeOptions}
-                    startPipeline={startPipeline}
-                    updateMessage={updateMessage}
-                />
-            </ButtonWrapper>
-            {filteredPipelines.map((pipeline: Pipeline, index: number) => (
-                <PipelineItem
-                    key={index}
-                    startPipeline={startPipeline}
-                    stopPipeline={stopPipeline}
-                    deletePipeline={deletePipeline}
-                    pipeline={pipeline}
-                />
-            ))}
-            {filteredPipelines.length === 0 && (
-                <Message>
-                    <Message.Header>
-                        There are no trading bots matching the chosen filters.
-                    </Message.Header>
-                </Message>
+        <Fragment>
+            {pipelineMatch ? (
+              <PipelineDetail
+                pipelines={pipelines}
+                pipelineId={pipelineMatch}
+                pipelineMetrics={pipelinesMetrics[pipelineId]}
+                startPipeline={startPipeline}
+                stopPipeline={stopPipeline}
+                deletePipeline={deletePipeline}
+                decimals={decimals}
+                trades={trades}
+                currentPrices={currentPrices}
+                updateTrades={updateTrades}
+              />
+            ) : (
+              // <StyledSegment basic className="flex-column" paddingBottom={'20px'}>
+              <Wrapper>
+                <ButtonWrapper className="flex-row">
+                    <Button.Group size="mini" style={{alignSelf: 'center'}}>
+                        {['live', 'test'].map((option, index) => (
+                            <Button key={index} onClick={() => dispatch({
+                                type: TOGGLE_OPTIONS,
+                                [option]: !options[option]
+                            })} color={options && options[option] && 'grey'}>
+                                {option}
+                            </Button>
+                        ))}
+                    </Button.Group>
+                    <Button.Group size="mini" style={{alignSelf: 'center'}}>
+                        {['active', 'stopped'].map((option, index) => (
+                          <Button key={index} onClick={() => dispatch({
+                              type: TOGGLE_OPTIONS,
+                              [option]: !options[option]
+                          })} color={options && options[option] && 'grey'}>
+                              {option}
+                          </Button>
+                        ))}
+                    </Button.Group>
+                    <NewPipeline
+                        strategies={strategies}
+                        balances={balances}
+                        symbolsOptions={symbolsOptions}
+                        strategiesOptions={strategiesOptions}
+                        candleSizeOptions={candleSizeOptions}
+                        exchangeOptions={exchangeOptions}
+                        startPipeline={startPipeline}
+                        updateMessage={updateMessage}
+                    />
+                </ButtonWrapper>
+                {filteredPipelines.map((pipelineId: string, index: number) => (
+                  <Link to={`/pipelines/${pipelineId}`} className="flex-row">
+                    <PipelineItem
+                        key={index}
+                        startPipeline={startPipeline}
+                        stopPipeline={stopPipeline}
+                        deletePipeline={deletePipeline}
+                        pipeline={pipelines[pipelineId]}
+                        lastRow={true}
+                    />
+                  </Link>
+                ))}
+                {filteredPipelines.length === 0 && (
+                    <Message>
+                        <Message.Header>
+                            There are no trading bots matching the chosen filters.
+                        </Message.Header>
+                    </Message>
+                )}
+              </Wrapper>
             )}
-        </StyledSegment>
+        </Fragment>
     );
 }
 
+// @ts-ignore
 export default PipelinePanel;

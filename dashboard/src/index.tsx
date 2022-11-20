@@ -9,7 +9,7 @@ import reportWebVitals from './reportWebVitals';
 ReactDOM.render(
   <React.StrictMode>
     <Router>
-      <Route render={({location, match}) => (
+      <Route render={({location}) => (
         <App location={location}/>
       )}>
       </Route>
