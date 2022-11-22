@@ -3,6 +3,7 @@ import os
 import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
 from functools import reduce
 
 from flask import Flask, jsonify, request
@@ -10,7 +11,9 @@ import django
 from flask_cors import CORS
 
 import redis
+from flask_jwt_extended import JWTManager
 
+from data.service.blueprints.user_management import user_management
 from data.service.blueprints.dashboard import dashboard
 from data.service.external_requests import start_stop_symbol_trading, get_strategies
 from data.service.helpers.decorators.handle_app_errors import handle_app_errors
@@ -38,6 +41,12 @@ executor = ThreadPoolExecutor(16)
 
 app = Flask(__name__)
 app.register_blueprint(dashboard)
+app.register_blueprint(user_management)
+
+app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=2)
+
+jwt = JWTManager(app)
 
 CORS(app)
 
@@ -80,7 +89,7 @@ def hello_world():
     return "I'm up!"
 
 
-@app.route('/start_bot', methods=['PUT'])
+@app.put('/start_bot')
 @handle_app_errors
 def start_bot():
 
@@ -166,7 +175,7 @@ def start_bot():
     return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline))
 
 
-@app.route('/stop_bot', methods=['PUT'])
+@app.put('/stop_bot')
 @handle_app_errors
 def stop_bot():
 
