@@ -9,8 +9,8 @@ import AppLogin from "./components/AppLogin";
 ReactDOM.render(
   <React.StrictMode>
     <Router>
-      <Route render={({location}) => (
-        <AppLogin location={location}/>
+      <Route render={({location, history}) => (
+        <AppLogin location={location} history={history}/>
       )}>
       </Route>
     </Router>

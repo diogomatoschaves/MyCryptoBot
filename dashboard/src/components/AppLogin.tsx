@@ -1,32 +1,42 @@
 import {Fragment} from "react";
 import App from "./App";
 import {Location} from 'history'
-import useToken from "./useToken";
+import withToken from "./withToken";
 import Login from "./Login";
+import {Redirect, Route, Switch} from "react-router-dom";
 
 
 interface Props {
   location: Location
+  history: History
+  token: string | undefined
+  saveToken: (userToken: string) => void
+  removeToken: () => void
 }
 
 const AppLogin = (props: Props) => {
 
-  const { location } = props
-
-  const { token, removeToken, setToken } = useToken()
-
-  console.log(token)
+  const { location, token, saveToken, removeToken } = props
 
   return (
     <Fragment>
-      {!token && token!=="" &&token!== undefined ? (
-        <Login setToken={setToken} />
+      {token ? (
+        <App location={location} removeToken={removeToken}/>
+      ) : (!token && token !=="" && token !== undefined && location.pathname !== "/login") ? (
+        <Redirect to="/login"/>
       ) : (
-        <App location={location}/>
+        <Switch>
+          <Route path="/login">
+            <Login saveToken={saveToken}/>
+          </Route>
+          <Route path="*">
+            <App location={location} removeToken={removeToken}/>
+          </Route>
+        </Switch>
       )}
     </Fragment>
   )
 }
 
 
-export default AppLogin
+export default withToken(AppLogin)
