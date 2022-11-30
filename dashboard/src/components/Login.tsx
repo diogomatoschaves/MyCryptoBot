@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {Button, Form, Input} from "semantic-ui-react";
 import {userLogin} from "../apiCalls";
 import styled from "styled-components";
+import {capitalize} from "../utils/helpers";
 
 
 const LoginForm = styled.div`
@@ -14,12 +15,12 @@ const LoginForm = styled.div`
 
 
 interface Props {
-  setToken: (userToken: string) => void
+  saveToken: (userToken: string) => void
 }
 
 function Login(props: Props) {
 
-  const { setToken } = props
+  const { saveToken } = props
 
   const [loginForm, setloginForm] = useState({
     username: "",
@@ -32,7 +33,7 @@ function Login(props: Props) {
       password: loginForm.password
     })
       .then((response) => {
-        setToken(response.data.access_token)
+        saveToken(response.access_token)
       }).catch((error) => {
       if (error.response) {
         console.log(error.response)
@@ -62,9 +63,9 @@ function Login(props: Props) {
             width={3}
             onChange={handleChange}
             control={Input}
-            label={name}
-            placeholder={name}
+            label={capitalize(name)}
             name={name}
+            type={name === "password" ? "password" : undefined}
             // @ts-ignore
             value={loginForm[name]}
           />
@@ -75,7 +76,7 @@ function Login(props: Props) {
           control={Button}
           type="submit"
         >
-          Submit
+          Login
         </Form.Field>
       </Form>
     </LoginForm>

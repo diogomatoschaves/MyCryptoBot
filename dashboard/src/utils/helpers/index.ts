@@ -223,3 +223,7 @@ export const timeFormatterDiff = (difference: number) => {
 export const getPnl = (original: number, current: number, side: number) => {
   return ((side * ((current / original) - 1)) * 100).toFixed(2)
 }
+
+export const capitalize = (s: string) => {
+  return s[0].toUpperCase() + s.slice(1);
+}
