@@ -178,11 +178,13 @@ export const getPipelinesMetrics = async () => {
 export const userLogin = async (requestData) => {
   const url = `${dataAPIHost}/token`
 
-  console.log(JSON.stringify(requestData))
+  const headers = new Headers()
+  headers.append('Content-Type', 'application/json');
 
   const response = await fetch(url, {
     body: JSON.stringify(requestData),
-    method: 'POST'
+    method: 'POST',
+    headers
   })
 
   return await response.json()

@@ -100,8 +100,9 @@ interface State {
 }
 
 interface Props {
-    decimals: Decimals
     location: Location
+    removeToken: () => void
+    decimals: Decimals
     menuProperties: MenuOption[]
 }
 
@@ -422,18 +423,23 @@ class App extends Component<Props, State> {
             strategies,
             currentPrices,
             message,
-            pipelinesMetrics
+            pipelinesMetrics,
         } = this.state
 
 
-        const { decimals, menuProperties, location } = this.props
+        const { decimals, menuProperties, location, removeToken } = this.props
 
         const menuOption = menuProperties.find(option => location.pathname.includes(option.code))
 
         return (
             <AppDiv className="flex-row">
                 <MenuColumn>
-                    <Menu menuOption={menuOption} changeMenu={this.changeMenu} menuProperties={menuProperties}/>
+                    <Menu
+                      menuOption={menuOption}
+                      changeMenu={this.changeMenu}
+                      menuProperties={menuProperties}
+                      removeToken={removeToken}
+                    />
                 </MenuColumn>
                 <AppColumn>
                     <StyledSegment basic paddingTop="10px" padding="0" className="flex-column">
