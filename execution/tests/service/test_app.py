@@ -4,10 +4,11 @@ from execution.tests.setup.fixtures.external_modules import *
 from execution.tests.setup.fixtures.internal_modules import *
 from shared.utils.exceptions import NoSuchPipeline
 from shared.utils.tests.fixtures.models import *
+from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
 
 class TestExecutionService:
-    def test_index_route(self, client):
+    def test_index_route(self, client, mock_jwt_required):
 
         res = client.get("/")
 
@@ -29,12 +30,7 @@ class TestExecutionService:
         res = client.get('/start_bot')
 
         """
-
-        print(route, method)
-
         res = getattr(client, method)(route)
-
-        print(res.data)
 
         assert res.status_code == 405
 
@@ -76,7 +72,8 @@ class TestExecutionService:
         client,
         exchange_data,
         create_pipeline,
-        create_inactive_pipeline
+        create_inactive_pipeline,
+        mock_jwt_required
     ):
         res = client.post("start_symbol_trading", json=params)
 
@@ -129,7 +126,8 @@ class TestExecutionService:
             client,
             exchange_data,
             create_pipeline,
-            create_inactive_pipeline
+            create_inactive_pipeline,
+            mock_jwt_required
     ):
         res = client.post("stop_symbol_trading", json=params)
 
@@ -180,7 +178,8 @@ class TestExecutionService:
         mock_redis_connection,
         client,
         exchange_data,
-        create_pipeline
+        create_pipeline,
+        mock_jwt_required
     ):
         payload = {
             **params,
@@ -256,6 +255,7 @@ class TestExecutionService:
         mock_binance_margin_trader_success,
         mock_binance_futures_trader_success,
         mock_redis_connection,
+        mock_jwt_required,
         client,
         exchange_data,
         create_pipeline,
@@ -290,6 +290,7 @@ class TestExecutionService:
         expected_value,
         mock_binance_futures_trader_raise_exception_trade,
         mock_redis_connection,
+        mock_jwt_required,
         client,
         exchange_data,
         create_pipeline,
@@ -333,6 +334,7 @@ class TestExecutionService:
         exchange_data,
         create_pipeline,
         create_inactive_pipeline,
+        mock_jwt_required
     ):
 
         res = client.post(f"{route}", json=params)
