@@ -5,6 +5,7 @@ import sys
 from binance.exceptions import BinanceAPIException
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, jwt_required
 
 from execution.service.helpers.decorators import binance_error_handler, handle_app_errors
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
@@ -31,6 +32,9 @@ binance_margin_mock_trader = BinanceMockMarginTrader()
 app = Flask(__name__)
 app.register_blueprint(market_data)
 
+app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+jwt = JWTManager(app)
+
 CORS(app)
 
 
@@ -52,6 +56,7 @@ def get_binance_trader_instance(binance_account_type, paper_trading):
 
 
 @app.route('/')
+@jwt_required()
 def hello_world():
     return "I'm up!"
 
@@ -59,6 +64,7 @@ def hello_world():
 @app.route('/start_symbol_trading', methods=['POST'])
 @handle_app_errors
 @binance_error_handler(request_obj=request)
+@jwt_required()
 def start_symbol_trading():
 
     request_data = request.get_json(force=True)
@@ -86,6 +92,7 @@ def start_symbol_trading():
 @app.route('/stop_symbol_trading', methods=['POST'])
 @handle_app_errors
 @binance_error_handler(request_obj=request)
+@jwt_required()
 def stop_symbol_trading():
 
     request_data = request.get_json(force=True)
@@ -107,6 +114,7 @@ def stop_symbol_trading():
 @app.route('/execute_order', methods=['POST'])
 @handle_app_errors
 @binance_error_handler
+@jwt_required()
 def execute_order():
 
     request_data = request.get_json(force=True)

@@ -4,10 +4,11 @@ from model.tests.setup.fixtures.internal_modules import *
 from model.tests.setup.test_data.sample_data import STRATEGIES
 from model.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
+from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
 
 class TestModelService:
-    def test_index_route(self, client):
+    def test_index_route(self, client, mock_jwt_required):
 
         res = client.get("/")
 
@@ -109,7 +110,7 @@ class TestModelService:
         ],
     )
     def test_check_job_status(
-        self, return_value, expected_value, client, mocked_rq_job
+        self, return_value, expected_value, client, mocked_rq_job, mock_jwt_required
     ):
 
         mocked_rq_job.return_value = return_value
@@ -118,7 +119,7 @@ class TestModelService:
 
         assert res.json == expected_value
 
-    def test_check_job_status_no_such_job_error(self, client, mocked_rq_job):
+    def test_check_job_status_no_such_job_error(self, client, mocked_rq_job, mock_jwt_required):
 
         mocked_rq_job.side_effect = lambda job_id, connection: mock_rq_job(
             raise_error=True
@@ -153,6 +154,7 @@ class TestModelService:
         mock_settings_env_vars,
         mocked_rq_enqueue_call,
         mock_redis_connection,
+        mock_jwt_required,
         create_exchange,
         create_pipeline
     ):
@@ -167,6 +169,7 @@ class TestModelService:
         mocked_rq_enqueue_call,
         mock_redis_connection,
         mock_strategies,
+        mock_jwt_required,
         create_exchange,
         create_pipeline
     ):
