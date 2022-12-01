@@ -19,12 +19,14 @@ class TestModelExternalRequests:
 
         """
 
+        bearer_token = "abc"
+
         params = {
             "pipeline_id": 1,
             "signal": 1,
         }
 
-        res = execute_order(**params)
+        res = execute_order(bearer_token=bearer_token, **params)
 
         assert res == response
         requests_post_spy.assert_called_with(
@@ -32,4 +34,5 @@ class TestModelExternalRequests:
                 os.getenv("EXECUTION_APP_URL")
             ),
             json=params,
+            headers={"Authorization": bearer_token}
         )

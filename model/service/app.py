@@ -58,6 +58,8 @@ def hello_world():
 @jwt_required()
 def generate_signal():
 
+    bearer_token = request.headers.get('Authorization')
+
     request_data = request.get_json(force=True)
 
     logging.debug(request_data)
@@ -76,6 +78,7 @@ def generate_signal():
             pipeline.exchange,
             pipeline.strategy,
             pipeline.params,
+            bearer_token,
             header
         )
     )
