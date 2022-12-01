@@ -2,6 +2,7 @@ import os
 
 import django
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 
 from shared.exchanges import BinanceHandler
 from shared.utils.decorators import retry_failed_connection
@@ -30,6 +31,7 @@ def get_current_price():
 
 @market_data.route('/futures_account_balance', methods=['GET'])
 @retry_failed_connection(num_times=2)
+@jwt_required()
 def get_futures_account_balance():
 
     balances = {"testnet": testnet_client.futures_account_balance(), "live": client.futures_account_balance()}
