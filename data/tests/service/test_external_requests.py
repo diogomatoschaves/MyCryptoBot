@@ -24,7 +24,8 @@ class TestDataExternalRequests:
         """
 
         params = {
-            "pipeline_id": 1
+            "pipeline_id": 1,
+            "bearer_token": "abc"
         }
 
         res = generate_signal(**params)
@@ -32,7 +33,8 @@ class TestDataExternalRequests:
         assert res == response
         requests_post_spy.assert_called_with(
             MODEL_APP_ENDPOINTS["GENERATE_SIGNAL"](os.getenv("MODEL_APP_URL")),
-            json=params
+            json={"pipeline_id": 1},
+            headers={"Authorization": "abc"}
         )
 
     @pytest.mark.parametrize(
@@ -75,12 +77,13 @@ class TestDataExternalRequests:
 
         endpoint = f"{start_or_stop.upper()}_SYMBOL_TRADING"
 
-        res = start_stop_symbol_trading(params, start_or_stop=start_or_stop)
+        res = start_stop_symbol_trading(params, start_or_stop=start_or_stop, bearer_token="abc")
 
         assert res == response
         requests_post_spy.assert_called_with(
             EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL")),
-            json=params
+            json=params,
+            headers={"Authorization": "abc"}
         )
 
     def test_check_job_status(
@@ -97,12 +100,14 @@ class TestDataExternalRequests:
         """
 
         job_id = 'abcdef'
+        bearer_token = "abc"
 
-        res = check_job_status(job_id)
+        res = check_job_status(job_id, bearer_token)
 
         assert res == response
         requests_get_spy.assert_called_with(
             MODEL_APP_ENDPOINTS["CHECK_JOB"](os.getenv("MODEL_APP_URL"), job_id),
+            headers={"Authorization": bearer_token}
         )
 
     def test_get_strategies(
@@ -119,9 +124,10 @@ class TestDataExternalRequests:
 
         """
 
-        res = get_strategies()
+        res = get_strategies("abc")
 
         assert res == response
         requests_get_spy.assert_called_with(
             MODEL_APP_ENDPOINTS["GET_STRATEGIES"](os.getenv("MODEL_APP_URL")),
+            headers={"Authorization": "abc"}
         )
