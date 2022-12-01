@@ -3,6 +3,9 @@ import os
 from datetime import datetime, timedelta
 
 import django
+import redis
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth import get_user_model
 import pytz
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import unset_jwt_cookies, create_access_token, get_jwt, get_jwt_identity, jwt_required
@@ -10,6 +13,9 @@ from flask_jwt_extended import unset_jwt_cookies, create_access_token, get_jwt, 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
+cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
+
+User = get_user_model()
 
 user_management = Blueprint('user_management', __name__)
 
@@ -25,6 +31,7 @@ def refresh_expiring_jwts(response):
             data = response.get_json()
             if type(data) is dict:
                 data["access_token"] = access_token
+                cache.set("bearer_token", f"Bearer {access_token}")
                 response.data = json.dumps(data)
         return response
     except (RuntimeError, KeyError):
@@ -34,25 +41,24 @@ def refresh_expiring_jwts(response):
 
 @user_management.post('/token')
 def create_token():
-    email = request.json.get("email", None)
+    username = request.json.get("username", None)
     password = request.json.get("password", None)
-    if email != "test" or password != "test":
+
+    try:
+        user = User.objects.get(username=username)
+
+        if not check_password(password, user.password):
+            raise User.DoesNotExist
+    except User.DoesNotExist:
         return {"msg": "Wrong email or password"}, 401
 
-    access_token = create_access_token(identity=email)
+    access_token = create_access_token(identity=username)
+
+    cache.set("bearer_token", f"Bearer {access_token}")
+
     response = {"access_token": access_token}
+
     return response
-
-
-@user_management.get('/profile')
-@jwt_required()
-def my_profile():
-    response_body = {
-        "name": "Nagato",
-        "about": "Hello! I'm a full stack developer that loves python and javascript"
-    }
-
-    return response_body
 
 
 @user_management.post("/logout")
