@@ -23,7 +23,7 @@ def mock_trigger_signal_successfully(mocker):
     return mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda pipeline_id, header='': True,
+        lambda pipeline_id, bearer_token, header='': True,
     )
 
 
@@ -32,7 +32,7 @@ def mock_trigger_signal_fail(mocker):
     mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda pipeline_id, header='': False,
+        lambda pipeline_id, bearer_token, header='': False,
     )
 
 
@@ -127,7 +127,7 @@ def mock_start_stop_symbol_trading_success_true(mocker):
     mocker.patch.object(
         data.service.app,
         'start_stop_symbol_trading',
-        lambda pipeline_id, start_or_stop: {"success": True, "message": ''},
+        lambda pipeline_id, start_or_stop, bearer_token: {"success": True, "message": ''},
     )
 
 
@@ -136,7 +136,7 @@ def mock_start_stop_symbol_trading_success_false(mocker):
     return mocker.patch.object(
         data.service.app,
         'start_stop_symbol_trading',
-        lambda pipeline_id, start_or_stop: {"success": False, "message": 'Failed'},
+        lambda pipeline_id, start_or_stop, bearer_token: {"success": False, "message": 'Failed'},
     )
 
 
@@ -185,5 +185,10 @@ def mock_redis_connection(mocker):
 
 
 @pytest.fixture
+def mock_redis_connection_binance(mocker):
+    return mocker.patch("data.sources.binance._binance.cache", mock_redis())
+
+
+@pytest.fixture
 def mock_get_strategies(mocker):
-    mocker.patch.object(data.service.app, "get_strategies", lambda: STRATEGIES)
+    mocker.patch.object(data.service.app, "get_strategies", lambda bearer_token: STRATEGIES)

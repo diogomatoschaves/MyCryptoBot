@@ -1,3 +1,4 @@
+import functools
 import json
 import os
 import logging
@@ -11,7 +12,7 @@ import django
 from flask_cors import CORS
 
 import redis
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, jwt_required
 
 from data.service.blueprints.user_management import user_management
 from data.service.blueprints.dashboard import dashboard
@@ -85,16 +86,20 @@ def stop_instance(pipeline_id, header):
 
 
 @app.route('/')
+@jwt_required()
 def hello_world():
     return "I'm up!"
 
 
-@app.put('/start_bot')
+@app.route('/start_bot', methods=['PUT'])
 @handle_app_errors
+@jwt_required()
 def start_bot():
 
+    bearer_token = request.headers.get('Authorization')
+
     if "STRATEGIES" not in globals():
-        STRATEGIES = get_strategies()
+        STRATEGIES = get_strategies(bearer_token)
         globals()["STRATEGIES"] = STRATEGIES
     else:
         STRATEGIES = globals()["STRATEGIES"]
@@ -154,7 +159,7 @@ def start_bot():
         "binance_trader_type": "futures",
     }
 
-    response = start_stop_symbol_trading(payload, 'start')
+    response = start_stop_symbol_trading(payload, 'start', bearer_token)
 
     if not response["success"]:
         logging.warning(response["message"])
@@ -176,11 +181,15 @@ def start_bot():
 
 
 @app.put('/stop_bot')
-@handle_app_errors
+@handle_app_errors()
+@jwt_required()
 def stop_bot():
 
     # Stops the data collection stream
     # closes any open positions
+
+    bearer_token = request.headers.get('Authorization')
+
     data = request.get_json(force=True)
 
     pipeline_id = data.get("pipelineId", None)
@@ -194,7 +203,7 @@ def stop_bot():
 
         stop_instance(pipeline_id, header=header)
 
-        response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop')
+        response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop', bearer_token)
 
         logging.debug(response["message"])
 

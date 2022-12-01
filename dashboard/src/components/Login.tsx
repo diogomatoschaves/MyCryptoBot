@@ -29,7 +29,7 @@ function Login(props: Props) {
 
   function logMeIn(event: any) {
     userLogin({
-      email: loginForm.username,
+      username: loginForm.username,
       password: loginForm.password
     })
       .then((response) => {

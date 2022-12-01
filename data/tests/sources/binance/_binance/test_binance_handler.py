@@ -80,6 +80,7 @@ class TestBinanceDataHandler:
         mock_binance_websocket_stop,
         mock_binance_threaded_websocket,
         mock_trigger_signal_successfully,
+        mock_redis_connection_binance,
         trigger_signal_spy,
         exchange_data
     ):
@@ -96,7 +97,7 @@ class TestBinanceDataHandler:
         else:
             pipeline_id = None
 
-        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id, )
+        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id, None)
 
         binance_data_handler.stop_data_ingestion()
 
@@ -135,6 +136,7 @@ class TestBinanceDataHandler:
         mock_binance_websocket_stop,
         mock_binance_threaded_websocket,
         mock_trigger_signal_fail,
+        mock_redis_connection_binance,
         trigger_signal_spy,
         exchange_data,
         create_pipeline
@@ -148,7 +150,7 @@ class TestBinanceDataHandler:
         else:
             pipeline_id = None
 
-        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id, )
+        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id, None)
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
         assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
