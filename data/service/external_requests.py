@@ -12,10 +12,10 @@ def prepare_payload(**kwargs):
 
 
 @retry_failed_connection(num_times=1)
-def check_job_status(job_id):
+def check_job_status(job_id, bearer_token):
     url = MODEL_APP_ENDPOINTS["CHECK_JOB"](os.getenv("MODEL_APP_URL"), job_id)
 
-    r = requests.get(url)
+    r = requests.get(url, headers={"Authorization": bearer_token})
     logging.debug(r.text)
 
     response = r.json()
@@ -26,7 +26,7 @@ def check_job_status(job_id):
 
 @retry_failed_connection(num_times=2)
 @json_error_handler
-def generate_signal(pipeline_id, header=''):
+def generate_signal(pipeline_id, bearer_token, header=''):
 
     url = MODEL_APP_ENDPOINTS["GENERATE_SIGNAL"](os.getenv("MODEL_APP_URL"))
 
@@ -36,7 +36,7 @@ def generate_signal(pipeline_id, header=''):
 
     logging.info(header + "Triggering signal")
 
-    r = requests.post(url, json=payload)
+    r = requests.post(url, json=payload, headers={"Authorization": bearer_token})
     logging.debug(r.text)
 
     response = r.json()
@@ -47,13 +47,15 @@ def generate_signal(pipeline_id, header=''):
 
 @retry_failed_connection(num_times=2)
 @json_error_handler
-def start_stop_symbol_trading(payload, start_or_stop):
+def start_stop_symbol_trading(payload, start_or_stop, bearer_token):
 
     endpoint = f"{start_or_stop.upper()}_SYMBOL_TRADING"
 
+    headers = {"Authorization": bearer_token}
+
     url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL"))
 
-    r = requests.post(url, json=payload)
+    r = requests.post(url, json=payload, headers=headers)
     logging.debug(r.text)
 
     response = r.json()
@@ -64,13 +66,13 @@ def start_stop_symbol_trading(payload, start_or_stop):
 
 @retry_failed_connection(num_times=2)
 @json_error_handler
-def get_strategies():
+def get_strategies(bearer_token):
 
     endpoint = "GET_STRATEGIES"
 
     url = MODEL_APP_ENDPOINTS[endpoint](os.getenv("MODEL_APP_URL"))
 
-    r = requests.get(url)
+    r = requests.get(url, headers={"Authorization": bearer_token})
     logging.debug("get_strategies: " + r.text)
 
     response = r.json()

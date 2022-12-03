@@ -5,6 +5,7 @@ import django
 from django.core.paginator import Paginator
 from django.db.models import Count, Max, Avg, F, Min, Q, Sum
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 
 from data.service.external_requests import get_strategies
 from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict
@@ -19,7 +20,10 @@ dashboard = Blueprint('dashboard', __name__)
 
 
 @dashboard.route('/resources/<resources>')
+@jwt_required()
 def get_resources(resources):
+
+    bearer_token = request.headers.get('Authorization')
 
     resources = resources.split(',')
 
@@ -35,7 +39,7 @@ def get_resources(resources):
             response["exchanges"] = convert_queryset_to_dict(exchanges)
 
         elif resource == 'strategies':
-            strategies = get_strategies()
+            strategies = get_strategies(bearer_token)
             response["strategies"] = strategies
 
         elif resource == 'candleSizes':
@@ -46,6 +50,7 @@ def get_resources(resources):
 
 @dashboard.route('/trades', defaults={'page': None}, methods=["GET"])
 @dashboard.route('/trades/<page>')
+@jwt_required()
 def get_trades(page):
 
     args = request.args
@@ -77,6 +82,7 @@ def get_trades(page):
 
 @dashboard.route('/pipelines', defaults={'page': None}, methods=["GET", "DELETE"])
 @dashboard.route('/pipelines/<page>')
+@jwt_required()
 def handle_pipelines(page):
 
     response = {"message": "This method is not allowed", "success": False}
@@ -117,6 +123,7 @@ def handle_pipelines(page):
 
 @dashboard.route('/positions', defaults={'page': None})
 @dashboard.route('/positions/<page>')
+@jwt_required()
 def get_positions(page):
 
     response = {}
@@ -139,6 +146,7 @@ def get_positions(page):
 
 
 @dashboard.route('/trades-metrics', methods=["GET"])
+@jwt_required()
 def get_trades_metrics():
 
     aggregate_values = Trade.objects.annotate(
@@ -161,6 +169,7 @@ def get_trades_metrics():
 
 
 @dashboard.route('/pipelines-metrics', methods=["GET"])
+@jwt_required()
 def get_pipelines_metrics():
 
     def reduce_pipelines(accum, pipeline):

@@ -12,6 +12,11 @@
   align-items: center;
 }
 
+.message-container {
+  transform: translate(-50%, 0);
+  transition: bottom 1s;
+}
+
 .ui.label.light-purple {
   background-color: rgba(163, 51, 200, 0.35) !important
 }
