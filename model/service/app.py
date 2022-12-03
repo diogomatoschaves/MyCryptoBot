@@ -5,6 +5,7 @@ import sys
 
 import redis
 from flask import Flask, jsonify, request
+from flask_jwt_extended import jwt_required, JWTManager
 from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
@@ -30,6 +31,9 @@ cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 app = Flask(__name__)
 
+app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+jwt = JWTManager(app)
+
 q = Queue(connection=conn)
 
 
@@ -44,13 +48,17 @@ strategies = [
 
 
 @app.route('/')
+@jwt_required()
 def hello_world():
     return "It's up!"
 
 
 @app.route('/generate_signal', methods=['POST'])
 @handle_app_errors
+@jwt_required()
 def generate_signal():
+
+    bearer_token = request.headers.get('Authorization')
 
     request_data = request.get_json(force=True)
 
@@ -69,6 +77,7 @@ def generate_signal():
             pipeline.candle_size,
             pipeline.exchange,
             pipeline.strategy,
+            bearer_token,
             pipeline.params,
             header
         )
@@ -80,6 +89,7 @@ def generate_signal():
 
 
 @app.route('/check_job/<job_id>', methods=['GET'])
+@jwt_required()
 def check_job(job_id):
     try:
         job = Job.fetch(job_id, connection=conn)
@@ -100,6 +110,7 @@ def check_job(job_id):
 
 
 @app.route('/strategies', methods=['GET'])
+@jwt_required()
 def get_strategies():
     return jsonify(STRATEGIES)
 

@@ -10,7 +10,7 @@ from shared.utils.decorators import retry_failed_connection
 
 @json_error_handler
 @retry_failed_connection(num_times=3)
-def execute_order(pipeline_id, signal, header=''):
+def execute_order(pipeline_id, signal, bearer_token, header=''):
 
     url = EXECUTION_APP_ENDPOINTS["EXECUTE_ORDER"](os.getenv("EXECUTION_APP_URL"))
 
@@ -23,7 +23,7 @@ def execute_order(pipeline_id, signal, header=''):
 
     logging.info(header + f"Sending {position} order.")
 
-    r = requests.post(url, json=payload)
+    r = requests.post(url, json=payload, headers={"Authorization": bearer_token})
     logging.debug(r.text)
 
     response = r.json()

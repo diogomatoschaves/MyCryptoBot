@@ -70,6 +70,7 @@ class TestExternalRequests:
         params = {
             "job_id": "abcdef",
             "pipeline_id": 1,
+            "bearer_token": "abc",
             "retry": 0
         }
 
@@ -100,6 +101,7 @@ class TestExternalRequests:
         params = {
             "job_id": "abcdef",
             "pipeline_id": 1,
+            "bearer_token": "abc",
             "retry": 0
         }
 
@@ -141,6 +143,7 @@ class TestExternalRequests:
 
         params = {
             "pipeline_id": 1,
+            "bearer_token": "abc",
             "retry": 0
         }
 

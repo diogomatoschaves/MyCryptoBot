@@ -6,11 +6,12 @@ from data.tests.setup.fixtures.external_modules import *
 from data.tests.setup.fixtures.app import *
 from database.model.models import Pipeline
 from shared.utils.tests.fixtures.models import *
+from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
 
 class TestDataService:
 
-    def test_index_route(self, client):
+    def test_index_route(self, client, mock_jwt_required):
 
         res = client.get('/')
 
@@ -154,6 +155,7 @@ class TestDataService:
         mock_redis_connection,
         mock_binance_client_exchange_info,
         mock_get_strategies,
+        mock_jwt_required,
         create_exchange,
         create_assets,
         create_symbol
@@ -271,6 +273,7 @@ class TestDataService:
         mock_settings_env_vars,
         mock_redis_connection,
         mock_get_strategies,
+        mock_jwt_required,
         create_exchange,
         create_assets,
         create_symbol
@@ -315,6 +318,7 @@ class TestDataService:
         mock_settings_env_vars,
         mock_redis_connection,
         mock_get_strategies,
+        mock_jwt_required,
         create_exchange,
         create_assets,
         create_symbol,
@@ -365,6 +369,7 @@ class TestDataService:
         mock_binance_websocket_start,
         mock_binance_websocket_stop,
         mock_executor_submit,
+        mock_jwt_required,
         binance_handler_instances_spy_start_bot,
         create_exchange,
         create_assets,
@@ -410,13 +415,14 @@ class TestDataService:
     def test_start_bot_unsuccessful_response(
         self,
         params,
-        mock_start_stop_symbol_trading_success_false,
         client,
+        mock_start_stop_symbol_trading_success_false,
         mock_binance_client_exchange_info,
         mock_settings_env_vars,
         mock_binance_handler_start_data_ingestion,
         mock_get_strategies,
         mock_redis_connection,
+        mock_jwt_required,
         create_exchange,
         create_assets,
         create_symbol,
@@ -457,6 +463,7 @@ class TestDataService:
         mock_binance_websocket_stop,
         mock_redis_connection,
         mock_get_strategies,
+        mock_jwt_required,
         binance_handler_stop_data_ingestion_spy,
         mock_start_stop_symbol_trading_success_true,
         binance_handler_instances_spy_stop_bot,
@@ -505,6 +512,7 @@ class TestDataService:
         mock_settings_env_vars,
         mock_redis_connection,
         mock_get_strategies,
+        mock_jwt_required,
         create_exchange,
         create_assets,
         create_symbol,

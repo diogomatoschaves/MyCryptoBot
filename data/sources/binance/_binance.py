@@ -3,6 +3,7 @@ import os
 
 import pandas as pd
 import django
+import redis
 from binance import ThreadedWebsocketManager
 
 import shared.exchanges.binance.constants as const
@@ -16,9 +17,11 @@ from shared.exchanges.binance import BinanceHandler
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import ExchangeData, StructuredData, Symbol, Pipeline
+from database.model.models import ExchangeData, StructuredData, Pipeline
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
+cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
 
 
 class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
@@ -182,7 +185,10 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         return new_entries
 
     def generate_new_signal(self, header):
-        success = trigger_signal(self.pipeline_id, header=header)
+
+        bearer_token = cache.get("bearer_token")
+
+        success = trigger_signal(self.pipeline_id, bearer_token, header=header)
 
         if not success:
             logging.warning(

@@ -12,7 +12,6 @@ import {
     StartPipeline,
     StopPipeline,
     GetCurrentPrices,
-    Message,
     UpdateMessage,
     DeletePipeline,
     BalanceObj,
@@ -43,6 +42,7 @@ import PositionsPanel from "./PositionsPanel";
 import {Box, StyledSegment, Wrapper} from "../styledComponents";
 import Dashboard from "./Dashboard";
 import {Grid, Header} from "semantic-ui-react";
+import withMessage from "../higherOrderComponents/withMessage";
 
 
 const AppDiv = styled.div`
@@ -95,14 +95,15 @@ interface State {
     strategies: any
     symbols: string[],
     currentPrices: Object
-    message: Message
     pipelinesMetrics: PipelinesMetrics
 }
 
 interface Props {
-    decimals: Decimals
     location: Location
+    removeToken: () => void
+    decimals: Decimals
     menuProperties: MenuOption[]
+    updateMessage: UpdateMessage
 }
 
 
@@ -144,7 +145,6 @@ class App extends Component<Props, State> {
         },
         symbols: [],
         currentPrices: {},
-        message: {show: false, bottomProp: -300, text: null, color: "#000000", success: true},
         pipelinesMetrics: {
             totalPipelines: 0,
             activePipelines: 0,
@@ -194,30 +194,7 @@ class App extends Component<Props, State> {
 
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<State>, snapshot?: any) {
 
-        const { message, menuOption } = this.state
-
-        if (prevState.message.show !== message.show && message.show) {
-            this.setState({message: {...message, bottomProp: 40, show: false}})
-
-            if (this.messageTimeout) {
-                clearTimeout(this.messageTimeout)
-            }
-            this.messageTimeout = setTimeout(() => {
-                this.setState((state) =>
-                    ({
-                        message: {
-                            ...state.message,
-                            bottomProp: -300
-                        }
-                    }),
-                    () => {
-                        if (this.messageTimeout) {
-                            clearTimeout(this.messageTimeout)
-                        }
-                    }
-                )
-            }, 4200)
-        }
+        const { menuOption } = this.state
 
         if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'trades') {
             this.updateTrades()
@@ -238,14 +215,16 @@ class App extends Component<Props, State> {
     startPipeline: StartPipeline = (pipelineParams: PipelineParams) => {
         startBot(pipelineParams)
             .then(response => {
+
+                const { updateMessage } = this.props
+
+                updateMessage({
+                    text: response.message,
+                    success: response.success,
+                })
+
                 this.setState(state => {
                     return {
-                        message: {
-                            ...state.message,
-                            text: response.message,
-                            show: true,
-                            success: response.success,
-                        },
                         pipelines: response.success ? {
                             ...state.pipelines,
                             [response.pipeline.id]: organizePipeline(response.pipeline)
@@ -258,13 +237,14 @@ class App extends Component<Props, State> {
     stopPipeline: StopPipeline = (pipelineId) => {
         return stopBot({pipelineId})
             .then(response => {
+                const { updateMessage } = this.props
+
+                updateMessage({
+                    text: response.message,
+                    success: response.success,
+                })
+
                 this.setState(state => ({
-                    message: {
-                        ...state.message,
-                        text: response.message,
-                        show: true,
-                        success: response.success
-                    },
                     pipelines: response.success ? {
                         ...state.pipelines,
                         [pipelineId]: organizePipeline(response.pipeline)
@@ -276,15 +256,16 @@ class App extends Component<Props, State> {
     deletePipeline: DeletePipeline = (pipelineId) => {
         deleteBot(pipelineId)
             .then(response => {
+                const { updateMessage } = this.props
+
+                updateMessage({
+                    text: response.message,
+                    success: response.success,
+                })
+
                 this.setState(state => {
                     const {id, ...pipelines} = state.pipelines
                     return {
-                        message: {
-                        ...state.message,
-                              text: response.message,
-                              show: true,
-                              success: response.success
-                        },
                         pipelines: response.success ? pipelines : state.pipelines,
                         positions: response.success ? state.positions.reduce(
                         (newPositions: Position[], position: Position) => {
@@ -397,17 +378,6 @@ class App extends Component<Props, State> {
           })
     }
 
-    updateMessage: UpdateMessage = (text, success) => {
-        this.setState(state => ({
-            message: {
-                ...state.message,
-                show: true,
-                text,
-                success,
-            }
-        }))
-    }
-
     render() {
 
         const {
@@ -421,19 +391,24 @@ class App extends Component<Props, State> {
             positions,
             strategies,
             currentPrices,
-            message,
-            pipelinesMetrics
+            pipelinesMetrics,
         } = this.state
 
 
-        const { decimals, menuProperties, location } = this.props
+        const { decimals, menuProperties, location, removeToken, updateMessage } = this.props
 
         const menuOption = menuProperties.find(option => location.pathname.includes(option.code))
 
         return (
             <AppDiv className="flex-row">
                 <MenuColumn>
-                    <Menu menuOption={menuOption} changeMenu={this.changeMenu} menuProperties={menuProperties}/>
+                    <Menu
+                      menuOption={menuOption}
+                      changeMenu={this.changeMenu}
+                      menuProperties={menuProperties}
+                      removeToken={removeToken}
+                      updateMessage={updateMessage}
+                    />
                 </MenuColumn>
                 <AppColumn>
                     <StyledSegment basic paddingTop="10px" padding="0" className="flex-column">
@@ -466,7 +441,7 @@ class App extends Component<Props, State> {
                                   startPipeline={this.startPipeline}
                                   stopPipeline={this.stopPipeline}
                                   deletePipeline={this.deletePipeline}
-                                  updateMessage={this.updateMessage}
+                                  updateMessage={updateMessage}
                                   pipelinesMetrics={pipelinesMetrics}
                                   decimals={decimals}
                                   trades={trades}
@@ -497,11 +472,7 @@ class App extends Component<Props, State> {
                                 <Redirect to="/dashboard" />
                             </Route>
                         </Switch>
-                        {message.text && (
-                          <StyledBox align="center" bottom={message.bottomProp}>
-                              <MessageComponent success={message.success} message={message.text} color={message.color}/>
-                          </StyledBox>
-                        )}
+                        {this.props.children}
                     </StyledSegment>
                 </AppColumn>
             </AppDiv>
