@@ -135,7 +135,7 @@ export type MenuOption = {
 export type Message = {
     text: string | null,
     show: boolean,
-    bottomProp: number,
+    bottomProp: string,
     color: string,
     success: boolean
 }

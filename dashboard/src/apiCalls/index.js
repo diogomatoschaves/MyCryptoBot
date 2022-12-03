@@ -21,7 +21,7 @@ export const getResources = async (resources) => {
   })
     .then(res => {
       if (res.status >= 400) {
-        throw(new Error('Error fetching resources'))
+        // throw(new Error('Error fetching resources'))
       } else {
         return res.json()
       }
@@ -42,7 +42,7 @@ export const getTrades = async (page, pipelineId) => {
   })
     .then(res => {
       if (res.status >= 400) {
-        throw(new Error('Error fetching trades'))
+        // throw(new Error('Error fetching trades'))
       } else {
         return res.json()
       }
@@ -63,7 +63,7 @@ export const getPipelines = async (page) => {
   })
     .then(res => {
       if (res.status >= 400) {
-        throw(new Error('Error fetching pipelines'))
+        // throw(new Error('Error fetching pipelines'))
       } else {
         return res.json()
       }
@@ -84,7 +84,7 @@ export const getPositions = async (page) => {
   })
     .then(res => {
       if (res.status >= 400) {
-        throw(new Error('Error fetching positions'))
+        // throw(new Error('Error fetching positions'))
       } else {
         return res.json()
       }
@@ -105,7 +105,7 @@ export const getPrice = async (symbol) => {
   })
     .then(res => {
       if (res.status >= 400) {
-        throw(new Error('Error fetching prices'))
+        // throw(new Error('Error fetching prices'))
       } else {
         return res.json()
       }

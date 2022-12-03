@@ -1,6 +1,5 @@
 import React from 'react'
 import styled, {css} from 'styled-components'
-import { StyledBox } from '../styledComponents'
 import {Message} from "semantic-ui-react";
 
 interface Props {
@@ -11,7 +10,7 @@ interface Props {
 
 const StyledMessage = styled(Message)`
   &.ui.message {
-    
+    // position: relative
   }
 `
 
