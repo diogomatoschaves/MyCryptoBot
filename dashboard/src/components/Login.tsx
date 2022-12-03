@@ -3,6 +3,7 @@ import {Button, Form, Input} from "semantic-ui-react";
 import {userLogin} from "../apiCalls";
 import styled from "styled-components";
 import {capitalize} from "../utils/helpers";
+import {UpdateMessage} from "../types";
 
 
 const LoginForm = styled.div`
@@ -16,11 +17,12 @@ const LoginForm = styled.div`
 
 interface Props {
   saveToken: (userToken: string) => void
+  updateMessage: UpdateMessage
 }
 
 function Login(props: Props) {
 
-  const { saveToken } = props
+  const { saveToken, updateMessage } = props
 
   const [loginForm, setloginForm] = useState({
     username: "",
@@ -33,7 +35,19 @@ function Login(props: Props) {
       password: loginForm.password
     })
       .then((response) => {
-        saveToken(response.access_token)
+        if (response.access_token) {
+          saveToken(response.access_token)
+          updateMessage({
+            text: "You're logged in!",
+            success: true
+          })
+        } else if(response.status !== 200) {
+          updateMessage({
+            text: response.msg,
+            success: false
+          })
+        }
+
       }).catch((error) => {
       if (error.response) {
         console.log(error.response)

@@ -12,7 +12,6 @@ import {
     StartPipeline,
     StopPipeline,
     GetCurrentPrices,
-    Message,
     UpdateMessage,
     DeletePipeline,
     BalanceObj,
@@ -408,6 +407,7 @@ class App extends Component<Props, State> {
                       changeMenu={this.changeMenu}
                       menuProperties={menuProperties}
                       removeToken={removeToken}
+                      updateMessage={updateMessage}
                     />
                 </MenuColumn>
                 <AppColumn>
@@ -472,6 +472,7 @@ class App extends Component<Props, State> {
                                 <Redirect to="/dashboard" />
                             </Route>
                         </Switch>
+                        {this.props.children}
                     </StyledSegment>
                 </AppColumn>
             </AppDiv>
@@ -480,4 +481,4 @@ class App extends Component<Props, State> {
 }
 
 
-export default withMessage(App);
+export default App;
