@@ -195,6 +195,6 @@ export type StopPipeline = (pipelineId: number) => Promise<void>
 export type DeletePipeline = (pipelineId: number) => void
 export type ChangeMenu = (option: MenuOption) => void
 export type GetCurrentPrices = () => void
-export type UpdateMessage = (text: string, success: boolean)  => void
+export type UpdateMessage = (newMessage: Object)  => void
 export type UpdateTrades = (page?: number, pipelineId?: string)  => void
 export type UpdatePipelinesMetrics = ()  => void
