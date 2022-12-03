@@ -1,8 +1,10 @@
+import functools
 import json
 import os
 import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
 from functools import reduce
 
 from flask import Flask, jsonify, request
@@ -10,7 +12,9 @@ import django
 from flask_cors import CORS
 
 import redis
+from flask_jwt_extended import JWTManager, jwt_required
 
+from data.service.blueprints.user_management import user_management
 from data.service.blueprints.dashboard import dashboard
 from data.service.external_requests import start_stop_symbol_trading, get_strategies
 from data.service.helpers.decorators.handle_app_errors import handle_app_errors
@@ -38,6 +42,12 @@ executor = ThreadPoolExecutor(16)
 
 app = Flask(__name__)
 app.register_blueprint(dashboard)
+app.register_blueprint(user_management)
+
+app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=2)
+
+jwt = JWTManager(app)
 
 CORS(app)
 
@@ -76,16 +86,20 @@ def stop_instance(pipeline_id, header):
 
 
 @app.route('/')
+@jwt_required()
 def hello_world():
     return "I'm up!"
 
 
 @app.route('/start_bot', methods=['PUT'])
 @handle_app_errors
+@jwt_required()
 def start_bot():
 
+    bearer_token = request.headers.get('Authorization')
+
     if "STRATEGIES" not in globals():
-        STRATEGIES = get_strategies()
+        STRATEGIES = get_strategies(bearer_token)
         globals()["STRATEGIES"] = STRATEGIES
     else:
         STRATEGIES = globals()["STRATEGIES"]
@@ -145,7 +159,7 @@ def start_bot():
         "binance_trader_type": "futures",
     }
 
-    response = start_stop_symbol_trading(payload, 'start')
+    response = start_stop_symbol_trading(payload, 'start', bearer_token)
 
     if not response["success"]:
         logging.warning(response["message"])
@@ -166,12 +180,16 @@ def start_bot():
     return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline))
 
 
-@app.route('/stop_bot', methods=['PUT'])
-@handle_app_errors
+@app.put('/stop_bot')
+@handle_app_errors()
+@jwt_required()
 def stop_bot():
 
     # Stops the data collection stream
     # closes any open positions
+
+    bearer_token = request.headers.get('Authorization')
+
     data = request.get_json(force=True)
 
     pipeline_id = data.get("pipelineId", None)
@@ -185,7 +203,7 @@ def stop_bot():
 
         stop_instance(pipeline_id, header=header)
 
-        response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop')
+        response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop', bearer_token)
 
         logging.debug(response["message"])
 

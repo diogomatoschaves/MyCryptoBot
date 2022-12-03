@@ -2,6 +2,7 @@ import time
 
 import pytest
 import requests
+from flask_jwt_extended import view_decorators
 
 response = {"message": "Something", "success": True}
 
@@ -46,3 +47,18 @@ def requests_get_spy(mocker):
 @pytest.fixture
 def mock_time_sleep(mocker):
     return mocker.patch.object(time, "sleep", lambda seconds: None)
+
+
+def mock_verify_jwt_in_request(
+    optional: bool = False,
+    fresh: bool = False,
+    refresh: bool = False,
+    locations = None,
+    verify_type: bool = True,
+):
+    pass
+
+
+@pytest.fixture
+def mock_jwt_required(mocker):
+    return mocker.patch.object(view_decorators, "verify_jwt_in_request", mock_verify_jwt_in_request)

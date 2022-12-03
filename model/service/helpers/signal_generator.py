@@ -21,7 +21,16 @@ from database.model.models import StructuredData
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
 
-def get_signal(pipeline_id, symbol, candle_size, exchange, strategy, params=None, header=''):
+def get_signal(
+    pipeline_id,
+    symbol,
+    candle_size,
+    exchange,
+    strategy,
+    bearer_token,
+    params=None,
+    header=''
+):
 
     if params is None:
         params = {}
@@ -64,12 +73,12 @@ def get_signal(pipeline_id, symbol, candle_size, exchange, strategy, params=None
 
     logging.debug(header + f"{convert_signal_to_text(signal)} signal generated")
 
-    return trigger_order(pipeline_id, signal, header=header)
+    return trigger_order(pipeline_id, signal, bearer_token, header=header)
 
 
-def trigger_order(pipeline_id, signal, header=''):
+def trigger_order(pipeline_id, signal, bearer_token, header=''):
 
-    response = execute_order(pipeline_id, signal, header=header)
+    response = execute_order(pipeline_id, signal, bearer_token, header=header)
 
     if "success" in response and response["success"]:
         logging.debug(header + "Order was executed successfully.")

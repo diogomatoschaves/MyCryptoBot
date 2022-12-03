@@ -99,6 +99,7 @@ class TestSignalGeneration:
             "strategy": strategy,
             "candle_size": "1h",
             "exchange": "Binance",
+            "bearer_token": "abc"
         }
 
         res = get_signal(**params)
@@ -130,7 +131,7 @@ class TestSignalGeneration:
 
         mock_execute_order.return_value = side_effect
 
-        params = {"signal": 1, "pipeline_id": 1}
+        params = {"signal": 1, "pipeline_id": 1, "bearer_token": "abc"}
 
         res = trigger_order(**params)
 
