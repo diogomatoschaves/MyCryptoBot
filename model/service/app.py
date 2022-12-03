@@ -77,8 +77,8 @@ def generate_signal():
             pipeline.candle_size,
             pipeline.exchange,
             pipeline.strategy,
-            pipeline.params,
             bearer_token,
+            pipeline.params,
             header
         )
     )

@@ -1,7 +1,7 @@
 import {Fragment} from "react";
 import App from "./App";
 import {Location} from 'history'
-import withToken from "./withToken";
+import withToken from "../higherOrderComponents/withToken";
 import Login from "./Login";
 import {Redirect, Route, Switch} from "react-router-dom";
 
