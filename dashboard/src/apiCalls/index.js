@@ -1,6 +1,11 @@
 const dataAPIHost = process.env.REACT_APP_DATA_API_HOST
 const executionAPIHost = process.env.REACT_APP_EXECUTION_API_HOST
 
+
+const getToken = () => {
+  return `Bearer ${window.localStorage.getItem('crypto-token')}`
+}
+
 export const getResources = async (resources) => {
 
   const resourcesString = resources.join()
@@ -11,6 +16,7 @@ export const getResources = async (resources) => {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
     }
   })
     .then(res => {
@@ -31,6 +37,7 @@ export const getTrades = async (page, pipelineId) => {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
     }
   })
     .then(res => {
@@ -51,6 +58,7 @@ export const getPipelines = async (page) => {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
     }
   })
     .then(res => {
@@ -71,6 +79,7 @@ export const getPositions = async (page) => {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
     }
   })
     .then(res => {
@@ -91,6 +100,7 @@ export const getPrice = async (symbol) => {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
     }
   })
     .then(res => {
@@ -111,6 +121,7 @@ export const getFuturesAccountBalance = async () => {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
     }
   })
     .then(res => {
@@ -127,8 +138,12 @@ export const startBot = async (requestData) => {
   const url = `${dataAPIHost}/start_bot`
 
   const response = await fetch(url, {
+    method: 'PUT',
     body: JSON.stringify(requestData),
-    method: 'PUT'
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
+    }
   })
 
   return await response.json()
@@ -140,8 +155,12 @@ export const stopBot = async (requestData) => {
   const url = `${dataAPIHost}/stop_bot`
 
   const response = await fetch(url, {
+    method: 'PUT',
     body: JSON.stringify(requestData),
-    method: 'PUT'
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
+    }
   })
 
   return await response.json()
@@ -152,7 +171,11 @@ export const deleteBot = async (pipelineId) => {
   const url = `${dataAPIHost}/pipelines?pipelineId=${pipelineId}`
 
   const response = await fetch(url, {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
+    }
   })
 
   return await response.json()
@@ -161,7 +184,13 @@ export const deleteBot = async (pipelineId) => {
 export const getTradesMetrics = async () => {
   const url = `${dataAPIHost}/trades-metrics`
 
-  const response = await fetch(url, {method: 'GET'})
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
+    }
+  })
 
   return await response.json()
 }
@@ -170,7 +199,13 @@ export const getTradesMetrics = async () => {
 export const getPipelinesMetrics = async () => {
   const url = `${dataAPIHost}/pipelines-metrics`
 
-  const response = await fetch(url, {method: 'GET'})
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
+    }
+  })
 
   return await response.json()
 }
@@ -178,13 +213,14 @@ export const getPipelinesMetrics = async () => {
 export const userLogin = async (requestData) => {
   const url = `${dataAPIHost}/token`
 
-  const headers = new Headers()
-  headers.append('Content-Type', 'application/json');
-
   const response = await fetch(url, {
     body: JSON.stringify(requestData),
     method: 'POST',
-    headers
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Authorization": getToken()
+    }
   })
 
   return await response.json()
