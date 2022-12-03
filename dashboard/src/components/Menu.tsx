@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import {Button, Divider, Grid, Icon, Menu} from "semantic-ui-react";
 import {Link} from 'react-router-dom'
-import {ChangeMenu, MenuOption} from "../types";
+import {ChangeMenu, MenuOption, UpdateMessage} from "../types";
 
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
     changeMenu: ChangeMenu
     menuProperties: MenuOption[]
     removeToken: () => void
+    updateMessage: UpdateMessage
 }
 
 
@@ -23,7 +24,15 @@ const Column = styled(Grid.Column)`
 
 function AppMenu(props: Props) {
 
-    const { menuOption, menuProperties, removeToken } = props
+    const { menuOption, menuProperties, removeToken, updateMessage } = props
+
+    const logout = () => {
+        updateMessage({
+            text: "You're logged out.",
+            success: true
+        })
+        removeToken()
+    }
 
     return (
         <Column width={4}>
@@ -44,7 +53,7 @@ function AppMenu(props: Props) {
                 <Divider/>
                 <Link to="/login">
                     <Menu.Item style={styles}>
-                        <a onClick={() => removeToken()} className="flex-row" style={{justifyContent: 'space-between'}}>
+                        <a onClick={logout} className="flex-row" style={{justifyContent: 'space-between'}}>
                             <span>Logout</span>
                             <span><Icon name="log out"/></span>
                         </a>
