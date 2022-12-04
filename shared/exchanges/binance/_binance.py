@@ -1,3 +1,4 @@
+import os
 from os import environ as env
 
 from dotenv import load_dotenv, find_dotenv
@@ -23,12 +24,13 @@ class BinanceHandler(Client):
 
         self._get_api_keys(paper_trading=paper_trading)
 
-        Client.__init__(
-            self,
-            self.binance_api_key,
-            self.binance_api_secret,
-            testnet=paper_trading
-        )
+        if not os.getenv('TEST'):
+            Client.__init__(
+                self,
+                self.binance_api_key,
+                self.binance_api_secret,
+                testnet=paper_trading
+            )
 
     def _get_api_keys(self, paper_trading):
 

@@ -11,7 +11,7 @@ def process_retry(retries, num_times, e, exception):
     retries += 1
     if retries > num_times:
         try:
-            raise exception(e)
+            raise exception
         except TypeError:
             raise Exception(e)
 
