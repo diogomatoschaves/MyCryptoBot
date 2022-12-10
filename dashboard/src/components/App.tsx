@@ -34,15 +34,13 @@ import {
 } from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
-import MessageComponent from "./Message";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
 import {parseTrade, organizePositions, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import {Box, StyledSegment, Wrapper} from "../styledComponents";
 import Dashboard from "./Dashboard";
-import {Grid, Header} from "semantic-ui-react";
-import withMessage from "../higherOrderComponents/withMessage";
+import {Header} from "semantic-ui-react";
 
 
 const AppDiv = styled.div`
@@ -51,16 +49,6 @@ const AppDiv = styled.div`
   height: 100vh;
   position: absolute;
   justify-content: flex-start;
-`
-
-const StyledBox = styled(Box)`
-  transition: bottom 1s ease;
-  position: fixed;
-  ${(props: any) =>
-    props.bottom &&
-    css`
-      bottom: ${props.bottom}px;
-    `}
 `
 
 const MenuColumn = styled.div`
@@ -192,21 +180,27 @@ class App extends Component<Props, State> {
         }, 60 * 1000)
     }
 
-    componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<State>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
 
-        const { menuOption } = this.state
+        const { symbols } = this.state
 
-        if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'trades') {
+        if (prevState.symbols !== symbols) {
+            this.getCurrentPrices()
+        }
+
+        const { pathname } = this.props.location
+
+        if (prevProps.location.pathname !== pathname && pathname.includes('/trades')) {
             this.updateTrades()
             this.getCurrentPrices()
         }
 
-        if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'pipelines') {
+        if (prevProps.location.pathname !== pathname && pathname.includes('/pipelines')) {
             this.updatePipelines()
             this.getCurrentPrices()
         }
 
-        if (prevState.menuOption.code !== menuOption.code && menuOption.code === 'positions') {
+        if (prevProps.location.pathname !== pathname && pathname.includes('/positions')) {
             this.updatePositions()
             this.getCurrentPrices()
         }
@@ -276,10 +270,6 @@ class App extends Component<Props, State> {
                     }
                 })
             })
-    }
-
-    changeMenu: ChangeMenu = (menuOption) => {
-        this.setState({ menuOption })
     }
 
     getCurrentPrices: GetCurrentPrices = () => {
@@ -404,7 +394,6 @@ class App extends Component<Props, State> {
                 <MenuColumn>
                     <Menu
                       menuOption={menuOption}
-                      changeMenu={this.changeMenu}
                       menuProperties={menuProperties}
                       removeToken={removeToken}
                       updateMessage={updateMessage}

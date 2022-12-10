@@ -23,19 +23,8 @@ if module_path not in sys.path:
 
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
-binance_futures_trader = BinanceFuturesTrader()
-binance_futures_mock_trader = BinanceFuturesTrader(paper_trading=True)
-binance_margin_trader = BinanceMarginTrader()
-binance_margin_mock_trader = BinanceMockMarginTrader()
 
-
-app = Flask(__name__)
-app.register_blueprint(market_data)
-
-app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
-jwt = JWTManager(app)
-
-CORS(app)
+global binance_futures_mock_trader, binance_futures_trader, binance_margin_mock_trader, binance_margin_trader
 
 
 def get_binance_trader_instance(binance_account_type, paper_trading):
@@ -55,95 +44,112 @@ def get_binance_trader_instance(binance_account_type, paper_trading):
     return binance_futures_mock_trader
 
 
-@app.route('/')
-@jwt_required()
-def hello_world():
-    return "I'm up!"
+def create_app():
 
+    global binance_futures_mock_trader, binance_futures_trader, binance_margin_mock_trader, binance_margin_trader
 
-@app.route('/start_symbol_trading', methods=['POST'])
-@handle_app_errors
-@binance_error_handler(request_obj=request)
-@jwt_required()
-def start_symbol_trading():
+    binance_futures_trader = BinanceFuturesTrader()
+    binance_futures_mock_trader = BinanceFuturesTrader(paper_trading=True)
+    binance_margin_trader = BinanceMarginTrader()
+    binance_margin_mock_trader = BinanceMockMarginTrader()
 
-    request_data = request.get_json(force=True)
+    app = Flask(__name__)
+    app.register_blueprint(market_data)
 
-    pipeline, parameters = extract_and_validate(request_data)
+    app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+    jwt = JWTManager(app)
 
-    if parameters.equity is None:
-        raise EquityRequired
+    CORS(app)
 
-    if pipeline.exchange == 'binance':
+    @app.route('/')
+    @jwt_required()
+    def hello_world():
+        return "I'm up!"
 
-        bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
+    @app.route('/start_symbol_trading', methods=['POST'])
+    @handle_app_errors
+    @binance_error_handler(request_obj=request)
+    @jwt_required()
+    def start_symbol_trading():
 
-        bt.start_symbol_trading(
-            pipeline.symbol,
-            equity=parameters.equity,
-            leverage=parameters.leverage,
-            header=parameters.header,
-            pipeline_id=pipeline.id
-        )
+        request_data = request.get_json(force=True)
 
-        return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
+        pipeline, parameters = extract_and_validate(request_data)
 
+        if parameters.equity is None:
+            raise EquityRequired
 
-@app.route('/stop_symbol_trading', methods=['POST'])
-@handle_app_errors
-@binance_error_handler(request_obj=request)
-@jwt_required()
-def stop_symbol_trading():
+        if pipeline.exchange == 'binance':
 
-    request_data = request.get_json(force=True)
+            bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
-    pipeline, parameters = extract_and_validate(request_data)
+            bt.start_symbol_trading(
+                pipeline.symbol,
+                equity=parameters.equity,
+                leverage=parameters.leverage,
+                header=parameters.header,
+                pipeline_id=pipeline.id
+            )
 
-    if not pipeline.active:
-        raise PipelineNotActive(pipeline.id)
+            return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
 
-    if pipeline.exchange == 'binance':
+    @app.route('/stop_symbol_trading', methods=['POST'])
+    @handle_app_errors
+    @binance_error_handler(request_obj=request)
+    @jwt_required()
+    def stop_symbol_trading():
 
-        bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
+        request_data = request.get_json(force=True)
 
-        bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
+        pipeline, parameters = extract_and_validate(request_data)
 
-        return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
+        if not pipeline.active:
+            raise PipelineNotActive(pipeline.id)
 
+        if pipeline.exchange == 'binance':
 
-@app.route('/execute_order', methods=['POST'])
-@handle_app_errors
-@binance_error_handler
-@jwt_required()
-def execute_order():
+            bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
-    request_data = request.get_json(force=True)
-
-    logging.debug(request_data)
-
-    pipeline, parameters = extract_and_validate(request_data)
-
-    if not pipeline.active:
-        raise PipelineNotActive(pipeline.id)
-
-    signal = request_data.get("signal", None)
-    amount = request_data.get("amount", "all")
-
-    validate_signal(signal=signal)
-
-    if pipeline.exchange.lower() == 'binance':
-
-        bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
-
-        try:
-            bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
-        except BinanceAPIException as e:
             bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
-            message = e.message
-            return jsonify(Responses.API_ERROR(pipeline.symbol, message))
+
+            return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
+
+    @app.route('/execute_order', methods=['POST'])
+    @handle_app_errors
+    @binance_error_handler
+    @jwt_required()
+    def execute_order():
+
+        request_data = request.get_json(force=True)
+
+        logging.debug(request_data)
+
+        pipeline, parameters = extract_and_validate(request_data)
+
+        if not pipeline.active:
+            raise PipelineNotActive(pipeline.id)
+
+        signal = request_data.get("signal", None)
+        amount = request_data.get("amount", "all")
+
+        validate_signal(signal=signal)
+
+        if pipeline.exchange.lower() == 'binance':
+
+            bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
+
+            try:
+                bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
+            except BinanceAPIException as e:
+                bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
+                message = e.message
+                return jsonify(Responses.API_ERROR(pipeline.symbol, message))
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))
 
+    return app
+
 
 if __name__ == "__main__":
+    app = create_app()
     app.run(host='0.0.0.0')

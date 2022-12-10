@@ -2,7 +2,7 @@ import {Table} from "semantic-ui-react";
 import TradeRow from "./TradeRow";
 import {Decimals, PipelinesObject, TradesObject, UpdateTrades} from "../types";
 import {Wrapper} from "../styledComponents";
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useReducer, useRef, useState} from "react";
 import {debounce, throttle} from "lodash";
 
 
@@ -17,11 +17,49 @@ interface Props {
   pipelineId?: string
 }
 
+const SORT_TRADES = 'SORT_TRADES'
+
+
+const reducer = (state: any, action: any) => {
+  switch (action.type) {
+    case SORT_TRADES:
+
+      const { filteredTrades, trades } = action
+
+      return {
+        ...state,
+        sortedTrades: filteredTrades ? filteredTrades.sort((a: string, b: string) => {
+          return trades[b].closeTime.getTime() - trades[a].closeTime.getTime()
+        }) : []
+      }
+    default:
+      throw new Error();
+  }
+}
+
 const TradesTable = (props: Props) => {
 
-  const { filteredTrades, trades, decimals, currentPrices, pipelines, updateTrades, maxHeight, pipelineId } = props
+  const {
+    filteredTrades,
+    trades,
+    decimals,
+    currentPrices,
+    pipelines,
+    updateTrades,
+    maxHeight,
+    pipelineId
+  } = props
 
-  console.log(pipelineId)
+
+  const [{ sortedTrades }, dispatch] = useReducer(reducer, {sortedTrades: filteredTrades})
+
+  useEffect(() => {
+    dispatch({
+      type: SORT_TRADES,
+      filteredTrades,
+      trades
+    })
+  }, [filteredTrades])
 
   const [bottomed, setBottomed] = useState(false)
   const [page, setPage] = useState(2)
@@ -72,7 +110,7 @@ const TradesTable = (props: Props) => {
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {filteredTrades.map((tradeId: string, index: number) => {
+          {sortedTrades.map((tradeId: string, index: number) => {
             // @ts-ignore
             const trade = trades[tradeId]
             return (
