@@ -1,12 +1,24 @@
 import {Fragment, Component} from "react";
 import MessageComponent from "../components/Message";
-import {StyledBox} from "../styledComponents";
+import {Box} from "../styledComponents";
 import {Message, UpdateMessage} from "../types";
+import styled, {css} from "styled-components";
 
 
 interface State {
   message: Message
 }
+
+
+const StyledBox = styled(Box)`
+  transition: bottom 1s ease;
+  position: fixed;
+  ${(props: any) =>
+  props.bottom &&
+  css`
+      bottom: ${props.bottom}px;
+    `}
+`
 
 
 const withMessage = (WrappedComponent: any) => {
@@ -68,10 +80,6 @@ const withMessage = (WrappedComponent: any) => {
             <StyledBox
               align="center"
               bottom={message.bottomProp}
-              left="50%"
-              position="absolute"
-              padding="0px"
-              className="message-container"
             >
               <MessageComponent success={message.success} message={message.text} color={message.color}/>
             </StyledBox>

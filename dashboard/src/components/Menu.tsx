@@ -6,7 +6,6 @@ import {ChangeMenu, MenuOption, UpdateMessage} from "../types";
 
 interface Props {
     menuOption: MenuOption | undefined
-    changeMenu: ChangeMenu
     menuProperties: MenuOption[]
     removeToken: () => void
     updateMessage: UpdateMessage

@@ -10,6 +10,8 @@ def create_app(testing=False, env_vars=None):
         for key, value in env_vars.items():
             os.environ.setdefault(key, value)
 
-    application.app.config['TESTING'] = testing
+    app = application.create_app()
 
-    return application.app
+    app.config['TESTING'] = testing
+
+    return app
