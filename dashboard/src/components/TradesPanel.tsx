@@ -41,8 +41,6 @@ const reducer = (state: any, action: any) => {
                 ...state,
                 filteredTrades: Object.keys(trades).filter((tradeId: string) => {
                     return (trades[tradeId].mock === test && test) || (trades[tradeId].mock === !live && live)
-                }).sort((a, b) => {
-                    return trades[b].closeTime.getTime() - trades[a].closeTime.getTime()
                 })
             }
         case TOGGLE_OPTIONS:

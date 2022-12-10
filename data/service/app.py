@@ -40,17 +40,6 @@ configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 executor = ThreadPoolExecutor(16)
 
 
-app = Flask(__name__)
-app.register_blueprint(dashboard)
-app.register_blueprint(user_management)
-
-app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=2)
-
-jwt = JWTManager(app)
-
-CORS(app)
-
 binance_instances = []
 
 binance_client = BinanceHandler()
@@ -85,136 +74,151 @@ def stop_instance(pipeline_id, header):
     )
 
 
-@app.route('/')
-@jwt_required()
-def hello_world():
-    return "I'm up!"
+def create_app():
+    app = Flask(__name__)
+    app.debug = False
+    app.register_blueprint(dashboard)
+    app.register_blueprint(user_management)
 
+    app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=2)
 
-@app.route('/start_bot', methods=['PUT'])
-@handle_app_errors
-@jwt_required()
-def start_bot():
+    jwt = JWTManager(app)
 
-    bearer_token = request.headers.get('Authorization')
+    CORS(app)
 
-    if "STRATEGIES" not in globals():
-        STRATEGIES = get_strategies(bearer_token)
-        globals()["STRATEGIES"] = STRATEGIES
-    else:
-        STRATEGIES = globals()["STRATEGIES"]
+    @app.route('/')
+    @jwt_required()
+    def hello_world():
+        return "I'm up!"
 
-    data = request.get_json(force=True)
+    @app.route('/start_bot', methods=['PUT'])
+    @handle_app_errors
+    @jwt_required()
+    def start_bot():
 
-    name = data.get("name", None)
-    color = data.get("color", None)
-    allocation = data.get("allocation", None)
-    symbol = data.get("symbol", None)
-    strategy = data.get("strategy", None)
-    params = data.get("params", {})
-    candle_size = data.get("candleSize", None)
-    exchange = data.get("exchanges", None)
-    paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
-    leverage = data.get("leverage", 1)
+        bearer_token = request.headers.get('Authorization')
 
-    check_input(
-        binance_client,
-        STRATEGIES,
-        name=name,
-        color=color,
-        allocation=allocation,
-        symbol=symbol,
-        strategy=strategy,
-        params=params,
-        candle_size=candle_size,
-        exchange=exchange,
-        leverage=leverage
-    )
+        if "STRATEGIES" not in globals():
+            STRATEGIES = get_strategies(bearer_token)
+            globals()["STRATEGIES"] = STRATEGIES
+        else:
+            STRATEGIES = globals()["STRATEGIES"]
 
-    exchange = exchange.lower()
-    candle_size = candle_size.lower()
+        data = request.get_json(force=True)
 
-    pipeline = get_or_create_pipeline(
-        name=name,
-        color=color,
-        allocation=allocation,
-        symbol=symbol,
-        candle_size=candle_size,
-        strategy=strategy,
-        exchange=exchange,
-        params=params,
-        paper_trading=paper_trading,
-        leverage=leverage
-    )
+        name = data.get("name", None)
+        color = data.get("color", None)
+        allocation = data.get("allocation", None)
+        symbol = data.get("symbol", None)
+        strategy = data.get("strategy", None)
+        params = data.get("params", {})
+        candle_size = data.get("candleSize", None)
+        exchange = data.get("exchanges", None)
+        paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
+        leverage = data.get("leverage", 1)
 
-    header = get_logging_row_header(symbol, strategy, params, candle_size, exchange, paper_trading)
+        check_input(
+            binance_client,
+            STRATEGIES,
+            name=name,
+            color=color,
+            allocation=allocation,
+            symbol=symbol,
+            strategy=strategy,
+            params=params,
+            candle_size=candle_size,
+            exchange=exchange,
+            leverage=leverage
+        )
 
-    cache.set(
-        f"pipeline {pipeline.id}",
-        json.dumps(header)
-    )
+        exchange = exchange.lower()
+        candle_size = candle_size.lower()
 
-    payload = {
-        "pipeline_id": pipeline.id,
-        "binance_trader_type": "futures",
-    }
+        pipeline = get_or_create_pipeline(
+            name=name,
+            color=color,
+            allocation=allocation,
+            symbol=symbol,
+            candle_size=candle_size,
+            strategy=strategy,
+            exchange=exchange,
+            params=params,
+            paper_trading=paper_trading,
+            leverage=leverage
+        )
 
-    response = start_stop_symbol_trading(payload, 'start', bearer_token)
+        header = get_logging_row_header(symbol, strategy, params, candle_size, exchange, paper_trading)
 
-    if not response["success"]:
-        logging.warning(response["message"])
+        cache.set(
+            f"pipeline {pipeline.id}",
+            json.dumps(header)
+        )
 
-        pipeline.active = False
-        pipeline.save()
+        payload = {
+            "pipeline_id": pipeline.id,
+            "binance_trader_type": "futures",
+        }
 
-        return response
+        response = start_stop_symbol_trading(payload, 'start', bearer_token)
 
-    logging.info(header + f"Starting data pipeline.")
+        if not response["success"]:
+            logging.warning(response["message"])
 
-    executor.submit(
-        initialize_data_collection,
-        pipeline,
-        header
-    )
+            pipeline.active = False
+            pipeline.save()
 
-    return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline))
+            return response
 
+        logging.info(header + f"Starting data pipeline.")
 
-@app.put('/stop_bot')
-@handle_app_errors()
-@jwt_required()
-def stop_bot():
+        executor.submit(
+            initialize_data_collection,
+            pipeline,
+            header
+        )
 
-    # Stops the data collection stream
-    # closes any open positions
+        return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline))
 
-    bearer_token = request.headers.get('Authorization')
+    @app.put('/stop_bot')
+    @handle_app_errors()
+    @jwt_required()
+    def stop_bot():
 
-    data = request.get_json(force=True)
+        # Stops the data collection stream
+        # closes any open positions
 
-    pipeline_id = data.get("pipelineId", None)
+        bearer_token = request.headers.get('Authorization')
 
-    try:
-        pipeline = Pipeline.objects.get(id=pipeline_id)
+        data = request.get_json(force=True)
 
-        header = json.loads(get_item_from_cache(cache, pipeline_id))
+        pipeline_id = data.get("pipelineId", None)
 
-        logging.info(header + f"Stopping data pipeline.")
+        try:
+            pipeline = Pipeline.objects.get(id=pipeline_id)
 
-        stop_instance(pipeline_id, header=header)
+            header = json.loads(get_item_from_cache(cache, pipeline_id))
 
-        response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop', bearer_token)
+            logging.info(header + f"Stopping data pipeline.")
 
-        logging.debug(response["message"])
+            stop_instance(pipeline_id, header=header)
 
-        pipeline.active = False
-        pipeline.open_time = None
-        pipeline.save()
+            response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop', bearer_token)
 
-        return jsonify(Responses.DATA_PIPELINE_STOPPED(pipeline))
-    except Pipeline.DoesNotExist:
-        raise DataPipelineDoesNotExist(pipeline_id)
+            logging.debug(response["message"])
+
+            pipeline.active = False
+            pipeline.open_time = None
+            pipeline.save()
+
+            return jsonify(Responses.DATA_PIPELINE_STOPPED(pipeline))
+        except Pipeline.DoesNotExist:
+            raise DataPipelineDoesNotExist(pipeline_id)
+
+    return app
 
 
 if __name__ == "__main__":
+    pass
+    app = create_app()
     app.run(host='0.0.0.0')

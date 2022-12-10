@@ -11,7 +11,10 @@ from execution.tests.setup.test_data.binance_api_responses import (
 
 
 def binance_client_mock_factory(method, type_='mock', account_type='margin'):
+
     class MockBinanceHandler(object):
+        def __init__(self, **kwargs):
+            pass
 
         def _init_session(self):
             pass

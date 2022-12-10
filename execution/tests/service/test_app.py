@@ -1,3 +1,5 @@
+import pytest
+
 from execution.service.helpers.responses import Responses
 from execution.tests.setup.fixtures.app import *
 from execution.tests.setup.fixtures.external_modules import *
@@ -5,6 +7,43 @@ from execution.tests.setup.fixtures.internal_modules import *
 from shared.utils.exceptions import NoSuchPipeline
 from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
+
+
+# def inject_fixture(mock_name, **kwargs):
+#     result = binance_trader_mock_factory(mock_name)
+#     print(result)
+#     globals()[f"{mock_name}"] = result
+#
+#
+# METHODS = [
+#     "mock_binance_margin_trader_success",
+#     "mock_binance_futures_trader_success",
+#     "mock_binance_margin_trader_fail",
+#     "mock_binance_futures_trader_fail",
+#     "mock_binance_futures_trader_raise_exception_trade",
+#     "mock_binance_futures_trader_raise_exception_start_stop",
+# ]
+#
+#
+# for method in METHODS:
+#     inject_fixture(method)
+
+
+def inject_fixture(mock_name, method_name, account_type):
+    print(method, account_type)
+    globals()[mock_name] = binance_client_mock_factory(method_name, 'mock', account_type)
+
+
+METHODS = [
+    ("futures_init_session", "_init_session", "futures"),
+    ("futures_ping", "ping", "futures"),
+    ("margin_init_session", "_init_session", "margin"),
+    ("margin_ping", "ping", "margin"),
+]
+
+
+for method in METHODS:
+    inject_fixture(*method)
 
 
 class TestExecutionService:
@@ -66,10 +105,10 @@ class TestExecutionService:
         self,
         params,
         expected_value,
+        client,
         mock_binance_margin_trader_fail,
         mock_binance_futures_trader_fail,
         mock_redis_connection,
-        client,
         exchange_data,
         create_pipeline,
         create_inactive_pipeline,
