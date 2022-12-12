@@ -1,4 +1,3 @@
-import {Fragment} from "react";
 import App from "./App";
 import {Location} from 'history'
 import withToken from "../higherOrderComponents/withToken";
@@ -6,6 +5,7 @@ import Login from "./Login";
 import {Redirect, Route, Switch} from "react-router-dom";
 import withMessage from "../higherOrderComponents/withMessage";
 import {UpdateMessage} from "../types";
+import ErrorHandler from "./ErrorHandler";
 
 
 interface Props {
@@ -17,14 +17,20 @@ interface Props {
   updateMessage: UpdateMessage
 }
 
+
 const AppLogin = (props: Props) => {
 
-  const { location, token, saveToken, removeToken, updateMessage } = props
+  const { location, history, token, saveToken, removeToken, updateMessage } = props
 
   return (
-    <Fragment>
+    <ErrorHandler removeToken={removeToken} location={location}>
       {token ? (
-        <App location={location} removeToken={removeToken} updateMessage={updateMessage}/>
+        <App
+          location={location}
+          history={history}
+          removeToken={removeToken}
+          updateMessage={updateMessage}
+        />
       ) : (!token && token !=="" && token !== undefined && location.pathname !== "/login") ? (
         <Redirect to="/login"/>
       ) : (
@@ -33,11 +39,16 @@ const AppLogin = (props: Props) => {
             <Login saveToken={saveToken} updateMessage={updateMessage}/>
           </Route>
           <Route path="*">
-            <App location={location} removeToken={removeToken} updateMessage={updateMessage}/>
+            <App
+              location={location}
+              history={history}
+              removeToken={removeToken}
+              updateMessage={updateMessage}
+            />
           </Route>
         </Switch>
       )}
-    </Fragment>
+    </ErrorHandler>
   )
 }
 
