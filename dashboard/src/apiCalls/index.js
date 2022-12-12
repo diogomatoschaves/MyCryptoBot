@@ -1,3 +1,4 @@
+
 const dataAPIHost = process.env.REACT_APP_DATA_API_HOST
 const executionAPIHost = process.env.REACT_APP_EXECUTION_API_HOST
 
@@ -6,7 +7,7 @@ const getToken = () => {
   return `Bearer ${window.localStorage.getItem('crypto-token')}`
 }
 
-export const getResources = async (resources) => {
+export const getResources = async (resources, history) => {
 
   const resourcesString = resources.join()
 
@@ -19,9 +20,11 @@ export const getResources = async (resources) => {
       "Authorization": getToken()
     }
   })
-    .then(res => {
+    .then(async (res) => {
       if (res.status >= 400) {
-        // throw(new Error('Error fetching resources'))
+        history.replace(history.location.pathname, {
+          errorStatusCode: res.status
+        });
       } else {
         return res.json()
       }
