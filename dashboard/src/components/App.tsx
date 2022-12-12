@@ -88,6 +88,7 @@ interface State {
 
 interface Props {
     location: Location
+    history: History
     removeToken: () => void
     decimals: Decimals
     menuProperties: MenuOption[]
@@ -142,9 +143,9 @@ class App extends Component<Props, State> {
     }
 
     componentDidMount() {
-        getResources(Object.keys(RESOURCES_MAPPING))
+        getResources(Object.keys(RESOURCES_MAPPING), this.props.history)
             .then(resources => {
-                const options = Object.keys(resources).reduce((accum: any, resource: any) => {
+                const options = resources ? Object.keys(resources).reduce((accum: any, resource: any) => {
                     return {
                         ...accum,
                         [RESOURCES_MAPPING[resource]]: Object.keys(resources[resource]).map((name: any, index: number) => ({
@@ -153,7 +154,7 @@ class App extends Component<Props, State> {
                             value: index + 1
                         }))
                     }
-                }, {})
+                }, {}) : []
 
                 this.setState(state => {
                     return {
