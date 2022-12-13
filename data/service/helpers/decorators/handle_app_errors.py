@@ -62,6 +62,8 @@ def handle_app_errors(_func=None):
                 return jsonify(Responses.DATA_PIPELINE_DOES_NOT_EXIST(e.message))
             except LeverageInvalid as e:
                 return jsonify(Responses.LEVERAGE_INVALID(e.message))
+            except PipelineStartFail as e:
+                return jsonify(Responses.PIPELINE_START_FAIL(e.message))
 
         return wrapper
 

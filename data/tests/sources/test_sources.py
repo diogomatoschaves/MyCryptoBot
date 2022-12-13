@@ -56,6 +56,7 @@ class TestExternalRequests:
         mock_check_job_status_response,
         mock_generate_signal,
         mock_time_sleep,
+        mock_redis_connection_external_requests
     ):
         """
         GIVEN some params
@@ -70,7 +71,6 @@ class TestExternalRequests:
         params = {
             "job_id": "abcdef",
             "pipeline_id": 1,
-            "bearer_token": "abc",
             "retry": 0
         }
 
@@ -84,7 +84,8 @@ class TestExternalRequests:
         self,
         mock_check_job_status_response,
         mock_generate_signal,
-        mock_time_sleep
+        mock_time_sleep,
+        mock_redis_connection_external_requests
     ):
 
         mock_generate_signal.return_value = {"success": True, "job_id": 'abcdef'}
@@ -101,7 +102,6 @@ class TestExternalRequests:
         params = {
             "job_id": "abcdef",
             "pipeline_id": 1,
-            "bearer_token": "abc",
             "retry": 0
         }
 
@@ -130,6 +130,7 @@ class TestExternalRequests:
         expected_value,
         mock_generate_signal,
         mock_wait_for_job_conclusion,
+        mock_redis_connection_external_requests
     ):
         """
         GIVEN some params
@@ -143,7 +144,6 @@ class TestExternalRequests:
 
         params = {
             "pipeline_id": 1,
-            "bearer_token": "abc",
             "retry": 0
         }
 

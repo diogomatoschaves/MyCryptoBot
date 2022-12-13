@@ -97,7 +97,7 @@ class TestBinanceDataHandler:
         else:
             pipeline_id = None
 
-        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id, None)
+        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id,)
 
         binance_data_handler.stop_data_ingestion()
 
@@ -150,7 +150,7 @@ class TestBinanceDataHandler:
         else:
             pipeline_id = None
 
-        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id, None)
+        assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id,)
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
         assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
