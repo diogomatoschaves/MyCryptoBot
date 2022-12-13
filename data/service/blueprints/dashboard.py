@@ -39,7 +39,7 @@ def get_resources(resources):
             response["exchanges"] = convert_queryset_to_dict(exchanges)
 
         elif resource == 'strategies':
-            strategies = get_strategies(bearer_token)
+            strategies = get_strategies()
             response["strategies"] = strategies
 
         elif resource == 'candleSizes':

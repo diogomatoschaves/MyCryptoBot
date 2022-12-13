@@ -1,8 +1,10 @@
+import flask_jwt_extended
 import pytest
 import redis
 from binance import ThreadedWebsocketManager
 from binance.client import Client
 
+import data
 from data.tests.setup.test_data.binance_api_responses import exchange_info
 from data.tests.setup.test_data.sample_data import binance_api_historical_data
 from shared.exchanges import BinanceHandler
@@ -44,3 +46,12 @@ def mock_binance_threaded_websocket(mocker):
 @pytest.fixture
 def mock_binance_client_exchange_info(mocker):
     mocker.patch.object(Client, "futures_exchange_info", lambda self: exchange_info)
+
+
+def create_access_token(x=None, **kwargs):
+    return "abc"
+
+
+@pytest.fixture
+def mock_create_access_token(mocker):
+    return mocker.patch("data.service.app.create_access_token", create_access_token)

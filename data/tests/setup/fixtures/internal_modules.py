@@ -3,6 +3,7 @@ import os
 import pytest
 
 import data
+from data.service.helpers.exceptions import PipelineStartFail
 from data.sources.binance import BinanceDataHandler
 from data.tests.setup.test_data.sample_data import mock_websocket_raw_data_5m, mock_websocket_raw_data_1h, STRATEGIES
 
@@ -23,7 +24,7 @@ def mock_trigger_signal_successfully(mocker):
     return mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda pipeline_id, bearer_token, header='': True,
+        lambda pipeline_id, header='': True,
     )
 
 
@@ -32,7 +33,7 @@ def mock_trigger_signal_fail(mocker):
     mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda pipeline_id, bearer_token, header='': False,
+        lambda pipeline_id, header='': False,
     )
 
 
@@ -110,6 +111,15 @@ def mock_executor_submit(mocker):
 
 
 @pytest.fixture
+def fake_executor_submit(mocker):
+    mocker.patch.object(
+        data.service.app.executor,
+        "submit",
+        lambda x, y, z=None: None
+    )
+
+
+@pytest.fixture
 def binance_handler_instances_spy_stop_bot(db, create_symbol, create_assets, create_exchange, mocker):
     return mocker.patch(
         'data.service.app.binance_instances',
@@ -127,8 +137,12 @@ def mock_start_stop_symbol_trading_success_true(mocker):
     mocker.patch.object(
         data.service.app,
         'start_stop_symbol_trading',
-        lambda pipeline_id, start_or_stop, bearer_token: {"success": True, "message": ''},
+        lambda pipeline_id, start_or_stop: {"success": True, "message": ''},
     )
+
+
+def raise_pipeline_start_fail(pipeline_id, start_or_stop):
+    raise PipelineStartFail
 
 
 @pytest.fixture
@@ -136,7 +150,7 @@ def mock_start_stop_symbol_trading_success_false(mocker):
     return mocker.patch.object(
         data.service.app,
         'start_stop_symbol_trading',
-        lambda pipeline_id, start_or_stop, bearer_token: {"success": False, "message": 'Failed'},
+        raise_pipeline_start_fail,
     )
 
 
@@ -165,6 +179,7 @@ def mock_redis():
     class RedisCache:
 
         def __init__(self):
+            setattr(self, "bearer_token", "mock bearer_token")
             print("Redis initialized")
 
         def set(self, object_name, object_value):
@@ -185,10 +200,25 @@ def mock_redis_connection(mocker):
 
 
 @pytest.fixture
+def mock_redis_connection_external_requests(mocker):
+    return mocker.patch("data.service.external_requests.cache", mock_redis())
+
+
+@pytest.fixture
 def mock_redis_connection_binance(mocker):
     return mocker.patch("data.sources.binance._binance.cache", mock_redis())
 
 
 @pytest.fixture
 def mock_get_strategies(mocker):
-    mocker.patch.object(data.service.app, "get_strategies", lambda bearer_token: STRATEGIES)
+    mocker.patch.object(data.service.app, "get_strategies", lambda: STRATEGIES)
+
+
+@pytest.fixture
+def mock_start_symbol_trading(mocker):
+    return mocker.patch.object(data.service.app, 'start_symbol_trading', lambda pipeline: None)
+
+
+@pytest.fixture
+def spy_start_symbol_trading(mocker):
+    return mocker.spy(data.service.app, 'start_symbol_trading')

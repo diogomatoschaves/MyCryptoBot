@@ -12,12 +12,13 @@ import django
 from flask_cors import CORS
 
 import redis
-from flask_jwt_extended import JWTManager, jwt_required
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 
 from data.service.blueprints.user_management import user_management
 from data.service.blueprints.dashboard import dashboard
 from data.service.external_requests import start_stop_symbol_trading, get_strategies
 from data.service.helpers.decorators.handle_app_errors import handle_app_errors
+from data.service.helpers.exceptions import PipelineStartFail
 from data.service.helpers.exceptions.data_pipeline_does_not_exist import DataPipelineDoesNotExist
 from data.service.helpers.responses import Responses
 from data.sources._sources import DataHandler
@@ -32,7 +33,7 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 from data.service.helpers import check_input, get_or_create_pipeline
-from database.model.models import Pipeline
+from database.model.models import Pipeline, Position
 from shared.utils.logger import configure_logger
 
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
@@ -74,6 +75,52 @@ def stop_instance(pipeline_id, header):
     )
 
 
+def startup_task(app):
+
+    open_positions = Position.objects.filter(open=True)
+
+    with app.app_context():
+        access_token = create_access_token(identity='abc', expires_delta=False)
+        bearer_token = 'Bearer ' + access_token
+        cache.set("bearer_token", bearer_token)
+
+    for open_position in open_positions:
+        start_symbol_trading(open_position.pipeline)
+
+
+def start_symbol_trading(pipeline):
+
+    header = get_logging_row_header(pipeline)
+
+    cache.set(
+        f"pipeline {pipeline.id}",
+        json.dumps(header)
+    )
+
+    payload = {
+        "pipeline_id": pipeline.id,
+        "binance_trader_type": "futures",
+    }
+
+    response = start_stop_symbol_trading(payload, 'start')
+
+    if not response["success"]:
+        logging.warning(response["message"])
+
+        pipeline.active = False
+        pipeline.save()
+
+        raise PipelineStartFail(response)
+
+    logging.info(header + f"Starting data pipeline.")
+
+    executor.submit(
+        initialize_data_collection,
+        pipeline,
+        header
+    )
+
+
 def create_app():
     app = Flask(__name__)
     app.debug = False
@@ -81,11 +128,13 @@ def create_app():
     app.register_blueprint(user_management)
 
     app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=2)
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=3)
 
     jwt = JWTManager(app)
 
     CORS(app)
+
+    startup_task(app)
 
     @app.route('/')
     @jwt_required()
@@ -97,10 +146,8 @@ def create_app():
     @jwt_required()
     def start_bot():
 
-        bearer_token = request.headers.get('Authorization')
-
         if "STRATEGIES" not in globals():
-            STRATEGIES = get_strategies(bearer_token)
+            STRATEGIES = get_strategies()
             globals()["STRATEGIES"] = STRATEGIES
         else:
             STRATEGIES = globals()["STRATEGIES"]
@@ -148,35 +195,7 @@ def create_app():
             leverage=leverage
         )
 
-        header = get_logging_row_header(symbol, strategy, params, candle_size, exchange, paper_trading)
-
-        cache.set(
-            f"pipeline {pipeline.id}",
-            json.dumps(header)
-        )
-
-        payload = {
-            "pipeline_id": pipeline.id,
-            "binance_trader_type": "futures",
-        }
-
-        response = start_stop_symbol_trading(payload, 'start', bearer_token)
-
-        if not response["success"]:
-            logging.warning(response["message"])
-
-            pipeline.active = False
-            pipeline.save()
-
-            return response
-
-        logging.info(header + f"Starting data pipeline.")
-
-        executor.submit(
-            initialize_data_collection,
-            pipeline,
-            header
-        )
+        start_symbol_trading(pipeline)
 
         return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline))
 
@@ -187,8 +206,6 @@ def create_app():
 
         # Stops the data collection stream
         # closes any open positions
-
-        bearer_token = request.headers.get('Authorization')
 
         data = request.get_json(force=True)
 
@@ -203,7 +220,7 @@ def create_app():
 
             stop_instance(pipeline_id, header=header)
 
-            response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop', bearer_token)
+            response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop')
 
             logging.debug(response["message"])
 

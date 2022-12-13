@@ -186,9 +186,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
     def generate_new_signal(self, header):
 
-        bearer_token = cache.get("bearer_token")
-
-        success = trigger_signal(self.pipeline_id, bearer_token, header=header)
+        success = trigger_signal(self.pipeline_id, header=header)
 
         if not success:
             logging.warning(
