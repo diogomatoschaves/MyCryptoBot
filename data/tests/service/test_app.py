@@ -11,7 +11,7 @@ from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
 class TestDataService:
 
-    def test_index_route(self, client, mock_jwt_required):
+    def test_index_route(self, client):
 
         res = client.get('/')
 
@@ -151,14 +151,6 @@ class TestDataService:
         response,
         message,
         client,
-        mock_settings_env_vars,
-        mock_redis_connection,
-        mock_binance_client_exchange_info,
-        mock_get_strategies,
-        mock_jwt_required,
-        create_exchange,
-        create_assets,
-        create_symbol
     ):
         """
         GIVEN some input params
@@ -269,14 +261,6 @@ class TestDataService:
         response,
         get_message,
         client,
-        mock_binance_client_exchange_info,
-        mock_settings_env_vars,
-        mock_redis_connection,
-        mock_get_strategies,
-        mock_jwt_required,
-        create_exchange,
-        create_assets,
-        create_symbol
     ):
         """
         GIVEN some input params
@@ -314,14 +298,6 @@ class TestDataService:
         params,
         response,
         client,
-        mock_binance_client_exchange_info,
-        mock_settings_env_vars,
-        mock_redis_connection,
-        mock_get_strategies,
-        mock_jwt_required,
-        create_exchange,
-        create_assets,
-        create_symbol,
         create_pipeline,
     ):
         """
@@ -358,22 +334,14 @@ class TestDataService:
         self,
         params,
         response,
-        mock_start_stop_symbol_trading_success_true,
         client,
-        mock_binance_client_exchange_info,
-        mock_settings_env_vars,
-        mock_redis_connection,
-        mock_get_strategies,
+        mock_start_stop_symbol_trading_success_true,
         mock_binance_handler_start_data_ingestion,
         mock_binance_threaded_websocket,
         mock_binance_websocket_start,
         mock_binance_websocket_stop,
         mock_executor_submit,
-        mock_jwt_required,
         binance_handler_instances_spy_start_bot,
-        create_exchange,
-        create_assets,
-        create_symbol,
     ):
         """
         GIVEN some input params
@@ -417,15 +385,7 @@ class TestDataService:
         params,
         client,
         mock_start_stop_symbol_trading_success_false,
-        mock_binance_client_exchange_info,
-        mock_settings_env_vars,
         mock_binance_handler_start_data_ingestion,
-        mock_get_strategies,
-        mock_redis_connection,
-        mock_jwt_required,
-        create_exchange,
-        create_assets,
-        create_symbol,
     ):
         """
         GIVEN some input params
@@ -436,7 +396,7 @@ class TestDataService:
 
         res = client.put('/start_bot', json=params)
 
-        assert res.json["message"] == 'Failed'
+        assert res.json["message"] == 'Pipeline start failed.'
 
     @pytest.mark.parametrize(
         "params,response",
@@ -455,21 +415,13 @@ class TestDataService:
         params,
         response,
         client,
-        mock_settings_env_vars,
-        mock_binance_client_exchange_info,
         mock_binance_handler_stop_data_ingestion,
         mock_binance_threaded_websocket,
         mock_binance_websocket_start,
         mock_binance_websocket_stop,
-        mock_redis_connection,
-        mock_get_strategies,
-        mock_jwt_required,
         binance_handler_stop_data_ingestion_spy,
         mock_start_stop_symbol_trading_success_true,
         binance_handler_instances_spy_stop_bot,
-        create_exchange,
-        create_assets,
-        create_symbol,
         create_pipeline
     ):
         """
@@ -508,14 +460,6 @@ class TestDataService:
         params,
         response,
         client,
-        mock_binance_client_exchange_info,
-        mock_settings_env_vars,
-        mock_redis_connection,
-        mock_get_strategies,
-        mock_jwt_required,
-        create_exchange,
-        create_assets,
-        create_symbol,
     ):
         """
         GIVEN some input params
@@ -527,3 +471,18 @@ class TestDataService:
         res = client.put('/stop_bot', json=params)
 
         assert res.json == getattr(Responses, response)(f'Data pipeline {params["pipelineId"]} does not exist.')
+
+    def test_startup_task_existing_positions(
+        self,
+        client_with_open_position,
+        spy_start_symbol_trading
+    ):
+        spy_start_symbol_trading.assert_called_once()
+
+    def test_startup_task_no_positions(
+        self,
+        client,
+        spy_start_symbol_trading
+    ):
+        spy_start_symbol_trading.assert_not_called()
+
