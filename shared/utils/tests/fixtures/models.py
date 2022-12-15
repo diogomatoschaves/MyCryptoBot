@@ -106,7 +106,7 @@ def create_position(db, create_pipeline):
         paper_trading=True,
         buying_price=0,
         amount=0,
-        open=True,
+        open=False,
     )
 
 
@@ -120,7 +120,7 @@ def create_positions(db, create_position):
         paper_trading=True,
         buying_price=0,
         amount=0,
-        open=False,
+        open=True,
     )
 
 

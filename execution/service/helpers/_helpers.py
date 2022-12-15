@@ -41,6 +41,10 @@ def validate_signal(**kwargs):
             raise SignalInvalid(signal)
 
 
+def get_header(pipeline_id):
+    return json.loads(get_item_from_cache(cache, pipeline_id))
+
+
 def extract_and_validate(request_data):
 
     binance_account_type = request_data.get('binance_account_type', 'futures')
@@ -48,6 +52,6 @@ def extract_and_validate(request_data):
 
     pipeline = get_pipeline_data(pipeline_id)
 
-    header = json.loads(get_item_from_cache(cache, pipeline_id))
+    header = get_header(pipeline_id)
 
     return pipeline, Parameters(header, binance_account_type, pipeline.equity, pipeline.leverage)

@@ -42,7 +42,15 @@ class BinanceFuturesTrader(BinanceTrader):
         self.exchange = "binance"
 
     # TODO: Make equity mandatory
-    def start_symbol_trading(self, symbol, equity=0, leverage=None, header='', **kwargs):
+    def start_symbol_trading(
+        self,
+        symbol,
+        equity=0,
+        leverage=None,
+        header='',
+        initial_position=0,
+        **kwargs
+    ):
 
         if symbol in self.symbols:
             raise SymbolAlreadyTraded(symbol)
@@ -57,7 +65,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._get_symbol_info(symbol)
 
-        self._set_initial_position(symbol, header)
+        self._set_initial_position(symbol, initial_position, header, **kwargs)
 
         self._set_initial_balance(symbol, equity, header=header)
 
