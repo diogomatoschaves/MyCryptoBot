@@ -3,6 +3,7 @@ import os
 import pytest
 from binance.exceptions import BinanceAPIException
 
+import execution
 from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded
 
 
@@ -105,6 +106,20 @@ def mock_binance_futures_trader_raise_exception_trade(mocker):
 @pytest.fixture
 def mock_binance_futures_trader_raise_exception_start_stop(mocker):
     return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader(raise_error_start_stop=True))
+
+
+@pytest.fixture
+def mock_start_pipeline_trade(mocker):
+    return mocker.patch.object(
+        execution.service.app,
+        "start_pipeline_trade",
+        lambda pipeline, binance_account_type, header, **kwargs: None
+    )
+
+
+@pytest.fixture
+def spy_start_pipeline_trade(mocker):
+    return mocker.spy(execution.service.app, "start_pipeline_trade")
 
 
 

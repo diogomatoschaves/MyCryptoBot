@@ -85,7 +85,12 @@ def startup_task(app):
         cache.set("bearer_token", bearer_token)
 
     for open_position in open_positions:
+
+        print(open_position)
+
         start_symbol_trading(open_position.pipeline)
+        open_position.pipeline.active = True
+        open_position.pipeline.save()
 
 
 def start_symbol_trading(pipeline):
@@ -96,21 +101,6 @@ def start_symbol_trading(pipeline):
         f"pipeline {pipeline.id}",
         json.dumps(header)
     )
-
-    payload = {
-        "pipeline_id": pipeline.id,
-        "binance_trader_type": "futures",
-    }
-
-    response = start_stop_symbol_trading(payload, 'start')
-
-    if not response["success"]:
-        logging.warning(response["message"])
-
-        pipeline.active = False
-        pipeline.save()
-
-        raise PipelineStartFail(response)
 
     logging.info(header + f"Starting data pipeline.")
 
@@ -194,6 +184,21 @@ def create_app():
             paper_trading=paper_trading,
             leverage=leverage
         )
+
+        payload = {
+            "pipeline_id": pipeline.id,
+            "binance_trader_type": "futures",
+        }
+
+        response = start_stop_symbol_trading(payload, 'start')
+
+        if not response["success"]:
+            logging.warning(response["message"])
+
+            pipeline.active = False
+            pipeline.save()
+
+            raise PipelineStartFail(response)
 
         start_symbol_trading(pipeline)
 
