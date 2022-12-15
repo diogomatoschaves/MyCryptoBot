@@ -46,6 +46,7 @@ function Dashboard(props: Props) {
     openPositions,
     totalEquityPositions,
     totalInitialEquity,
+    pnl,
     symbolsCount,
   }, positionsDispatch] = useReducer(
       positionsReducer, positions.reduce(positionsReducerCallback(currentPrices), positionsReducerInitialState)
@@ -98,9 +99,8 @@ function Dashboard(props: Props) {
 
   let totalPnl, pnlColor
   if (totalInitialEquity !== 0) {
-    totalPnl = ((totalEquityPositions - totalInitialEquity) / totalInitialEquity * 100)
-    pnlColor = totalPnl > 0 ? GREEN : RED
-    totalPnl = `${totalPnl.toFixed(2)}%`
+    pnlColor = pnl > 0 ? GREEN : RED
+    totalPnl = `${(pnl / totalInitialEquity * 100).toFixed(2)}%`
   } else {
     totalPnl = '-'
     pnlColor = '#6435C9'
