@@ -53,10 +53,12 @@ class BinanceTrader(BinanceHandler, Trader):
             **kwargs
         )
 
-    def _set_initial_position(self, symbol, header=''):
-        # TODO: Get this value from database?
-        logging.debug(header + f"Setting initial position NEUTRAL.")
-        self._set_position(symbol, 0)
+    def _set_initial_position(self, symbol, initial_position, header='', **kwargs):
+
+        position = "NEUTRAL" if initial_position == 0 else "LONG" if initial_position == 1 else "SHORT"
+
+        logging.debug(header + f"Setting initial position {position}.")
+        self._set_position(symbol, initial_position, previous_position=initial_position, **kwargs)
 
     def _set_position(self, symbol, position, **kwargs):
 
@@ -79,27 +81,29 @@ class BinanceTrader(BinanceHandler, Trader):
                     close_time=datetime.now(tz=pytz.UTC),
                 )
             else:
-                Position.objects.filter(
-                    pipeline_id=pipeline_id,
-                    symbol=symbol
-                ).update(
+                if new_trade:
+                    Position.objects.filter(
+                        pipeline_id=pipeline_id,
+                        symbol=symbol
+                    ).update(
+                        position=position,
+                        open=True,
+                        open_time=datetime.now(tz=pytz.UTC),
+                        close_time=None,
+                        buying_price=new_trade.open_price,
+                        amount=new_trade.amount
+                    )
+        else:
+            if new_trade:
+                Position.objects.create(
                     position=position,
-                    open=True,
-                    open_time=datetime.now(tz=pytz.UTC),
-                    close_time=None,
+                    symbol_id=symbol,
+                    exchange_id=self.exchange,
+                    pipeline_id=pipeline_id,
+                    paper_trading=self.paper_trading,
                     buying_price=new_trade.open_price,
-                    amount=new_trade.amount
+                    amount=new_trade.amount,
                 )
-        elif new_trade:
-            Position.objects.create(
-                position=position,
-                symbol_id=symbol,
-                exchange_id=self.exchange,
-                pipeline_id=pipeline_id,
-                paper_trading=self.paper_trading,
-                buying_price=new_trade.open_price,
-                amount=new_trade.amount,
-            )
 
     def _format_order(self, order, pipeline_id):
         raise NotImplementedError

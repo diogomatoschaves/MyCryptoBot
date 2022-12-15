@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 
+import django
 from binance.exceptions import BinanceAPIException
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -10,12 +11,18 @@ from flask_jwt_extended import JWTManager, jwt_required
 from execution.service.helpers.decorators import binance_error_handler, handle_app_errors
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
-from execution.service.helpers import validate_signal, extract_and_validate
+from execution.service.helpers import validate_signal, extract_and_validate, get_header
 from execution.service.helpers.exceptions import EquityRequired, PipelineNotActive
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.exchanges.binance.futures import BinanceFuturesTrader
+from shared.utils.helpers import get_pipeline_data
 from shared.utils.logger import configure_logger
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
+django.setup()
+
+from database.model.models import Position
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -44,6 +51,32 @@ def get_binance_trader_instance(binance_account_type, paper_trading):
     return binance_futures_mock_trader
 
 
+def startup_task():
+    open_positions = Position.objects.filter(open=True)
+
+    for open_position in open_positions:
+
+        pipeline = get_pipeline_data(open_position.pipeline_id)
+
+        header = get_header(pipeline.id)
+
+        start_pipeline_trade(pipeline, 'futures', header, initial_position=open_position.position)
+
+
+def start_pipeline_trade(pipeline, binance_account_type, header, initial_position=0):
+
+    bt = get_binance_trader_instance(binance_account_type, pipeline.paper_trading)
+
+    bt.start_symbol_trading(
+        pipeline.symbol,
+        equity=pipeline.equity,
+        leverage=pipeline.leverage,
+        initial_position=initial_position,
+        header=header,
+        pipeline_id=pipeline.id,
+    )
+
+
 def create_app():
 
     global binance_futures_mock_trader, binance_futures_trader, binance_margin_mock_trader, binance_margin_trader
@@ -60,6 +93,8 @@ def create_app():
     jwt = JWTManager(app)
 
     CORS(app)
+
+    startup_task()
 
     @app.route('/')
     @jwt_required()
@@ -81,15 +116,7 @@ def create_app():
 
         if pipeline.exchange == 'binance':
 
-            bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
-
-            bt.start_symbol_trading(
-                pipeline.symbol,
-                equity=parameters.equity,
-                leverage=parameters.leverage,
-                header=parameters.header,
-                pipeline_id=pipeline.id
-            )
+            start_pipeline_trade(pipeline, parameters.binance_account_type, parameters.header)
 
             return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
 

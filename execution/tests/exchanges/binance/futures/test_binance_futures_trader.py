@@ -33,18 +33,34 @@ for method in METHODS:
     inject_fixture(*method)
 
 
+@pytest.fixture
+def test_mock_setup(
+    mocker,
+    create_exchange,
+    create_symbol,
+    ping,
+    init_session,
+    futures_change_leverage,
+    futures_create_order,
+    futures_exchange_info,
+    get_symbol_ticker
+):
+    return
+
+
 class TestBinanceFuturesTrader:
 
     symbol = "BTCUSDT"
 
     @pytest.mark.parametrize(
-        "parameters,symbols,times_called,balance",
+        "parameters,symbols,times_called,balance,initial_position",
         [
             pytest.param(
                 {"symbol": "BTCUSDT", "equity": 100},
                 {},
                 (0, 1, 0),
                 100,
+                0,
                 id="SymbolStarted",
             ),
             pytest.param(
@@ -52,7 +68,16 @@ class TestBinanceFuturesTrader:
                 {},
                 (1, 1, 0),
                 100,
+                0,
                 id="SymbolStarted-ChangeLeverage",
+            ),
+            pytest.param(
+                {"symbol": "BTCUSDT",  "equity": 100, "initial_position": 1},
+                {},
+                (0, 1, 0),
+                100,
+                1,
+                id="SymbolStarted-WithInitialPosition",
             ),
         ]
     )
@@ -62,17 +87,11 @@ class TestBinanceFuturesTrader:
         symbols,
         times_called,
         balance,
-        create_symbol,
-        create_exchange,
-        ping,
-        init_session,
-        futures_change_leverage,
+        initial_position,
+        test_mock_setup,
         futures_change_leverage_spy,
-        futures_create_order,
-        futures_exchange_info,
         futures_exchange_info_spy,
         futures_create_order_spy,
-        get_symbol_ticker
     ):
         binance_trader = self.start_symbol_trading(parameters, symbols)
 
@@ -82,6 +101,7 @@ class TestBinanceFuturesTrader:
 
         assert binance_trader.current_balance[parameters["symbol"]] == balance
         assert binance_trader.initial_balance[parameters["symbol"]] == balance
+        assert binance_trader.positions[parameters["symbol"]] == initial_position
 
     @pytest.mark.parametrize(
         "parameters,symbols,position,units,times_called",
@@ -125,15 +145,9 @@ class TestBinanceFuturesTrader:
         position,
         units,
         times_called,
-        create_symbol,
-        create_exchange,
+        test_mock_setup,
         create_orders,
-        ping,
-        init_session,
-        futures_change_leverage,
-        futures_create_order,
         futures_create_order_spy,
-        get_symbol_ticker
     ):
 
         binance_trader = self.stop_symbol_trading(
@@ -154,17 +168,10 @@ class TestBinanceFuturesTrader:
         self,
         initial_position,
         signal,
-        ping,
-        init_session,
-        create_symbol,
-        create_exchange,
+        test_mock_setup,
         create_pipeline,
         create_position,
-        futures_change_leverage,
-        futures_create_order,
-        futures_exchange_info,
         futures_create_order_spy,
-        get_symbol_ticker
     ):
         ###########################################################################################
         #                                       SETUP                                             #
@@ -211,24 +218,17 @@ class TestBinanceFuturesTrader:
 
     def test_all(
         self,
-        ping,
-        init_session,
-        create_symbol,
-        create_exchange,
         create_pipeline,
         create_orders,
-        futures_change_leverage,
-        futures_change_leverage_spy,
-        futures_exchange_info,
-        futures_create_order,
-        futures_create_order_spy,
-        get_symbol_ticker
+        test_mock_setup
     ):
 
         binance_trader = BinanceFuturesTrader()
 
         binance_trader.start_symbol_trading(self.symbol, pipeline_id=1)
+
         binance_trader.trade(self.symbol, 1, amount="all", pipeline_id=1)
+
         binance_trader.stop_symbol_trading(self.symbol, pipeline_id=1)
 
         positions = Position.objects.all()
@@ -271,17 +271,10 @@ class TestBinanceFuturesTrader:
         times_called,
         balance,
         expected_exception,
-        create_symbol,
-        create_exchange,
-        ping,
-        init_session,
-        futures_change_leverage,
+        test_mock_setup,
         futures_change_leverage_spy,
-        futures_create_order,
-        futures_exchange_info,
         futures_exchange_info_spy,
         futures_create_order_spy,
-        get_symbol_ticker
     ):
         with pytest.raises(Exception) as exception:
             binance_trader = self.start_symbol_trading(parameters, symbols)
@@ -343,16 +336,9 @@ class TestBinanceFuturesTrader:
         units,
         times_called,
         expected_value,
-        create_symbol,
-        create_exchange,
+        test_mock_setup,
         create_orders,
-        ping,
-        init_session,
-        futures_change_leverage,
-        futures_create_order,
         futures_create_order_spy,
-        futures_exchange_info,
-        get_symbol_ticker
     ):
         with pytest.raises(Exception) as exception:
             bt = self.stop_symbol_trading(

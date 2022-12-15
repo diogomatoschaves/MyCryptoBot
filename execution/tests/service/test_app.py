@@ -9,45 +9,8 @@ from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
 
-# def inject_fixture(mock_name, **kwargs):
-#     result = binance_trader_mock_factory(mock_name)
-#     print(result)
-#     globals()[f"{mock_name}"] = result
-#
-#
-# METHODS = [
-#     "mock_binance_margin_trader_success",
-#     "mock_binance_futures_trader_success",
-#     "mock_binance_margin_trader_fail",
-#     "mock_binance_futures_trader_fail",
-#     "mock_binance_futures_trader_raise_exception_trade",
-#     "mock_binance_futures_trader_raise_exception_start_stop",
-# ]
-#
-#
-# for method in METHODS:
-#     inject_fixture(method)
-
-
-def inject_fixture(mock_name, method_name, account_type):
-    print(method, account_type)
-    globals()[mock_name] = binance_client_mock_factory(method_name, 'mock', account_type)
-
-
-METHODS = [
-    ("futures_init_session", "_init_session", "futures"),
-    ("futures_ping", "ping", "futures"),
-    ("margin_init_session", "_init_session", "margin"),
-    ("margin_ping", "ping", "margin"),
-]
-
-
-for method in METHODS:
-    inject_fixture(*method)
-
-
 class TestExecutionService:
-    def test_index_route(self, client, mock_jwt_required):
+    def test_index_route(self, client):
 
         res = client.get("/")
 
@@ -108,11 +71,10 @@ class TestExecutionService:
         client,
         mock_binance_margin_trader_fail,
         mock_binance_futures_trader_fail,
-        mock_redis_connection,
         exchange_data,
         create_pipeline,
         create_inactive_pipeline,
-        mock_jwt_required
+
     ):
         res = client.post("start_symbol_trading", json=params)
 
@@ -156,17 +118,15 @@ class TestExecutionService:
         ],
     )
     def test_binance_trader_fail_stop(
-            self,
-            params,
-            expected_value,
-            mock_binance_margin_trader_fail,
-            mock_binance_futures_trader_fail,
-            mock_redis_connection,
-            client,
-            exchange_data,
-            create_pipeline,
-            create_inactive_pipeline,
-            mock_jwt_required
+        self,
+        params,
+        expected_value,
+        mock_binance_margin_trader_fail,
+        mock_binance_futures_trader_fail,
+        client,
+        exchange_data,
+        create_pipeline,
+        create_inactive_pipeline,
     ):
         res = client.post("stop_symbol_trading", json=params)
 
@@ -214,11 +174,9 @@ class TestExecutionService:
         binance_account_type,
         mock_binance_margin_trader_success,
         mock_binance_futures_trader_success,
-        mock_redis_connection,
         client,
         exchange_data,
         create_pipeline,
-        mock_jwt_required
     ):
         payload = {
             **params,
@@ -293,8 +251,6 @@ class TestExecutionService:
         binance_account_type,
         mock_binance_margin_trader_success,
         mock_binance_futures_trader_success,
-        mock_redis_connection,
-        mock_jwt_required,
         client,
         exchange_data,
         create_pipeline,
@@ -328,8 +284,6 @@ class TestExecutionService:
         params,
         expected_value,
         mock_binance_futures_trader_raise_exception_trade,
-        mock_redis_connection,
-        mock_jwt_required,
         client,
         exchange_data,
         create_pipeline,
@@ -368,14 +322,23 @@ class TestExecutionService:
         params,
         expected_value,
         mock_binance_futures_trader_raise_exception_start_stop,
-        mock_redis_connection,
         client,
-        exchange_data,
-        create_pipeline,
-        create_inactive_pipeline,
-        mock_jwt_required
     ):
 
         res = client.post(f"{route}", json=params)
 
         assert res.json == expected_value
+
+    def test_startup_task_with_open_positions(
+        self,
+        client_with_open_positions,
+        spy_start_pipeline_trade
+    ):
+        spy_start_pipeline_trade.assert_called_once()
+
+    def test_startup_task_no_open_positions(
+        self,
+        client,
+        spy_start_pipeline_trade
+    ):
+        spy_start_pipeline_trade.assert_not_called()
