@@ -1,3 +1,18 @@
+FROM node:13.12.0-alpine as build-step
+ENV DIRECTORY dashboard
+
+WORKDIR /app/
+
+COPY $DIRECTORY/package*.json ./
+RUN npm install
+
+
+COPY ./$DIRECTORY/ ./
+
+RUN npm run build
+
+
+
 FROM python:3.8-slim
 
 # Keeps Python from generating .pyc files in the container
@@ -23,13 +38,15 @@ COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /
 RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi --no-dev
 
-WORKDIR /usr/src/app
+#WORKDIR /usr/src/app
 
 COPY ./database/ ./database/
 COPY ./$DIRECTORY/ ./$DIRECTORY/
 COPY ./shared/ ./shared/
 
+COPY --from=build-step app/build ./$DIRECTORY/build
+
 RUN useradd -m myuser
 USER myuser
 
-CMD bash /usr/src/app/$DIRECTORY/entrypoint.sh
+CMD bash $DIRECTORY/entrypoint.sh

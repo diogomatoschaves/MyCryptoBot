@@ -25,6 +25,8 @@ MODEL_APP_ENDPOINTS = {
 EXECUTION_APP_ENDPOINTS = {
     "START_SYMBOL_TRADING": lambda host_url: f"{host_url}/start_symbol_trading",
     "STOP_SYMBOL_TRADING": lambda host_url: f"{host_url}/stop_symbol_trading",
+    "GET_PRICE": lambda host_url, symbol: f"{host_url}/prices?symbol={symbol}",
+    "GET_BALANCE": lambda host_url: f"{host_url}/futures_account_balance"
 }
 
 
