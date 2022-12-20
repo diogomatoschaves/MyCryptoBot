@@ -8,7 +8,7 @@ from data.service.helpers import MODEL_APP_ENDPOINTS, EXECUTION_APP_ENDPOINTS
 from shared.utils.decorators import retry_failed_connection, json_error_handler
 
 
-cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
+cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
 
 def prepare_payload(**kwargs):
