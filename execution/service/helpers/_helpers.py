@@ -26,7 +26,7 @@ Parameters = namedtuple(
 )
 
 
-cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
+cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
 
 def validate_signal(**kwargs):
