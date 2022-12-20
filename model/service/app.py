@@ -15,6 +15,7 @@ from model.service.helpers.responses import Responses
 from model.service.helpers.signal_generator import get_signal
 from model.strategies.properties import STRATEGIES
 from model.worker import conn
+from shared.utils.decorators import handle_db_connection_error
 from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 from shared.utils.logger import configure_logger
 
@@ -47,6 +48,7 @@ def create_app():
     @app.route('/generate_signal', methods=['POST'])
     @handle_app_errors
     @jwt_required()
+    @handle_db_connection_error
     def generate_signal():
 
         bearer_token = request.headers.get('Authorization')
@@ -80,6 +82,7 @@ def create_app():
 
     @app.route('/check_job/<job_id>', methods=['GET'])
     @jwt_required()
+    @handle_db_connection_error
     def check_job(job_id):
         try:
             job = Job.fetch(job_id, connection=conn)
@@ -100,6 +103,7 @@ def create_app():
 
     @app.route('/strategies', methods=['GET'])
     @jwt_required()
+    @handle_db_connection_error
     def get_strategies():
         return jsonify(STRATEGIES)
 
