@@ -1,6 +1,5 @@
 
-const dataAPIHost = process.env.REACT_APP_DATA_API_HOST
-const executionAPIHost = process.env.REACT_APP_EXECUTION_API_HOST
+const dataAPIHost = process.env.REACT_APP_DATA_API_HOST || ''
 
 
 const getToken = () => {
@@ -97,7 +96,7 @@ export const getPositions = async (page) => {
 
 export const getPrice = async (symbol) => {
 
-  const url = `${executionAPIHost}/prices?symbol=${symbol}`
+  const url = `${dataAPIHost}/prices?symbol=${symbol}`
 
   return await fetch(url, {
     method: 'GET',
@@ -118,7 +117,7 @@ export const getPrice = async (symbol) => {
 
 export const getFuturesAccountBalance = async () => {
 
-  const url = `${executionAPIHost}/futures_account_balance`
+  const url = `${dataAPIHost}/futures_account_balance`
 
   return await fetch(url, {
     method: 'GET',
