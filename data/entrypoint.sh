@@ -2,4 +2,4 @@
 
 cd $DIRECTORY/service/
 
-exec gunicorn --bind 0.0.0.0:"$PORT" --pythonpath /usr/src/app wsgi:application
+exec gunicorn --bind 0.0.0.0:"$PORT" --pythonpath /app wsgi:application
