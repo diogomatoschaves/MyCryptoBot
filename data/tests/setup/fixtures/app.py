@@ -4,7 +4,12 @@ import pytest
 
 from data.service import create_app
 from data.tests.setup.fixtures.external_modules import mock_create_access_token, mock_binance_client_exchange_info
-from data.tests.setup.fixtures.internal_modules import mock_redis_connection, mock_settings_env_vars, mock_get_strategies
+from data.tests.setup.fixtures.internal_modules import (
+    mock_redis_connection,
+    mock_settings_env_vars,
+    mock_get_strategies,
+    mock_redis_connection_bots_api
+)
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 from shared.utils.tests.fixtures.models import *
 
@@ -23,6 +28,7 @@ def app(
     mock_client_env_vars,
     mock_create_access_token,
     mock_redis_connection,
+    mock_redis_connection_bots_api,
     mock_jwt_required,
     mock_settings_env_vars,
     mock_get_strategies,
@@ -49,6 +55,7 @@ def app_with_open_position(
     mock_client_env_vars,
     mock_create_access_token,
     mock_redis_connection,
+    mock_redis_connection_bots_api,
     mock_jwt_required,
     mock_settings_env_vars,
     mock_get_strategies,

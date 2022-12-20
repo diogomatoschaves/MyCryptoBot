@@ -84,3 +84,37 @@ def get_strategies():
 
     return response
 
+
+@retry_failed_connection(num_times=2)
+@json_error_handler
+def get_price(symbol):
+
+    endpoint = "GET_PRICE"
+
+    url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL"), symbol)
+
+    r = requests.get(url, headers={"Authorization": cache.get("bearer_token")})
+    logging.debug("get_price: " + r.text)
+
+    response = r.json()
+    logging.debug(f"get_price: {response}")
+
+    return response
+
+
+@retry_failed_connection(num_times=2)
+@json_error_handler
+def get_balance():
+
+    endpoint = "GET_BALANCE"
+
+    url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL"))
+
+    r = requests.get(url, headers={"Authorization": cache.get("bearer_token")})
+    logging.debug("get_balance: " + r.text)
+
+    response = r.json()
+    logging.debug(f"get_balance: {response}")
+
+    return response
+

@@ -17,16 +17,11 @@ class TestDataService:
 
         res = client.get('/')
 
-        assert res.data.decode(res.charset) == "I'm up!"
+        assert res.data.decode(res.charset) == 'No files found!'
 
     @pytest.mark.parametrize(
         "route,method",
         [
-            pytest.param(
-                'start_bot',
-                'get',
-                id="start_bot_get",
-            ),
             pytest.param(
                 'start_bot',
                 'post',
@@ -39,18 +34,13 @@ class TestDataService:
             ),
             pytest.param(
                 'stop_bot',
-                'get',
-                id="start_bot_delete",
-            ),
-            pytest.param(
-                'stop_bot',
                 'post',
-                id="start_bot_delete",
+                id="stop_bot_post",
             ),
             pytest.param(
                 'stop_bot',
                 'delete',
-                id="start_bot_delete",
+                id="stop_bot_delete",
             ),
         ],
     )
