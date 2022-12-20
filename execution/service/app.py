@@ -16,6 +16,7 @@ from execution.service.helpers.exceptions import EquityRequired, PipelineNotActi
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.exchanges.binance.futures import BinanceFuturesTrader
+from shared.utils.decorators import handle_db_connection_error
 from shared.utils.helpers import get_pipeline_data
 from shared.utils.logger import configure_logger
 
@@ -105,6 +106,7 @@ def create_app():
     @handle_app_errors
     @binance_error_handler(request_obj=request)
     @jwt_required()
+    @handle_db_connection_error
     def start_symbol_trading():
 
         request_data = request.get_json(force=True)
@@ -124,6 +126,7 @@ def create_app():
     @handle_app_errors
     @binance_error_handler(request_obj=request)
     @jwt_required()
+    @handle_db_connection_error
     def stop_symbol_trading():
 
         request_data = request.get_json(force=True)
@@ -145,6 +148,7 @@ def create_app():
     @handle_app_errors
     @binance_error_handler
     @jwt_required()
+    @handle_db_connection_error
     def execute_order():
 
         request_data = request.get_json(force=True)

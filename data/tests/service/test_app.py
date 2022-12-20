@@ -1,5 +1,7 @@
 import json
 
+from django.db import InterfaceError
+
 from data.service.helpers.responses import Responses
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
@@ -486,3 +488,51 @@ class TestDataService:
     ):
         spy_start_symbol_trading.assert_not_called()
 
+    @pytest.mark.parametrize(
+        "raises_error,side_effect,call_count",
+        [
+            pytest.param(
+                True,
+                get_strategies_side_effect_3_errors,
+                2,
+                id="3-errors|2-calls",
+            ),
+            pytest.param(
+                True,
+                get_strategies_side_effect_2_errors,
+                2,
+                id="2-errors|2-calls",
+            ),
+            pytest.param(
+                False,
+                get_strategies_side_effect_1_errors,
+                1,
+                id="1-errors|1-calls",
+            ),
+            pytest.param(
+                False,
+                get_strategies_side_effect_0_errors,
+                0,
+                id="0-errors|0-calls",
+            ),
+        ],
+    )
+    def test_interface_error_handling(
+        self,
+        raises_error,
+        side_effect,
+        call_count,
+        client,
+        mock_get_strategies_raise_exception,
+        spy_db_connection
+    ):
+
+        mock_get_strategies_raise_exception.side_effect = side_effect
+
+        if raises_error:
+            with pytest.raises(InterfaceError):
+                client.get('/resources/strategies')
+        else:
+            client.get('/resources/strategies')
+
+        assert spy_db_connection.call_count == call_count

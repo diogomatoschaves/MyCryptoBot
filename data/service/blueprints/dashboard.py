@@ -10,6 +10,7 @@ from flask_jwt_extended import jwt_required
 from data.service.external_requests import get_strategies
 from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER
+from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -21,9 +22,8 @@ dashboard = Blueprint('dashboard', __name__)
 
 @dashboard.route('/resources/<resources>')
 @jwt_required()
+@handle_db_connection_error
 def get_resources(resources):
-
-    bearer_token = request.headers.get('Authorization')
 
     resources = resources.split(',')
 
@@ -51,6 +51,7 @@ def get_resources(resources):
 @dashboard.route('/trades', defaults={'page': None}, methods=["GET"])
 @dashboard.route('/trades/<page>')
 @jwt_required()
+@handle_db_connection_error
 def get_trades(page):
 
     args = request.args
@@ -82,6 +83,7 @@ def get_trades(page):
 
 @dashboard.route('/pipelines', defaults={'page': None}, methods=["GET", "DELETE"])
 @dashboard.route('/pipelines/<page>')
+@handle_db_connection_error
 @jwt_required()
 def handle_pipelines(page):
 
@@ -124,6 +126,7 @@ def handle_pipelines(page):
 @dashboard.route('/positions', defaults={'page': None})
 @dashboard.route('/positions/<page>')
 @jwt_required()
+@handle_db_connection_error
 def get_positions(page):
 
     response = {}
@@ -147,6 +150,7 @@ def get_positions(page):
 
 @dashboard.route('/trades-metrics', methods=["GET"])
 @jwt_required()
+@handle_db_connection_error
 def get_trades_metrics():
 
     aggregate_values = Trade.objects.annotate(
@@ -170,6 +174,7 @@ def get_trades_metrics():
 
 @dashboard.route('/pipelines-metrics', methods=["GET"])
 @jwt_required()
+@handle_db_connection_error
 def get_pipelines_metrics():
 
     def reduce_pipelines(accum, pipeline):
