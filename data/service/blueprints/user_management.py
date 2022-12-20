@@ -15,7 +15,7 @@ from shared.utils.decorators import handle_db_connection_error
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
+cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
 User = get_user_model()
 

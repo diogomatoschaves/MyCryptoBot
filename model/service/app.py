@@ -27,7 +27,7 @@ if module_path not in sys.path:
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
 
-cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
+cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
 
 q = Queue(connection=conn)

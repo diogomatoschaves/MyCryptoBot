@@ -46,7 +46,7 @@ binance_instances = []
 
 binance_client = BinanceHandler()
 
-cache = redis.from_url(os.getenv('REDISTOGO_URL', 'redis://localhost:6379'))
+cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
 
 def initialize_data_collection(pipeline, header):
@@ -242,6 +242,5 @@ def create_app():
 
 
 if __name__ == "__main__":
-    pass
     app = create_app()
     app.run(host='0.0.0.0')
