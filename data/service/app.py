@@ -23,6 +23,7 @@ from data.service.helpers.exceptions.data_pipeline_does_not_exist import DataPip
 from data.service.helpers.responses import Responses
 from data.sources._sources import DataHandler
 from shared.exchanges import BinanceHandler
+from shared.utils.decorators import handle_db_connection_error
 from shared.utils.helpers import get_logging_row_header, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -86,8 +87,6 @@ def startup_task(app):
 
     for open_position in open_positions:
 
-        print(open_position)
-
         start_symbol_trading(open_position.pipeline)
         open_position.pipeline.active = True
         open_position.pipeline.save()
@@ -134,6 +133,7 @@ def create_app():
     @app.route('/start_bot', methods=['PUT'])
     @handle_app_errors
     @jwt_required()
+    @handle_db_connection_error
     def start_bot():
 
         if "STRATEGIES" not in globals():
@@ -207,6 +207,7 @@ def create_app():
     @app.put('/stop_bot')
     @handle_app_errors()
     @jwt_required()
+    @handle_db_connection_error
     def stop_bot():
 
         # Stops the data collection stream

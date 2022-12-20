@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from django.db import InterfaceError
 
 import data
 from data.service.helpers.exceptions import PipelineStartFail
@@ -210,8 +211,8 @@ def mock_redis_connection_binance(mocker):
 
 
 @pytest.fixture
-def mock_get_strategies(mocker):
-    mocker.patch.object(data.service.app, "get_strategies", lambda: STRATEGIES)
+def mock_get_strategies_raise_exception(mocker):
+    return mocker.patch('data.service.blueprints.dashboard.get_strategies')
 
 
 @pytest.fixture
@@ -222,3 +223,43 @@ def mock_start_symbol_trading(mocker):
 @pytest.fixture
 def spy_start_symbol_trading(mocker):
     return mocker.spy(data.service.app, 'start_symbol_trading')
+
+
+def fake_get_strategies_error():
+    raise InterfaceError
+
+
+def fake_get_strategies_no_error():
+    return STRATEGIES
+
+
+class SideEffect:
+    def __init__(self, *fns):
+        self.fs = iter(fns)
+
+    def __call__(self, *args, **kwargs):
+        f = next(self.fs)
+        return f(*args, **kwargs)
+
+
+@pytest.fixture
+def mock_get_strategies(mocker):
+    mocker.patch.object(data.service.app, "get_strategies", fake_get_strategies_no_error)
+
+
+get_strategies_side_effect_3_errors = SideEffect(
+    fake_get_strategies_error, fake_get_strategies_error, fake_get_strategies_error
+)
+
+get_strategies_side_effect_2_errors = SideEffect(
+    fake_get_strategies_error, fake_get_strategies_error, fake_get_strategies_no_error
+)
+
+get_strategies_side_effect_1_errors = SideEffect(
+    fake_get_strategies_error, fake_get_strategies_no_error, fake_get_strategies_no_error
+)
+
+get_strategies_side_effect_0_errors = SideEffect(
+    fake_get_strategies_no_error, fake_get_strategies_no_error, fake_get_strategies_no_error
+)
+
