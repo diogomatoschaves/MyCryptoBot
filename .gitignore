@@ -134,3 +134,4 @@ dmypy.json
 database/datasets/
 
 dump.rdb
+crypto_bot.dump
