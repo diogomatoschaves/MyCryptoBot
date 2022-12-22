@@ -1,6 +1,10 @@
 
 const dataAPIHost = process.env.REACT_APP_DATA_API_HOST || ''
 
+const domain = window.location.origin !== dataAPIHost && dataAPIHost ? dataAPIHost : window.location.origin
+
+const urlPrefix = new URL('api', domain).toString();
+
 
 const getToken = () => {
   return `Bearer ${window.localStorage.getItem('crypto-token')}`
@@ -10,7 +14,7 @@ export const getResources = async (resources, history) => {
 
   const resourcesString = resources.join()
 
-  const url = `${dataAPIHost}/resources/${resourcesString}`
+  const url = `${urlPrefix}/resources/${resourcesString}`
 
   return await fetch(url, {
     method: 'GET',
@@ -33,7 +37,7 @@ export const getResources = async (resources, history) => {
 
 export const getTrades = async (page, pipelineId) => {
 
-  const url = `${dataAPIHost}/trades${page ? '/' + page : ''}${pipelineId ? '?pipelineId=' + pipelineId : ''}`
+  const url = `${urlPrefix}/trades${page ? '/' + page : ''}${pipelineId ? '?pipelineId=' + pipelineId : ''}`
 
   return await fetch(url, {
     method: 'GET',
@@ -54,7 +58,7 @@ export const getTrades = async (page, pipelineId) => {
 
 export const getPipelines = async (page) => {
 
-  const url = `${dataAPIHost}/pipelines${page ? '/' + page : ''}`
+  const url = `${urlPrefix}/pipelines${page ? '/' + page : ''}`
 
   return await fetch(url, {
     method: 'GET',
@@ -75,7 +79,7 @@ export const getPipelines = async (page) => {
 
 export const getPositions = async (page) => {
 
-  const url = `${dataAPIHost}/positions${page ? '/' + page : ''}`
+  const url = `${urlPrefix}/positions${page ? '/' + page : ''}`
 
   return await fetch(url, {
     method: 'GET',
@@ -96,7 +100,7 @@ export const getPositions = async (page) => {
 
 export const getPrice = async (symbol) => {
 
-  const url = `${dataAPIHost}/prices?symbol=${symbol}`
+  const url = `${urlPrefix}/prices?symbol=${symbol}`
 
   return await fetch(url, {
     method: 'GET',
@@ -117,7 +121,7 @@ export const getPrice = async (symbol) => {
 
 export const getFuturesAccountBalance = async () => {
 
-  const url = `${dataAPIHost}/futures_account_balance`
+  const url = `${urlPrefix}/futures_account_balance`
 
   return await fetch(url, {
     method: 'GET',
@@ -138,7 +142,7 @@ export const getFuturesAccountBalance = async () => {
 
 export const startBot = async (requestData) => {
 
-  const url = `${dataAPIHost}/start_bot`
+  const url = `${urlPrefix}/start_bot`
 
   const response = await fetch(url, {
     method: 'PUT',
@@ -155,7 +159,7 @@ export const startBot = async (requestData) => {
 
 export const stopBot = async (requestData) => {
 
-  const url = `${dataAPIHost}/stop_bot`
+  const url = `${urlPrefix}/stop_bot`
 
   const response = await fetch(url, {
     method: 'PUT',
@@ -171,7 +175,7 @@ export const stopBot = async (requestData) => {
 
 export const deleteBot = async (pipelineId) => {
 
-  const url = `${dataAPIHost}/pipelines?pipelineId=${pipelineId}`
+  const url = `${urlPrefix}/pipelines?pipelineId=${pipelineId}`
 
   const response = await fetch(url, {
     method: 'DELETE',
@@ -185,7 +189,7 @@ export const deleteBot = async (pipelineId) => {
 }
 
 export const getTradesMetrics = async () => {
-  const url = `${dataAPIHost}/trades-metrics`
+  const url = `${urlPrefix}/trades-metrics`
 
   const response = await fetch(url, {
     method: 'GET',
@@ -200,7 +204,7 @@ export const getTradesMetrics = async () => {
 
 
 export const getPipelinesMetrics = async () => {
-  const url = `${dataAPIHost}/pipelines-metrics`
+  const url = `${urlPrefix}/pipelines-metrics`
 
   const response = await fetch(url, {
     method: 'GET',
@@ -214,7 +218,7 @@ export const getPipelinesMetrics = async () => {
 }
 
 export const userLogin = async (requestData) => {
-  const url = `${dataAPIHost}/token`
+  const url = `${urlPrefix}/token`
 
   const response = await fetch(url, {
     body: JSON.stringify(requestData),
