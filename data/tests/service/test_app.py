@@ -11,6 +11,9 @@ from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
 
+API_PREFIX = '/api'
+
+
 class TestDataService:
 
     def test_index_route(self, client):
@@ -23,22 +26,22 @@ class TestDataService:
         "route,method",
         [
             pytest.param(
-                'start_bot',
+                'api/start_bot',
                 'post',
                 id="start_bot_post",
             ),
             pytest.param(
-                'start_bot',
+                'api/start_bot',
                 'delete',
                 id="start_bot_delete",
             ),
             pytest.param(
-                'stop_bot',
+                'api/stop_bot',
                 'post',
                 id="stop_bot_post",
             ),
             pytest.param(
-                'stop_bot',
+                'api/stop_bot',
                 'delete',
                 id="stop_bot_delete",
             ),
@@ -151,7 +154,7 @@ class TestDataService:
 
         """
 
-        res = client.put('/start_bot', json=input_params)
+        res = client.put(f'{API_PREFIX}/start_bot', json=input_params)
 
         assert res.json == getattr(Responses, response)(message)
 
@@ -261,7 +264,7 @@ class TestDataService:
 
         """
 
-        res = client.put('/start_bot', json=input_params)
+        res = client.put(f'{API_PREFIX}/start_bot', json=input_params)
 
         assert res.json == getattr(Responses, response)(get_message(input_params))
 
@@ -299,7 +302,7 @@ class TestDataService:
 
         """
 
-        res = client.put('/start_bot', json=params)
+        res = client.put(f'{API_PREFIX}/start_bot', json=params)
 
         assert res.json == getattr(Responses, response)('Data pipeline 1 is already ongoing.', 1)
 
@@ -342,7 +345,7 @@ class TestDataService:
 
         """
 
-        res = client.put('/start_bot', json=params)
+        res = client.put(f'{API_PREFIX}/start_bot', json=params)
 
         pipeline = Pipeline.objects.last()
 
@@ -386,7 +389,7 @@ class TestDataService:
 
         """
 
-        res = client.put('/start_bot', json=params)
+        res = client.put(f'{API_PREFIX}/start_bot', json=params)
 
         assert res.json["message"] == 'Pipeline start failed.'
 
@@ -425,7 +428,7 @@ class TestDataService:
 
         assert len(binance_handler_instances_spy_stop_bot) == 1
 
-        res = client.put('/stop_bot', json=params)
+        res = client.put(f'{API_PREFIX}/stop_bot', json=params)
 
         pipeline = Pipeline.objects.get(id=params["pipelineId"])
 
@@ -460,7 +463,7 @@ class TestDataService:
 
         """
 
-        res = client.put('/stop_bot', json=params)
+        res = client.put(f'{API_PREFIX}/stop_bot', json=params)
 
         assert res.json == getattr(Responses, response)(f'Data pipeline {params["pipelineId"]} does not exist.')
 
@@ -521,8 +524,8 @@ class TestDataService:
 
         if raises_error:
             with pytest.raises(InterfaceError):
-                client.get('/resources/strategies')
+                client.get(f'{API_PREFIX}/resources/strategies')
         else:
-            client.get('/resources/strategies')
+            client.get(f'{API_PREFIX}/resources/strategies')
 
         assert spy_db_connection.call_count == call_count

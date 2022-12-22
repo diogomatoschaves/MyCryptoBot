@@ -51,10 +51,10 @@ def create_app():
     app = Flask(__name__, static_folder="../build/static", template_folder="../build")
     app.debug = False
 
-    app.register_blueprint(bots_api)
-    app.register_blueprint(dashboard)
-    app.register_blueprint(user_management)
-    app.register_blueprint(proxy)
+    app.register_blueprint(bots_api, url_prefix='/api')
+    app.register_blueprint(dashboard, url_prefix='/api')
+    app.register_blueprint(user_management, url_prefix='/api')
+    app.register_blueprint(proxy, url_prefix='/api')
 
     app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=3)
