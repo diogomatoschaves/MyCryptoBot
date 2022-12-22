@@ -12,7 +12,9 @@ def json_error_handler(_func=None):
                 return func(*args, **kwargs)
             except JSONDecodeError as e:
                 logging.warning(e)
-                return {"success": False, "message": "There was an error processing the request."}
+                response = {"success": False, "message": "There was an error processing the request."}
+
+                return response, 502
 
         return wrapper
 
