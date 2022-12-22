@@ -25,7 +25,7 @@ def mock_trigger_signal_successfully(mocker):
     return mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda pipeline_id, header='': True,
+        lambda pipeline_id, header='': (True, ""),
     )
 
 
@@ -34,7 +34,7 @@ def mock_trigger_signal_fail(mocker):
     mocker.patch.object(
         data.sources.binance._binance,
         'trigger_signal',
-        lambda pipeline_id, header='': False,
+        lambda pipeline_id, header='': (False, ""),
     )
 
 

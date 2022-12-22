@@ -1,8 +1,9 @@
 from data.service.external_requests import generate_signal
 from data.service.helpers import MODEL_APP_ENDPOINTS
-from data.sources._signal_triggerer import wait_for_job_conclusion
+from data.sources._signal_triggerer import wait_for_job_conclusion, RESPONSES
 from data.sources import trigger_signal
 from shared.utils.tests.fixtures.external_modules import mock_time_sleep
+from shared.utils.tests.fixtures.models import *
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
 
@@ -19,7 +20,7 @@ class TestExternalRequests:
                 [
                     {"code": "FINISHED", "status": "finished"},
                 ],
-                True,
+                RESPONSES["FINISHED"],
                 id="STATUS_FINISHED",
             ),
             pytest.param(
@@ -29,14 +30,14 @@ class TestExternalRequests:
                     {"code": "WAITING", "status": "waiting"},
                     {"code": "FINISHED", "status": "finished"},
                 ],
-                True,
+                RESPONSES["FINISHED"],
                 id="STATUS_WAITING_IN-QUEUE",
             ),
             pytest.param(
                 [
                     {"code": "FAILED", "status": "failed"},
                 ],
-                False,
+                RESPONSES["JOB_FAILED"],
                 id="STATUS_FAILED",
             ),
             pytest.param(
@@ -44,8 +45,34 @@ class TestExternalRequests:
                     {"code": "JOB_NOT_FOUND", "status": "job not found"},
                     {"code": "FINISHED", "status": "finished"},
                 ],
-                True,
-                id="STATUS_NOT_FOUND",
+                RESPONSES["FINISHED"],
+                id="STATUS_NOT_FOUND_ONCE",
+            ),
+            pytest.param(
+                [
+                    {"code": "JOB_NOT_FOUND", "status": "job not found"},
+                    {"code": "JOB_NOT_FOUND", "status": "job not found"},
+                    {"code": "JOB_NOT_FOUND", "status": "job not found"},
+                ],
+                RESPONSES["JOB_NOT_FOUND"],
+                id="STATUS_JOB_NOT_FOUND_THREE_TIMES",
+            ),
+            pytest.param(
+                [
+                    {"code": "IN_QUEUE", "status": "in-queue"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                    {"code": "WAITING", "status": "waiting"},
+                ],
+                RESPONSES["TOO_MANY_RETRIES"],
+                id="STATUS_TOO_MANY_RETRIES",
             ),
         ],
     )
@@ -56,7 +83,8 @@ class TestExternalRequests:
         mock_check_job_status_response,
         mock_generate_signal,
         mock_time_sleep,
-        mock_redis_connection_external_requests
+        mock_redis_connection_external_requests,
+        create_pipeline
     ):
         """
         GIVEN some params
@@ -80,46 +108,17 @@ class TestExternalRequests:
 
         assert mock_check_job_status_response.call_count == len(side_effects)
 
-    def test_wait_for_job_conclusion_job_not_found(
-        self,
-        mock_check_job_status_response,
-        mock_generate_signal,
-        mock_time_sleep,
-        mock_redis_connection_external_requests
-    ):
-
-        mock_generate_signal.return_value = {"success": True, "job_id": 'abcdef'}
-
-        mock_check_job_status_response.side_effect = [
-            {"code": "JOB_NOT_FOUND", "status": "job not found"},
-            {"code": "JOB_NOT_FOUND", "status": "job not found"},
-            {"code": "JOB_NOT_FOUND", "status": "job not found"},
-            {"code": "JOB_NOT_FOUND", "status": "job not found"},
-            {"code": "JOB_NOT_FOUND", "status": "job not found"},
-            {"code": "FINISHED", "status": "finished"},
-        ]
-
-        params = {
-            "job_id": "abcdef",
-            "pipeline_id": 1,
-            "retry": 0
-        }
-
-        res = wait_for_job_conclusion(**params)
-
-        assert res is False
-
     @pytest.mark.parametrize(
         "return_value,expected_value",
         [
             pytest.param(
                 {"success": True, "job_id": 'abcdef'},
-                True,
+                RESPONSES["FINISHED"],
                 id="SUCCESS",
             ),
             pytest.param(
                 {"success": False, "message": "Failed"},
-                False,
+                (False, "Failed"),
                 id="FAIL",
             )
         ],
@@ -130,7 +129,8 @@ class TestExternalRequests:
         expected_value,
         mock_generate_signal,
         mock_wait_for_job_conclusion,
-        mock_redis_connection_external_requests
+        mock_redis_connection_external_requests,
+        create_pipeline
     ):
         """
         GIVEN some params
@@ -140,7 +140,7 @@ class TestExternalRequests:
         """
 
         mock_generate_signal.return_value = return_value
-        mock_wait_for_job_conclusion.return_value = True
+        mock_wait_for_job_conclusion.return_value = True, ""
 
         params = {
             "pipeline_id": 1,
@@ -149,4 +149,43 @@ class TestExternalRequests:
 
         res = trigger_signal(**params)
 
-        assert res is expected_value
+        assert res == expected_value
+
+    @pytest.mark.parametrize(
+        "pipeline_id,expected_value",
+        [
+            pytest.param(
+                3,
+                RESPONSES["PIPELINE_NOT_ACTIVE"],
+                id="INACTIVE_PIPELINE",
+            ),
+            pytest.param(
+                2,
+                RESPONSES["PIPELINE_NOT_ACTIVE"],
+                id="NON_EXISTENT_PIPELINE",
+            )
+        ],
+    )
+    def test_trigger_signal_inactive_pipeline(
+        self,
+        pipeline_id,
+        expected_value,
+        mock_generate_signal,
+        mock_wait_for_job_conclusion,
+        mock_redis_connection_external_requests,
+        create_inactive_pipeline
+    ):
+        """
+        GIVEN some params
+        WHEN the method generate_signal is called
+        THEN the return value is equal to the expected response
+
+        """
+        params = {
+            "pipeline_id": pipeline_id,
+            "retry": 0
+        }
+
+        res = trigger_signal(**params)
+
+        assert res == expected_value
