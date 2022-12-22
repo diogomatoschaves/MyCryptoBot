@@ -6,7 +6,7 @@ import {
   StopPipeline,
   TradesMetrics, TradesObject, UpdateTrades
 } from "../types";
-import {Grid, Icon} from "semantic-ui-react";
+import {Grid} from "semantic-ui-react";
 import styled from "styled-components";
 import TradesStats from "./TradesStats";
 import TradesTable from "./TradesTable";

@@ -1,7 +1,7 @@
 import {Decimals, Pipeline, Trade} from "../types";
 import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
-import {getPnl, timeFormatterDate} from "../utils/helpers";
+import {timeFormatterDate} from "../utils/helpers";
 import React from "react";
 
 

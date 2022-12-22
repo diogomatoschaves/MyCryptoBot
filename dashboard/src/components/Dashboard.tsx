@@ -86,7 +86,7 @@ function Dashboard(props: Props) {
       })
     }
 
-    if (pipelines != previous.pipelines) {
+    if (pipelines !== previous.pipelines) {
       updatePipelinesMetrics()
     }
     return () => {
