@@ -1,10 +1,7 @@
-import {Decimals, Pipeline, PipelinesObject, TradesObject, UpdateTrades} from "../types";
-import {Button, Header, Table} from "semantic-ui-react";
-import TradeRow from './TradeRow'
+import {Decimals, PipelinesObject, TradesObject, UpdateTrades} from "../types";
+import {Button} from "semantic-ui-react";
 import styled from "styled-components";
-import {useEffect, useReducer, useRef, useState} from "react";
-import {Wrapper} from "../styledComponents";
-import { debounce, throttle } from 'lodash'
+import {useEffect, useReducer, useRef} from "react";
 import TradesTable from "./TradesTable";
 
 

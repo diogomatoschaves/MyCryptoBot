@@ -2,7 +2,7 @@ import '../App.css';
 import {Component} from 'react'
 import {Route, Switch, Redirect} from 'react-router-dom'
 import {Location} from 'history'
-import styled, {css} from 'styled-components'
+import styled from 'styled-components'
 import {
     DropdownOptions,
     MenuOption,

@@ -1,5 +1,4 @@
 import {
-  BalanceObj,
   DropdownOptions,
   Pipeline,
   Position,

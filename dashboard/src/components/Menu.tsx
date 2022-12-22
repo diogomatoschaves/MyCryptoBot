@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import {Button, Divider, Grid, Icon, Menu} from "semantic-ui-react";
+import {Divider, Grid, Icon, Menu} from "semantic-ui-react";
 import {Link} from 'react-router-dom'
-import {ChangeMenu, MenuOption, UpdateMessage} from "../types";
+import {MenuOption, UpdateMessage} from "../types";
 
 
 interface Props {

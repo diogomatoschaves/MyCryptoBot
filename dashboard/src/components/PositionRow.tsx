@@ -1,4 +1,4 @@
-import {Decimals, Pipeline, PipelinesObject, Position} from "../types";
+import {Decimals, PipelinesObject, Position} from "../types";
 import {Label, Table, Image} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import React from "react";

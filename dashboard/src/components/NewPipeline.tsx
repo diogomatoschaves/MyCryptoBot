@@ -1,5 +1,5 @@
 import React, {useReducer, useState, Fragment} from 'react';
-import {Button, Checkbox, Dropdown, Grid, Header, Icon, Input, Modal, Popup, Form} from "semantic-ui-react";
+import {Button, Dropdown, Grid, Header, Icon, Input, Modal, Popup, Form} from "semantic-ui-react";
 import {BalanceObj, DropdownOptions, StartPipeline, UpdateMessage} from "../types";
 import {validateParams, validatePipelineCreation} from "../utils/helpers";
 import MessageComponent from "./Message";

@@ -1,17 +1,12 @@
 import {DeletePipeline, Pipeline, StartPipeline, StopPipeline} from "../types";
 import {Button, Grid, Header, Icon, Label, Modal, Segment} from "semantic-ui-react";
-import {COLORS, GREEN, RED} from "../utils/constants";
+import {GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
 import PipelineButton from "./PipelineButton";
 import {timeFormatterDate} from "../utils/helpers";
 import {useState} from "react";
 
-
-
-const PipelineDiv = styled.div`
-    width: 100%;
-`
 
 const StyledColumn = styled(Grid.Column)`
     display: flex !important;
