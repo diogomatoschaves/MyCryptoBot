@@ -60,8 +60,8 @@ jobs:
       - name: Build and push
         run: |
           cd $DIRECTORY
-          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../
-          --arg BINANCE_API_KEY=$BINANCE_API_KEY,BINANCE_API_SECRET=$BINANCE_API_SECRET,\
+          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../ \
+           --arg BINANCE_API_KEY=$BINANCE_API_KEY,BINANCE_API_SECRET=$BINANCE_API_SECRET,\
           BINANCE_API_KEY_TEST=$BINANCE_API_KEY_TEST,BINANCE_API_SECRET_TEST=$BINANCE_API_SECRET_TEST,\
           APP_NAME=$HEROKU_APP_NAME
       - name: Release
