@@ -1,5 +1,11 @@
 FROM python:3.8-slim
 
+ARG BINANCE_API_KEY
+ARG BINANCE_API_SECRET
+ARG BINANCE_API_KEY_TEST
+ARG BINANCE_API_SECRET_TEST
+ARG APP_NAME
+
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE 1
 # Turns off buffering for easier container logging
@@ -31,5 +37,11 @@ COPY ./shared/ ./shared/
 
 RUN useradd -m myuser
 USER myuser
+
+ENV BINANCE_API_KEY=$BINANCE_API_KEY
+ENV BINANCE_API_SECRET=$BINANCE_API_SECRET
+ENV BINANCE_API_KEY_TEST=$BINANCE_API_KEY_TEST
+ENV BINANCE_API_SECRET_TEST=$BINANCE_API_SECRET_TEST
+ENV APP_NAME=$APP_NAME
 
 CMD bash /usr/src/app/$DIRECTORY/entrypoint.sh
