@@ -190,6 +190,10 @@ class App extends Component<Props, State> {
 
         const { pathname } = this.props.location
 
+        if (prevProps.location.pathname !== pathname && pathname.includes('/dashboard')) {
+            this.getAccountBalance()
+        }
+
         if (prevProps.location.pathname !== pathname && pathname.includes('/trades')) {
             this.updateTrades()
             this.getCurrentPrices()
