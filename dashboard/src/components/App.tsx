@@ -4,7 +4,6 @@ import {Route, Switch, Redirect} from 'react-router-dom'
 import {Location} from 'history'
 import styled, {css} from 'styled-components'
 import {
-    ChangeMenu,
     DropdownOptions,
     MenuOption,
     PipelineParams,
@@ -38,7 +37,7 @@ import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
 import {parseTrade, organizePositions, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
-import {Box, StyledSegment, Wrapper} from "../styledComponents";
+import {StyledSegment} from "../styledComponents";
 import Dashboard from "./Dashboard";
 import {Header} from "semantic-ui-react";
 
@@ -164,7 +163,7 @@ class App extends Component<Props, State> {
                     }
                 })
             })
-            .catch()
+            .catch(() => {})
 
         this.updateTrades()
 
@@ -227,6 +226,7 @@ class App extends Component<Props, State> {
                     }
                 })
             })
+            .catch(() => {})
     }
 
     stopPipeline: StopPipeline = (pipelineId) => {
@@ -246,6 +246,7 @@ class App extends Component<Props, State> {
                     } : state.pipelines
                 }))
             })
+            .catch(() => {})
     }
 
     deletePipeline: DeletePipeline = (pipelineId) => {
@@ -271,6 +272,7 @@ class App extends Component<Props, State> {
                     }
                 })
             })
+            .catch(() => {})
     }
 
     getCurrentPrices: GetCurrentPrices = () => {
@@ -284,7 +286,7 @@ class App extends Component<Props, State> {
                     } else return prices
                 }, {})
             })
-        })
+        }).catch(() => {})
     }
 
     balanceReducer = (balance: any, coin: { asset: string; balance: string; withdrawAvailable: string; }) => {
@@ -310,6 +312,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
+          .catch(() => {})
     }
 
     updatePipelinesMetrics = () => {
@@ -319,6 +322,7 @@ class App extends Component<Props, State> {
                   pipelinesMetrics: response
               })
           })
+          .catch(() => {})
     }
 
     updateTrades = (page?: number, pipelineId?: string) => {
@@ -336,6 +340,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
+          .catch(() => {})
     }
 
     updatePipelines = () => {
@@ -355,6 +360,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
+          .catch(() => {})
     }
 
     updatePositions = () => {
@@ -367,6 +373,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
+          .catch(() => {})
     }
 
     render() {
