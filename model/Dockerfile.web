@@ -1,5 +1,8 @@
 FROM python:3.8-slim
 
+ARG EXECUTION_APP_URL
+ARG APP_NAME
+
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE 1
 # Turns off buffering for easier container logging
@@ -32,5 +35,8 @@ RUN useradd -m myuser
 USER myuser
 
 ENV PYTHONPATH="${PYTHONPATH}:/usr/src/app/"
+
+ENV EXECUTION_APP_URL=$EXECUTION_APP_URL
+ENV APP_NAME=$APP_NAME
 
 CMD bash /usr/src/app/$DIRECTORY/entrypoint.sh
