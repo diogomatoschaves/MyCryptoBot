@@ -67,7 +67,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._set_initial_position(symbol, initial_position, header, **kwargs)
 
-        self._set_initial_balance(symbol, equity, header=header)
+        self._set_initial_balance(symbol, equity, initial_position, header=header)
 
     def stop_symbol_trading(self, symbol, header='', **kwargs):
 
@@ -79,6 +79,7 @@ class BinanceFuturesTrader(BinanceTrader):
         try:
             self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
         except NoUnits:
+            logging.info("There's no position to be closed.")
             pass
 
         self.symbols.pop(symbol)
@@ -167,14 +168,17 @@ class BinanceFuturesTrader(BinanceTrader):
         )
 
     # TODO: Add last order position
-    def _set_initial_balance(self, symbol, amount, factor=1, header=''):
+    def _set_initial_balance(self, symbol, amount, initial_position, header=''):
         logging.debug(header + f"Updating balance for symbol: {symbol}.")
 
-        balance = amount * factor
+        units = self._convert_units(amount, None, symbol)
 
-        self.units[symbol] = 0
-        self.current_balance[symbol] = balance
-        self.initial_balance[symbol] = balance
+        self.units[symbol] = initial_position * units
+
+        factor = (initial_position - 1) * -1
+
+        self.current_balance[symbol] = factor * amount
+        self.initial_balance[symbol] = amount
 
     def _get_symbol_info(self, symbol):
 

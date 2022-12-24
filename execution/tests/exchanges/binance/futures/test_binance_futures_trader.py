@@ -77,7 +77,15 @@ class TestBinanceFuturesTrader:
                 (0, 1, 0),
                 100,
                 1,
-                id="SymbolStarted-WithInitialPosition",
+                id="SymbolStarted-WithInitialPositionLONG",
+            ),
+            pytest.param(
+                {"symbol": "BTCUSDT",  "equity": 100, "initial_position": -1},
+                {},
+                (0, 1, 0),
+                100,
+                -1,
+                id="SymbolStarted-WithInitialPositionSHORT",
             ),
         ]
     )
@@ -99,9 +107,12 @@ class TestBinanceFuturesTrader:
         assert futures_exchange_info_spy.call_count == times_called[1]
         assert futures_create_order_spy.call_count == times_called[2]
 
-        assert binance_trader.current_balance[parameters["symbol"]] == balance
-        assert binance_trader.initial_balance[parameters["symbol"]] == balance
-        assert binance_trader.positions[parameters["symbol"]] == initial_position
+        symbol = parameters["symbol"]
+
+        assert binance_trader.units[symbol] == initial_position * 0.005
+        assert binance_trader.current_balance[symbol] == (initial_position - 1) * -1 * balance
+        assert binance_trader.initial_balance[symbol] == balance
+        assert binance_trader.positions[symbol] == initial_position
 
     @pytest.mark.parametrize(
         "parameters,symbols,position,units,times_called",
