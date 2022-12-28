@@ -7,6 +7,7 @@ import redis
 from binance import ThreadedWebsocketManager
 
 import shared.exchanges.binance.constants as const
+from data.service.external_requests import start_stop_symbol_trading
 from data.service.helpers.exceptions import CandleSizeInvalid
 from data.sources import trigger_signal
 from data.sources.binance.extract import extract_data
@@ -17,7 +18,7 @@ from shared.exchanges.binance import BinanceHandler
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import ExchangeData, StructuredData, Pipeline
+from database.model.models import ExchangeData, StructuredData, Pipeline, Position
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
@@ -125,6 +126,13 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         ExchangeData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
         StructuredData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
 
+        Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
+        Position.objects.filter(pipeline_id=self.pipeline_id).update(open=False, position=0)
+
+        response = start_stop_symbol_trading({"pipeline_id": self.pipeline_id}, 'stop')
+
+        logging.debug(response["message"])
+
     def _start_kline_websockets(self, symbol, callback, header=''):
 
         # streams = [
@@ -192,8 +200,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         if not success:
             logging.warning(header + message)
             self.stop_data_ingestion()
-            # TODO: Should close all positions associated with pipeline
-            Pipeline.objects.filter(id=self.pipeline_id).update(active=False)
 
         return success
 

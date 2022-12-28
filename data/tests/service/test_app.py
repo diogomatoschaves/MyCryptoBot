@@ -432,6 +432,8 @@ class TestDataService:
 
         pipeline = Pipeline.objects.get(id=params["pipelineId"])
 
+        print(pipeline.active)
+
         assert res.json == getattr(Responses, response)(pipeline)
 
         assert pipeline.active is False

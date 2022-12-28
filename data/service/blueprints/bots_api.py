@@ -169,7 +169,7 @@ def stop_bot():
     pipeline_id = data.get("pipelineId", None)
 
     try:
-        pipeline = Pipeline.objects.get(id=pipeline_id)
+        Pipeline.objects.filter(id=pipeline_id).exists()
 
         header = json.loads(get_item_from_cache(cache, pipeline_id))
 
@@ -177,13 +177,7 @@ def stop_bot():
 
         stop_instance(pipeline_id, header=header)
 
-        response = start_stop_symbol_trading({"pipeline_id": pipeline.id}, 'stop')
-
-        logging.debug(response["message"])
-
-        pipeline.active = False
-        pipeline.open_time = None
-        pipeline.save()
+        pipeline = Pipeline.objects.get(id=pipeline_id)
 
         return jsonify(Responses.DATA_PIPELINE_STOPPED(pipeline))
     except Pipeline.DoesNotExist:

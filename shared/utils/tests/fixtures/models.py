@@ -111,6 +111,20 @@ def create_position(db, create_pipeline):
 
 
 @pytest.fixture
+def create_open_position(db, create_pipeline):
+    return Position.objects.create(
+        position=1,
+        symbol_id="BTCUSDT",
+        exchange_id='binance',
+        pipeline_id=1,
+        paper_trading=True,
+        buying_price=0,
+        amount=0,
+        open=True,
+    )
+
+
+@pytest.fixture
 def create_positions(db, create_position):
     return Position.objects.create(
         position=0,
