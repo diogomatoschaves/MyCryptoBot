@@ -35,8 +35,6 @@ def get_signal(
     if params is None:
         params = {}
 
-    print(params)
-
     data = get_data(StructuredData, None, symbol, candle_size, exchange)
 
     if len(data) == 0:

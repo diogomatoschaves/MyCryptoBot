@@ -7,6 +7,7 @@ import data
 from data.service.helpers.exceptions import PipelineStartFail
 from data.sources.binance import BinanceDataHandler
 from data.tests.setup.test_data.sample_data import mock_websocket_raw_data_5m, mock_websocket_raw_data_1h, STRATEGIES
+from database.model.models import Pipeline
 
 MODEL_APP_URL = 'https://example.com'
 EXECUTION_APP_URL = 'https://example.com'
@@ -79,12 +80,16 @@ def mock_binance_handler_start_data_ingestion(mocker):
     )
 
 
+def fake_stop_data_ingestion(self, header):
+    Pipeline.objects.filter(id=1).update(active=False)
+
+
 @pytest.fixture
 def mock_binance_handler_stop_data_ingestion(mocker):
     return mocker.patch.object(
         BinanceDataHandler,
         "stop_data_ingestion",
-        lambda self, header='': None
+        fake_stop_data_ingestion
     )
 
 
@@ -133,10 +138,26 @@ def binance_handler_instances_spy(mocker):
     return mocker.spy(data.service.blueprints.bots_api, 'binance_instances')
 
 
+def fake_start_stop_trading(pipeline_id, start_or_stop):
+    if start_or_stop == 'stop':
+        Pipeline.objects.get(id=pipeline_id).update(active=False)
+
+    return {"success": True, "message": ''}
+
+
 @pytest.fixture
 def mock_start_stop_symbol_trading_success_true(mocker):
     mocker.patch.object(
         data.service.blueprints.bots_api,
+        'start_stop_symbol_trading',
+        fake_start_stop_trading,
+    )
+
+
+@pytest.fixture
+def mock_start_stop_symbol_trading_success_true_binance_handler(mocker):
+    mocker.patch.object(
+        data.sources.binance._binance,
         'start_stop_symbol_trading',
         lambda pipeline_id, start_or_stop: {"success": True, "message": ''},
     )

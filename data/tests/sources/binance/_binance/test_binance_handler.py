@@ -10,6 +10,26 @@ from shared.utils.tests.fixtures.models import *
 from database.model.models import ExchangeData, StructuredData, Jobs
 
 
+@pytest.fixture
+def common_fixture(
+    mocker,
+    mock_binance_handler_klines,
+    mock_binance_client_init,
+    mock_binance_client_ping,
+    mock_binance_client_exchange_info,
+    mock_binance_handler_websocket,
+    mock_binance_websocket_start,
+    mock_binance_websocket_stop,
+    mock_binance_threaded_websocket,
+    exchange_data,
+    mock_redis_connection_binance,
+    mock_client_env_vars,
+    mock_settings_env_vars,
+    mock_start_stop_symbol_trading_success_true_binance_handler
+):
+    return
+
+
 class TestBinanceDataHandler:
 
     @pytest.mark.parametrize(
@@ -71,18 +91,9 @@ class TestBinanceDataHandler:
         self,
         input_params,
         output,
-        mock_binance_handler_klines,
-        mock_binance_client_init,
-        mock_binance_client_ping,
-        mock_binance_client_exchange_info,
-        mock_binance_handler_websocket,
-        mock_binance_websocket_start,
-        mock_binance_websocket_stop,
-        mock_binance_threaded_websocket,
+        common_fixture,
         mock_trigger_signal_successfully,
-        mock_redis_connection_binance,
         trigger_signal_spy,
-        exchange_data
     ):
 
         binance_data_handler = BinanceDataHandler(**input_params)
@@ -126,20 +137,12 @@ class TestBinanceDataHandler:
         self,
         input_params,
         output,
-        mock_binance_handler_klines,
-        mock_binance_client_init,
-        mock_client_env_vars,
-        mock_binance_client_ping,
-        mock_binance_client_exchange_info,
-        mock_binance_handler_websocket,
-        mock_binance_websocket_start,
-        mock_binance_websocket_stop,
-        mock_binance_threaded_websocket,
+        common_fixture,
         mock_trigger_signal_fail,
-        mock_redis_connection_binance,
+        mock_redis_connection_external_requests,
         trigger_signal_spy,
-        exchange_data,
-        create_pipeline
+        create_pipeline,
+        create_open_position
     ):
 
         binance_data_handler = BinanceDataHandler(**input_params)
@@ -157,6 +160,10 @@ class TestBinanceDataHandler:
 
         pipeline = Pipeline.objects.get(id=pipeline_id)
         assert pipeline.active is False
+
+        position = Position.objects.get(pipeline_id=pipeline_id)
+        assert position.open is False
+        assert position.position == 0
 
     @pytest.mark.parametrize(
         "input_value,exception",
@@ -183,12 +190,7 @@ class TestBinanceDataHandler:
         self,
         input_value,
         exception,
-        mock_binance_client_init,
-        mock_binance_client_ping,
-        mock_binance_client_exchange_info,
-        mock_binance_handler_websocket,
-        mock_binance_threaded_websocket,
-        exchange_data
+        common_fixture
     ):
 
         with pytest.raises(Exception) as excinfo:
