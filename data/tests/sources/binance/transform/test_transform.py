@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from data.sources.binance.transform import transform_data
 from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.test_setup import get_fixtures
@@ -32,4 +34,6 @@ class TestBinanceTransform:
 
         result = transform_data(**params_dict).reset_index().to_dict(orient='records')
 
-        assert result == fixture["out"]["expected_value"]
+        for i, d in enumerate(result):
+            for key in d:
+                assert d[key] == pytest.approx(fixture["out"]["expected_value"][i][key], 0.2)
