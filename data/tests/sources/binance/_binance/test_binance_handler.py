@@ -1,7 +1,7 @@
 from data.service.helpers.exceptions import CandleSizeInvalid
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
-from data.tests.setup.fixtures.app import mock_client_env_vars
+# from data.tests.setup.fixtures.app import mock_client_env_vars
 from data.tests.setup.test_data.sample_data import processed_historical_data
 from shared.utils.exceptions import SymbolInvalid
 from shared.utils.tests.test_setup import get_fixtures
@@ -23,7 +23,7 @@ def common_fixture(
     mock_binance_threaded_websocket,
     exchange_data,
     mock_redis_connection_binance,
-    mock_client_env_vars,
+    # mock_client_env_vars,
     mock_settings_env_vars,
     mock_start_stop_symbol_trading_success_true_binance_handler
 ):

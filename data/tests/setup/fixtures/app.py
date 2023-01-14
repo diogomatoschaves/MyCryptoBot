@@ -8,7 +8,8 @@ from data.tests.setup.fixtures.internal_modules import (
     mock_redis_connection,
     mock_settings_env_vars,
     mock_get_strategies,
-    mock_redis_connection_bots_api
+    mock_redis_connection_bots_api,
+    spy_start_symbol_trading
 )
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 from shared.utils.tests.fixtures.models import *
@@ -19,7 +20,7 @@ TEST_APP_NAME = 'test_app'
 
 @pytest.fixture()
 def mock_client_env_vars(mocker):
-    mocker.patch.dict(os.environ, {"APP_NAME": TEST_APP_NAME})
+    mocker.patch.dict(os.environ, {"TEST": "true"})
 
 
 @pytest.fixture
@@ -36,8 +37,11 @@ def app(
     create_exchange,
     create_assets,
     create_symbol,
-    spy_start_symbol_trading
+    spy_start_symbol_trading,
+    monkeypatch
 ):
+
+    # monkeypatch.setenv("TEST", )
     app = create_app(testing=True)
     return app
 
@@ -52,7 +56,7 @@ def client(app):
 @pytest.fixture
 def app_with_open_position(
     db,
-    mock_client_env_vars,
+    # mock_client_env_vars,
     mock_create_access_token,
     mock_redis_connection,
     mock_redis_connection_bots_api,

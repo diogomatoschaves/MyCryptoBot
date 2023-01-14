@@ -288,4 +288,3 @@ get_strategies_side_effect_1_errors = SideEffect(
 get_strategies_side_effect_0_errors = SideEffect(
     fake_get_strategies_no_error, fake_get_strategies_no_error, fake_get_strategies_no_error
 )
-

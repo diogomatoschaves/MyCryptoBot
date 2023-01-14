@@ -92,9 +92,10 @@ def clean_docstring(doc):
 
 def get_symbol_or_raise_exception(exchange_info, symbol):
     symbol_info = None
-    for info in exchange_info["symbols"]:
-        if info['symbol'] == symbol:
-            symbol_info = info
+    if "symbols" in exchange_info:
+        for info in exchange_info["symbols"]:
+            if info['symbol'] == symbol:
+                symbol_info = info
 
     if not symbol_info:
         raise SymbolInvalid(symbol)
