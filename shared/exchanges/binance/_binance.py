@@ -31,6 +31,8 @@ class BinanceHandler(Client):
                 self.binance_api_secret,
                 testnet=paper_trading
             )
+        else:
+            self.session = None
 
     def _get_api_keys(self, paper_trading):
 

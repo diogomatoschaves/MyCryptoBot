@@ -3,14 +3,17 @@ import os
 import django
 import pytest
 
-from execution.service.helpers.exceptions import SymbolNotBeingTraded, NoUnits, SymbolAlreadyTraded
+with pytest.MonkeyPatch().context() as ctx:
+    ctx.setenv("TEST", True)
+    from execution.service.helpers.exceptions import SymbolNotBeingTraded, NoUnits, SymbolAlreadyTraded
+    from execution.exchanges.binance.futures import BinanceFuturesTrader
+    from execution.tests.setup.fixtures.external_modules import *
+
 from shared.utils.exceptions import SymbolInvalid
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from execution.exchanges.binance.futures import BinanceFuturesTrader
-from execution.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
 
 

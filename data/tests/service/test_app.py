@@ -1,15 +1,18 @@
 import json
+import pytest
 
 from django.db import InterfaceError
 
-from data.service.helpers.responses import Responses
-from data.tests.setup.fixtures.internal_modules import *
-from data.tests.setup.fixtures.external_modules import *
-from data.tests.setup.fixtures.app import *
+with pytest.MonkeyPatch().context() as ctx:
+    ctx.setenv("TEST", True)
+    from data.tests.setup.fixtures.app import *
+    from data.tests.setup.fixtures.internal_modules import *
+    from data.tests.setup.fixtures.external_modules import *
+    from data.service.helpers.responses import Responses
+
 from database.model.models import Pipeline
 from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
-
 
 API_PREFIX = '/api'
 
@@ -431,8 +434,6 @@ class TestDataService:
         res = client.put(f'{API_PREFIX}/stop_bot', json=params)
 
         pipeline = Pipeline.objects.get(id=params["pipelineId"])
-
-        print(pipeline.active)
 
         assert res.json == getattr(Responses, response)(pipeline)
 

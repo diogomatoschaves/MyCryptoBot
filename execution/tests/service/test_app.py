@@ -1,9 +1,12 @@
 import pytest
 
-from execution.service.helpers.responses import Responses
-from execution.tests.setup.fixtures.app import *
-from execution.tests.setup.fixtures.external_modules import *
-from execution.tests.setup.fixtures.internal_modules import *
+with pytest.MonkeyPatch().context() as ctx:
+    ctx.setenv("TEST", True)
+    from execution.service.helpers.responses import Responses
+    from execution.tests.setup.fixtures.app import *
+    from execution.tests.setup.fixtures.external_modules import *
+    from execution.tests.setup.fixtures.internal_modules import *
+
 from shared.utils.exceptions import NoSuchPipeline
 from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
