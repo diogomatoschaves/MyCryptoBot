@@ -48,12 +48,6 @@ class TestSignalGeneration:
                 id="Momentum",
             ),
             pytest.param(
-                "MachineLearning",
-                sample_structured_data,
-                True,
-                id="MachineLearning",
-            ),
-            pytest.param(
                 "InvalidStrategy",
                 sample_structured_data,
                 False,
@@ -79,7 +73,6 @@ class TestSignalGeneration:
         MovingAverageCrossover,
         BollingerBands,
         Momentum,
-        MachineLearning,
         mock_get_data,
         mock_trigger_order,
     ):
