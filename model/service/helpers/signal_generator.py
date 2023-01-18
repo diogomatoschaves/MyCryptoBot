@@ -11,7 +11,6 @@ from shared.data.queries import get_data
 from model.strategies.trend import Momentum
 from model.strategies.moving_average import MovingAverageConvergenceDivergence, MovingAverageCrossover, MovingAverage
 from model.strategies.mean_reversion import BollingerBands
-from model.strategies.machine_learning import MachineLearning
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -56,13 +55,6 @@ def get_signal(
 
     elif strategy == 'Momentum':
         signal_gen = Momentum(**params, data=data)
-
-    elif strategy == 'MachineLearning':
-        # TODO: Check current error
-        # TODO: Must resample data and delete entries
-        #  that would not make sense according to number of lags
-        signal_gen = MachineLearning(**params, data=data)
-
     else:
         logging.warning(header + f"Invalid strategy: %s" % strategy)
         return False
