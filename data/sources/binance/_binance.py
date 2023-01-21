@@ -206,8 +206,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     # TODO: Add timer to check if it's below 24h
     def _websocket_callback(self, row, header=''):
 
-        logging.info(row)
-
         kline_size = row["stream"].split('_')[-1]
 
         if kline_size == self.base_candle_size:
