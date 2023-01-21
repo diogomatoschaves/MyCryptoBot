@@ -59,9 +59,11 @@ def get_signal(
         logging.warning(header + f"Invalid strategy: %s" % strategy)
         return False
 
+    logging.info(header + "Generating signal.")
+
     signal = signal_gen.get_signal()
 
-    logging.debug(header + f"{convert_signal_to_text(signal)} signal generated")
+    logging.debug(header + f"{convert_signal_to_text(signal)} signal generated.")
 
     return trigger_order(pipeline_id, signal, bearer_token, header=header)
 

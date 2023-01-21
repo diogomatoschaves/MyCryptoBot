@@ -45,10 +45,7 @@ def convert_signal_to_text(signal):
 
 def get_logging_row_header(pipeline):
 
-    paper_trading_str = "LIVE" if not pipeline.paper_trading else "FAKE"
-
-    return f"{paper_trading_str}|{pipeline.symbol_id}|{pipeline.strategy}&{pipeline.params}|" \
-           f"{pipeline.interval}|{pipeline.exchange_id}: "
+    return f"{pipeline.name}|{pipeline.id}|{pipeline.interval}: "
 
 
 def get_item_from_cache(cache, key):

@@ -28,6 +28,7 @@ class Trader:
         raise NotImplementedError
 
     def _get_balances(self, symbol):
+
         initial_balance = self.initial_balance[symbol] if isinstance(self.initial_balance, dict) else self.initial_balance
         current_balance = self.current_balance[symbol] if isinstance(self.current_balance, dict) else self.current_balance
 
@@ -94,12 +95,14 @@ class Trader:
 
             logging.info(header + f"Maintaining {verbose_position} position.")
 
+            self.print_current_balance(date, header, symbol=symbol)
+
     def print_current_position_value(self, date, price, header='', **kwargs):
 
         units = self._get_units(kwargs.get("symbol", ""))
 
         cpv = units * price
-        print(header + f"| {date} | Current Position Value = {round(cpv, 2)}")
+        logging.info(header + f"| {date} | Current Position Value = {round(cpv, 2)}")
 
     def print_current_nav(self, date, price, header='', **kwargs):
 
@@ -107,10 +110,10 @@ class Trader:
         current_balance = self._get_balances(kwargs.get("symbol", ""))[1]
 
         nav = current_balance + units * price
-        print(header + f"| {date} | Net Asset Value = {round(nav, 2)}")
+        logging.info(header + f"| {date} | Net Asset Value = {round(nav, 2)}")
 
     def print_current_balance(self, date, header='', **kwargs):
 
         current_balance = self._get_balances(kwargs.get("symbol", ""))[1]
 
-        print(header + f"| {date} | Current Balance: {round(current_balance, 2)}")
+        logging.info(header + f"| {date} | Current Balance: {round(current_balance, 2)}")

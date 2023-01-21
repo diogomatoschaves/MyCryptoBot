@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -6,7 +7,7 @@ import requests
 
 from data.service.helpers import MODEL_APP_ENDPOINTS, EXECUTION_APP_ENDPOINTS
 from shared.utils.decorators import retry_failed_connection, json_error_handler
-
+from shared.utils.helpers import get_item_from_cache
 
 cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
@@ -38,7 +39,7 @@ def generate_signal(pipeline_id, header=''):
         pipeline_id=pipeline_id
     )
 
-    logging.info(header + "Triggering signal")
+    logging.info(header + "Triggering signal generation.")
 
     r = requests.post(url, json=payload, headers={"Authorization": cache.get("bearer_token")})
     logging.debug(r.text)
@@ -52,6 +53,9 @@ def generate_signal(pipeline_id, header=''):
 @retry_failed_connection(num_times=4)
 @json_error_handler
 def start_stop_symbol_trading(payload, start_or_stop):
+
+    header = json.loads(get_item_from_cache(cache, payload["pipeline_id"]))
+    logging.info(header + f"Sending {start_or_stop} request to Execution app.")
 
     endpoint = f"{start_or_stop.upper()}_SYMBOL_TRADING"
 
