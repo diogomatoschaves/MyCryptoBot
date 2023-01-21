@@ -234,7 +234,7 @@ class TestDataService:
                     "exchanges": "Binance"
                 },
                 "NAME_INVALID",
-                lambda input_params: f'{input_params["name"]} is not a valid name.',
+                lambda input_params: f'{input_params["name"]} is not a valid name or is already taken.',
                 id="NAME_INVALID",
             ),
             pytest.param(
@@ -276,6 +276,7 @@ class TestDataService:
         [
             pytest.param(
                 {
+                    "pipelineId": 1,
                     "color": "purple",
                     "name": "Hello World",
                     "symbol": "BTCUSDT",

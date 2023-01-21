@@ -81,6 +81,7 @@ export type RawPipeline = {
 }
 
 export type PipelineParams = {
+    pipelineId?: number
     name: string,
     allocation: number,
     leverage: number,

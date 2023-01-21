@@ -94,6 +94,7 @@ def start_bot():
 
     data = request.get_json(force=True)
 
+    pipeline_id = data.get("pipelineId", None)
     name = data.get("name", None)
     color = data.get("color", None)
     allocation = data.get("allocation", None)
@@ -105,9 +106,10 @@ def start_bot():
     paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
     leverage = data.get("leverage", 1)
 
-    check_input(
+    exists = check_input(
         binance_client,
         STRATEGIES,
+        pipeline_id=pipeline_id,
         name=name,
         color=color,
         allocation=allocation,
@@ -123,6 +125,8 @@ def start_bot():
     candle_size = candle_size.lower()
 
     pipeline = get_or_create_pipeline(
+        exists,
+        pipeline_id=pipeline_id,
         name=name,
         color=color,
         allocation=allocation,
