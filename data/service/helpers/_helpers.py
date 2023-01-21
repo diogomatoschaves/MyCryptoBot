@@ -32,6 +32,9 @@ EXECUTION_APP_ENDPOINTS = {
 
 def check_input(binance_client, strategies, **kwargs):
 
+    if "pipeline_id" in kwargs and kwargs["pipeline_id"] and Pipeline.objects.filter(id=kwargs["pipeline_id"]).exists():
+        return True
+
     if "symbol" in kwargs:
         symbol = kwargs["symbol"]
 
@@ -95,7 +98,7 @@ def check_input(binance_client, strategies, **kwargs):
         raise NameRequired
     else:
         name = kwargs["name"]
-        if not isinstance(name, str):
+        if not isinstance(name, str) or Pipeline.objects.filter(name=name).exists():
             raise NameInvalid(name)
 
     if "color" not in kwargs or kwargs["name"] is None:
@@ -105,8 +108,26 @@ def check_input(binance_client, strategies, **kwargs):
         if not isinstance(kwargs["leverage"], int):
             raise LeverageInvalid(kwargs["leverage"])
 
+    return False
+
+
+def get_existing_pipeline(fields):
+    pipeline = Pipeline.objects.get(**fields)
+
+    if pipeline.active:
+        raise DataPipelineOngoing(pipeline.id)
+    else:
+        pipeline.active = True
+        pipeline.open_time = datetime.datetime.now(pytz.utc)
+
+        pipeline.save()
+
+    return pipeline
+
 
 def get_or_create_pipeline(
+    exists,
+    pipeline_id,
     name,
     color,
     allocation,
@@ -118,34 +139,28 @@ def get_or_create_pipeline(
     paper_trading,
     leverage
 ):
+    if exists:
+        pipeline = get_existing_pipeline(dict(id=pipeline_id))
 
-    columns = dict(
-        name=name,
-        color=color,
-        allocation=allocation,
-        symbol_id=symbol,
-        interval=candle_size,
-        strategy=strategy,
-        exchange_id=exchange,
-        params=json.dumps(params),
-        paper_trading=paper_trading,
-        leverage=leverage
-    )
+    else:
+        columns = dict(
+            name=name,
+            color=color,
+            allocation=allocation,
+            symbol_id=symbol,
+            interval=candle_size,
+            strategy=strategy,
+            exchange_id=exchange,
+            params=json.dumps(params),
+            paper_trading=paper_trading,
+            leverage=leverage
+        )
 
-    try:
-        pipeline = Pipeline.objects.get(**columns)
-
-        if pipeline.active:
-            raise DataPipelineOngoing(pipeline.id)
-        else:
-            pipeline.active = True
-            pipeline.open_time = datetime.datetime.now(pytz.utc)
-
-            pipeline.save()
-
-    except Pipeline.DoesNotExist:
-        pipeline = Pipeline.objects.create(**columns)
-        logging.info(f"Successfully created new pipeline ({pipeline.id})")
+        try:
+            pipeline = Pipeline.objects.create(**columns)
+            logging.info(f"Successfully created new pipeline ({pipeline.id})")
+        except django.db.utils.IntegrityError:
+            pipeline = get_existing_pipeline(columns)
 
     return pipeline
 

@@ -35,6 +35,7 @@ function PipelineButton(props: Props) {
         ) : (
           <Button
               onClick={() => startPipeline({
+                pipelineId: pipeline.id,
                 name: pipeline.name,
                 allocation: pipeline.allocation,
                 symbol: pipeline.symbol,
