@@ -1,4 +1,5 @@
 import functools
+import logging
 
 from flask import jsonify
 
@@ -16,6 +17,7 @@ def handle_app_errors(_func=None):
             try:
                 return func(*args, **kwargs)
             except NoSuchPipeline as e:
+                logging.info(e.message)
                 return jsonify(Responses.NO_SUCH_PIPELINE(e.message))
 
         return wrapper

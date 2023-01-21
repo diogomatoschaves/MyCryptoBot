@@ -208,5 +208,9 @@ class BinanceTrader(BinanceHandler, Trader):
         logging.info(header + f"" + 100 * "-")
         logging.info(header + f"{date} | {going}")
         logging.info(header + f"units = {units} | price = {price}")
-        self.print_current_nav(date, price, **kwargs)
+
+        self.print_current_nav(date, price, header, **kwargs)
+        self.print_current_balance(date, header, **kwargs)
+        self.print_current_position_value(date, price, header, **kwargs)
+
         logging.info(header + f"" + 100 * "-")
