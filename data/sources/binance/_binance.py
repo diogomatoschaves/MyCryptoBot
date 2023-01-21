@@ -124,14 +124,13 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         self._stop_websocket()
 
         ExchangeData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
-        StructuredData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
-
-        Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
-        Position.objects.filter(pipeline_id=self.pipeline_id).update(open=False, position=0)
 
         response = start_stop_symbol_trading({"pipeline_id": self.pipeline_id}, 'stop')
 
-        logging.debug(response["message"])
+        logging.info(response["message"])
+
+        Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
+        Position.objects.filter(pipeline_id=self.pipeline_id).update(open=False, position=0)
 
     def _start_kline_websockets(self, symbol, callback, header=''):
 
@@ -193,13 +192,19 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         return new_entries
 
-    def generate_new_signal(self, header):
+    def generate_new_signal(self, header, retries=0):
+
+        if retries >= 2:
+            return False
 
         success, message = trigger_signal(self.pipeline_id, header=header)
 
         if not success:
-            logging.warning(header + message)
-            self.stop_data_ingestion()
+            if "Too many retries" in message:
+                success, message = self.generate_new_signal(header, retries=retries+1)
+            else:
+                logging.warning(header + message)
+                self.stop_data_ingestion()
 
         return success
 
