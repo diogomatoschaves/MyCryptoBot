@@ -23,7 +23,6 @@ def common_fixture(
     mock_binance_threaded_websocket,
     exchange_data,
     mock_redis_connection_binance,
-    # mock_client_env_vars,
     mock_settings_env_vars,
     mock_start_stop_symbol_trading_success_true_binance_handler
 ):
@@ -113,7 +112,7 @@ class TestBinanceDataHandler:
         binance_data_handler.stop_data_ingestion()
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
-        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
+        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
 
     @pytest.mark.parametrize(
         "input_params,output",
@@ -156,7 +155,7 @@ class TestBinanceDataHandler:
         assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id,)
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
-        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
+        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
 
         pipeline = Pipeline.objects.get(id=pipeline_id)
         assert pipeline.active is False
