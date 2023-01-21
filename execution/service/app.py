@@ -174,6 +174,7 @@ def create_app():
             except BinanceAPIException as e:
                 bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
                 message = e.message
+                logging.warning(message)
                 return jsonify(Responses.API_ERROR(pipeline.symbol, message))
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))

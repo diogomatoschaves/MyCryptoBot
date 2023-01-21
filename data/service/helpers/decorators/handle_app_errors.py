@@ -53,16 +53,22 @@ def handle_app_errors(_func=None):
                 logging.info(e.message)
                 return jsonify(Responses.NAME_INVALID(e.message))
             except NameRequired as e:
+                logging.info(e.message)
                 return jsonify(Responses.NAME_REQUIRED(e.message))
             except ColorRequired as e:
+                logging.info(e.message)
                 return jsonify(Responses.COLOR_REQUIRED(e.message))
             except DataPipelineOngoing as e:
+                logging.info(e.message)
                 return jsonify(Responses.DATA_PIPELINE_ONGOING(e.message, e.pipeline_id))
             except DataPipelineDoesNotExist as e:
+                logging.info(e.message)
                 return jsonify(Responses.DATA_PIPELINE_DOES_NOT_EXIST(e.message))
             except LeverageInvalid as e:
+                logging.info(e.message)
                 return jsonify(Responses.LEVERAGE_INVALID(e.message))
             except PipelineStartFail as e:
+                logging.info(e.message)
                 return jsonify(Responses.PIPELINE_START_FAIL(e.message))
 
         return wrapper

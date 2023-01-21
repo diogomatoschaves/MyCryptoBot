@@ -87,6 +87,7 @@ def create_app():
         try:
             job = Job.fetch(job_id, connection=conn)
         except NoSuchJobError:
+            logging.info(f"Job {job_id} not found.")
             return jsonify(Responses.JOB_NOT_FOUND)
 
         if job.is_finished:
