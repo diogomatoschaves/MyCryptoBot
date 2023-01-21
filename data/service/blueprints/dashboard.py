@@ -179,32 +179,39 @@ def get_pipelines_metrics():
 
     def reduce_pipelines(accum, pipeline):
 
-        trades_metrics = convert_trades_to_dict(pipeline.trade_set.all().annotate(
-            duration=F('close_time') - F('open_time'),
-            winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
-            losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
-        ).aggregate(
-            Max('duration'),
-            Avg('duration'),
-            Count('id'),
-            Max('profit_loss'),
-            Min('profit_loss'),
-            Sum('winning_trade'),
-            Sum('losing_trade'),
-        ))
+        try:
+            trades_metrics = convert_trades_to_dict(pipeline.trade_set.all().annotate(
+                duration=F('close_time') - F('open_time'),
+                winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
+                losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
+            ).aggregate(
+                Max('duration'),
+                Avg('duration'),
+                Count('id'),
+                Max('profit_loss'),
+                Min('profit_loss'),
+                Sum('winning_trade'),
+                Sum('losing_trade'),
+            ))
 
-        win_rate = trades_metrics["winningTrades"] / trades_metrics["numberTrades"]
+            win_rate = trades_metrics["winningTrades"] / trades_metrics["numberTrades"]
 
-        return {
-            **accum,
-            str(pipeline.id): trades_metrics,
-            "totalPipelines": accum["totalPipelines"] + 1,
-            "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
-            "bestWinRate": {**pipeline.as_json(), "winRate": win_rate}
-            if win_rate > accum["bestWinRate"]["winRate"] else accum["bestWinRate"],
-            "mostTrades": {**pipeline.as_json(), "totalTrades": trades_metrics["numberTrades"]}
-            if trades_metrics["numberTrades"] > accum["mostTrades"]["totalTrades"] else accum["mostTrades"],
-        }
+            return {
+                **accum,
+                str(pipeline.id): trades_metrics,
+                "totalPipelines": accum["totalPipelines"] + 1,
+                "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
+                "bestWinRate": {**pipeline.as_json(), "winRate": win_rate}
+                if win_rate > accum["bestWinRate"]["winRate"] else accum["bestWinRate"],
+                "mostTrades": {**pipeline.as_json(), "totalTrades": trades_metrics["numberTrades"]}
+                if trades_metrics["numberTrades"] > accum["mostTrades"]["totalTrades"] else accum["mostTrades"],
+            }
+        except AttributeError:
+            return {
+                **accum,
+                "totalPipelines": accum["totalPipelines"] + 1,
+                "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
+            }
 
     pipelines = Pipeline.objects.all()
 
