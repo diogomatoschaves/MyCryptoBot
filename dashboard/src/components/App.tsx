@@ -264,7 +264,7 @@ class App extends Component<Props, State> {
                 })
 
                 this.setState(state => {
-                    const {id, ...pipelines} = state.pipelines
+                    const {[pipelineId]: _, ...pipelines} = state.pipelines
                     return {
                         pipelines: response.success ? pipelines : state.pipelines,
                         positions: response.success ? state.positions.reduce(
