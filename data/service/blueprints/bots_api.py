@@ -177,11 +177,13 @@ def stop_bot():
 
         header = json.loads(get_item_from_cache(cache, pipeline_id))
 
-        logging.info(header + f"Stopping data pipeline.")
+        logging.info(header + f"Stopping pipeline {pipeline_id}.")
 
         stop_instance(pipeline_id, header=header)
 
         pipeline = Pipeline.objects.get(id=pipeline_id)
+        pipeline.active = False
+        pipeline.save()
 
         return jsonify(Responses.DATA_PIPELINE_STOPPED(pipeline))
     except Pipeline.DoesNotExist:
