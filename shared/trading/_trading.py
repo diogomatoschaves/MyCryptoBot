@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 
 class Trader:
@@ -116,4 +117,4 @@ class Trader:
 
         current_balance = self._get_balances(kwargs.get("symbol", ""))[1]
 
-        logging.info(header + f"| {date} | Current Balance: {round(current_balance, 2)}")
+        logging.info(header + f"| {date if date else datetime.now()} | Current Balance: {round(current_balance, 2)}")
