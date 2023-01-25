@@ -155,9 +155,6 @@ class BinanceTrader(BinanceHandler, Trader):
 
             new_order = orders.pop(0)
 
-            # amount = sum([order.executed_qty for order in orders])
-            # price = sum([order.price * order.executed_qty for order in orders]) / amount if amount > 0 else 0
-
             new_trade = Trade.objects.create(
                 symbol_id=symbol,
                 open_price=new_order.price,

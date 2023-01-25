@@ -112,10 +112,10 @@ class BinanceFuturesTrader(BinanceTrader):
         **kwargs
     ):
 
-        factor = 1
+        units_factor = 1
         if "reducing" in kwargs:
             kwargs.update({"reduceOnly": True})
-            factor = 1.2
+            units_factor = 1.2
 
         units = self._convert_units(amount, units, symbol)
 
@@ -126,7 +126,7 @@ class BinanceFuturesTrader(BinanceTrader):
             side=order_side,
             type=order_type,
             newOrderRespType='RESULT',
-            quantity=units * factor,
+            quantity=units * units_factor,
             **kwargs
         )
 
@@ -134,9 +134,14 @@ class BinanceFuturesTrader(BinanceTrader):
 
         order = self._process_order(order, pipeline_id)
 
+        units = float(order["executed_qty"])
+
+        print(self.units)
+        print(order)
+
         factor = 1 if order_side == self.SIDE_SELL else -1
 
-        units = float(order["executed_qty"])
+        print(factor)
 
         self.current_balance[symbol] += factor * float(order['cummulative_quote_qty'])
         self.units[symbol] -= factor * units
@@ -164,7 +169,7 @@ class BinanceFuturesTrader(BinanceTrader):
             price=float(order["avgPrice"]),
             original_qty=float(order["origQty"]),
             executed_qty=float(order["executedQty"]),
-            cummulative_quote_qty=float(order["cumQty"]),
+            cummulative_quote_qty=float(order["cumQuote"]),
             status=order["status"],
             type=order["type"],
             side=order["side"],
