@@ -58,6 +58,7 @@ class BinanceTrader(BinanceHandler, Trader):
         position = "NEUTRAL" if initial_position == 0 else "LONG" if initial_position == 1 else "SHORT"
 
         logging.debug(header + f"Setting initial position {position}.")
+
         self._set_position(symbol, initial_position, previous_position=initial_position, **kwargs)
 
     def _set_position(self, symbol, position, **kwargs):
@@ -70,40 +71,38 @@ class BinanceTrader(BinanceHandler, Trader):
 
         new_trade = self._handle_trades(pipeline_id, symbol, previous_position, position)
 
-        if Position.objects.filter(pipeline_id=pipeline_id, symbol=symbol).exists():
+        if Position.objects.filter(pipeline_id=pipeline_id).exists():
             if position == 0:
                 Position.objects.filter(
                     pipeline_id=pipeline_id,
-                    symbol=symbol
                 ).update(
                     position=position,
                     open=False,
-                    close_time=datetime.now(tz=pytz.UTC),
+                    amount=None,
+                    buying_price=None,
+                    open_time=None,
                 )
             else:
                 if new_trade:
                     Position.objects.filter(
                         pipeline_id=pipeline_id,
-                        symbol=symbol
                     ).update(
                         position=position,
                         open=True,
                         open_time=datetime.now(tz=pytz.UTC),
-                        close_time=None,
                         buying_price=new_trade.open_price,
                         amount=new_trade.amount
                     )
         else:
-            if new_trade:
-                Position.objects.create(
-                    position=position,
-                    symbol_id=symbol,
-                    exchange_id=self.exchange,
-                    pipeline_id=pipeline_id,
-                    paper_trading=self.paper_trading,
-                    buying_price=new_trade.open_price,
-                    amount=new_trade.amount,
-                )
+            Position.objects.create(
+                position=position,
+                symbol_id=symbol,
+                exchange_id=self.exchange,
+                pipeline_id=pipeline_id,
+                paper_trading=self.paper_trading,
+                buying_price=new_trade.open_price if new_trade else None,
+                amount=new_trade.amount if new_trade else None,
+            )
 
     def _format_order(self, order, pipeline_id):
         raise NotImplementedError

@@ -49,6 +49,7 @@ class BinanceFuturesTrader(BinanceTrader):
         leverage=None,
         header='',
         initial_position=0,
+        pipeline_id=None,
         **kwargs
     ):
 
@@ -65,7 +66,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._get_symbol_info(symbol)
 
-        self._set_initial_position(symbol, initial_position, header, **kwargs)
+        self._set_initial_position(symbol, initial_position, header, pipeline_id=pipeline_id, **kwargs)
 
         self._set_initial_balance(symbol, equity, initial_position, header=header)
 
