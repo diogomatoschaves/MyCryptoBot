@@ -254,10 +254,10 @@ class Position(models.Model):
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE, null=True)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
-    buying_price = models.FloatField()
-    amount = models.FloatField()
+    buying_price = models.FloatField(null=True, blank=True)
+    amount = models.FloatField(null=True, blank=True)
     open = models.BooleanField(default=True, blank=True)
-    open_time = models.DateTimeField(auto_now_add=True)
+    open_time = models.DateTimeField(auto_now_add=True, null=True)
     close_time = models.DateTimeField(null=True, blank=True)
 
     def as_json(self):

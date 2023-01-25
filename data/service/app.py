@@ -33,7 +33,7 @@ cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
 def startup_task(app):
 
-    open_positions = Position.objects.filter(open=True)
+    open_positions = Position.objects.filter(pipeline__active=True)
 
     with app.app_context():
         access_token = create_access_token(identity='abc', expires_delta=False)
@@ -41,7 +41,6 @@ def startup_task(app):
         cache.set("bearer_token", bearer_token)
 
     for open_position in open_positions:
-
         start_symbol_trading(open_position.pipeline)
         open_position.pipeline.active = True
         open_position.pipeline.save()

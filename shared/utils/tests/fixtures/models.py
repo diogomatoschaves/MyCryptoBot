@@ -60,6 +60,36 @@ def create_pipeline(db, create_exchange, create_symbol):
 
 
 @pytest.fixture
+def create_pipeline_2(db, create_exchange, create_symbol):
+    return Pipeline.objects.create(
+        id=2,
+        color="purple",
+        name='Hello World',
+        symbol_id='BTCUSDT',
+        strategy='MovingAverage',
+        params='{"ma": 30}',
+        exchange_id='binance',
+        interval="1h",
+        active=True,
+        allocation=100,
+        leverage=10
+    )
+
+
+@pytest.fixture
+def create_inactive_pipeline(db, create_exchange, create_symbol):
+    return Pipeline.objects.create(
+        id=3,
+        symbol_id='BTCUSDT',
+        strategy='Momentum',
+        params="{}",
+        exchange_id='binance',
+        interval="1h",
+        active=False
+    )
+
+
+@pytest.fixture
 def create_orders(db, create_exchange, create_symbol, create_pipeline):
     order_1 = Orders.objects.create(
         order_id=randint(1, 1E9),
@@ -97,7 +127,7 @@ def create_orders(db, create_exchange, create_symbol, create_pipeline):
 
 
 @pytest.fixture
-def create_position(db, create_pipeline):
+def create_neutral_position(db, create_pipeline):
     return Position.objects.create(
         position=0,
         symbol_id="BTCUSDT",
@@ -111,31 +141,36 @@ def create_position(db, create_pipeline):
 
 
 @pytest.fixture
-def create_open_position(db, create_pipeline):
+def create_open_position(db, create_pipeline_2):
     return Position.objects.create(
         position=1,
         symbol_id="BTCUSDT",
         exchange_id='binance',
-        pipeline_id=1,
+        pipeline_id=2,
         paper_trading=True,
-        buying_price=0,
-        amount=0,
+        buying_price=1000,
+        amount=0.1,
         open=True,
     )
 
 
 @pytest.fixture
-def create_positions(db, create_position):
+def create_inactive_position(db, create_inactive_pipeline):
     return Position.objects.create(
-        position=0,
+        position=1,
         symbol_id="BTCUSDT",
         exchange_id='binance',
-        pipeline_id=1,
+        pipeline_id=3,
         paper_trading=True,
-        buying_price=0,
-        amount=0,
+        buying_price=10000,
+        amount=0.1,
         open=True,
     )
+
+
+@pytest.fixture
+def create_neutral_open_inactive_position(db, create_inactive_position, create_open_position, create_neutral_position):
+    return
 
 
 @pytest.fixture
@@ -148,19 +183,6 @@ def create_trade(db, create_exchange, create_symbol, create_pipeline):
         exchange_id='binance',
         mock=True,
         pipeline_id=1,
-    )
-
-
-@pytest.fixture
-def create_inactive_pipeline(db, create_exchange, create_symbol):
-    return Pipeline.objects.create(
-        id=3,
-        symbol_id='BTCUSDT',
-        strategy='Momentum',
-        params="{}",
-        exchange_id='binance',
-        interval="1h",
-        active=False
     )
 
 

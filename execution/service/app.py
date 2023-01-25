@@ -53,7 +53,7 @@ def get_binance_trader_instance(binance_account_type, paper_trading):
 
 
 def startup_task():
-    open_positions = Position.objects.filter(open=True)
+    open_positions = Position.objects.filter(pipeline__active=True)
 
     for open_position in open_positions:
 

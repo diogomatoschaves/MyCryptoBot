@@ -337,7 +337,7 @@ class TestExecutionService:
         client_with_open_positions,
         spy_start_pipeline_trade
     ):
-        spy_start_pipeline_trade.assert_called_once()
+        assert spy_start_pipeline_trade.call_count == 2
 
     def test_startup_task_no_open_positions(
         self,
