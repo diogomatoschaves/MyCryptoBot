@@ -52,7 +52,6 @@ class BinanceFuturesTrader(BinanceTrader):
         pipeline_id=None,
         **kwargs
     ):
-
         if symbol in self.symbols:
             raise SymbolAlreadyTraded(symbol)
 
@@ -91,9 +90,9 @@ class BinanceFuturesTrader(BinanceTrader):
             raise NoUnits
 
         if self.units[symbol] < 0:
-            self.buy_instrument(symbol, date, row, units=-3*self.units[symbol], header=header, reduceOnly=True, **kwargs)
+            self.buy_instrument(symbol, date, row, units=-self.units[symbol], header=header, reducing=True, **kwargs)
         else:
-            self.sell_instrument(symbol, date, row, units=3*self.units[symbol], header=header, reduceOnly=True, **kwargs)
+            self.sell_instrument(symbol, date, row, units=self.units[symbol], header=header, reducing=True, **kwargs)
 
         self._set_position(symbol, 0, previous_position=1, **kwargs)
 
@@ -113,6 +112,11 @@ class BinanceFuturesTrader(BinanceTrader):
         **kwargs
     ):
 
+        factor = 1
+        if "reducing" in kwargs:
+            kwargs.update({"reduceOnly": True})
+            factor = 1.2
+
         units = self._convert_units(amount, units, symbol)
 
         pipeline_id = kwargs["pipeline_id"] if "pipeline_id" in kwargs else None
@@ -122,7 +126,7 @@ class BinanceFuturesTrader(BinanceTrader):
             side=order_side,
             type=order_type,
             newOrderRespType='RESULT',
-            quantity=units,
+            quantity=units * factor,
             **kwargs
         )
 
