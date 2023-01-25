@@ -19,10 +19,14 @@ function PipelineButton(props: Props) {
   } = props
 
   return (
-      <Fragment>
+      <div style={styles.buttonDiv} className='flex-column'>
         {pipeline.active ? (
           <Button
-            onClick={() => stopPipeline(pipeline.id)}
+            onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation()
+                stopPipeline(pipeline.id)
+            }}
             style={styles.button}
             color={'red'}
             icon
@@ -34,19 +38,23 @@ function PipelineButton(props: Props) {
           </Button>
         ) : (
           <Button
-              onClick={() => startPipeline({
-                pipelineId: pipeline.id,
-                name: pipeline.name,
-                allocation: pipeline.allocation,
-                symbol: pipeline.symbol,
-                strategy: pipeline.strategy,
-                candleSize: pipeline.candleSize,
-                exchanges: pipeline.exchange,
-                params: pipeline.params,
-                paperTrading: pipeline.paperTrading,
-                color: pipeline.color,
-                leverage: pipeline.leverage,
-              })}
+              onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation()
+                  startPipeline({
+                      pipelineId: pipeline.id,
+                      name: pipeline.name,
+                      allocation: pipeline.allocation,
+                      symbol: pipeline.symbol,
+                      strategy: pipeline.strategy,
+                      candleSize: pipeline.candleSize,
+                      exchanges: pipeline.exchange,
+                      params: pipeline.params,
+                      paperTrading: pipeline.paperTrading,
+                      color: pipeline.color,
+                      leverage: pipeline.leverage,
+                  })
+              }}
               style={styles.button}
               color={'green'}
               icon
@@ -57,7 +65,7 @@ function PipelineButton(props: Props) {
             Start Bot
           </Button>
         )}
-      </Fragment>
+      </div>
   );
 }
 
@@ -65,10 +73,14 @@ export default PipelineButton;
 
 
 const styles = {
-  button: {
-    width: '80%'
-  },
-  icon: {
-    marginRight: '10px'
-  }
+    buttonDiv: {
+        width: '100%',
+        alignSelf: 'center'
+    },
+    button: {
+        width: '80%'
+    },
+    icon: {
+        marginRight: '10px'
+    }
 }
