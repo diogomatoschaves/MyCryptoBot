@@ -222,9 +222,10 @@ class App extends Component<Props, State> {
                 })
 
                 this.setState(state => {
+                    const {[pipelineParams.pipelineId as any]: _, ...pipelines} = state.pipelines
                     return {
                         pipelines: response.success ? {
-                            ...state.pipelines,
+                            ...pipelines,
                             [response.pipeline.id]: organizePipeline(response.pipeline)
                         } : state.pipelines
                     }
@@ -243,12 +244,14 @@ class App extends Component<Props, State> {
                     success: response.success,
                 })
 
-                this.setState(state => ({
-                    pipelines: response.success ? {
-                        ...state.pipelines,
-                        [pipelineId]: organizePipeline(response.pipeline)
-                    } : state.pipelines
-                }))
+                this.setState(state => {
+                    return {
+                        pipelines: response.success ? {
+                            ...state.pipelines,
+                            [pipelineId]: organizePipeline(response.pipeline)
+                        } : state.pipelines
+                    }
+                })
             })
             .catch(() => {})
     }
