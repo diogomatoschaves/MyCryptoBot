@@ -42,6 +42,8 @@ function PipelineItem(props: Props) {
 
     const [open, setOpen] = useState(false)
 
+    if (!pipeline) return <div></div>
+
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
     const liveStr = pipeline.paperTrading ? "Test" : "Live"
 
