@@ -184,7 +184,7 @@ class TestBinanceFuturesTrader:
         signal,
         test_mock_setup,
         create_pipeline,
-            create_neutral_position,
+        create_neutral_position,
         futures_create_order_spy,
     ):
         ###########################################################################################
@@ -194,9 +194,10 @@ class TestBinanceFuturesTrader:
         print(f"initial_position: {initial_position}, signal: {signal}")
 
         pipeline_id = 1
+        equity = 1000
 
         binance_trader = BinanceFuturesTrader()
-        binance_trader.start_symbol_trading(self.symbol, 1000, pipeline_id=pipeline_id)
+        binance_trader.start_symbol_trading(self.symbol, equity, pipeline_id=pipeline_id)
         binance_trader.trade(self.symbol, initial_position, amount="all", pipeline_id=pipeline_id)
 
         ###########################################################################################
@@ -206,6 +207,13 @@ class TestBinanceFuturesTrader:
         binance_trader.trade(self.symbol, signal, amount="all", pipeline_id=pipeline_id)
 
         assert binance_trader._get_position(self.symbol) == signal
+
+        # factor = abs(abs(signal) - 1)
+        factor = (signal - 1) * -1
+
+        assert binance_trader.units[self.symbol] == float(futures_order_creation["origQty"]) * signal
+        assert binance_trader.initial_balance[self.symbol] == equity
+        assert binance_trader.current_balance[self.symbol] == equity * factor
 
         number_orders = abs(initial_position - signal)
 
