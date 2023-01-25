@@ -147,12 +147,11 @@ def start_bot():
     response = start_stop_symbol_trading(payload, 'start')
 
     if not response["success"]:
-        logging.warning(response["message"])
-
         pipeline.active = False
+        pipeline.open_time = None
         pipeline.save()
 
-        raise PipelineStartFail(response)
+        raise PipelineStartFail(response["message"])
 
     start_symbol_trading(pipeline)
 
