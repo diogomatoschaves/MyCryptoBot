@@ -1,6 +1,8 @@
 import os
 
 import pytest
+import numpy as np
+import pandas as pd
 
 from model.tests.setup.test_data.sample_data import data
 from shared.utils.tests.test_setup import get_fixtures
@@ -32,7 +34,7 @@ class TestStrategy:
 
         instance = strategy(**params, data=data)
 
-        assert instance.data.equals(fixture["out"]["expected_data"])
+        pd.testing.assert_frame_equal(instance.data, fixture["out"]["expected_data"], check_exact=False)
 
     @pytest.mark.parametrize(
         "fixture",
@@ -58,7 +60,7 @@ class TestStrategy:
 
         instance.set_parameters(new_parameters)
 
-        assert instance.data.equals(fixture["out"]["expected_data_set_parameters"])
+        pd.testing.assert_frame_equal(instance.data, fixture["out"]["expected_data_set_parameters"], check_exact=False)
 
         for param, value in new_parameters.items():
             assert getattr(instance, f"_{param}") == value

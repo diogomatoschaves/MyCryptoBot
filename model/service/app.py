@@ -12,7 +12,7 @@ from rq.job import Job
 
 from model.service.helpers.decorators.handle_app_errors import handle_app_errors
 from model.service.helpers.responses import Responses
-from model.service.helpers.signal_generator import get_signal
+from model.service.helpers.signal_generator import send_signal
 from model.strategies.properties import STRATEGIES
 from model.worker import conn
 from shared.utils.decorators import handle_db_connection_error
@@ -64,7 +64,7 @@ def create_app():
         header = json.loads(get_item_from_cache(cache, pipeline_id))
 
         job = q.enqueue_call(
-            get_signal, (
+            send_signal, (
                 pipeline_id,
                 pipeline.symbol,
                 pipeline.candle_size,
