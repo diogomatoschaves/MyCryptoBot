@@ -1,4 +1,4 @@
-import {Table} from "semantic-ui-react";
+import {Message, Table} from "semantic-ui-react";
 import TradeRow from "./TradeRow";
 import {Decimals, PipelinesObject, TradesObject, UpdateTrades} from "../types";
 import {Wrapper} from "../styledComponents";
@@ -126,6 +126,13 @@ const TradesTable = (props: Props) => {
           })}
         </Table.Body>
       </Table>
+      {sortedTrades.length == 0 && (
+          <Message>
+            <Message.Header>
+              No trades to show yet.
+            </Message.Header>
+          </Message>
+      )}
       {bottomed && <h1>Fetching more list items...</h1>}
     </Wrapper>
   )

@@ -118,7 +118,7 @@ def handle_pipelines(page):
             Pipeline.objects.filter(id=pipeline_id).delete()
             response.update({"message": "The trading bot was deleted", "success": True})
         else:
-            response.update({"message": "The requested trading bot was not found", "success": False})
+            response.update({"message": "The requested trading bot was not found", "success": True})
 
     return jsonify(response)
 

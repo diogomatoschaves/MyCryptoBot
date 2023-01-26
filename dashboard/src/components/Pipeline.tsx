@@ -6,6 +6,7 @@ import styled from "styled-components";
 import PipelineButton from "./PipelineButton";
 import {timeFormatterDate} from "../utils/helpers";
 import {useState} from "react";
+import PipelineDeleteButton from "./PipelineDeleteButton";
 
 
 const StyledColumn = styled(Grid.Column)`
@@ -40,6 +41,8 @@ function PipelineItem(props: Props) {
     } = props
 
     const [open, setOpen] = useState(false)
+
+    if (!pipeline) return <div></div>
 
     const activeProps = pipeline.active ? {status: "Running", color: GREEN} : {status: "Stopped", color: RED}
     const liveStr = pipeline.paperTrading ? "Test" : "Live"
@@ -86,57 +89,13 @@ function PipelineItem(props: Props) {
                         </Grid.Column>
                     </Grid.Column>
                     <StyledColumn width={6} className="flex-row">
-                        <Modal
-                            onClose={() => setOpen(false)}
-                            onOpen={() => setOpen(true)}
+                        <PipelineDeleteButton
+                            pipeline={pipeline}
+                            deletePipeline={deletePipeline}
+                            stopPipeline={stopPipeline}
                             open={open}
-                            size='small'
-                            trigger={
-                                <div style={styles.buttonDiv} className='flex-column'>
-                                    <Button
-                                        icon
-                                        style={{width: '80%'}}
-                                    >
-                                        <span style={{marginRight: '10px', marginLeft: '-10px'}}>
-                                            <Icon name={'delete'}/>
-                                        </span>
-                                        Delete
-                                    </Button>
-                                </div>
-                            }
-                        >
-                            <Header icon>
-                                <Icon name='delete' />
-                                Delete trading bot
-                            </Header>
-                            <Modal.Content>
-                                <p>
-                                    Are you sure you want to delete this trading bot?
-                                </p>
-                            </Modal.Content>
-                            <Modal.Actions>
-                                <Button
-                                    color='red'
-                                    inverted
-                                    onClick={() => setOpen(false)}
-                                >
-                                    <Icon name='remove'/> No
-                                </Button>
-                                <Button
-                                    color='green'
-                                    inverted
-                                    onClick={async () => {
-                                        if (pipeline.active) {
-                                            await stopPipeline(pipeline.id)
-                                        }
-                                        deletePipeline(pipeline.id)
-                                        setOpen(false)
-                                    }}
-                                >
-                                    <Icon name='checkmark' /> Yes
-                                </Button>
-                            </Modal.Actions>
-                        </Modal>
+                            setOpen={setOpen}
+                        />
                     </StyledColumn>
                 </StyledRow>
                 <StyledRow>
@@ -165,13 +124,11 @@ function PipelineItem(props: Props) {
                         </Grid.Column>
                     </Grid.Column>
                     <StyledColumn width={6} className="flex-row">
-                        <div style={styles.buttonDiv} className='flex-column'>
-                            <PipelineButton
-                                pipeline={pipeline}
-                                startPipeline={startPipeline}
-                                stopPipeline={stopPipeline}
-                            />
-                        </div>
+                        <PipelineButton
+                            pipeline={pipeline}
+                            startPipeline={startPipeline}
+                            stopPipeline={stopPipeline}
+                        />
                     </StyledColumn>
                 </StyledRow>
                 {lastRow && (
@@ -224,8 +181,4 @@ const styles = {
         overflow: 'hidden',
         textOverflow: 'ellipsis'
     },
-    buttonDiv: {
-        width: '100%',
-        alignSelf: 'center'
-    }
 }
