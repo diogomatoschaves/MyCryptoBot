@@ -169,15 +169,15 @@ def create_app():
             bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
             return_value = handle_order_execution_errors(
-                pipeline=pipeline,
+                symbol=pipeline.symbol,
                 trader_instance=bt,
-                parameters=parameters
+                header=parameters.header
             )(
                 lambda: bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
             )()
 
             if return_value:
-                return return_value
+                return jsonify(return_value)
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))
 

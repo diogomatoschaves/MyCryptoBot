@@ -9,9 +9,10 @@ from binance.exceptions import BinanceAPIException
 
 from execution.exchanges.binance import BinanceTrader
 from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits
+from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
 from shared.exchanges import BinanceHandler
 from shared.trading import Trader
-from execution.service.helpers.decorators import binance_error_handler
+from execution.service.helpers.decorators import binance_error_handler, handle_order_execution_errors
 from shared.utils.decorators.failed_connection import retry_failed_connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -58,10 +59,17 @@ class BinanceFuturesTrader(BinanceTrader):
         self.equity[symbol] = equity
 
         if isinstance(leverage, int):
-            try:
-                self.futures_change_leverage(symbol=symbol, leverage=leverage)
-            except BinanceAPIException as e:
-                logging.warning(e)
+
+            return_value = handle_order_execution_errors(
+                symbol=symbol,
+                trader_instance=self,
+                header=header
+            )(
+                lambda: self.futures_change_leverage(symbol=symbol, leverage=leverage)
+            )()
+
+            if return_value and "message" in return_value:
+                raise LeverageSettingFail(return_value["message"])
 
         self._get_symbol_info(symbol)
 
@@ -135,12 +143,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         units = float(order["executed_qty"])
 
-        print(self.units)
-        print(order)
-
         factor = 1 if order_side == self.SIDE_SELL else -1
-
-        print(factor)
 
         self.current_balance[symbol] += factor * float(order['cummulative_quote_qty'])
         self.units[symbol] -= factor * units
