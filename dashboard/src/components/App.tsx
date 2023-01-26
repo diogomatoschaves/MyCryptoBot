@@ -440,6 +440,7 @@ class App extends Component<Props, State> {
                                   candleSizeOptions={candleSizeOptions}
                                   exchangeOptions={exchangeOptions}
                                   pipelines={pipelines}
+                                  positions={positions}
                                   strategies={strategies}
                                   balances={balances}
                                   startPipeline={this.startPipeline}
