@@ -7,3 +7,4 @@ from execution.service.helpers.exceptions.pipeline_not_active import PipelineNot
 from execution.service.helpers.exceptions.symbol_already_traded import SymbolAlreadyTraded
 from execution.service.helpers.exceptions.symbol_not_being_traded import SymbolNotBeingTraded
 from execution.service.helpers.exceptions.no_units import NoUnits
+from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
