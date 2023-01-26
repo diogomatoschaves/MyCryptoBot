@@ -1,4 +1,4 @@
-from model.service.helpers.signal_generator import get_signal, trigger_order
+from model.service.helpers.signal_generator import send_signal, trigger_order
 from model.tests.setup.fixtures.internal_modules import *
 from model.tests.setup.test_data.sample_data import sample_structured_data
 from model.strategies.properties import STRATEGIES
@@ -61,7 +61,7 @@ class TestSignalGeneration:
             ),
         ],
     )
-    def test_get_signal(
+    def test_send_signal(
         self,
         strategy,
         side_effect,
@@ -95,7 +95,7 @@ class TestSignalGeneration:
             "bearer_token": "abc"
         }
 
-        res = get_signal(**params)
+        res = send_signal(**params)
 
         assert res == expected_value
 

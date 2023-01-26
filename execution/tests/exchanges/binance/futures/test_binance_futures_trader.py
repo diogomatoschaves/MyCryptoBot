@@ -208,7 +208,6 @@ class TestBinanceFuturesTrader:
 
         assert binance_trader._get_position(self.symbol) == signal
 
-        # factor = abs(abs(signal) - 1)
         factor = (signal - 1) * -1
 
         assert binance_trader.units[self.symbol] == float(futures_order_creation["origQty"]) * signal
