@@ -6,7 +6,7 @@ import {
     StartPipeline,
     StopPipeline,
     UpdateMessage,
-    DeletePipeline, BalanceObj, PipelinesMetrics, PipelinesObject, Decimals, TradesObject, UpdateTrades
+    DeletePipeline, BalanceObj, PipelinesMetrics, PipelinesObject, Decimals, TradesObject, UpdateTrades, Position
 } from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
@@ -22,6 +22,7 @@ interface Props {
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
     pipelines: PipelinesObject;
+    positions: Position[];
     balances: BalanceObj;
     startPipeline: StartPipeline;
     stopPipeline: StopPipeline;
@@ -91,6 +92,7 @@ function PipelinePanel(props: Props) {
         symbolsOptions,
         strategiesOptions,
         pipelines,
+        positions,
         balances,
         strategies,
         candleSizeOptions,
@@ -178,6 +180,8 @@ function PipelinePanel(props: Props) {
                     <NewPipeline
                         strategies={strategies}
                         balances={balances}
+                        pipelines={pipelines}
+                        positions={positions}
                         symbolsOptions={symbolsOptions}
                         strategiesOptions={strategiesOptions}
                         candleSizeOptions={candleSizeOptions}
