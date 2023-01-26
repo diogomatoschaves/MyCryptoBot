@@ -84,7 +84,7 @@ class IterativeBacktester(BacktestMixin, Trader):
 
             self.positions_lst.append(self._get_position(self.symbol))
 
-    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header=''):
+    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
 
         price = self.get_values(date, row)
 
@@ -98,7 +98,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.trades += 1
         print(f"{date} |  Buying {round(units, 4)} {self.symbol} for {round(price, 5)}")
 
-    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header=''):
+    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
 
         price = self.get_values(date, row)
 
@@ -112,7 +112,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.trades += 1
         print(f"{date} |  Selling {round(units, 4)} {self.symbol} for {round(price, 5)}")
 
-    def close_pos(self, symbol, date=None, row=None, header=''):
+    def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 
         print(75 * "-")
         print("{} |  +++ CLOSING FINAL POSITION +++".format(date))

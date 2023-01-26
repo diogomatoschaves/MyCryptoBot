@@ -77,9 +77,7 @@ def app_with_open_positions(
     mock_jwt_required,
     mock_redis_connection,
     exchange_data,
-    create_pipeline,
-    create_inactive_pipeline,
-    create_positions,
+    create_neutral_open_inactive_position,
     mock_start_pipeline_trade,
     spy_start_pipeline_trade
 ):

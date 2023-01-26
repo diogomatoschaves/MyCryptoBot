@@ -121,7 +121,7 @@ class TestBinanceDataHandler:
                 {
                     "symbol": "BTCUSDT",
                     "candle_size": "1h",
-                    "pipeline_id": 1
+                    "pipeline_id": 2
                 },
                 {
                     "expected_number_objs_structured": 1,
@@ -140,7 +140,6 @@ class TestBinanceDataHandler:
         mock_trigger_signal_fail,
         mock_redis_connection_external_requests,
         trigger_signal_spy,
-        create_pipeline,
         create_open_position
     ):
 

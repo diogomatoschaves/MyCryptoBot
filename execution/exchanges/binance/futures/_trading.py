@@ -49,9 +49,9 @@ class BinanceFuturesTrader(BinanceTrader):
         leverage=None,
         header='',
         initial_position=0,
+        pipeline_id=None,
         **kwargs
     ):
-
         if symbol in self.symbols:
             raise SymbolAlreadyTraded(symbol)
 
@@ -65,7 +65,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._get_symbol_info(symbol)
 
-        self._set_initial_position(symbol, initial_position, header, **kwargs)
+        self._set_initial_position(symbol, initial_position, header, pipeline_id=pipeline_id, **kwargs)
 
         self._set_initial_balance(symbol, equity, initial_position, header=header)
 
@@ -90,16 +90,15 @@ class BinanceFuturesTrader(BinanceTrader):
             raise NoUnits
 
         if self.units[symbol] < 0:
-            self.buy_instrument(symbol, date, row, units=-3*self.units[symbol], header=header, reduceOnly=True, **kwargs)
+            self.buy_instrument(symbol, date, row, units=-self.units[symbol], header=header, reducing=True, **kwargs)
         else:
-            self.sell_instrument(symbol, date, row, units=3*self.units[symbol], header=header, reduceOnly=True, **kwargs)
+            self.sell_instrument(symbol, date, row, units=self.units[symbol], header=header, reducing=True, **kwargs)
 
         self._set_position(symbol, 0, previous_position=1, **kwargs)
 
         self.print_trading_results(header, date, symbol=symbol)
 
     @retry_failed_connection(num_times=2)
-    @binance_error_handler
     def _execute_order(
         self,
         symbol,
@@ -112,6 +111,11 @@ class BinanceFuturesTrader(BinanceTrader):
         **kwargs
     ):
 
+        units_factor = 1
+        if "reducing" in kwargs:
+            kwargs.update({"reduceOnly": True})
+            units_factor = 1.2
+
         units = self._convert_units(amount, units, symbol)
 
         pipeline_id = kwargs["pipeline_id"] if "pipeline_id" in kwargs else None
@@ -121,7 +125,7 @@ class BinanceFuturesTrader(BinanceTrader):
             side=order_side,
             type=order_type,
             newOrderRespType='RESULT',
-            quantity=units,
+            quantity=units * units_factor,
             **kwargs
         )
 
@@ -129,9 +133,14 @@ class BinanceFuturesTrader(BinanceTrader):
 
         order = self._process_order(order, pipeline_id)
 
+        units = float(order["executed_qty"])
+
+        print(self.units)
+        print(order)
+
         factor = 1 if order_side == self.SIDE_SELL else -1
 
-        units = float(order["executed_qty"])
+        print(factor)
 
         self.current_balance[symbol] += factor * float(order['cummulative_quote_qty'])
         self.units[symbol] -= factor * units
@@ -159,7 +168,7 @@ class BinanceFuturesTrader(BinanceTrader):
             price=float(order["avgPrice"]),
             original_qty=float(order["origQty"]),
             executed_qty=float(order["executedQty"]),
-            cummulative_quote_qty=float(order["cumQty"]),
+            cummulative_quote_qty=float(order["cumQuote"]),
             status=order["status"],
             type=order["type"],
             side=order["side"],
