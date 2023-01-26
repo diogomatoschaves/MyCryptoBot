@@ -143,12 +143,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         units = float(order["executed_qty"])
 
-        print(self.units)
-        print(order)
-
         factor = 1 if order_side == self.SIDE_SELL else -1
-
-        print(factor)
 
         self.current_balance[symbol] += factor * float(order['cummulative_quote_qty'])
         self.units[symbol] -= factor * units
