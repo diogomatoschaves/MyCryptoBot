@@ -99,7 +99,6 @@ class BinanceFuturesTrader(BinanceTrader):
         self.print_trading_results(header, date, symbol=symbol)
 
     @retry_failed_connection(num_times=2)
-    @binance_error_handler
     def _execute_order(
         self,
         symbol,
