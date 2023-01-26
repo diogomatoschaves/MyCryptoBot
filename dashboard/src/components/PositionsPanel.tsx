@@ -1,5 +1,5 @@
 import React from 'react';
-import {Table} from "semantic-ui-react";
+import {Message, Table} from "semantic-ui-react";
 import StyledSegment from "../styledComponents/StyledSegment";
 import {Decimals, PipelinesObject, Position} from "../types";
 import PositionRow from "./PositionRow";
@@ -48,6 +48,13 @@ const PositionsPanel = (props: Props) => {
             })}
           </Table.Body>
         </Table>
+          {positions.length == 0 && (
+              <Message style={{width: "100%"}}>
+                <Message.Header>
+                  There are no open positions.
+                </Message.Header>
+              </Message>
+          )}
       </StyledSegment>
   );
 };

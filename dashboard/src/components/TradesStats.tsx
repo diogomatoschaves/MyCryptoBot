@@ -11,9 +11,21 @@ interface Props {
 
 const TradesStats = (props: Props) => {
 
-  if (!props.tradesMetrics) return <div></div>
+  let { tradesMetrics } = props
 
-  const { winningTrades, numberTrades, maxTradeDuration, avgTradeDuration, bestTrade, worstTrade } = props.tradesMetrics;
+  if (!tradesMetrics) {
+    tradesMetrics = {
+      winningTrades: 0,
+      numberTrades: 0,
+      maxTradeDuration: 0,
+      avgTradeDuration: 0,
+      bestTrade: 0,
+      worstTrade: 0,
+      losingTrades: 0
+    }
+  }
+
+  const { winningTrades, numberTrades, maxTradeDuration, avgTradeDuration, bestTrade, worstTrade } = tradesMetrics;
   const { style } = props
 
   const winRate = winningTrades / numberTrades * 100

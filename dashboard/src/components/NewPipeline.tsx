@@ -1,6 +1,6 @@
-import React, {useReducer, useState, Fragment} from 'react';
+import React, {useReducer, useState, Fragment, useEffect, useRef} from 'react';
 import {Button, Dropdown, Grid, Header, Icon, Input, Modal, Popup, Form} from "semantic-ui-react";
-import {BalanceObj, DropdownOptions, StartPipeline, UpdateMessage} from "../types";
+import {BalanceObj, DropdownOptions, PipelinesObject, Position, StartPipeline, UpdateMessage} from "../types";
 import {validateParams, validatePipelineCreation} from "../utils/helpers";
 import MessageComponent from "./Message";
 import {COLORS_NAMES} from "../utils/constants";
@@ -24,7 +24,9 @@ interface Props {
   startPipeline: StartPipeline;
   updateMessage: UpdateMessage;
   strategies: any;
-  balances: BalanceObj
+  balances: BalanceObj;
+  pipelines: PipelinesObject;
+  positions: Position[];
 }
 
 
@@ -45,6 +47,38 @@ const leverageOptions = Array.from({length: 20}, (x, i) => ({
 }))
 
 
+const UPDATE_BALANCE = "UPDATE_BALANCE"
+
+const availableBalanceReducer = (state: any, action: any) => {
+  switch (action.type) {
+    case UPDATE_BALANCE:
+      return {
+        ...state,
+        ...action.positions.reduce((accum: any, position: Position) => {
+          if (position.position === 0) {
+            const pipeline = action.pipelines[position.pipelineId]
+
+            if (!pipeline) return accum
+
+            const pipelineType = pipeline.paperTrading ? "test" : "live"
+            return {
+              ...accum,
+              [pipelineType]: accum[pipelineType] - (pipeline.allocation / pipeline.leverage)
+            }
+          } else {
+            return accum
+          }
+        }, {
+              live: action.balances.live.USDT.availableBalance,
+              test: action.balances.test.USDT.availableBalance
+            }),
+      }
+    default:
+      throw new Error();
+  }
+}
+
+
 const NewPipeline = (props: Props) => {
 
   const {
@@ -54,7 +88,9 @@ const NewPipeline = (props: Props) => {
     exchangeOptions,
     startPipeline,
     strategies,
-    balances
+    balances,
+    positions,
+    pipelines
   } = props
 
   const [open, setOpen] = useState(false)
@@ -75,7 +111,38 @@ const NewPipeline = (props: Props) => {
     secondaryMessage
   }, dispatch] = useReducer(modalReducer, initialState);
 
-  const availableBalance = liveTrading ? balances.live.USDT.availableBalance : balances.test.USDT.availableBalance
+  const [availableBalance, updateBalance] = useReducer(availableBalanceReducer, {
+    live: balances.live.USDT.availableBalance,
+    test: balances.test.USDT.availableBalance
+  })
+
+  const previous = useRef({positions, balances}).current;
+
+  useEffect(() => {
+    updateBalance({
+      type: UPDATE_BALANCE,
+      positions,
+      pipelines,
+      balances
+    })
+  }, [])
+
+  useEffect(() => {
+    if (previous.balances !== balances || previous.positions !== positions) {
+      updateBalance({
+        type: UPDATE_BALANCE,
+        positions,
+        pipelines,
+        balances
+      })
+    }
+    return () => {
+      previous.positions = positions
+      previous.balances = balances
+    };
+  }, [positions, balances])
+
+  const balance = availableBalance[liveTrading ? "live" : "test"]
 
   const chosenStrategy = strategy && strategies[strategiesOptions[strategy - 1].text]
 
@@ -222,7 +289,7 @@ const NewPipeline = (props: Props) => {
                   style={{width: '80%'}}
                   value={allocation}
                   placeholder={
-                    `Avbl: ${availableBalance.toFixed(1)} USDT Max: ${(availableBalance * leverage).toFixed(1)} USDT)
+                    `Avbl: ${balance.toFixed(1)} USDT Max: ${(balance * leverage).toFixed(1)} USDT
                   `}
                 />
               </Form.Field>
