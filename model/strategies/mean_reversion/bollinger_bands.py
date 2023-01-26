@@ -38,7 +38,7 @@ class BollingerBands(StrategyMixin):
         data["upper"] = data["sma"] + data[self.price_col].rolling(self._ma).std() * self._sd
         data["lower"] = data["sma"] - data[self.price_col].rolling(self._ma).std() * self._sd
 
-        self.data = data
+        self.data = self._calculate_positions(data)
 
     def _calculate_positions(self, data):
         data["distance"] = data[self.price_col] - data["sma"]
@@ -57,22 +57,4 @@ class BollingerBands(StrategyMixin):
         if row is None:
             row = self.data.iloc[-1]
 
-        position = self._get_position(self.symbol)
-
-        if position == 0: # when neutral
-            if row[self.price_col] < row["lower"]:  # signal to go long
-                return 1
-            elif row[self.price_col] > row["upper"]:  # signal to go Short
-                return -1
-        elif position == 1:  # when long
-            if row[self.price_col] > row["sma"]:
-                if row[self.price_col] > row["upper"]:  # signal to go short
-                    return -1
-                else:
-                    return 0
-        elif position == -1: # when short
-            if row[self.price_col] < row["sma"]:
-                if row[self.price_col] < row["lower"]:  # signal to go long
-                    return 1
-                else:
-                    return 0
+        return int(row["position"])

@@ -43,7 +43,7 @@ class Trader:
         existing_units = -self._get_units(symbol)
 
         if position == -1:
-            self.buy_instrument(symbol, date, row, units=existing_units, header=header, **kwargs)  # if short position, go neutral first
+            self.buy_instrument(symbol, date, row, units=existing_units, header=header, reducing=True, **kwargs)
 
         if units:
             self.buy_instrument(symbol, date, row, units=units, header=header, **kwargs)
@@ -58,7 +58,7 @@ class Trader:
         existing_units = self._get_units(symbol)
 
         if position == 1:
-            self.sell_instrument(symbol, date, row, units=existing_units, header=header, **kwargs)  # if long position, go neutral first
+            self.sell_instrument(symbol, date, row, units=existing_units, header=header, reducing=True, **kwargs)
         if units:
             self.sell_instrument(symbol, date, row, units=units, header=header, **kwargs)
         elif amount:
@@ -85,9 +85,9 @@ class Trader:
             units = self.units[symbol] if isinstance(self.units, dict) else self.units
 
             if position == -1:
-                self.buy_instrument(symbol, date, row, units=-units, header=header, **kwargs)
+                self.buy_instrument(symbol, date, row, units=-units, header=header, reducing=True, **kwargs)
             elif position == 1:
-                self.sell_instrument(symbol, date, row, units=units, header=header, **kwargs)
+                self.sell_instrument(symbol, date, row, units=units, header=header, reducing=True, **kwargs)
 
             self._set_position(symbol, 0, previous_position=position, **kwargs)
 

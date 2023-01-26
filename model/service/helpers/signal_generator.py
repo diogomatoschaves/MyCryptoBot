@@ -20,7 +20,7 @@ from database.model.models import StructuredData
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
 
-def get_signal(
+def send_signal(
     pipeline_id,
     symbol,
     candle_size,

@@ -476,7 +476,7 @@ class TestDataService:
         client_with_open_position,
         spy_start_symbol_trading
     ):
-        spy_start_symbol_trading.assert_called_once()
+        assert spy_start_symbol_trading.call_count == 2
 
     def test_startup_task_no_positions(
         self,

@@ -41,7 +41,7 @@ class BinanceMarginTrader(BinanceTrader):
         self.conn_key = None
         self.exchange = "binance"
 
-    def start_symbol_trading(self, symbol, header='', **kwargs):
+    def start_symbol_trading(self, symbol, header='', pipeline_id=None, **kwargs):
 
         if symbol in self.symbols:
             return True
@@ -57,7 +57,7 @@ class BinanceMarginTrader(BinanceTrader):
         if not trading_account_exists:
             return False
 
-        self._set_initial_position(symbol, header)
+        self._set_initial_position(symbol, header, pipeline_id=pipeline_id)
 
         self._update_account_status(symbol, header=header)
 
@@ -170,10 +170,10 @@ class BinanceMarginTrader(BinanceTrader):
             pipeline_id=pipeline_id
         )
 
-    def _set_initial_position(self, symbol, header=''):
+    def _set_initial_position(self, symbol, header='', **kwargs):
         # TODO: Get this value from database?
         logging.debug(header + f"Setting initial position NEUTRAL.")
-        self._set_position(symbol, 0)
+        self._set_position(symbol, 0, **kwargs)
 
     @retry_failed_connection(num_times=3)
     def _get_trading_fees(self, symbol, header=''):

@@ -131,7 +131,7 @@ def get_positions(page):
 
     response = {}
 
-    positions = Position.objects.filter(open=True).order_by('id')
+    positions = Position.objects.filter(pipeline__active=True).order_by('id')
 
     paginator = Paginator(positions, 100)
 
