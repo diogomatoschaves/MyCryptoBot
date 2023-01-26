@@ -108,7 +108,7 @@ Responses = RESPONSES(
     API_ERROR=lambda symbol, message: {
         "code": ReturnCodes.API_ERROR,
         "success": False,
-        "message": f"{symbol}: {message}. Closing pipeline.",
+        "message": message,
     },
     SYMBOL_ALREADY_TRADED=lambda message: {
         "code": ReturnCodes.SYMBOL_ALREADY_TRADED,

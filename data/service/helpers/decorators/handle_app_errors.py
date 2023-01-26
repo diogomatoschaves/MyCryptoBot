@@ -4,8 +4,6 @@ import logging
 from flask import jsonify
 
 from data.service.helpers.exceptions import *
-from data.service.helpers.exceptions.data_pipeline_does_not_exist import DataPipelineDoesNotExist
-from data.service.helpers.exceptions.data_pipeline_ongoing import DataPipelineOngoing
 from shared.utils.exceptions import SymbolInvalid
 
 
@@ -64,6 +62,9 @@ def handle_app_errors(_func=None):
             except DataPipelineDoesNotExist as e:
                 logging.info(e.message)
                 return jsonify(Responses.DATA_PIPELINE_DOES_NOT_EXIST(e.message))
+            except DataPipelineCouldNotBeStopped as e:
+                logging.info(e.message)
+                return jsonify(Responses.DATA_PIPELINE_COULD_NOT_BE_STOPPED(e.message))
             except LeverageInvalid as e:
                 logging.info(e.message)
                 return jsonify(Responses.LEVERAGE_INVALID(e.message))
