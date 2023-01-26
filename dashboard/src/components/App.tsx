@@ -42,7 +42,7 @@ import Dashboard from "./Dashboard";
 import {Header} from "semantic-ui-react";
 
 
-const AppDiv = styled.div`
+const AppDiv: any = styled.div`
   text-align: center;
   width: 100vw;
   height: 100vh;
@@ -58,7 +58,7 @@ const MenuColumn = styled.div`
     width: 25vw;
 `
 
-const AppColumn = styled.div`
+const AppColumn: any = styled.div`
     position: absolute;
     left: 25vw;
     bottom: 0;
@@ -66,7 +66,8 @@ const AppColumn = styled.div`
     right: 0;
     width: 75vw;
     height: 100vh;
-    overflow: hidden
+    overflow: hidden;
+    overflow-x: ${(props: any) => props.overflowX ? props.overflowX : 'hidden'};
 `
 
 interface State {
@@ -399,10 +400,11 @@ class App extends Component<Props, State> {
             pipelinesMetrics,
         } = this.state
 
-
         const { decimals, menuProperties, location, removeToken, updateMessage } = this.props
 
         const menuOption = menuProperties.find(option => location.pathname.includes(option.code))
+
+        console.log(menuOption)
 
         return (
             <AppDiv className="flex-row">
@@ -414,8 +416,13 @@ class App extends Component<Props, State> {
                       updateMessage={updateMessage}
                     />
                 </MenuColumn>
-                <AppColumn>
-                    <StyledSegment basic paddingTop="10px" padding="0" className="flex-column">
+                <AppColumn overflowX={menuOption && menuOption.code === '/positions' && "scroll"} >
+                    <StyledSegment
+                        basic
+                        paddingTop="10px"
+                        padding="0"
+                        className="flex-column"
+                    >
                         {menuOption && (
                           <Header size={'large'} dividing style={{height: '40px'}}>
                             <span style={{marginRight: 10}}>{menuOption.emoji}</span>

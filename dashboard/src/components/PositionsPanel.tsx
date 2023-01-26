@@ -17,8 +17,8 @@ const PositionsPanel = (props: Props) => {
   const { positions, currentPrices, pipelines, decimals } = props
 
   return (
-      <StyledSegment basic className="flex-column">
-        <Table basic='very' striped>
+      <StyledSegment padding={'40px'} basic className="flex-column">
+        <Table basic='very' striped compact textAlign={'center'}>
           <Table.Header>
             <Table.Row>
               <Table.HeaderCell width={2}>Trading Bot</Table.HeaderCell>
@@ -31,7 +31,7 @@ const PositionsPanel = (props: Props) => {
               <Table.HeaderCell>Entry Price</Table.HeaderCell>
               <Table.HeaderCell>Mark Price</Table.HeaderCell>
               <Table.HeaderCell>Leverage</Table.HeaderCell>
-              <Table.HeaderCell>Net Profit</Table.HeaderCell>
+              <Table.HeaderCell>PnL (ROI%)</Table.HeaderCell>
               <Table.HeaderCell>Exchange</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
