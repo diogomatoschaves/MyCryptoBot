@@ -163,6 +163,27 @@ class TestBinanceDataHandler:
         assert position.open is False
         assert position.position == 0
 
+    def test_binance_data_handler_stop_pipeline_fail(
+        self,
+        common_fixture,
+        mock_trigger_signal_successfully,
+        mock_start_stop_symbol_trading_success_false_binance_data_handler,
+        mock_redis_connection_external_requests,
+    ):
+
+        input_params = {
+            "symbol": "BTCUSDT",
+            "candle_size": "1h",
+            "pipeline_id": 2
+        }
+
+        with pytest.raises(Exception) as exception:
+            binance_data_handler = BinanceDataHandler(**input_params)
+            binance_data_handler.start_data_ingestion()
+            binance_data_handler.stop_data_ingestion()
+
+        assert exception.type == DataPipelineCouldNotBeStopped
+
     @pytest.mark.parametrize(
         "input_value,exception",
         [

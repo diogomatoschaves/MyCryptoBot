@@ -4,7 +4,7 @@ import pytest
 from django.db import InterfaceError
 
 import data
-from data.service.helpers.exceptions import PipelineStartFail
+from data.service.helpers.exceptions import PipelineStartFail, DataPipelineCouldNotBeStopped
 from data.sources.binance import BinanceDataHandler
 from data.tests.setup.test_data.sample_data import mock_websocket_raw_data_5m, mock_websocket_raw_data_1h, STRATEGIES
 from database.model.models import Pipeline
@@ -168,11 +168,34 @@ def raise_pipeline_start_fail(pipeline_id, start_or_stop):
 
 
 @pytest.fixture
+def mock_start_stop_symbol_trading_success_false_binance_data_handler(mocker):
+    return mocker.patch.object(
+        data.sources.binance._binance,
+        'start_stop_symbol_trading',
+        lambda pipeline_id, start_or_stop: {"success": False, "message": ''},
+    )
+
+
+@pytest.fixture
 def mock_start_stop_symbol_trading_success_false(mocker):
     return mocker.patch.object(
         data.service.blueprints.bots_api,
         'start_stop_symbol_trading',
         raise_pipeline_start_fail,
+    )
+
+
+def raise_pipeline_stop_fail(pipeline_id, header):
+    raise DataPipelineCouldNotBeStopped("APIError(code=-1021): "
+                                        "Timestamp for this request is outside of the recvWindow.")
+
+
+@pytest.fixture
+def mock_stop_instance_raise_exception(mocker):
+    return mocker.patch.object(
+        data.service.blueprints.bots_api,
+        'stop_instance',
+        raise_pipeline_stop_fail,
     )
 
 

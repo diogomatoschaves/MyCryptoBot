@@ -22,7 +22,8 @@ RESPONSES = namedtuple(
         "NAME_REQUIRED",
         "COLOR_REQUIRED",
         "LEVERAGE_INVALID",
-        "PIPELINE_START_FAIL"
+        "PIPELINE_START_FAIL",
+        "DATA_PIPELINE_COULD_NOT_BE_STOPPED"
     ]
 )
 
@@ -46,7 +47,8 @@ ReturnCodes = RESPONSES(
     NAME_REQUIRED="NAME_REQUIRED",
     COLOR_REQUIRED="COLOR_REQUIRED",
     LEVERAGE_INVALID="LEVERAGE_INVALID",
-    PIPELINE_START_FAIL="PIPELINE_START_FAIL"
+    PIPELINE_START_FAIL="PIPELINE_START_FAIL",
+    DATA_PIPELINE_COULD_NOT_BE_STOPPED="DATA_PIPELINE_COULD_NOT_BE_STOPPED"
 )
 
 
@@ -62,6 +64,8 @@ Responses = RESPONSES(
                                             "success": True, "pipeline": pipeline.as_json()},
     DATA_PIPELINE_DOES_NOT_EXIST=lambda message: {"code": ReturnCodes.DATA_PIPELINE_DOES_NOT_EXIST,
                                                   "message": message, "success": False},
+    DATA_PIPELINE_COULD_NOT_BE_STOPPED=lambda message: {"code": ReturnCodes.DATA_PIPELINE_COULD_NOT_BE_STOPPED,
+                                                        "message": message, "success": False},
     SYMBOL_REQUIRED=lambda message: {"code": ReturnCodes.SYMBOL_REQUIRED,
                                      "message": message, "success": False},
     SYMBOL_INVALID=lambda message: {"code": ReturnCodes.SYMBOL_INVALID,

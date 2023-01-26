@@ -150,13 +150,6 @@ class TestDataService:
         message,
         client,
     ):
-        """
-        GIVEN some input params
-        WHEN one input_parameter is missing
-        THEN the corresponding response will be sent
-
-        """
-
         res = client.put(f'{API_PREFIX}/start_bot', json=input_params)
 
         assert res.json == getattr(Responses, response)(message)
@@ -260,13 +253,6 @@ class TestDataService:
         get_message,
         client,
     ):
-        """
-        GIVEN some input params
-        WHEN one input_parameter is invalid
-        THEN the corresponding response will be sent
-
-        """
-
         res = client.put(f'{API_PREFIX}/start_bot', json=input_params)
 
         assert res.json == getattr(Responses, response)(get_message(input_params))
@@ -299,13 +285,6 @@ class TestDataService:
         client,
         create_pipeline,
     ):
-        """
-        GIVEN some input params
-        WHEN one pipeline job is present
-        THEN the corresponding response will be sent
-
-        """
-
         res = client.put(f'{API_PREFIX}/start_bot', json=params)
 
         assert res.json == getattr(Responses, response)('Data pipeline 1 is already ongoing.', 1)
@@ -342,13 +321,6 @@ class TestDataService:
         mock_executor_submit,
         binance_handler_instances_spy_start_bot,
     ):
-        """
-        GIVEN some input params
-        WHEN everything works as expected
-        THEN the corresponding response will be sent and the pipeline is started
-
-        """
-
         res = client.put(f'{API_PREFIX}/start_bot', json=params)
 
         pipeline = Pipeline.objects.last()
@@ -386,12 +358,6 @@ class TestDataService:
         mock_start_stop_symbol_trading_success_false,
         mock_binance_handler_start_data_ingestion,
     ):
-        """
-        GIVEN some input params
-        WHEN everything works as expected
-        THEN the corresponding response will be sent and the pipeline is started
-
-        """
 
         res = client.put(f'{API_PREFIX}/start_bot', json=params)
 
@@ -423,13 +389,6 @@ class TestDataService:
         binance_handler_instances_spy_stop_bot,
         create_pipeline
     ):
-        """
-        GIVEN some input params
-        WHEN everything works as expected
-        THEN the corresponding response will be sent and the pipeline is started
-
-        """
-
         assert len(binance_handler_instances_spy_stop_bot) == 1
 
         res = client.put(f'{API_PREFIX}/stop_bot', json=params)
@@ -460,16 +419,35 @@ class TestDataService:
         response,
         client,
     ):
-        """
-        GIVEN some input params
-        WHEN everything works as expected
-        THEN the corresponding response will be sent and the pipeline is started
-
-        """
-
         res = client.put(f'{API_PREFIX}/stop_bot', json=params)
 
         assert res.json == getattr(Responses, response)(f'Data pipeline {params["pipelineId"]} does not exist.')
+
+    @pytest.mark.parametrize(
+        "params,response",
+        [
+            pytest.param(
+                {
+                    "pipelineId": 1
+                },
+                "DATA_PIPELINE_COULD_NOT_BE_STOPPED",
+                id="DATA_PIPELINE_COULD_NOT_BE_STOPPED",
+            ),
+        ],
+    )
+    def test_stop_bot_data_pipeline_could_not_be_stopped(
+        self,
+        params,
+        response,
+        client,
+        mock_stop_instance_raise_exception
+    ):
+        res = client.put(f'{API_PREFIX}/stop_bot', json=params)
+
+        assert res.json == getattr(Responses, response)(
+            'Data pipeline could not be stopped. APIError(code=-1021): '
+            'Timestamp for this request is outside of the recvWindow.'
+        )
 
     def test_startup_task_existing_positions(
         self,

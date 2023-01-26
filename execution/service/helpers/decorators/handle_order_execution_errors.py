@@ -2,10 +2,9 @@ import functools
 import logging
 
 from binance.exceptions import BinanceAPIException
-from flask import jsonify
 
 
-def handle_order_execution_errors(pipeline, trader_instance, parameters, num_times=3):
+def handle_order_execution_errors(symbol, trader_instance, header, num_times=3):
 
     def decorator(func):
 
@@ -23,14 +22,14 @@ def handle_order_execution_errors(pipeline, trader_instance, parameters, num_tim
 
                     logging.warning(e)
 
-                    trader_instance.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
+                    trader_instance.stop_symbol_trading(symbol=symbol, header=header)
 
                     message = e.message
                     logging.warning(message)
 
                     from execution.service.helpers.responses import Responses
 
-                    return jsonify(Responses.API_ERROR(pipeline.symbol, message))
+                    return Responses.API_ERROR(symbol, message)
 
         return wrapper
     return decorator

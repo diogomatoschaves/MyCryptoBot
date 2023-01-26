@@ -41,6 +41,9 @@ def handle_app_errors(_func=None):
             except SignalInvalid as e:
                 logging.info(e.message)
                 return jsonify(Responses.SIGNAL_INVALID(e.message))
+            except LeverageSettingFail as e:
+                logging.info(e.message)
+                return jsonify(Responses.LEVERAGE_SETTING_FAILURE(e.message))
 
         return wrapper
 

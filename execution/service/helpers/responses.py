@@ -18,7 +18,8 @@ RESPONSES = namedtuple(
         "EQUITY_REQUIRED",
         "API_ERROR",
         "SYMBOL_ALREADY_TRADED",
-        "SYMBOL_NOT_BEING_TRADED"
+        "SYMBOL_NOT_BEING_TRADED",
+        "LEVERAGE_SETTING_FAILURE"
     ]
 )
 
@@ -39,6 +40,7 @@ ReturnCodes = RESPONSES(
     API_ERROR="API_ERROR",
     SYMBOL_ALREADY_TRADED="SYMBOL_ALREADY_TRADED",
     SYMBOL_NOT_BEING_TRADED="SYMBOL_NOT_BEING_TRADED",
+    LEVERAGE_SETTING_FAILURE="LEVERAGE_SETTING_FAILURE"
 )
 
 
@@ -106,7 +108,7 @@ Responses = RESPONSES(
     API_ERROR=lambda symbol, message: {
         "code": ReturnCodes.API_ERROR,
         "success": False,
-        "message": f"{symbol}: {message}. Closing pipeline.",
+        "message": message,
     },
     SYMBOL_ALREADY_TRADED=lambda message: {
         "code": ReturnCodes.SYMBOL_ALREADY_TRADED,
@@ -115,6 +117,11 @@ Responses = RESPONSES(
     },
     SYMBOL_NOT_BEING_TRADED=lambda message: {
         "code": ReturnCodes.SYMBOL_NOT_BEING_TRADED,
+        "success": False,
+        "message":  message
+    },
+    LEVERAGE_SETTING_FAILURE=lambda message: {
+        "code": ReturnCodes.LEVERAGE_SETTING_FAILURE,
         "success": False,
         "message":  message
     },

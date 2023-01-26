@@ -25,8 +25,9 @@ const PositionsPanel = (props: Props) => {
               <Table.HeaderCell>Mode</Table.HeaderCell>
               <Table.HeaderCell>Symbol</Table.HeaderCell>
               <Table.HeaderCell>Open since</Table.HeaderCell>
-              <Table.HeaderCell>Position</Table.HeaderCell>
-              <Table.HeaderCell>Amount</Table.HeaderCell>
+              <Table.HeaderCell>Side</Table.HeaderCell>
+              <Table.HeaderCell>Size</Table.HeaderCell>
+              <Table.HeaderCell>Units</Table.HeaderCell>
               <Table.HeaderCell>Entry Price</Table.HeaderCell>
               <Table.HeaderCell>Mark Price</Table.HeaderCell>
               <Table.HeaderCell>Leverage</Table.HeaderCell>

@@ -8,7 +8,7 @@ from binance import ThreadedWebsocketManager
 
 import shared.exchanges.binance.constants as const
 from data.service.external_requests import start_stop_symbol_trading
-from data.service.helpers.exceptions import CandleSizeInvalid
+from data.service.helpers.exceptions import CandleSizeInvalid, DataPipelineCouldNotBeStopped
 from data.sources import trigger_signal
 from data.sources.binance.extract import extract_data
 from data.sources.binance.load import load_data
@@ -127,7 +127,9 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         response = start_stop_symbol_trading({"pipeline_id": self.pipeline_id}, 'stop')
 
-        logging.info(response["message"])
+        if not response["success"]:
+            logging.info(response["message"])
+            raise DataPipelineCouldNotBeStopped(response["message"])
 
         Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
         Position.objects.filter(pipeline_id=self.pipeline_id).update(open=False, position=0)
