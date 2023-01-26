@@ -42,11 +42,12 @@ function TradeRow(props: Props) {
 
   const duration = timeFormatterDate(trade.openTime, trade.closeTime && trade.closeTime)
 
-  return (
+    return (
         <Table.Row key={index} >
             <Table.Cell style={styles.defaultCell}>
               {pipeline && (
-                <Label ribbon color={pipeline.color as any}>{pipeline.name}</Label>
+                  // @ts-ignore
+                  <Label ribbon color={pipeline.color as any}><span style={styles.ribbon}>{pipeline.name}</span></Label>
               )}
             </Table.Cell>
           <Table.Cell style={styles.defaultCell}>
@@ -93,5 +94,12 @@ const styles = {
     quantityCell: {
       // color: TEAL,
       fontWeight: '500',
+    },
+    ribbon: {
+        display: 'inline-block',
+        maxWidth: '80px',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
     }
 }
