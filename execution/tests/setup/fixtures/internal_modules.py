@@ -4,7 +4,8 @@ import pytest
 from binance.exceptions import BinanceAPIException
 
 import execution
-from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded
+from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded, LeverageSettingFail
+
 
 
 class MockBinanceTrader:
@@ -13,12 +14,14 @@ class MockBinanceTrader:
         raise_error_trade=False,
         raise_error_start_stop=False,
         raise_symbol_not_being_traded=False,
-        raise_symbol_already_traded=False
+        raise_symbol_already_traded=False,
+        raise_leverage_setting_failure=False
     ):
         self.raise_error_trade = raise_error_trade
         self.raise_error_start_stop = raise_error_start_stop
         self.raise_symbol_not_being_traded = raise_symbol_not_being_traded
         self.raise_symbol_already_traded = raise_symbol_already_traded
+        self.raise_leverage_setting_failure = raise_leverage_setting_failure
 
     def start_symbol_trading(self, symbol, header='', **kwargs):
         if self.raise_error_start_stop:
@@ -29,6 +32,8 @@ class MockBinanceTrader:
             )
         elif self.raise_symbol_already_traded:
             raise SymbolAlreadyTraded(symbol)
+        elif self.raise_leverage_setting_failure:
+            raise LeverageSettingFail("")
 
     def stop_symbol_trading(self, symbol, header='', **kwargs):
         if self.raise_error_start_stop:
@@ -106,6 +111,11 @@ def mock_binance_futures_trader_raise_exception_trade(mocker):
 @pytest.fixture
 def mock_binance_futures_trader_raise_exception_start_stop(mocker):
     return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader(raise_error_start_stop=True))
+
+
+@pytest.fixture
+def mock_binance_futures_trader_raise_leverage_setting_fail(mocker):
+    return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader(raise_leverage_setting_failure=True))
 
 
 @pytest.fixture

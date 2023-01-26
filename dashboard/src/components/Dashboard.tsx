@@ -215,7 +215,7 @@ function Dashboard(props: Props) {
                     </Grid.Column>
                     <Grid.Column>
                       <Grid.Column floated='left' style={styles.positionsHeader}>
-                        Exposure
+                        Total Size
                       </Grid.Column>
                       <Grid.Column floated='right' style={styles.positionsColumn} >
                         {totalEquityPositions.toFixed(1)} USDT

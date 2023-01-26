@@ -327,10 +327,18 @@ class TestExecutionService:
         mock_binance_futures_trader_raise_exception_start_stop,
         client,
     ):
-
         res = client.post(f"{route}", json=params)
 
         assert res.json == expected_value
+
+    def test_failed_leverage_setting(
+        self,
+        mock_binance_futures_trader_raise_leverage_setting_fail,
+        client,
+    ):
+        res = client.post(f"start_symbol_trading", json={"pipeline_id": 1})
+
+        assert res.json == Responses.LEVERAGE_SETTING_FAILURE("Failed to set leverage. ")
 
     def test_startup_task_with_open_positions(
         self,

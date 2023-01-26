@@ -49,6 +49,7 @@ function PositionRow(props: Props) {
         <Table.Cell style={{fontWeight: 600, color: DARK_YELLOW}}>{position.symbol}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{age}</Table.Cell>
         <Table.Cell style={{color, fontWeight: '600'}}>{positionSide}</Table.Cell>
+        <Table.Cell style={{...styles.defaultCell, color}}>{(Number(position.amount) * markPrice).toFixed(quoteDecimal)} USDT</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{Number(position.amount).toFixed(baseDecimal)}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{Number(position.price).toFixed(quoteDecimal)}</Table.Cell>
         <Table.Cell style={styles.defaultCell}>{markPrice ? markPrice.toFixed(quoteDecimal) : '-'}</Table.Cell>
