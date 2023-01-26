@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required
 
-from execution.service.helpers.decorators import binance_error_handler, handle_app_errors
+from execution.service.helpers.decorators import binance_error_handler, handle_app_errors, handle_order_execution_errors
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_signal, extract_and_validate, get_header
@@ -146,7 +146,6 @@ def create_app():
 
     @app.route('/execute_order', methods=['POST'])
     @handle_app_errors
-    @binance_error_handler
     @jwt_required()
     @handle_db_connection_error
     def execute_order():
@@ -169,13 +168,16 @@ def create_app():
 
             bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
 
-            try:
-                bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
-            except BinanceAPIException as e:
-                bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
-                message = e.message
-                logging.warning(message)
-                return jsonify(Responses.API_ERROR(pipeline.symbol, message))
+            return_value = handle_order_execution_errors(
+                pipeline=pipeline,
+                trader_instance=bt,
+                parameters=parameters
+            )(
+                lambda: bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
+            )()
+
+            if return_value:
+                return return_value
 
         return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))
 
