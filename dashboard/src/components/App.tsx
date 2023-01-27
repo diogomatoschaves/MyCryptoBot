@@ -184,7 +184,7 @@ class App extends Component<Props, State> {
 
         const { symbols } = this.state
 
-        if (prevState.symbols !== symbols) {
+        if (prevState.symbols.length !== symbols.length) {
             this.getCurrentPrices()
         }
 
@@ -198,7 +198,7 @@ class App extends Component<Props, State> {
 
             if (pathname.includes('/dashboard')) {
                 this.getAccountBalance()
-
+                this.getCurrentPrices()
                 this.getPricesInterval = setInterval(() => {
                     this.getCurrentPrices()
                 }, 10 * 1000)
@@ -206,7 +206,6 @@ class App extends Component<Props, State> {
             } else if (pathname.includes('/trades')){
                 this.updateTrades()
                 this.getCurrentPrices()
-
                 this.getTradesInterval = setInterval(() => {
                     this.updateTrades()
                 }, 20 * 1000)
@@ -222,7 +221,6 @@ class App extends Component<Props, State> {
                 this.getPricesInterval = setInterval(() => {
                     this.getCurrentPrices()
                 }, 10 * 1000)
-
                 this.getPositionsInterval = setInterval(() => {
                     this.updatePositions()
                 }, 30 * 1000)
