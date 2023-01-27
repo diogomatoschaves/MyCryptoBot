@@ -133,16 +133,15 @@ def create_app():
 
         pipeline, parameters = extract_and_validate(request_data)
 
+        bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
+
         if not pipeline.active:
+            bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
             raise PipelineNotActive(pipeline.id)
 
-        if pipeline.exchange == 'binance':
+        bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
 
-            bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
-
-            bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
-
-            return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
+        return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
 
     @app.route('/execute_order', methods=['POST'])
     @handle_app_errors
