@@ -6,7 +6,6 @@ class FakeBinanceClient:
         pass
 
     def futures_exchange_info(self):
-        print('this was called')
         return {"symbols": [{"symbol": "BTCUSDT"}]}
 
 

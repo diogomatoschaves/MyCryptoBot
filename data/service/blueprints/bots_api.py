@@ -37,10 +37,11 @@ binance_client = BinanceHandler()
 
 def initialize_data_collection(pipeline, header):
 
-    data_handler = DataHandler(pipeline, header=header)
-
     global binance_instances
+
+    data_handler = DataHandler(pipeline, header=header)
     binance_instances.append(data_handler.binance_handler)
+    data_handler.binance_handler.start_data_ingestion()
 
 
 def reduce_instances(instances, instance, pipeline_id, header):
