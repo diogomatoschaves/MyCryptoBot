@@ -102,7 +102,7 @@ const TradesTable = (props: Props) => {
             <Table.HeaderCell>Opened On</Table.HeaderCell>
             <Table.HeaderCell>Duration</Table.HeaderCell>
             <Table.HeaderCell>Side</Table.HeaderCell>
-            <Table.HeaderCell>Amount</Table.HeaderCell>
+            <Table.HeaderCell>Units</Table.HeaderCell>
             <Table.HeaderCell>Leverage</Table.HeaderCell>
             <Table.HeaderCell>Entry Price</Table.HeaderCell>
             <Table.HeaderCell>Exit Price</Table.HeaderCell>
