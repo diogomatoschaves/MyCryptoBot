@@ -181,7 +181,7 @@ class App extends Component<Props, State> {
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
 
-        const { symbols } = this.state
+        const { symbols, trades } = this.state
 
         if (prevState.symbols.length !== symbols.length) {
             this.getCurrentPrices()
@@ -224,6 +224,10 @@ class App extends Component<Props, State> {
                     this.updatePositions()
                 }, 30 * 1000)
             }
+        }
+
+        if (prevState.trades !== trades) {
+            this.updatePipelinesMetrics()
         }
     }
 
@@ -269,6 +273,8 @@ class App extends Component<Props, State> {
                         } : state.pipelines
                     }
                 })
+
+                this.updateTrades()
             })
             .catch(() => {})
     }

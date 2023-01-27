@@ -46,7 +46,7 @@ function TradeRow(props: Props) {
         <Table.Row key={index} >
             <Table.Cell style={styles.defaultCell}>
                 {/*@ts-ignore*/}
-              <Label ribbon color={trade.pipelineColor as any}><span style={styles.ribbon}>{trade.pipelineName}</span></Label>
+              <Label color={trade.pipelineColor as any}><span style={styles.ribbon}>{trade.pipelineName}</span></Label>
             </Table.Cell>
             <Table.Cell style={styles.defaultCell}>
                 <Label basic color='blue'>{trade.mock ? "test" : "live"}</Label>
