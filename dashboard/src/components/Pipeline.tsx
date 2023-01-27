@@ -1,6 +1,6 @@
-import {DeletePipeline, Pipeline, StartPipeline, StopPipeline} from "../types";
-import {Button, Grid, Header, Icon, Label, Modal, Segment} from "semantic-ui-react";
-import {GREEN, RED} from "../utils/constants";
+import {DeletePipeline, Pipeline, Position, StartPipeline, StopPipeline} from "../types";
+import {Grid, Icon, Label, Segment} from "semantic-ui-react";
+import {BLUE, DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
 import PipelineButton from "./PipelineButton";
@@ -14,7 +14,9 @@ const StyledColumn = styled(Grid.Column)`
 `
 
 const StyledRow = styled(Grid.Row)`
-    & .ui.grid.row {
+    padding-top: 8px !important;
+    padding-bottom: 7px !important;
+    & .ui.grid > .row {
         padding: 0.9rem;
     }
 `
@@ -26,6 +28,7 @@ interface Props {
     deletePipeline: DeletePipeline
     segmentStyle?: Object
     lastRow?: boolean
+    position?: Position
 }
 
 
@@ -33,6 +36,7 @@ function PipelineItem(props: Props) {
 
     const {
         pipeline,
+        position,
         startPipeline,
         stopPipeline,
         deletePipeline,
@@ -62,13 +66,32 @@ function PipelineItem(props: Props) {
             <Ribbon color={pipeline.color} ribbon>
                 {pipeline.name}
             </Ribbon>
+            {position && (
+                //@ts-ignore
+                <Label size="large" attached='top right'>
+                    <span
+                        style={{color: position.position === -1 ? RED : position.position === 1 ? GREEN : DARK_YELLOW}}
+                    >
+                        {position.position === -1 ? "SHORT" : position.position === 1 ? "LONG" : "NEUTRAL"}
+                    </span>
+                </Label>
+            )}
+            <Label size="large" attached='bottom left' style={{color: BLUE}}>
+                {liveStr}
+            </Label>
+            <Label size="large" attached='bottom right'>
+                <span>
+                    <span style={{color: activeProps.color, fontSize: '0.7em'}}><Icon name={'circle'}/></span>
+                    <span >{activeProps.status}</span>
+                </span>
+            </Label>
             <Grid columns={4}>
                 <StyledRow>
                     <Grid.Column width={3}>
                         <Grid.Column style={styles.header}>
                             Trading Pair
                         </Grid.Column>
-                        <Grid.Column style={styles.rightColumn} >
+                        <Grid.Column style={{...styles.rightColumn, color: DARK_YELLOW}} >
                             {pipeline.symbol}
                         </Grid.Column>
                     </Grid.Column>
@@ -82,7 +105,7 @@ function PipelineItem(props: Props) {
                     </Grid.Column>
                     <Grid.Column width={3}>
                         <Grid.Column floated='left' style={styles.header}>
-                            Time running {!pipeline.active && '(All time)'}
+                            Active since
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.rightColumn} >
                             {age}
@@ -117,7 +140,7 @@ function PipelineItem(props: Props) {
                     </Grid.Column>
                     <Grid.Column width={3}>
                         <Grid.Column floated='left' style={styles.header}>
-                            Profit / Loss {!pipeline.active && '(All time)'}
+                            PnL {!pipeline.active && '(All time)'}
                         </Grid.Column>
                         <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
                             {pnl}
@@ -134,16 +157,19 @@ function PipelineItem(props: Props) {
                 {lastRow && (
                   <StyledRow>
                     <Grid.Column width={3}>
-                        <Grid.Column floated='right' style={{...styles.rightColumn, fontSize: '1.2em'}} >
-                            <span >
-                                <span style={{color: activeProps.color, fontSize: '0.7em'}}><Icon name={'circle'}/></span>
-                                <span >{activeProps.status}</span>
-                            </span>
+                        <Grid.Column floated='left' style={styles.header}>
+                            Allocated Equity
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={styles.rightColumn} >
+                            {`${pipeline.allocation} USDT`}
                         </Grid.Column>
                     </Grid.Column>
                     <Grid.Column width={4}>
-                        <Grid.Column floated='right' style={{...styles.rightColumn, fontSize: '1.2em'}} >
-                            <Label color='blue' basic>{liveStr}</Label>
+                        <Grid.Column floated='left' style={styles.header}>
+                            Leverage
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={styles.rightColumn} >
+                            {pipeline.leverage}
                         </Grid.Column>
                     </Grid.Column>
                     <Grid.Column width={3}>
@@ -168,12 +194,13 @@ export default PipelineItem;
 const styles = {
     segment: {
         width: '100%',
-        padding: '30px 30px 20px',
+        padding: '55px 30px 55px',
         marginBottom: '40px',
         // border: 'none'
     },
     header: {
         color: 'rgb(130, 130, 130)',
+        fontSize: '0.9em'
     },
     rightColumn: {
         fontWeight: '600',
