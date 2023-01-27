@@ -229,7 +229,7 @@ class App extends Component<Props, State> {
     }
 
     startPipeline: StartPipeline = (pipelineParams: PipelineParams) => {
-        startBot(pipelineParams)
+        return startBot(pipelineParams)
             .then(response => {
 
                 const { updateMessage } = this.props
@@ -275,7 +275,7 @@ class App extends Component<Props, State> {
     }
 
     deletePipeline: DeletePipeline = (pipelineId) => {
-        deleteBot(pipelineId)
+        return deleteBot(pipelineId)
             .then(response => {
                 const { updateMessage } = this.props
 
