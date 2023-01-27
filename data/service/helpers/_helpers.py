@@ -179,3 +179,18 @@ def convert_trades_to_dict(trades_metrics):
         'winningTrades': trades_metrics['winning_trade__sum'],
         'losingTrades': trades_metrics['losing_trade__sum'],
     }
+
+
+def convert_client_request(data):
+    return {
+        "name": data["name"],
+        "allocation": data["allocation"],
+        "symbol_id": data["symbol"],
+        "strategy": data["strategy"],
+        "interval": data["candleSize"],
+        "exchange_id": data["exchanges"],
+        "params": json.dumps(data["params"]),
+        "paper_trading": data["paperTrading"],
+        "color": data["color"],
+        "leverage": data["leverage"]
+    }

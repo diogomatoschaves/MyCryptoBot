@@ -1,6 +1,7 @@
 import {
+  BalanceObj,
   Decimals,
-  DeletePipeline,
+  DeletePipeline, DropdownOptions, EditPipeline,
   PipelinesObject, Position,
   StartPipeline,
   StopPipeline,
@@ -43,11 +44,18 @@ interface Props {
   pipelineMetrics: TradesMetrics
   startPipeline: StartPipeline
   stopPipeline: StopPipeline
+  editPipeline: EditPipeline
   deletePipeline: DeletePipeline
   decimals: Decimals
   trades: TradesObject
   currentPrices: Object
   updateTrades: UpdateTrades
+  symbolsOptions: DropdownOptions[];
+  strategiesOptions: DropdownOptions[];
+  candleSizeOptions: DropdownOptions[];
+  exchangeOptions: DropdownOptions[];
+  strategies: any;
+  balances: BalanceObj;
 }
 
 
@@ -59,12 +67,19 @@ function PipelineDetail(props: Props) {
     pipelineId,
     startPipeline,
     stopPipeline,
+    editPipeline,
     deletePipeline,
     pipelineMetrics,
     decimals,
     trades,
     currentPrices,
-    updateTrades
+    updateTrades,
+    symbolsOptions,
+    strategiesOptions,
+    candleSizeOptions,
+    exchangeOptions,
+    strategies,
+    balances,
   } = props
 
   const pipeline = pipelines[pipelineId]
@@ -75,8 +90,17 @@ function PipelineDetail(props: Props) {
         <StatsContainer>
           <Grid.Column width={10}>
             <PipelineItem
+              strategies={strategies}
+              balances={balances}
+              pipelines={pipelines}
+              positions={positions}
+              symbolsOptions={symbolsOptions}
+              strategiesOptions={strategiesOptions}
+              candleSizeOptions={candleSizeOptions}
+              exchangeOptions={exchangeOptions}
               pipeline={pipeline}
               startPipeline={startPipeline}
+              editPipeline={editPipeline}
               stopPipeline={stopPipeline}
               deletePipeline={deletePipeline}
               position={positions.find((position) => String(position.pipelineId) === pipelineId)}
