@@ -173,6 +173,22 @@ export const stopBot = async (requestData) => {
   return await response.json()
 }
 
+export const editBot = async (requestData, pipelineId) => {
+
+  const url = `${urlPrefix}/pipelines?pipelineId=${pipelineId}`
+
+  const response = await fetch(url, {
+    method: 'PUT',
+    body: JSON.stringify(requestData),
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
+    }
+  })
+
+  return await response.json()
+}
+
 export const deleteBot = async (pipelineId) => {
 
   const url = `${urlPrefix}/pipelines?pipelineId=${pipelineId}`

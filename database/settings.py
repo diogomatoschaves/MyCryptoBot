@@ -4,6 +4,9 @@ import os
 import dj_database_url
 
 
+hello = 'hello'
+
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 if os.getenv("TEST", False):

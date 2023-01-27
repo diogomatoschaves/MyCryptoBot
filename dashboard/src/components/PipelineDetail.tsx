@@ -1,7 +1,8 @@
 import {
+  BalanceObj,
   Decimals,
-  DeletePipeline,
-  PipelinesObject,
+  DeletePipeline, DropdownOptions, EditPipeline,
+  PipelinesObject, Position,
   StartPipeline,
   StopPipeline,
   TradesMetrics, TradesObject, UpdateTrades
@@ -23,7 +24,7 @@ const Container = styled.div`
 
 const TradesContainer = styled(Grid.Row)`
   width: 100%;
-  height: 70vh;
+  height: 80vh;
   padding-top: 0 !important;
   margin-top: 10px;
 `
@@ -33,19 +34,28 @@ const StatsContainer = styled(Grid.Row)`
   height: 30%;
   minHeight: 300px;
   position: relative;
+  padding-bottom: 0 !important;
 `
 
 interface Props {
   pipelines: PipelinesObject
+  positions: Position[]
   pipelineId: string
   pipelineMetrics: TradesMetrics
   startPipeline: StartPipeline
   stopPipeline: StopPipeline
+  editPipeline: EditPipeline
   deletePipeline: DeletePipeline
   decimals: Decimals
   trades: TradesObject
   currentPrices: Object
   updateTrades: UpdateTrades
+  symbolsOptions: DropdownOptions[];
+  strategiesOptions: DropdownOptions[];
+  candleSizeOptions: DropdownOptions[];
+  exchangeOptions: DropdownOptions[];
+  strategies: any;
+  balances: BalanceObj;
 }
 
 
@@ -53,15 +63,23 @@ function PipelineDetail(props: Props) {
 
   const {
     pipelines,
+    positions,
     pipelineId,
     startPipeline,
     stopPipeline,
+    editPipeline,
     deletePipeline,
     pipelineMetrics,
     decimals,
     trades,
     currentPrices,
-    updateTrades
+    updateTrades,
+    symbolsOptions,
+    strategiesOptions,
+    candleSizeOptions,
+    exchangeOptions,
+    strategies,
+    balances,
   } = props
 
   const pipeline = pipelines[pipelineId]
@@ -72,15 +90,26 @@ function PipelineDetail(props: Props) {
         <StatsContainer>
           <Grid.Column width={10}>
             <PipelineItem
+              strategies={strategies}
+              balances={balances}
+              pipelines={pipelines}
+              positions={positions}
+              symbolsOptions={symbolsOptions}
+              strategiesOptions={strategiesOptions}
+              candleSizeOptions={candleSizeOptions}
+              exchangeOptions={exchangeOptions}
               pipeline={pipeline}
               startPipeline={startPipeline}
+              editPipeline={editPipeline}
               stopPipeline={stopPipeline}
               deletePipeline={deletePipeline}
+              position={positions.find((position) => String(position.pipelineId) === pipelineId)}
               segmentStyle={styles.segment}
+              lastRow={true}
             />
           </Grid.Column>
           <Grid.Column width={6}>
-            <TradesStats tradesMetrics={pipelineMetrics}/>
+            <TradesStats tradesMetrics={pipelineMetrics} style={{height: '100%'}}/>
           </Grid.Column>
         </StatsContainer>
         <TradesContainer>
@@ -107,6 +136,6 @@ export default PipelineDetail;
 const styles = {
   segment: {
     width: '100%',
-    padding: '30px 30px 20px',
+    padding: '55px 30px 55px'
   },
 }

@@ -211,6 +211,7 @@ class Pipeline(models.Model):
     open_time = models.DateTimeField(auto_now_add=True, null=True)
     color = models.TextField()
     leverage = models.IntegerField(blank=True, default=1)
+    deleted = models.BooleanField(default=False, blank=True)
 
     def get_profit_loss(self):
         result = reduce(
@@ -306,5 +307,7 @@ class Trade(models.Model):
             side=self.side,
             mock=self.mock,
             pipelineId=self.pipeline.id if self.pipeline else None,
+            pipelineName=self.pipeline.name if self.pipeline else None,
+            pipelineColor=self.pipeline.color if self.pipeline else None,
             leverage=self.pipeline.leverage if self.pipeline else None,
         )

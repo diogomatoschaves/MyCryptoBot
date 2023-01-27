@@ -37,10 +37,11 @@ binance_client = BinanceHandler()
 
 def initialize_data_collection(pipeline, header):
 
-    data_handler = DataHandler(pipeline, header=header)
-
     global binance_instances
+
+    data_handler = DataHandler(pipeline, header=header)
     binance_instances.append(data_handler.binance_handler)
+    data_handler.binance_handler.start_data_ingestion()
 
 
 def reduce_instances(instances, instance, pipeline_id, header):
@@ -93,6 +94,8 @@ def start_bot():
         STRATEGIES = globals()["STRATEGIES"]
 
     data = request.get_json(force=True)
+
+    print(data)
 
     pipeline_id = data.get("pipelineId", None)
     name = data.get("name", None)
@@ -147,12 +150,11 @@ def start_bot():
     response = start_stop_symbol_trading(payload, 'start')
 
     if not response["success"]:
-        logging.warning(response["message"])
-
         pipeline.active = False
+        pipeline.open_time = None
         pipeline.save()
 
-        raise PipelineStartFail(response)
+        raise PipelineStartFail(response["message"])
 
     start_symbol_trading(pipeline)
 

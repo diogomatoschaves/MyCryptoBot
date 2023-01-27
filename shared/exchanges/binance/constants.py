@@ -21,6 +21,16 @@ CANDLE_SIZES_MAPPER = {
     '1d': '1D',
 }
 
+CANDLE_SIZES_ORDERED = [
+    '1m',
+    '5m',
+    '10m',
+    '15m',
+    '30m',
+    '1h',
+    '1d',
+]
+
 COUNT_MAPPER = {
     '5m': {'5m': 1},
     '10m': {'5m': 2, '10m': 1},

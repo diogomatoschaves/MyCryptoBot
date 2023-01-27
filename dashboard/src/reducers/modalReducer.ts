@@ -1,3 +1,5 @@
+import {Pipeline} from "../types";
+
 export const UPDATE_STRATEGY = 'UPDATE_STRATEGY'
 export const UPDATE_SECOND_MODAL_OPEN = 'UPDATE_SECOND_MODAL_OPEN'
 export const RESET_MODAL = 'RESET_MODAL'
@@ -6,6 +8,7 @@ export const UPDATE_PARAMS = 'UPDATE_PARAMS'
 export const UPDATE_CHECKBOX = 'UPDATE_CHECKBOX'
 export const UPDATE_MESSAGE = 'UPDATE_MESSAGE'
 export const UPDATE_SECONDARY_MESSAGE = 'UPDATE_SECONDARY_MESSAGE'
+export const GET_INITIAL_STATE = 'GET_INITIAL_STATE'
 
 
 export const modalReducer = (state: any, action: any) => {
@@ -69,23 +72,69 @@ export const modalReducer = (state: any, action: any) => {
         ...state,
         secondaryMessage: action.message
       }
+    case GET_INITIAL_STATE:
+      return {
+        ...state,
+        ...getInitialState(
+          action.symbols,
+          action.strategies,
+          action.candleSizes,
+          action.exchanges,
+          action.pipeline
+        )
+      }
     default:
       throw new Error();
   }
 }
 
+export const getInitialState = (
+  symbols: any,
+  strategies: any,
+  candleSizes: any,
+  exchanges: any,
+  pipeline?: Pipeline
+) => {
+  if (pipeline) {
+    const strategy = strategies.find((strategy: any) => strategy.text === pipeline.strategy)
+    const symbol = symbols.find((symbol: any) => symbol.text === pipeline.symbol)
+    const candleSize = candleSizes.find((candleSize: any) => candleSize.text === pipeline.candleSize)
+    const exchange = exchanges.find((exchange: any) => exchange.text === pipeline.exchange)
+
+    return {
+      strategy: strategy && strategy.value,
+      color: pipeline.color,
+      symbol: symbol && symbol.value,
+      candleSize: candleSize && candleSize.value,
+      name: pipeline.name,
+      allocation: String(pipeline.allocation),
+      leverage: pipeline.leverage,
+      exchanges: exchange && [exchange.value],
+      params: pipeline.params,
+      liveTrading: !pipeline.paperTrading,
+      secondModalOpen: false,
+      message: {text: '', success: false},
+      secondaryMessage: {text: '', success: false}
+    }
+  } else {
+    return {
+      strategy: null,
+      color: null,
+      symbol: null,
+      candleSize: null,
+      name: "",
+      allocation: "",
+      leverage: 1,
+      exchanges: [],
+      liveTrading: false,
+      secondModalOpen: false,
+      params: {},
+      message: {text: '', success: false},
+      secondaryMessage: {text: '', success: false}
+    }
+  }
+}
+
 export const initialState = {
-  strategy: null,
-  color: null,
-  symbol: null,
-  candleSize: null,
-  name: "",
-  allocation: "",
-  leverage: 1,
-  exchanges: [],
-  liveTrading: false,
-  secondModalOpen: false,
-  params: {},
-  message: {text: '', success: false},
-  secondaryMessage: {text: '', success: false}
+
 }

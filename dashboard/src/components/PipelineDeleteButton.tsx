@@ -1,5 +1,6 @@
 import {Button, Header, Icon, Modal} from "semantic-ui-react";
 import {DeletePipeline, Pipeline, StopPipeline} from "../types";
+import {useState} from "react";
 
 
 interface Props {
@@ -13,7 +14,9 @@ interface Props {
 
 const PipelineDeleteButton = (props: Props) => {
 
-    const { deletePipeline, stopPipeline, pipeline, setOpen, open } = props
+    const { deletePipeline, pipeline, setOpen, open } = props
+
+    const [loading, setLoading] = useState(false)
 
     return (
         <div style={styles.buttonDiv} className='flex-column'>
@@ -25,6 +28,8 @@ const PipelineDeleteButton = (props: Props) => {
                     event.preventDefault()
                     event.stopPropagation();
                 }}
+                disabled={pipeline.active}
+                loading={loading}
             >
                 <span style={{marginRight: '10px', marginLeft: '-10px'}}>
                     <Icon name={'delete'}/>
@@ -62,12 +67,10 @@ const PipelineDeleteButton = (props: Props) => {
                         color='green'
                         inverted
                         onClick={async (event) => {
+                            setLoading(true)
                             event.preventDefault()
                             event.stopPropagation()
-                            if (pipeline.active) {
-                                await stopPipeline(pipeline.id)
-                            }
-                            deletePipeline(pipeline.id)
+                            deletePipeline(pipeline.id).then(() => setLoading(false))
                             setOpen(false)
                         }}
                     >

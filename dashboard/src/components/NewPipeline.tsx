@@ -1,6 +1,6 @@
-import React, {useReducer, useState, Fragment, useEffect, useRef} from 'react';
+import React, {useReducer, useState, Fragment, useEffect, useRef, ReactNode} from 'react';
 import {Button, Dropdown, Grid, Header, Icon, Input, Modal, Popup, Form} from "semantic-ui-react";
-import {BalanceObj, DropdownOptions, PipelinesObject, Position, StartPipeline, UpdateMessage} from "../types";
+import {BalanceObj, DropdownOptions, EditPipeline, Pipeline, PipelinesObject, Position, StartPipeline} from "../types";
 import {validateParams, validatePipelineCreation} from "../utils/helpers";
 import MessageComponent from "./Message";
 import {COLORS_NAMES} from "../utils/constants";
@@ -12,7 +12,8 @@ import {
   UPDATE_STRATEGY_PARAMS,
   RESET_MODAL,
   UPDATE_SECOND_MODAL_OPEN,
-  initialState, UPDATE_PARAMS
+  UPDATE_PARAMS,
+  getInitialState, GET_INITIAL_STATE
 } from "../reducers/modalReducer";
 
 
@@ -22,11 +23,14 @@ interface Props {
   candleSizeOptions: DropdownOptions[];
   exchangeOptions: DropdownOptions[];
   startPipeline: StartPipeline;
-  updateMessage: UpdateMessage;
+  editPipeline: EditPipeline;
   strategies: any;
   balances: BalanceObj;
   pipelines: PipelinesObject;
   positions: Position[];
+  children: ReactNode,
+  pipeline?: Pipeline,
+  edit?: boolean
 }
 
 
@@ -87,10 +91,14 @@ const NewPipeline = (props: Props) => {
     candleSizeOptions,
     exchangeOptions,
     startPipeline,
+    editPipeline,
     strategies,
     balances,
     positions,
-    pipelines
+    pipelines,
+    children,
+    pipeline,
+    edit
   } = props
 
   const [open, setOpen] = useState(false)
@@ -109,7 +117,13 @@ const NewPipeline = (props: Props) => {
     liveTrading,
     message,
     secondaryMessage
-  }, dispatch] = useReducer(modalReducer, initialState);
+  }, dispatch] = useReducer(modalReducer, getInitialState(
+    symbolsOptions,
+    strategiesOptions,
+    candleSizeOptions,
+    exchangeOptions,
+    pipeline
+  ));
 
   const [availableBalance, updateBalance] = useReducer(availableBalanceReducer, {
     live: balances.live.USDT.availableBalance,
@@ -149,21 +163,30 @@ const NewPipeline = (props: Props) => {
   return (
       <Modal
           closeIcon
-          onClose={() => {
-            dispatch({type: RESET_MODAL})
+          onClick={(event: any) => {
+            event.preventDefault();
+            event.stopPropagation()
+          }}
+          onClose={(event) => {
+            event.preventDefault();
+            event.stopPropagation()
+            !edit && dispatch({type: RESET_MODAL})
             setOpen(false)
           }}
-          onOpen={() => setOpen(true)}
+          onOpen={() => {
+            dispatch({
+              type: GET_INITIAL_STATE,
+              symbols: symbolsOptions,
+              strategies: strategiesOptions,
+              candleSizes: candleSizeOptions,
+              exchanges: exchangeOptions,
+              pipeline: pipeline
+            })
+            setOpen(true)
+          }}
           open={open}
           size="small"
-          trigger={
-            <Button inverted secondary>
-              <span style={{marginRight: '10px'}}>
-                  <Icon name={'plus'}/>
-              </span>
-              New Trading Bot
-            </Button>
-          }
+          trigger={children}
       >
         <Modal.Header>New Trading Bot <span>🤖</span></Modal.Header>
         <Modal.Content >
@@ -479,18 +502,22 @@ const NewPipeline = (props: Props) => {
                 </div>
             )}
             <div>
-              <Button color='black' onClick={() => {
-                dispatch({type: RESET_MODAL})
+              <Button color='black' onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation()
+                !edit && dispatch({type: RESET_MODAL})
                 setOpen(false)
               }}>
                 Cancel
               </Button>
               <Button
                   positive
-                  content="Create trading bot"
+                  content={edit ? "Update parameters" : "Create trading bot"}
                   labelPosition='right'
                   icon='checkmark'
-                  onClick={async () => {
+                  onClick={async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation()
                     const success = await validatePipelineCreation({
                       name,
                       allocation,
@@ -504,10 +531,13 @@ const NewPipeline = (props: Props) => {
                       candleSizeOptions,
                       exchangeOptions,
                       startPipeline,
+                      editPipeline,
                       dispatch,
                       params,
                       liveTrading,
                       leverage,
+                      edit,
+                      pipelineId: pipeline && pipeline.id,
                       balance: balances[liveTrading ? 'live': 'test'].USDT.availableBalance
                     })
                     if (success) setOpen(false)

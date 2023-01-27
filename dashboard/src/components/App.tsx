@@ -18,7 +18,7 @@ import {
     RawTrade,
     PipelinesMetrics,
     RawPipeline,
-    PipelinesObject, TradesObject
+    PipelinesObject, TradesObject, EditPipeline
 } from "../types";
 import {
     getTrades,
@@ -29,7 +29,7 @@ import {
     startBot,
     stopBot,
     getPrice,
-    deleteBot, getPipelinesMetrics,
+    deleteBot, getPipelinesMetrics, editBot,
 } from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
@@ -66,7 +66,6 @@ const AppColumn: any = styled.div`
     right: 0;
     width: 75vw;
     height: 100vh;
-    overflow: hidden;
     overflow-x: ${(props: any) => props.overflowX ? props.overflowX : 'hidden'};
 `
 
@@ -149,9 +148,12 @@ class App extends Component<Props, State> {
         getResources(Object.keys(RESOURCES_MAPPING), this.props.history)
             .then(resources => {
                 const options = resources ? Object.keys(resources).reduce((accum: any, resource: any) => {
+
+                    const resourcesArray = resource === 'candleSizes' ? resources[resource] : Object.keys(resources[resource])
+
                     return {
                         ...accum,
-                        [RESOURCES_MAPPING[resource]]: Object.keys(resources[resource]).map((name: any, index: number) => ({
+                        [RESOURCES_MAPPING[resource]]: resourcesArray.map((name: any, index: number) => ({
                             key: index + 1,
                             text: name,
                             value: index + 1
@@ -182,9 +184,9 @@ class App extends Component<Props, State> {
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
 
-        const { symbols } = this.state
+        const { symbols, trades } = this.state
 
-        if (prevState.symbols !== symbols) {
+        if (prevState.symbols.length !== symbols.length) {
             this.getCurrentPrices()
         }
 
@@ -198,7 +200,7 @@ class App extends Component<Props, State> {
 
             if (pathname.includes('/dashboard')) {
                 this.getAccountBalance()
-
+                this.getCurrentPrices()
                 this.getPricesInterval = setInterval(() => {
                     this.getCurrentPrices()
                 }, 10 * 1000)
@@ -206,7 +208,6 @@ class App extends Component<Props, State> {
             } else if (pathname.includes('/trades')){
                 this.updateTrades()
                 this.getCurrentPrices()
-
                 this.getTradesInterval = setInterval(() => {
                     this.updateTrades()
                 }, 20 * 1000)
@@ -222,16 +223,19 @@ class App extends Component<Props, State> {
                 this.getPricesInterval = setInterval(() => {
                     this.getCurrentPrices()
                 }, 10 * 1000)
-
                 this.getPositionsInterval = setInterval(() => {
                     this.updatePositions()
                 }, 30 * 1000)
             }
         }
+
+        if (prevState.trades !== trades) {
+            this.updatePipelinesMetrics()
+        }
     }
 
     startPipeline: StartPipeline = (pipelineParams: PipelineParams) => {
-        startBot(pipelineParams)
+        return startBot(pipelineParams)
             .then(response => {
 
                 const { updateMessage } = this.props
@@ -272,12 +276,38 @@ class App extends Component<Props, State> {
                         } : state.pipelines
                     }
                 })
+
+                this.updateTrades()
             })
             .catch(() => {})
     }
 
+    editPipeline: EditPipeline = (pipelineParams: PipelineParams, pipelineId?: number) => {
+        return editBot(pipelineParams, pipelineId)
+          .then(response => {
+
+              const { updateMessage } = this.props
+
+              updateMessage({
+                  text: response.message,
+                  success: response.success,
+              })
+
+              this.setState(state => {
+                  const {[pipelineParams.pipelineId as any]: _, ...pipelines} = state.pipelines
+                  return {
+                      pipelines: response.success ? {
+                          ...pipelines,
+                          [response.pipeline.id]: organizePipeline(response.pipeline)
+                      } : state.pipelines
+                  }
+              })
+          })
+          .catch(() => {})
+    }
+
     deletePipeline: DeletePipeline = (pipelineId) => {
-        deleteBot(pipelineId)
+        return deleteBot(pipelineId)
             .then(response => {
                 const { updateMessage } = this.props
 
@@ -469,6 +499,7 @@ class App extends Component<Props, State> {
                                   balances={balances}
                                   startPipeline={this.startPipeline}
                                   stopPipeline={this.stopPipeline}
+                                  editPipeline={this.editPipeline}
                                   deletePipeline={this.deletePipeline}
                                   updateMessage={updateMessage}
                                   pipelinesMetrics={pipelinesMetrics}

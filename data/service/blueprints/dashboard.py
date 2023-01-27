@@ -1,3 +1,4 @@
+import json
 import os
 from functools import reduce
 
@@ -8,8 +9,8 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from data.service.external_requests import get_strategies
-from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict
-from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER
+from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict, convert_client_request
+from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -43,7 +44,7 @@ def get_resources(resources):
             response["strategies"] = strategies
 
         elif resource == 'candleSizes':
-            response["candleSizes"] = {key: key for key in CANDLE_SIZES_MAPPER.keys()}
+            response["candleSizes"] = CANDLE_SIZES_ORDERED
 
     return jsonify(response)
 
@@ -81,7 +82,7 @@ def get_trades(page):
     return jsonify(response)
 
 
-@dashboard.route('/pipelines', defaults={'page': None}, methods=["GET", "DELETE"])
+@dashboard.route('/pipelines', defaults={'page': None}, methods=["GET", "PUT", "DELETE"])
 @dashboard.route('/pipelines/<page>')
 @handle_db_connection_error
 @jwt_required()
@@ -97,7 +98,7 @@ def handle_pipelines(page):
             response["pipelines"] = [pipeline.as_json() for pipeline in Pipeline.objects.filter(id=pipeline_id)]
 
         else:
-            pipelines = Pipeline.objects.all().order_by('id')
+            pipelines = Pipeline.objects.filter(deleted=False).order_by('id')
 
             paginator = Paginator(pipelines, 20)
 
@@ -113,12 +114,28 @@ def handle_pipelines(page):
 
         response.update({"message": "The request was successful.", "success": True})
 
-    if request.method == 'DELETE':
+    elif request.method == 'DELETE':
         if Pipeline.objects.filter(id=pipeline_id).exists():
-            Pipeline.objects.filter(id=pipeline_id).delete()
+            Pipeline.objects.filter(id=pipeline_id).update(deleted=True)
             response.update({"message": "The trading bot was deleted", "success": True})
         else:
             response.update({"message": "The requested trading bot was not found", "success": True})
+
+    elif request.method == 'PUT':
+        if Pipeline.objects.filter(id=pipeline_id).exists():
+            data = request.get_json(force=True)
+
+            data = convert_client_request(data)
+
+            Pipeline.objects.filter(id=pipeline_id).update(**data)
+            pipeline = Pipeline.objects.get(id=pipeline_id)
+            response.update({
+                "message": "The trading bot was updated successfully.",
+                "success": True,
+                "pipeline": pipeline.as_json()
+            })
+        else:
+            response.update({"message": "The requested trading bot was not found", "success": False})
 
     return jsonify(response)
 
