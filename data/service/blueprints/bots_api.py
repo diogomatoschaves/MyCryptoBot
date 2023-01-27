@@ -95,6 +95,8 @@ def start_bot():
 
     data = request.get_json(force=True)
 
+    print(data)
+
     pipeline_id = data.get("pipelineId", None)
     name = data.get("name", None)
     color = data.get("color", None)

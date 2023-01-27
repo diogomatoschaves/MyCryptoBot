@@ -1,12 +1,20 @@
-import {Fragment} from 'react'
-import {Button, Message} from "semantic-ui-react";
+import React, {Fragment} from 'react'
+import {Button, Icon, Message} from "semantic-ui-react";
 import {Link} from 'react-router-dom';
 import {
     DropdownOptions,
     StartPipeline,
     StopPipeline,
     UpdateMessage,
-    DeletePipeline, BalanceObj, PipelinesMetrics, PipelinesObject, Decimals, TradesObject, UpdateTrades, Position
+    DeletePipeline,
+    BalanceObj,
+    PipelinesMetrics,
+    PipelinesObject,
+    Decimals,
+    TradesObject,
+    UpdateTrades,
+    Position,
+    EditPipeline
 } from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
@@ -26,6 +34,7 @@ interface Props {
     balances: BalanceObj;
     startPipeline: StartPipeline;
     stopPipeline: StopPipeline;
+    editPipeline: EditPipeline;
     deletePipeline: DeletePipeline;
     updateMessage: UpdateMessage;
     strategies: any
@@ -99,8 +108,8 @@ function PipelinePanel(props: Props) {
         exchangeOptions,
         startPipeline,
         stopPipeline,
+        editPipeline,
         deletePipeline,
-        updateMessage,
         pipelinesMetrics,
         trades,
         decimals,
@@ -148,12 +157,20 @@ function PipelinePanel(props: Props) {
                 pipelineMetrics={pipelinesMetrics[pipelineId]}
                 startPipeline={startPipeline}
                 stopPipeline={stopPipeline}
+                editPipeline={editPipeline}
                 deletePipeline={deletePipeline}
                 decimals={decimals}
                 trades={trades}
                 currentPrices={currentPrices}
                 updateTrades={updateTrades}
                 positions={positions}
+                strategies={strategies}
+                balances={balances}
+                symbolsOptions={symbolsOptions}
+                strategiesOptions={strategiesOptions}
+                candleSizeOptions={candleSizeOptions}
+                exchangeOptions={exchangeOptions}
+
               />
             ) : (
               <Wrapper>
@@ -188,15 +205,31 @@ function PipelinePanel(props: Props) {
                         candleSizeOptions={candleSizeOptions}
                         exchangeOptions={exchangeOptions}
                         startPipeline={startPipeline}
-                        updateMessage={updateMessage}
-                    />
+                        editPipeline={editPipeline}
+                    >
+                        <Button inverted secondary>
+                          <span style={{marginRight: '10px'}}>
+                              <Icon name={'plus'}/>
+                          </span>
+                            New Trading Bot
+                        </Button>
+                    </NewPipeline>
                 </ButtonWrapper>
                   <div className="flex-column">
                 {filteredPipelines.map((pipelineId: string, index: number) => (
                   <Link to={`/pipelines/${pipelineId}`} className="flex-row" style={{width: 'calc(80% - 50px)'}}>
                     <PipelineItem
+                        strategies={strategies}
+                        balances={balances}
+                        pipelines={pipelines}
+                        positions={positions}
+                        symbolsOptions={symbolsOptions}
+                        strategiesOptions={strategiesOptions}
+                        candleSizeOptions={candleSizeOptions}
+                        exchangeOptions={exchangeOptions}
                         key={index}
                         startPipeline={startPipeline}
+                        editPipeline={editPipeline}
                         stopPipeline={stopPipeline}
                         deletePipeline={deletePipeline}
                         pipeline={pipelines[pipelineId]}

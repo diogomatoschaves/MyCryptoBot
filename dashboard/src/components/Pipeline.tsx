@@ -1,12 +1,22 @@
-import {DeletePipeline, Pipeline, Position, StartPipeline, StopPipeline} from "../types";
-import {Grid, Icon, Label, Segment} from "semantic-ui-react";
+import {
+    BalanceObj,
+    DeletePipeline,
+    DropdownOptions, EditPipeline,
+    Pipeline, PipelinesObject,
+    Position,
+    StartPipeline,
+    StopPipeline,
+    UpdateMessage
+} from "../types";
+import {Button, Grid, Icon, Label, Segment} from "semantic-ui-react";
 import {BLUE, DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
 import PipelineButton from "./PipelineButton";
 import {timeFormatterDate} from "../utils/helpers";
-import {useState} from "react";
+import React, {useState} from "react";
 import PipelineDeleteButton from "./PipelineDeleteButton";
+import NewPipeline from "./NewPipeline";
 
 
 const StyledColumn = styled(Grid.Column)`
@@ -25,10 +35,19 @@ interface Props {
     pipeline: Pipeline
     startPipeline: StartPipeline
     stopPipeline: StopPipeline
+    editPipeline: EditPipeline
     deletePipeline: DeletePipeline
     segmentStyle?: Object
     lastRow?: boolean
     position?: Position
+    symbolsOptions: DropdownOptions[];
+    strategiesOptions: DropdownOptions[];
+    candleSizeOptions: DropdownOptions[];
+    exchangeOptions: DropdownOptions[];
+    strategies: any;
+    balances: BalanceObj;
+    pipelines: PipelinesObject;
+    positions: Position[];
 }
 
 
@@ -39,9 +58,18 @@ function PipelineItem(props: Props) {
         position,
         startPipeline,
         stopPipeline,
+        editPipeline,
         deletePipeline,
         segmentStyle,
-        lastRow
+        lastRow,
+        symbolsOptions,
+        strategiesOptions,
+        candleSizeOptions,
+        exchangeOptions,
+        strategies,
+        balances,
+        positions,
+        pipelines
     } = props
 
     const [open, setOpen] = useState(false)
@@ -147,11 +175,37 @@ function PipelineItem(props: Props) {
                         </Grid.Column>
                     </Grid.Column>
                     <StyledColumn width={6} className="flex-row">
-                        <PipelineButton
-                            pipeline={pipeline}
-                            startPipeline={startPipeline}
-                            stopPipeline={stopPipeline}
-                        />
+                        <div style={{width: '100%', alignSelf: 'center'}} className='flex-column'>
+                            <NewPipeline
+                              strategies={strategies}
+                              balances={balances}
+                              pipelines={pipelines}
+                              positions={positions}
+                              symbolsOptions={symbolsOptions}
+                              strategiesOptions={strategiesOptions}
+                              candleSizeOptions={candleSizeOptions}
+                              exchangeOptions={exchangeOptions}
+                              startPipeline={startPipeline}
+                              editPipeline={editPipeline}
+                              pipeline={pipeline}
+                              edit={true}
+                            >
+                                <Button
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation()
+                                  }}
+                                  style={{width: '80%'}}
+                                  icon
+                                  disabled={pipeline.active}
+                                >
+                                <span style={{marginRight: '10px'}}>
+                                  <Icon name={'edit'}/>
+                                </span>
+                                    Edit Bot
+                                </Button>
+                            </NewPipeline>
+                        </div>
                     </StyledColumn>
                 </StyledRow>
                 {lastRow && (
@@ -180,6 +234,13 @@ function PipelineItem(props: Props) {
                             {pipeline.numberTrades}
                         </Grid.Column>
                     </Grid.Column>
+                      <StyledColumn width={6} className="flex-row">
+                          <PipelineButton
+                            pipeline={pipeline}
+                            startPipeline={startPipeline}
+                            stopPipeline={stopPipeline}
+                          />
+                      </StyledColumn>
                   </StyledRow>
                 )}
             </Grid>

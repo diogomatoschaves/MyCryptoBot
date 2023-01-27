@@ -18,7 +18,7 @@ import {
     RawTrade,
     PipelinesMetrics,
     RawPipeline,
-    PipelinesObject, TradesObject
+    PipelinesObject, TradesObject, EditPipeline
 } from "../types";
 import {
     getTrades,
@@ -29,7 +29,7 @@ import {
     startBot,
     stopBot,
     getPrice,
-    deleteBot, getPipelinesMetrics,
+    deleteBot, getPipelinesMetrics, editBot,
 } from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
@@ -273,6 +273,30 @@ class App extends Component<Props, State> {
             .catch(() => {})
     }
 
+    editPipeline: EditPipeline = (pipelineParams: PipelineParams, pipelineId?: number) => {
+        return editBot(pipelineParams, pipelineId)
+          .then(response => {
+
+              const { updateMessage } = this.props
+
+              updateMessage({
+                  text: response.message,
+                  success: response.success,
+              })
+
+              this.setState(state => {
+                  const {[pipelineParams.pipelineId as any]: _, ...pipelines} = state.pipelines
+                  return {
+                      pipelines: response.success ? {
+                          ...pipelines,
+                          [response.pipeline.id]: organizePipeline(response.pipeline)
+                      } : state.pipelines
+                  }
+              })
+          })
+          .catch(() => {})
+    }
+
     deletePipeline: DeletePipeline = (pipelineId) => {
         return deleteBot(pipelineId)
             .then(response => {
@@ -466,6 +490,7 @@ class App extends Component<Props, State> {
                                   balances={balances}
                                   startPipeline={this.startPipeline}
                                   stopPipeline={this.stopPipeline}
+                                  editPipeline={this.editPipeline}
                                   deletePipeline={this.deletePipeline}
                                   updateMessage={updateMessage}
                                   pipelinesMetrics={pipelinesMetrics}

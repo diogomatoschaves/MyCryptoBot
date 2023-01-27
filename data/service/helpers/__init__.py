@@ -3,4 +3,5 @@ from data.service.helpers._helpers import (
     MODEL_APP_ENDPOINTS,
     EXECUTION_APP_ENDPOINTS,
     get_or_create_pipeline,
+    convert_client_request
 )

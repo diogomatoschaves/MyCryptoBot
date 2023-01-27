@@ -1,5 +1,5 @@
 import {
-  DropdownOptions,
+  DropdownOptions, EditPipeline,
   Pipeline,
   Position,
   RawPipeline,
@@ -29,6 +29,9 @@ export const validatePipelineCreation = async (
       liveTrading,
       balance,
       leverage,
+      edit,
+      editPipeline,
+      pipelineId
     }: {
       name: string | undefined,
       allocation: string | undefined,
@@ -47,6 +50,9 @@ export const validatePipelineCreation = async (
       liveTrading: boolean,
       balance: number,
       leverage: number,
+      edit?: boolean,
+      editPipeline: EditPipeline,
+      pipelineId?: number
     }) => {
   if (!name || !color || !allocation || !symbol || !strategy || !candleSize || exchanges.length === 0) {
     dispatch({
@@ -74,8 +80,7 @@ export const validatePipelineCreation = async (
     return false
   }
 
-
-  startPipeline({
+  const payload = {
     symbol: symbol ? symbolsOptions[symbol - 1].text : "",
     strategy: strategy ? strategiesOptions[strategy - 1].text : "",
     candleSize: candleSize ? candleSizeOptions[candleSize - 1].text : "",
@@ -87,7 +92,13 @@ export const validatePipelineCreation = async (
     leverage,
     paperTrading: !liveTrading,
     color
-  })
+  }
+
+  if (edit) {
+    editPipeline(payload, pipelineId)
+  } else {
+    startPipeline(payload)
+  }
 
   return true
 }

@@ -40,7 +40,6 @@ function PipelineButton(props: Props) {
               <Icon name={'stop'}/>
             </span>
             Stop Bot
-            <Loader active={loading} inline/>
           </Button>
         ) : (
           <Button
@@ -69,8 +68,8 @@ function PipelineButton(props: Props) {
               loading={loading}
           >
             <span style={styles.icon}>
-                  <Icon name={'play'}/>
-                </span>
+              <Icon name={'play'}/>
+            </span>
             Start Bot
           </Button>
         )}
