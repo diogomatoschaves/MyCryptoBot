@@ -93,7 +93,7 @@ const TradesTable = (props: Props) => {
 
   return (
     <Wrapper maxHeight={maxHeight} onScroll={(e: any) => handleScroll(e)}>
-      <Table basic='very' size="small" compact striped>
+      <Table basic='very' size="small" compact striped textAlign="center">
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell>Trading Bot</Table.HeaderCell>

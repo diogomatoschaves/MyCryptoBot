@@ -35,7 +35,7 @@ const TradesStats = (props: Props) => {
       <Header size={'medium'} color="purple">
         Trades
       </Header>
-      <Grid columns={3}>
+      <Grid columns={3} style={{height: '100%'}}>
         <Grid.Row>
           <Grid.Column>
             <Grid.Column style={styles.tradesHeader}>
