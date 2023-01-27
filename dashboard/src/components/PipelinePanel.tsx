@@ -153,6 +153,7 @@ function PipelinePanel(props: Props) {
                 trades={trades}
                 currentPrices={currentPrices}
                 updateTrades={updateTrades}
+                positions={positions}
               />
             ) : (
               <Wrapper>
@@ -200,6 +201,7 @@ function PipelinePanel(props: Props) {
                         deletePipeline={deletePipeline}
                         pipeline={pipelines[pipelineId]}
                         lastRow={true}
+                        position={positions.find((position) => String(position.pipelineId) === pipelineId)}
                     />
                   </Link>
                 ))}

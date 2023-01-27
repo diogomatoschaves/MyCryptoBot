@@ -1,7 +1,7 @@
 import {
   Decimals,
   DeletePipeline,
-  PipelinesObject,
+  PipelinesObject, Position,
   StartPipeline,
   StopPipeline,
   TradesMetrics, TradesObject, UpdateTrades
@@ -37,6 +37,7 @@ const StatsContainer = styled(Grid.Row)`
 
 interface Props {
   pipelines: PipelinesObject
+  positions: Position[]
   pipelineId: string
   pipelineMetrics: TradesMetrics
   startPipeline: StartPipeline
@@ -53,6 +54,7 @@ function PipelineDetail(props: Props) {
 
   const {
     pipelines,
+    positions,
     pipelineId,
     startPipeline,
     stopPipeline,
@@ -76,7 +78,8 @@ function PipelineDetail(props: Props) {
               startPipeline={startPipeline}
               stopPipeline={stopPipeline}
               deletePipeline={deletePipeline}
-              segmentStyle={styles.segment}
+              position={positions.find((position) => String(position.pipelineId) === pipelineId)}
+              lastRow={true}
             />
           </Grid.Column>
           <Grid.Column width={6}>
