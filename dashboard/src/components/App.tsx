@@ -66,7 +66,6 @@ const AppColumn: any = styled.div`
     right: 0;
     width: 75vw;
     height: 100vh;
-    overflow: hidden;
     overflow-x: ${(props: any) => props.overflowX ? props.overflowX : 'hidden'};
 `
 
