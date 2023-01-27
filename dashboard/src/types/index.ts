@@ -195,9 +195,9 @@ export type TradesMetrics = {
     losingTrades: number
 }
 
-export type StartPipeline = (pipelineParams: PipelineParams) => void
+export type StartPipeline = (pipelineParams: PipelineParams) => Promise<void>
 export type StopPipeline = (pipelineId: number) => Promise<void>
-export type DeletePipeline = (pipelineId: number) => void
+export type DeletePipeline = (pipelineId: number) => Promise<void>
 export type ChangeMenu = (option: MenuOption) => void
 export type GetCurrentPrices = () => void
 export type UpdateMessage = (newMessage: Object)  => void
