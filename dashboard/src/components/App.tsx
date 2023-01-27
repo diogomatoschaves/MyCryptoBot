@@ -99,6 +99,9 @@ interface Props {
 class App extends Component<Props, State> {
 
     messageTimeout: any
+    getPricesInterval: any
+    getTradesInterval: any
+    getPositionsInterval: any
 
     static defaultProps = {
         decimals: {
@@ -175,10 +178,6 @@ class App extends Component<Props, State> {
         this.getAccountBalance()
 
         this.updatePipelinesMetrics()
-
-        setInterval(() => {
-            this.updateTrades()
-        }, 60 * 1000)
     }
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
@@ -191,23 +190,43 @@ class App extends Component<Props, State> {
 
         const { pathname } = this.props.location
 
-        if (prevProps.location.pathname !== pathname && pathname.includes('/dashboard')) {
-            this.getAccountBalance()
-        }
+        if (prevProps.location.pathname !== pathname) {
 
-        if (prevProps.location.pathname !== pathname && pathname.includes('/trades')) {
-            this.updateTrades()
-            this.getCurrentPrices()
-        }
+            clearInterval(this.getPricesInterval)
+            clearInterval(this.getTradesInterval)
+            clearInterval(this.getPositionsInterval)
 
-        if (prevProps.location.pathname !== pathname && pathname.includes('/pipelines')) {
-            this.updatePipelines()
-            this.getCurrentPrices()
-        }
+            if (pathname.includes('/dashboard')) {
+                this.getAccountBalance()
 
-        if (prevProps.location.pathname !== pathname && pathname.includes('/positions')) {
-            this.updatePositions()
-            this.getCurrentPrices()
+                this.getPricesInterval = setInterval(() => {
+                    this.getCurrentPrices()
+                }, 10 * 1000)
+
+            } else if (pathname.includes('/trades')){
+                this.updateTrades()
+                this.getCurrentPrices()
+
+                this.getTradesInterval = setInterval(() => {
+                    this.updateTrades()
+                }, 20 * 1000)
+
+            } else if (pathname.includes('/pipelines')){
+                this.updatePipelines()
+                this.getCurrentPrices()
+
+            } else if (pathname.includes('/positions')){
+                this.updatePositions()
+                this.getCurrentPrices()
+
+                this.getPricesInterval = setInterval(() => {
+                    this.getCurrentPrices()
+                }, 10 * 1000)
+
+                this.getPositionsInterval = setInterval(() => {
+                    this.updatePositions()
+                }, 30 * 1000)
+            }
         }
     }
 
@@ -403,8 +422,6 @@ class App extends Component<Props, State> {
         const { decimals, menuProperties, location, removeToken, updateMessage } = this.props
 
         const menuOption = menuProperties.find(option => location.pathname.includes(option.code))
-
-        console.log(menuOption)
 
         return (
             <AppDiv className="flex-row">
