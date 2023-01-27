@@ -167,7 +167,7 @@ export default PipelineItem;
 
 const styles = {
     segment: {
-        width: '80%',
+        width: '100%',
         padding: '30px 30px 20px',
         marginBottom: '40px',
         // border: 'none'

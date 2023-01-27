@@ -190,8 +190,9 @@ function PipelinePanel(props: Props) {
                         updateMessage={updateMessage}
                     />
                 </ButtonWrapper>
+                  <div className="flex-column">
                 {filteredPipelines.map((pipelineId: string, index: number) => (
-                  <Link to={`/pipelines/${pipelineId}`} className="flex-row" style={{padding: '0 30px'}}>
+                  <Link to={`/pipelines/${pipelineId}`} className="flex-row" style={{width: 'calc(80% - 50px)'}}>
                     <PipelineItem
                         key={index}
                         startPipeline={startPipeline}
@@ -202,6 +203,7 @@ function PipelinePanel(props: Props) {
                     />
                   </Link>
                 ))}
+                  </div>
                 {filteredPipelines.length === 0 && (
                     <Message>
                         <Message.Header>
