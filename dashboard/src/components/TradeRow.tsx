@@ -19,7 +19,7 @@ const dateStringOptions = {day: 'numeric', month: 'short', year: 'numeric', hour
 
 function TradeRow(props: Props) {
 
-  const { trade, pipeline, index, decimals: {quoteDecimal, baseDecimal} } = props
+  const { trade, index, decimals: {quoteDecimal, baseDecimal} } = props
 
   const negative = trade.side === -1
 
@@ -45,14 +45,12 @@ function TradeRow(props: Props) {
     return (
         <Table.Row key={index} >
             <Table.Cell style={styles.defaultCell}>
-              {pipeline && (
-                  // @ts-ignore
-                  <Label ribbon color={pipeline.color as any}><span style={styles.ribbon}>{pipeline.name}</span></Label>
-              )}
+                {/*@ts-ignore*/}
+              <Label ribbon color={trade.pipelineColor as any}><span style={styles.ribbon}>{trade.pipelineName}</span></Label>
             </Table.Cell>
-          <Table.Cell style={styles.defaultCell}>
-            <Label basic color='blue'>{trade.mock ? "test" : "live"}</Label>
-          </Table.Cell>
+            <Table.Cell style={styles.defaultCell}>
+                <Label basic color='blue'>{trade.mock ? "test" : "live"}</Label>
+            </Table.Cell>
             <Table.Cell collapsing style={{...styles.defaultCell, color: DARK_YELLOW, fontWeight: '600'}}>
               {trade.symbol}
             </Table.Cell>

@@ -21,6 +21,8 @@ export type Trade = {
     side: number
     mock: boolean
     pipelineId: number
+    pipelineName: string
+    pipelineColor: string
     leverage: number
 }
 
@@ -39,6 +41,8 @@ export type RawTrade = {
     side: number
     mock: boolean
     pipelineId: number
+    pipelineName: string
+    pipelineColor: string
     leverage: number
 }
 
