@@ -124,7 +124,7 @@ class BinanceFuturesTrader(BinanceTrader):
             kwargs.update({"reduceOnly": True})
             units_factor = 1.2
 
-        units = self._convert_units(amount, units, symbol)
+        units = self._convert_units(amount, units, symbol, units_factor)
 
         pipeline_id = kwargs["pipeline_id"] if "pipeline_id" in kwargs else None
 
@@ -133,7 +133,7 @@ class BinanceFuturesTrader(BinanceTrader):
             side=order_side,
             type=order_type,
             newOrderRespType='RESULT',
-            quantity=units * units_factor,
+            quantity=units,
             **kwargs
         )
 
@@ -152,15 +152,15 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self.report_trade(order, units, going, header, symbol=symbol)
 
-    def _convert_units(self, amount, units, symbol):
+    def _convert_units(self, amount, units, symbol, units_factor=1):
         price_precision = self.symbols[symbol]["price_precision"]
         quantity_precision = self.symbols[symbol]["quantity_precision"]
 
         if amount is not None and units is None:
             price = round(float(self.get_symbol_ticker(symbol=symbol)['price']), price_precision)
-            return round(amount / price, quantity_precision)
+            return round(amount / price * units_factor, quantity_precision)
         else:
-            return round(units, quantity_precision)
+            return round(units * units_factor, quantity_precision)
 
     def _format_order(self, order, pipeline_id):
         return dict(
