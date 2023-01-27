@@ -32,7 +32,7 @@ function PositionRow(props: Props) {
     const roi = markPrice ? getRoi(position.price, currentPrices[position.symbol], position.position, position.leverage)
       : 0
 
-    const pnl = markPrice ? (markPrice - position.price) * position.amount : 0
+    const pnl = markPrice ? Math.abs((markPrice - position.price) * position.amount) : 0
 
     const pnlColor = roi > 0 ? GREEN : RED
 
