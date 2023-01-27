@@ -97,7 +97,7 @@ def handle_pipelines(page):
             response["pipelines"] = [pipeline.as_json() for pipeline in Pipeline.objects.filter(id=pipeline_id)]
 
         else:
-            pipelines = Pipeline.objects.all().order_by('id')
+            pipelines = Pipeline.objects.filter(deleted=False).order_by('id')
 
             paginator = Paginator(pipelines, 20)
 
@@ -115,7 +115,7 @@ def handle_pipelines(page):
 
     if request.method == 'DELETE':
         if Pipeline.objects.filter(id=pipeline_id).exists():
-            Pipeline.objects.filter(id=pipeline_id).delete()
+            Pipeline.objects.filter(id=pipeline_id).update(deleted=True)
             response.update({"message": "The trading bot was deleted", "success": True})
         else:
             response.update({"message": "The requested trading bot was not found", "success": True})
