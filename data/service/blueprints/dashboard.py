@@ -10,7 +10,7 @@ from flask_jwt_extended import jwt_required
 
 from data.service.external_requests import get_strategies
 from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict, convert_client_request
-from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER
+from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -44,7 +44,7 @@ def get_resources(resources):
             response["strategies"] = strategies
 
         elif resource == 'candleSizes':
-            response["candleSizes"] = {key: key for key in CANDLE_SIZES_MAPPER.keys()}
+            response["candleSizes"] = CANDLE_SIZES_ORDERED
 
     return jsonify(response)
 

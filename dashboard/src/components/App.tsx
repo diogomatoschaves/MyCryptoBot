@@ -148,9 +148,12 @@ class App extends Component<Props, State> {
         getResources(Object.keys(RESOURCES_MAPPING), this.props.history)
             .then(resources => {
                 const options = resources ? Object.keys(resources).reduce((accum: any, resource: any) => {
+
+                    const resourcesArray = resource === 'candleSizes' ? resources[resource] : Object.keys(resources[resource])
+
                     return {
                         ...accum,
-                        [RESOURCES_MAPPING[resource]]: Object.keys(resources[resource]).map((name: any, index: number) => ({
+                        [RESOURCES_MAPPING[resource]]: resourcesArray.map((name: any, index: number) => ({
                             key: index + 1,
                             text: name,
                             value: index + 1
