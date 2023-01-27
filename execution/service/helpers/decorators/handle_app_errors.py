@@ -31,10 +31,10 @@ def handle_app_errors(_func=None):
                 return jsonify(Responses.SYMBOL_INVALID(e.message))
             except SymbolAlreadyTraded as e:
                 logging.info(e.message)
-                return jsonify((Responses.SYMBOL_ALREADY_TRADED(e.message)))
+                return jsonify(Responses.SYMBOL_ALREADY_TRADED(e.message))
             except SymbolNotBeingTraded as e:
                 logging.info(e.message)
-                return jsonify((Responses.SYMBOL_NOT_BEING_TRADED(e.message)))
+                return jsonify(Responses.SYMBOL_NOT_BEING_TRADED(e.message))
             except SignalRequired as e:
                 logging.info(e.message)
                 return jsonify(Responses.SIGNAL_REQUIRED(e.message))
