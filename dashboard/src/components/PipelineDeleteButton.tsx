@@ -25,6 +25,7 @@ const PipelineDeleteButton = (props: Props) => {
                     event.preventDefault()
                     event.stopPropagation();
                 }}
+                disabled={pipeline.active}
             >
                 <span style={{marginRight: '10px', marginLeft: '-10px'}}>
                     <Icon name={'delete'}/>
