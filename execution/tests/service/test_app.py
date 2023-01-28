@@ -111,6 +111,26 @@ class TestExecutionService:
                 Responses.NO_SUCH_PIPELINE("Pipeline 2 was not found."),
                 id="NO_SUCH_PIPELINE",
             ),
+        ],
+    )
+    def test_binance_trader_fail_stop(
+        self,
+        params,
+        expected_value,
+        mock_binance_margin_trader_fail,
+        mock_binance_futures_trader_fail,
+        client,
+        exchange_data,
+        create_pipeline,
+        create_inactive_pipeline,
+    ):
+        res = client.post("stop_symbol_trading", json=params)
+
+        assert res.json == expected_value
+
+    @pytest.mark.parametrize(
+        "params,expected_value",
+        [
             pytest.param(
                 {
                     "pipeline_id": 3
@@ -120,12 +140,12 @@ class TestExecutionService:
             ),
         ],
     )
-    def test_binance_trader_fail_stop(
+    def test_binance_trader_fail_stop_pipeline_inactive(
         self,
         params,
         expected_value,
-        mock_binance_margin_trader_fail,
-        mock_binance_futures_trader_fail,
+        mock_binance_margin_trader_fail_pipeline_inactive,
+        mock_binance_futures_trader_fail_pipeline_inactive,
         client,
         exchange_data,
         create_pipeline,

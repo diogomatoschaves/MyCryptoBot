@@ -7,7 +7,6 @@ import execution
 from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded, LeverageSettingFail
 
 
-
 class MockBinanceTrader:
     def __init__(
         self,
@@ -60,23 +59,39 @@ def mock_binance_margin_trader_success(mocker):
 
 
 @pytest.fixture
+def mock_binance_futures_trader_success(mocker):
+    return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader())
+
+
+@pytest.fixture
 def mock_binance_margin_trader_fail(mocker):
     return mocker.patch(
         "execution.service.app.binance_margin_trader",
-        MockBinanceTrader(raise_symbol_not_being_traded=True, raise_symbol_already_traded=True)
+        MockBinanceTrader(raise_symbol_not_being_traded=True, raise_symbol_already_traded=True),
     )
 
 
 @pytest.fixture
-def mock_binance_futures_trader_success(mocker):
-    return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader())
+def mock_binance_margin_trader_fail_pipeline_inactive(mocker):
+    return mocker.patch(
+        "execution.service.app.binance_margin_trader",
+        MockBinanceTrader(),
+    )
 
 
 @pytest.fixture
 def mock_binance_futures_trader_fail(mocker):
     return mocker.patch(
         "execution.service.app.binance_futures_trader",
-        MockBinanceTrader(raise_symbol_not_being_traded=True, raise_symbol_already_traded=True)
+        MockBinanceTrader(raise_symbol_not_being_traded=True, raise_symbol_already_traded=True),
+    )
+
+
+@pytest.fixture
+def mock_binance_futures_trader_fail_pipeline_inactive(mocker):
+    return mocker.patch(
+        "execution.service.app.binance_futures_trader",
+        MockBinanceTrader(),
     )
 
 
