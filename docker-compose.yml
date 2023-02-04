@@ -28,6 +28,8 @@ services:
     image: model-server
     ports:
       - "5001:5000"
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
@@ -59,7 +61,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgres://postgres:6730@host.docker.internal:5432/crypto_bot
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
       - APP_NAME=crypto-bot-execution
       - PORT=5000
