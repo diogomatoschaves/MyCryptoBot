@@ -170,7 +170,7 @@ def get_positions(page):
 @handle_db_connection_error
 def get_trades_metrics():
 
-    aggregate_values = Trade.objects.annotate(
+    aggregate_values = Trade.objects.exclude(close_time=None).annotate(
         duration=F('close_time') - F('open_time'),
         winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
         losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
@@ -197,7 +197,7 @@ def get_pipelines_metrics():
     def reduce_pipelines(accum, pipeline):
 
         try:
-            trades_metrics = convert_trades_to_dict(pipeline.trade_set.all().annotate(
+            trades_metrics = convert_trades_to_dict(pipeline.trade_set.exclude(close_time=None).annotate(
                 duration=F('close_time') - F('open_time'),
                 winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
                 losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
@@ -230,7 +230,7 @@ def get_pipelines_metrics():
                 "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
             }
 
-    pipelines = Pipeline.objects.all()
+    pipelines = Pipeline.objects.exclude(deleted=True)
 
     pipelines_metrics = reduce(reduce_pipelines, pipelines, {
         "totalPipelines": 0,
