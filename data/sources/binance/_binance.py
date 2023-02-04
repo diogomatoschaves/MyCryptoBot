@@ -71,14 +71,14 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         sets instance parameters: symbol, quote, base
 
         """
-        symbol_info = self.validate_symbol(symbol)
+        symbol_obj = self.validate_symbol(symbol)
 
         if candle_size not in const.CANDLE_SIZES_MAPPER:
             raise CandleSizeInvalid(candle_size)
 
         self.symbol = symbol
-        self.base = symbol_info["baseAsset"],
-        self.quote = symbol_info["quoteAsset"],
+        self.base = symbol_obj.base,
+        self.quote = symbol_obj.quote,
 
     def start_data_ingestion(self, header=''):
         """

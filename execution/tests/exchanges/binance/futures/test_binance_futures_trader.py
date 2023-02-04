@@ -101,13 +101,11 @@ class TestBinanceFuturesTrader:
         initial_position,
         test_mock_setup,
         futures_change_leverage_spy,
-        futures_exchange_info_spy,
         futures_create_order_spy,
     ):
         binance_trader = self.start_symbol_trading(parameters, symbols)
 
         assert futures_change_leverage_spy.call_count == times_called[0]
-        assert futures_exchange_info_spy.call_count == times_called[1]
         assert futures_create_order_spy.call_count == times_called[2]
 
         symbol = parameters["symbol"]

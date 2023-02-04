@@ -87,7 +87,7 @@ class BinanceFuturesTrader(BinanceTrader):
         try:
             self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
         except NoUnits:
-            logging.info("There's no position to be closed.")
+            logging.info(header + "There's no position to be closed.")
             pass
 
         self.symbols.pop(symbol)
@@ -194,11 +194,11 @@ class BinanceFuturesTrader(BinanceTrader):
 
     def _get_symbol_info(self, symbol):
 
-        symbol_info = self.validate_symbol(symbol)
+        symbol_obj = self.validate_symbol(symbol)
 
         self.symbols[symbol] = {
-            "base": symbol_info["baseAsset"],
-            "quote": symbol_info["quoteAsset"],
-            "price_precision": symbol_info["pricePrecision"],
-            "quantity_precision": symbol_info["quantityPrecision"]
+            "base": symbol_obj.base,
+            "quote": symbol_obj.quote,
+            "price_precision": symbol_obj.price_precision,
+            "quantity_precision": symbol_obj.quantity_precision
         }

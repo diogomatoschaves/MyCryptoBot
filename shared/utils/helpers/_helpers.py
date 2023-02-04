@@ -10,8 +10,7 @@ from shared.utils.exceptions import SymbolInvalid, NoSuchPipeline
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Pipeline
-
+from database.model.models import Pipeline, Symbol
 
 escapes = ''.join([chr(char) for char in range(1, 32)])
 translator = str.maketrans('', '', escapes)
@@ -87,14 +86,8 @@ def clean_docstring(doc):
     return doc.translate(translator).strip()
 
 
-def get_symbol_or_raise_exception(exchange_info, symbol):
-    symbol_info = None
-    if "symbols" in exchange_info:
-        for info in exchange_info["symbols"]:
-            if info['symbol'] == symbol:
-                symbol_info = info
-
-    if not symbol_info:
+def get_symbol_or_raise_exception(symbol):
+    if not Symbol.objects.filter(name=symbol).exists():
         raise SymbolInvalid(symbol)
-
-    return symbol_info
+    else:
+        return Symbol.objects.get(name=symbol)
