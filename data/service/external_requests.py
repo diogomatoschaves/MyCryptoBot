@@ -122,3 +122,20 @@ def get_balance():
 
     return response
 
+
+@retry_failed_connection(num_times=2)
+@json_error_handler
+def get_open_positions(symbol):
+
+    endpoint = "GET_OPEN_POSITIONS"
+
+    url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL")) + f"?symbol={symbol}"
+
+    r = requests.get(url, headers={"Authorization": cache.get("bearer_token")})
+    logging.debug("get_open_positions: " + r.text)
+
+    response = r.json()
+    logging.debug(f"get_open_positions: {response}")
+
+    return response
+

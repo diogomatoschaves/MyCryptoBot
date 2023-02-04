@@ -1,7 +1,6 @@
 from data.service.helpers.exceptions import CandleSizeInvalid
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
-# from data.tests.setup.fixtures.app import mock_client_env_vars
 from data.tests.setup.test_data.sample_data import processed_historical_data
 from shared.utils.exceptions import SymbolInvalid
 from shared.utils.tests.test_setup import get_fixtures
@@ -163,26 +162,99 @@ class TestBinanceDataHandler:
         assert position.open is False
         assert position.position == 0
 
+    @pytest.mark.parametrize(
+        "exception,start_stop_symbol_return_value,get_open_positions_return_value,expected_values",
+        [
+            pytest.param(
+                False,
+                {"success": True, "message": ''},
+                {"success": True, "positions": {"test": 1, "live": 0}},
+                {
+                    "pipeline_active": False,
+                    "position_active": False,
+                    "position_side": 0,
+                },
+                id="start_stop-True",
+            ),
+            pytest.param(
+                False,
+                {"success": False, "message": ''},
+                {"success": True, "positions": {"test": 0, "live": 0}},
+                {
+                    "pipeline_active": False,
+                    "position_active": False,
+                    "position_side": 0,
+                },
+                id="start_stop-False|get_open_positions-True-positions==0",
+            ),
+            pytest.param(
+                False,
+                {"success": False, "message": ''},
+                {"success": False, "positions": {"test": 0, "live": 0}},
+                {
+                    "pipeline_active": False,
+                    "position_active": False,
+                    "position_side": 0,
+                },
+                id="start_stop-False|get_open_positions-False",
+            ),
+            pytest.param(
+                True,
+                {"success": False, "message": 'API ERROR'},
+                {"success": True, "positions": {"test": 1, "live": 1}},
+                {
+                    "pipeline_active": True,
+                    "position_active": True,
+                    "position_side": 1,
+                },
+                id="start_stop-FALSE|get_open_positions-True-positions!=0",
+            ),
+        ],
+    )
     def test_binance_data_handler_stop_pipeline_fail(
         self,
+        exception,
+        start_stop_symbol_return_value,
+        get_open_positions_return_value,
+        expected_values,
         common_fixture,
+        create_open_position,
         mock_trigger_signal_successfully,
-        mock_start_stop_symbol_trading_success_false_binance_data_handler,
+        mock_start_stop_symbol_trading,
+        mock_get_open_positions,
         mock_redis_connection_external_requests,
     ):
+
+        pipeline_id = 2
 
         input_params = {
             "symbol": "BTCUSDT",
             "candle_size": "1h",
-            "pipeline_id": 2
+            "pipeline_id": pipeline_id
         }
 
-        with pytest.raises(Exception) as exception:
+        mock_start_stop_symbol_trading.return_value = start_stop_symbol_return_value
+        mock_get_open_positions.return_value = get_open_positions_return_value
+
+        if exception:
+            with pytest.raises(Exception) as exception:
+                binance_data_handler = BinanceDataHandler(**input_params)
+                binance_data_handler.start_data_ingestion()
+                binance_data_handler.stop_data_ingestion()
+
+            assert exception.type == DataPipelineCouldNotBeStopped
+
+        else:
             binance_data_handler = BinanceDataHandler(**input_params)
             binance_data_handler.start_data_ingestion()
             binance_data_handler.stop_data_ingestion()
 
-        assert exception.type == DataPipelineCouldNotBeStopped
+        pipeline = Pipeline.objects.get(id=pipeline_id)
+        assert pipeline.active is expected_values["pipeline_active"]
+
+        position = Position.objects.get(pipeline_id=pipeline_id)
+        assert position.open is expected_values["position_active"]
+        assert position.position == expected_values["position_side"]
 
     @pytest.mark.parametrize(
         "input_value,exception",

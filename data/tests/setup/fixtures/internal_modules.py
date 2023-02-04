@@ -168,12 +168,13 @@ def raise_pipeline_start_fail(pipeline_id, start_or_stop):
 
 
 @pytest.fixture
-def mock_start_stop_symbol_trading_success_false_binance_data_handler(mocker):
-    return mocker.patch.object(
-        data.sources.binance._binance,
-        'start_stop_symbol_trading',
-        lambda pipeline_id, start_or_stop: {"success": False, "message": ''},
-    )
+def mock_start_stop_symbol_trading(mocker):
+    return mocker.patch('data.sources.binance._binance.start_stop_symbol_trading')
+
+
+@pytest.fixture
+def mock_get_open_positions(mocker):
+    return mocker.patch('data.sources.binance._binance.get_open_positions')
 
 
 @pytest.fixture

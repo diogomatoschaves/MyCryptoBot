@@ -26,7 +26,8 @@ EXECUTION_APP_ENDPOINTS = {
     "START_SYMBOL_TRADING": lambda host_url: f"{host_url}/start_symbol_trading",
     "STOP_SYMBOL_TRADING": lambda host_url: f"{host_url}/stop_symbol_trading",
     "GET_PRICE": lambda host_url, symbol: f"{host_url}/prices?symbol={symbol}",
-    "GET_BALANCE": lambda host_url: f"{host_url}/futures_account_balance"
+    "GET_BALANCE": lambda host_url: f"{host_url}/futures_account_balance",
+    "GET_OPEN_POSITIONS": lambda host_url: f"{host_url}/open-positions",
 }
 
 
@@ -42,6 +43,8 @@ def check_input(binance_client, strategies, **kwargs):
             raise SymbolRequired
 
         exchange_info = binance_client.futures_exchange_info()
+
+        print(exchange_info)
 
         get_symbol_or_raise_exception(exchange_info, symbol)
 

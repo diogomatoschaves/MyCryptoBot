@@ -7,7 +7,7 @@ import redis
 from binance import ThreadedWebsocketManager
 
 import shared.exchanges.binance.constants as const
-from data.service.external_requests import start_stop_symbol_trading
+from data.service.external_requests import start_stop_symbol_trading, get_open_positions
 from data.service.helpers.exceptions import CandleSizeInvalid, DataPipelineCouldNotBeStopped
 from data.sources import trigger_signal
 from data.sources.binance.extract import extract_data
@@ -26,7 +26,6 @@ cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
 
 class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
-
     """
     Class that handles realtime / incoming data from the Binance API, and
     triggers signal generation whenever a new step has been surpassed (currently
@@ -129,7 +128,15 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         if not response["success"]:
             logging.info(response["message"])
-            raise DataPipelineCouldNotBeStopped(response["message"])
+
+            positions = get_open_positions(symbol=self.symbol)
+
+            pipeline = Pipeline.objects.get(id=self.pipeline_id)
+
+            if positions["success"]:
+                if (pipeline.paper_trading and positions["positions"]["test"] != 0) \
+                        or (not pipeline.paper_trading and positions["positions"]["live"] != 0):
+                    raise DataPipelineCouldNotBeStopped(response["message"])
 
         Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
         Position.objects.filter(pipeline_id=self.pipeline_id).update(open=False, position=0)
@@ -203,10 +210,10 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         if not success:
             if "Too many retries" in message:
-                success, message = self.generate_new_signal(header, retries=retries+1)
+                success = self.generate_new_signal(header, retries=retries + 1)
             else:
                 logging.warning(header + message)
-                self.stop_data_ingestion()
+                self.stop_data_ingestion(header=header)
 
         return success
 
@@ -285,8 +292,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     ):
         new_entries = 0
         if len(data) != data_length:
-
-            rows = data.iloc[data_length-1:-1].reset_index()
+            rows = data.iloc[data_length - 1:-1].reset_index()
 
             data_length = len(data)
 
