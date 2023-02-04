@@ -8,12 +8,12 @@ import pytz
 
 from data.service.helpers.exceptions import *
 from data.service.helpers.exceptions.data_pipeline_ongoing import DataPipelineOngoing
-from shared.utils.helpers import get_symbol_or_raise_exception
+from shared.utils.exceptions import SymbolInvalid
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Exchange, Pipeline
+from database.model.models import Exchange, Pipeline, Symbol
 import shared.exchanges.binance.constants as const
 
 MODEL_APP_ENDPOINTS = {
@@ -42,11 +42,8 @@ def check_input(binance_client, strategies, **kwargs):
         if symbol is None:
             raise SymbolRequired
 
-        exchange_info = binance_client.futures_exchange_info()
-
-        print(exchange_info)
-
-        get_symbol_or_raise_exception(exchange_info, symbol)
+        if not Symbol.objects.filter(name=symbol).exists():
+            raise SymbolInvalid(symbol)
 
     if "exchange" in kwargs:
         exchange = kwargs["exchange"]

@@ -32,8 +32,8 @@ def create_assets(db):
 
 @pytest.fixture
 def create_symbol(db, create_assets):
-    obj1 = Symbol.objects.create(name='BTCUSDT', base_id='BTC', quote_id='USDT')
-    obj2 = Symbol.objects.create(name='BNBBTC', base_id='BNB', quote_id='BTC')
+    obj1 = Symbol.objects.create(name='BTCUSDT', base_id='BTC', quote_id='USDT', price_precision=2, quantity_precision=3)
+    obj2 = Symbol.objects.create(name='BNBBTC', base_id='BNB', quote_id='BTC', price_precision=2, quantity_precision=3)
     return obj1, obj2
 
 
