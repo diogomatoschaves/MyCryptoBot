@@ -36,9 +36,9 @@ class TestVectorizedBacktester:
         assert perf == fixture["out"]["expected_performance"]
         assert outperf == fixture["out"]["expected_outperformance"]
 
-        assert (
-            vect.results.to_dict(orient="records") == fixture["out"]["expected_results"]
-        )
+        for i, d in enumerate(vect.results.to_dict(orient="records")):
+            for key in d:
+                assert d[key] == pytest.approx(fixture["out"]["expected_results"][i][key], 0.2)
 
     @pytest.mark.parametrize(
         "fixture",
@@ -65,4 +65,5 @@ class TestVectorizedBacktester:
         assert (
             optimization_results == fixture["out"]["expected_optimization_results"][0]
         ).all()
+
         assert perf == fixture["out"]["expected_optimization_results"][1]

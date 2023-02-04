@@ -22,6 +22,14 @@ const ErrorHandler = (props: Props) => {
           {props.children}
         </Fragment>
       )
+    // @ts-ignore
+    case 422:
+      removeToken()
+      return (
+        <Fragment>
+          {props.children}
+        </Fragment>
+      )
     default:
       return (
         <Fragment>
