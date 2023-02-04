@@ -182,7 +182,7 @@ function Dashboard(props: Props) {
                       </Grid.Column>
                       <Grid.Column floated='right' style={styles.pipelinesColumn}>
                         {/*@ts-ignore*/}
-                        <Label color={bestWinRate.color}>{bestWinRate.name}</Label>
+                        {bestWinRate && <Label color={bestWinRate.color}>{bestWinRate.name}</Label>}
                       </Grid.Column>
                     </Grid.Column>
                     <Grid.Column>
@@ -191,7 +191,7 @@ function Dashboard(props: Props) {
                       </Grid.Column>
                       <Grid.Column style={styles.pipelinesColumn}>
                         {/*@ts-ignore*/}
-                        <Label color={mostTrades.color}>{mostTrades.name}</Label>
+                        {mostTrades && <Label color={mostTrades.color}>{mostTrades.name}</Label>}
                       </Grid.Column>
                     </Grid.Column>
                   </Grid.Row>
