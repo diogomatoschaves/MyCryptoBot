@@ -10,7 +10,7 @@ if module_path not in sys.path:
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Asset, Symbol
+from database.model.models import Asset, Symbol, Exchange
 from shared.exchanges import BinanceHandler
 
 
@@ -39,6 +39,8 @@ def main():
                     price_precision=symbol["pricePrecision"],
                     quantity_precision=symbol["quantityPrecision"]
                 )
+
+    Exchange.objects.get_or_create(name='binance')
 
 
 if __name__ == "__main__":
