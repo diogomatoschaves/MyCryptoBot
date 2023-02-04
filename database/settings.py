@@ -20,7 +20,7 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'crypto_bot',
+            'NAME': 'mycryptobot',
             'USER': 'postgres',
             'PASSWORD': '6730',
             'HOST': 'localhost',
