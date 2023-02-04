@@ -4,6 +4,7 @@ import os
 import sys
 
 import redis
+from dotenv import find_dotenv, load_dotenv
 from flask import Flask, jsonify, request
 from flask_jwt_extended import jwt_required, JWTManager
 from rq import Queue
@@ -24,11 +25,13 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
-
 cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
-
 
 q = Queue(connection=conn)
 

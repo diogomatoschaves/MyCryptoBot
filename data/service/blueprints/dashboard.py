@@ -211,7 +211,10 @@ def get_pipelines_metrics():
                 Sum('losing_trade'),
             ))
 
-            win_rate = trades_metrics["winningTrades"] / trades_metrics["numberTrades"]
+            try:
+                win_rate = trades_metrics["winningTrades"] / trades_metrics["numberTrades"]
+            except TypeError:
+                win_rate = None
 
             return {
                 **accum,
@@ -219,7 +222,7 @@ def get_pipelines_metrics():
                 "totalPipelines": accum["totalPipelines"] + 1,
                 "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
                 "bestWinRate": {**pipeline.as_json(), "winRate": win_rate}
-                if win_rate > accum["bestWinRate"]["winRate"] else accum["bestWinRate"],
+                if win_rate and win_rate > accum["bestWinRate"]["winRate"] else accum["bestWinRate"],
                 "mostTrades": {**pipeline.as_json(), "totalTrades": trades_metrics["numberTrades"]}
                 if trades_metrics["numberTrades"] > accum["mostTrades"]["totalTrades"] else accum["mostTrades"],
             }
