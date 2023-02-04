@@ -21,6 +21,7 @@ env:
   BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
   BINANCE_API_KEY_TEST: ${{ secrets.BINANCE_API_KEY_TEST }}
   BINANCE_API_SECRET_TEST: ${{ secrets.BINANCE_API_SECRET_TEST }}
+  SECRET_KEY: ${{ secrets.SECRET_KEY}}
 
 jobs:
   testing:

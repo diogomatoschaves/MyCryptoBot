@@ -21,8 +21,9 @@ env:
   BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
   BINANCE_API_KEY_TEST: ${{ secrets.BINANCE_API_KEY_TEST }}
   BINANCE_API_SECRET_TEST: ${{ secrets.BINANCE_API_SECRET_TEST }}
-  MODEL_APP_URL: ${{ secrets.MODEL_APP_URL }}
-  EXECUTION_APP_URL: ${{ secrets.EXECUTION_APP_URL }}
+  MODEL_APP_URL: https://${{ secrets.HEROKU_MODEL_APP_NAME }}.herokuapp.com
+  EXECUTION_APP_URL: https://${{ secrets.HEROKU_EXECUTION_APP_NAME }}.herokuapp.com
+  SECRET_KEY: ${{ secrets.SECRET_KEY}}
 
 jobs:
   testing:

@@ -2,6 +2,11 @@ import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import dj_database_url
+from dotenv import find_dotenv, load_dotenv
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
 
 
 hello = 'hello'
@@ -20,9 +25,9 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'mycryptobot',
-            'USER': 'postgres',
-            'PASSWORD': '6730',
+            'NAME': os.getenv('POSTGRES_DB'),
+            'USER': os.getenv('POSTGRES_USER'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
             'HOST': 'localhost',
             'PORT': '5432',
             'CONN_MAX_AGE': 500
@@ -39,8 +44,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes'
 )
 
-# SECURITY WARNING: Modify this secret key if using in production!
-SECRET_KEY = '6few3nci_q_o@l1dlbk81%wcxe!*6r29yu629&d97!hiqat9fa'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 USE_TZ = True
 

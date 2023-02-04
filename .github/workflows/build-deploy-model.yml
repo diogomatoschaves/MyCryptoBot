@@ -18,7 +18,8 @@ env:
   HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
   HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
   HEROKU_APP_NAME: ${{ secrets.HEROKU_MODEL_APP_NAME }}
-  EXECUTION_APP_URL: ${{ secrets.EXECUTION_APP_URL }}
+  EXECUTION_APP_URL: https://${{ secrets.HEROKU_EXECUTION_APP_NAME }}.herokuapp.com
+  SECRET_KEY: ${{ secrets.SECRET_KEY}}
 
 jobs:
   testing:

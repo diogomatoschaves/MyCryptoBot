@@ -3,7 +3,7 @@ import sys
 
 import django
 
-module_path = os.path.abspath(os.path.join('datasets'))
+module_path = os.path.abspath(os.path.join('.'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
@@ -24,13 +24,21 @@ def main():
             quote_asset, _ = Asset.objects.get_or_create(symbol=symbol["quoteAsset"])
             base_asset, _ = Asset.objects.get_or_create(symbol=symbol["baseAsset"])
 
-            Symbol.objects.get_or_create(
-                name=symbol["symbol"],
-                base=base_asset,
-                quote=quote_asset,
-                price_precision=symbol["pricePrecision"],
-                quantity_precision=symbol["quantityPrecision"]
-            )
+            try:
+                Symbol.objects.get_or_create(
+                    name=symbol["symbol"],
+                    base=base_asset,
+                    quote=quote_asset,
+                    price_precision=symbol["pricePrecision"],
+                    quantity_precision=symbol["quantityPrecision"]
+                )
+            except django.db.utils.IntegrityError:
+                Symbol.objects.filter(name=symbol["symbol"]).update(
+                    base=base_asset,
+                    quote=quote_asset,
+                    price_precision=symbol["pricePrecision"],
+                    quantity_precision=symbol["quantityPrecision"]
+                )
 
 
 if __name__ == "__main__":

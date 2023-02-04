@@ -55,7 +55,7 @@ def create_app():
     app.register_blueprint(user_management, url_prefix='/api')
     app.register_blueprint(proxy, url_prefix='/api')
 
-    app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+    app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=3)
 
     jwt = JWTManager(app)

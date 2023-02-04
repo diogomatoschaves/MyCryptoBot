@@ -90,7 +90,7 @@ def create_app():
     app = Flask(__name__)
     app.register_blueprint(market_data)
 
-    app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
+    app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
     jwt = JWTManager(app)
 
     CORS(app)
