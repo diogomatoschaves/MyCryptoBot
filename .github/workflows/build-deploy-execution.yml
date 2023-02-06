@@ -3,6 +3,8 @@ name: crypto-bot-execution - Build and Deploy to heroku.
 
 # Run workflow on every push to master branch.
 on:
+  repository_dispatch:
+    types: [on-demand-run]
   push:
     branches: [master]
     paths:
