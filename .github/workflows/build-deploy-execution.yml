@@ -1,5 +1,5 @@
 # Your workflow name.
-name: crypto-bot-execution - Build and Deploy to heroku.
+name: test-build-execution-app
 
 # Run workflow on every push to master branch.
 on:

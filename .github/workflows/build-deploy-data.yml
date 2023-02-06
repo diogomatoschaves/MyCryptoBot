@@ -1,5 +1,5 @@
 # Your workflow name.
-name: crypto-bot-data - Build and Deploy to heroku.
+name: test-build-data-app
 
 # Run workflow on every push to master branch.
 on:
