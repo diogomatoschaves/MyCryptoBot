@@ -186,7 +186,7 @@ class Pipeline(models.Model):
     def get_profit_loss(self):
         result = reduce(
             lambda accum, trade: [
-                accum[0] + trade.profit_loss * trade.amount,
+                accum[0] + trade.profit_loss * trade.amount * (trade.leverage if trade.leverage else self.leverage),
                 accum[1] + trade.amount
             ] if trade.profit_loss else accum,
             self.trade_set.iterator(),
@@ -262,6 +262,7 @@ class Trade(models.Model):
     exchange = models.ForeignKey(Exchange, default='binance', on_delete=models.SET_DEFAULT)
     mock = models.BooleanField(null=True, default=False)
     pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
+    leverage = models.IntegerField(null=True, default=None)
 
     def as_json(self):
         return dict(
@@ -279,5 +280,5 @@ class Trade(models.Model):
             pipelineId=self.pipeline.id if self.pipeline else None,
             pipelineName=self.pipeline.name if self.pipeline else None,
             pipelineColor=self.pipeline.color if self.pipeline else None,
-            leverage=self.pipeline.leverage if self.pipeline else None,
+            leverage=self.leverage if self.leverage else self.pipeline.leverage if self.pipeline else None,
         )

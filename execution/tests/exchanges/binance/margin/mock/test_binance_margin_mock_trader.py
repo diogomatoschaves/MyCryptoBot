@@ -155,6 +155,7 @@ class TestBinanceMockTrader:
         initial_position,
         signal,
         create_symbol,
+        create_pipeline,
         create_exchange,
         create_structured_data,
         create_margin_order_spy
@@ -167,9 +168,9 @@ class TestBinanceMockTrader:
             }
         }
 
-        binance_trader._set_position(self.symbol, initial_position)
+        binance_trader._set_position(self.symbol, initial_position, pipeline_id=1)
 
-        binance_trader.trade(self.symbol, signal, amount="all")
+        binance_trader.trade(self.symbol, signal, amount="all", pipeline_id=1)
 
         assert binance_trader._get_position(self.symbol) == signal
 
