@@ -1,7 +1,7 @@
 import {Decimals, Pipeline, Trade} from "../types";
 import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
-import {timeFormatterDate} from "../utils/helpers";
+import {getRoi, timeFormatterDate} from "../utils/helpers";
 import React from "react";
 
 
@@ -34,7 +34,7 @@ function TradeRow(props: Props) {
   let pnl, pnlColor
   if (trade.profitLoss !== null) {
     pnlColor = trade.profitLoss > 0 ? GREEN : RED
-    pnl = (trade.profitLoss * 100).toFixed(2)
+    pnl = (trade.profitLoss * trade.leverage * 100).toFixed(2)
   } else {
     pnlColor = '#000000'
     pnl = '-'

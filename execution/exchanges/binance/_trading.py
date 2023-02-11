@@ -11,7 +11,7 @@ from shared.trading import Trader
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Position, Trade, Orders
+from database.model.models import Position, Trade, Orders, Pipeline
 
 
 class BinanceTrader(BinanceHandler, Trader):
@@ -155,6 +155,8 @@ class BinanceTrader(BinanceHandler, Trader):
 
             new_order = orders.pop(0)
 
+            leverage = Pipeline.objects.get(id=pipeline_id).leverage
+
             new_trade = Trade.objects.create(
                 symbol_id=symbol,
                 open_price=new_order.price,
@@ -162,7 +164,8 @@ class BinanceTrader(BinanceHandler, Trader):
                 side=1 if new_order.side == "BUY" else -1,
                 exchange_id=self.exchange,
                 mock=new_order.mock,
-                pipeline_id=pipeline_id
+                pipeline_id=pipeline_id,
+                leverage=leverage
             )
 
             return new_trade
