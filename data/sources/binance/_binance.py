@@ -91,12 +91,13 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         """
 
         # Get missing raw data
-        self._etl_pipeline(ExchangeData, self.base_candle_size, count_updates=False, header=header)
+        data, _ = self._etl_pipeline(ExchangeData, self.base_candle_size, count_updates=False, header=header)
 
         # Get missing structured data
         self._etl_pipeline(
             StructuredData,
             self.candle_size,
+            data=data,
             remove_zeros=True,
             remove_rows=True,
             count_updates=False,
@@ -182,7 +183,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                                 self.base_candle_size, candle_size, header=header)
 
         # Transform
-        data = transform_data(
+        transformed_data = transform_data(
             data,
             candle_size,
             self.exchange,
@@ -195,11 +196,9 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         )
 
         # Load
-        new_entries = load_data(model_class, data, count_updates=count_updates)
+        new_entries = load_data(model_class, transformed_data, count_updates=count_updates, header=header)
 
-        logging.info(header + f"Added {new_entries} new rows into {model_class}.")
-
-        return new_entries
+        return data, new_entries
 
     def generate_new_signal(self, header, retries=0):
 
@@ -290,13 +289,13 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         remove_zeros=False,
         remove_rows=False
     ):
-        new_entries = 0
+        new_entries = False
         if len(data) != data_length:
             rows = data.iloc[data_length - 1:-1].reset_index()
 
             data_length = len(data)
 
-            new_entries = self._etl_pipeline(
+            _, new_entries = self._etl_pipeline(
                 model_class,
                 candle_size,
                 reference_candle_size=candle_size,
@@ -306,4 +305,4 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                 columns_aggregation=const.COLUMNS_AGGREGATION
             )
 
-        return data, data_length, new_entries > 0
+        return data, data_length, new_entries

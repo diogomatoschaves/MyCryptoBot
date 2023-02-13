@@ -1,3 +1,4 @@
+import logging
 import os
 
 from django.db import connection, transaction
@@ -9,7 +10,7 @@ django.setup()
 unique_fields = {"open_time", "exchange", "symbol", "interval"}
 
 
-def load_data(model_class, data, count_updates=True):
+def load_data(model_class, data, count_updates=True, header=''):
 
     if data.index.name == 'open_time':
         data = data.reset_index()
@@ -21,7 +22,9 @@ def load_data(model_class, data, count_updates=True):
 
         new_entries += 1 if new_entry else 0
 
-    return new_entries
+    logging.info(header + f"Added {new_entries} new rows into {model_class}.")
+
+    return new_entries > 0
 
 
 def save_new_entry_db(model_class, fields, count_updates=True):

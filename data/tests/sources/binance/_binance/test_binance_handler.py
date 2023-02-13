@@ -92,6 +92,7 @@ class TestBinanceDataHandler:
         common_fixture,
         mock_trigger_signal_successfully,
         trigger_signal_spy,
+        spy_binance_handler_klines
     ):
 
         binance_data_handler = BinanceDataHandler(**input_params)
@@ -107,6 +108,7 @@ class TestBinanceDataHandler:
             pipeline_id = None
 
         assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id,)
+        assert spy_binance_handler_klines.call_count == 1
 
         binance_data_handler.stop_data_ingestion()
 

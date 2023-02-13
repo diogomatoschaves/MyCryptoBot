@@ -29,6 +29,11 @@ def mock_binance_handler_klines(mocker):
 
 
 @pytest.fixture
+def spy_binance_handler_klines(mocker):
+    return mocker.spy(BinanceHandler, "get_historical_klines_generator")
+
+
+@pytest.fixture
 def mock_binance_client_init(mocker):
     mocker.patch.object(Client, "_init_session", lambda self: None)
 
