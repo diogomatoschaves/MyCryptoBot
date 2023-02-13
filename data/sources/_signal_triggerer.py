@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-from collections import namedtuple
 
 import django
 
@@ -42,8 +41,8 @@ def trigger_signal(pipeline_id, header='', retry=0):
     if "success" in response and response["success"]:
         return wait_for_job_conclusion(response["job_id"], pipeline_id, header=header, retry=retry)
     else:
-        logging.info(response["message"])
-        return False, response["message"]
+        logging.info(response)
+        return False, (response["message"] if "message" in response else response)
 
 
 def wait_for_job_conclusion(job_id, pipeline_id, retry, header=''):
