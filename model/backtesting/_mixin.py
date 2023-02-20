@@ -1,18 +1,177 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.optimize import brute
+
+legend_mapping = {
+    "creturns": "Hold & Buy",
+    "cstrategy": "Strategy returns (no trading costs)",
+    "cstrategy_tc": "Strategy returns (with trading costs)"
+}
 
 
 class BacktestMixin:
+    """A Mixin class for backtesting trading strategies.
 
+    Attributes:
+    -----------
+    symbol : str
+        The trading symbol used for the backtest.
+    tc : float
+        The transaction costs (e.g. spread, commissions) as a percentage.
+    results : pandas.DataFrame
+        A DataFrame containing the results of the backtest.
+
+    Methods:
+    --------
+    run(params=None, print_results=True, plot_results=True, plot_positions=False):
+        Runs the trading strategy and prints and/or plots the results.
+    optimize(params, **kwargs):
+        Optimizes the trading strategy using brute force.
+    _test_strategy(params=None, print_results=True, plot_results=True, plot_positions=False):
+        Tests the trading strategy on historical data.
+    _assess_strategy(data, title, print_results=True, plot_results=True, plot_positions=True):
+        Assesses the performance of the trading strategy on historical data.
+    plot_results(title, plot_positions=True):
+        Plots the performance of the trading strategy compared to a buy and hold strategy.
+    _gen_repeating(s):
+        A generator function that groups repeated elements in an iterable.
+    plot_func(ax, group):
+        A function used for plotting positions.
+    """
     def __init__(self, symbol, trading_costs):
+        """
+        Initialize the BacktestMixin object.
 
+        Parameters:
+        -----------
+        symbol : str
+            The trading symbol to use for the backtest.
+        trading_costs : float
+            The transaction costs (e.g. spread, commissions) as a percentage.
+        """
         self.symbol = symbol
         self.tc = trading_costs / 100
+        self.strategy = None
 
-    def _assess_strategy(self, data, title, plot_results=True, plot_positions=True):
+    def __getattr__(self, attr):
+        """
+        Overrides the __getattr__ method to get attributes from the trading strategy object.
+
+        Parameters
+        ----------
+        attr : str
+            The attribute to be retrieved.
+
+        Returns
+        -------
+        object
+            The attribute object.
+        """
+        method = getattr(self.strategy, attr)
+
+        if not method:
+            return getattr(self, attr)
+        else:
+            return method
+
+    def load_data(self, data=None, csv_path=None):
+        if data:
+            self.set_data(data, self.strategy)
+
+        if csv_path or not data:
+            csv_path = csv_path if csv_path else 'model/sample_data/bitcoin.csv'
+            self.set_data(pd.read_csv(csv_path, index_col='date'), self.strategy)
+
+    def run(self, params=None, print_results=True, plot_results=True, plot_positions=False):
+        """Runs the trading strategy and prints and/or plots the results.
+
+        Parameters:
+        -----------
+        params : dict or None
+            The parameters to use for the trading strategy.
+        print_results : bool
+            If True, print the results of the backtest.
+        plot_results : bool
+            If True, plot the performance of the trading strategy compared to a buy and hold strategy.
+        plot_positions : bool
+            If True, plot the trading positions.
+
+        Returns:
+        --------
+        None
+        """
+        self._test_strategy(params, print_results, plot_results, plot_positions)
+
+    def optimize(self, params, **kwargs):
+        """Optimizes the trading strategy using brute force.
+
+        Parameters:
+        -----------
+        params : dict
+            A dictionary containing the parameters to optimize.
+        **kwargs : dict
+            Additional arguments to pass to the `brute` function.
+
+        Returns:
+        --------
+        opt : numpy.ndarray
+            The optimal parameter values.
+        -self._update_and_run(opt, plot_results=True) : float
+            The negative performance of the strategy using the optimal parameter values.
+        """
+        opt_params = []
+        for param in self.params:
+            if param in params:
+                opt_params.append(params[param])
+            else:
+                param_value = getattr(self, f"_{param}")
+                if isinstance(param_value, (float, int)):
+                    opt_params.append((param_value, param_value + 1, 1))
+
+        opt = brute(self._update_and_run, opt_params, finish=None)
+
+        if not isinstance(opt, (list, tuple, type(np.array([])))):
+            opt = np.array([opt])
+
+        return opt, -self._update_and_run(opt, plot_results=True)
+
+    def _test_strategy(self, params=None, print_results=True, plot_results=True, plot_positions=False):
+        """Tests the trading strategy on historical data.
+
+        Parameters:
+        -----------
+        params : dict or None
+            The parameters to use for the trading strategy
+        """
+        raise NotImplementedError
+
+    def _assess_strategy(self, data, title, print_results=True, plot_results=True, plot_positions=True):
+        """
+        Assess the performance of the trading strategy on historical data.
+
+        Parameters:
+        -----------
+        data : pandas.DataFrame
+            Historical price data for the trading symbol.
+        title : str
+            Title for the plot.
+        print_results : bool, default True
+            Whether to print the results.
+        plot_results : bool, default True
+            Whether to plot the results.
+        plot_positions : bool, default True
+            Whether to plot the positions.
+
+        Returns:
+        --------
+        float
+            The performance of the strategy.
+        float
+            The out-/underperformance of the strategy.
+        """
 
         data = self._calculate_positions(data.copy())
-
         data["trades"] = data.position.diff().fillna(0).abs()
 
         data["strategy"] = data.position.shift(1) * data.returns
@@ -26,28 +185,43 @@ class BacktestMixin:
 
         number_trades = self._get_trades(data)
 
-        print(f"Number of trades: {number_trades}")
-
         self.results = data
 
         if len(data) == 0:
             return 0, None
 
         # absolute performance of the strategy
-        perf = data["cstrategy_tc"].iloc[-1]
+        perf = round(data["cstrategy_tc"].iloc[-1], 3)
 
         # out-/underperformance of strategy
-        outperf = perf - data["creturns"].iloc[-1]
+        outperf = round(perf - data["creturns"].iloc[-1], 3)
+
+        if print_results:
+            print('--------------------------------')
+            print('\tResults')
+            print('')
+            print(f'\t# Trades: {number_trades}')
+            print(f'\tPerformance: {perf}')
+            print(f'\tOut Performance: {outperf}')
+            print('--------------------------------')
 
         if plot_results:
             self.plot_results(title, plot_positions)
 
-        return round(perf, 6), round(outperf, 6)
+        return perf, outperf
 
     def plot_results(self, title, plot_positions=True):
-        """ Plots the cumulative performance of the trading strategy
-        compared to buy and hold.
         """
+        Plot the performance of the trading strategy compared to a buy and hold strategy.
+
+        Parameters:
+        -----------
+        title : str
+            Title for the plot.
+        plot_positions : bool, default True
+            Whether to plot the positions.
+        """
+
         if self.results is None:
             print("No results to plot yet. Run the strategy first.")
         else:
@@ -55,7 +229,7 @@ class BacktestMixin:
             if self.tc != 0:
                 plotting_cols.append("cstrategy")
 
-            ax = self.results[plotting_cols].plot(title=title, figsize=(20, 12))
+            ax = self.results[plotting_cols].plot(title=title, figsize=(12, 8))\
 
             if plot_positions:
 
@@ -97,13 +271,26 @@ class BacktestMixin:
             else:
                 ax.plot(self.results.index, self.results["cstrategy_tc"], c='g')
 
+                plotting_cols.append("cstrategy_tc")
+
+                ax.legend([legend_mapping[col] for col in plotting_cols])
+
             plt.show()
 
     @staticmethod
     def _gen_repeating(s):
-        """Generator: groups repeated elements in an iterable
-        E.g.
-            'abbccc' -> [('a', 0, 0), ('b', 1, 2), ('c', 3, 5)]
+        """
+        A generator function that groups repeated elements in an iterable.
+
+        Parameters:
+        -----------
+        s : Iterable
+            An iterable object.
+
+        Yields:
+        -------
+        Tuple
+            A tuple containing the element, start index, and end index of a group of repeated elements.
         """
         i = 0
         while i < len(s):
@@ -118,3 +305,51 @@ class BacktestMixin:
         color = 'r' if (group['position'] < 0).all() else 'g'
         lw = 2.0
         ax.plot(group.index, group.cstrategy_tc, c=color, linewidth=lw)
+
+    def _update_and_run(self, args, plot_results=False):
+        """
+        Update the hyperparameters of the strategy with the given `args`,
+        and then run the strategy with the updated parameters.
+        The strategy is run by calling the `_test_strategy` method with the
+        updated parameters.
+
+        Parameters
+        ----------
+        args : array-like
+            A list of hyperparameters to be updated in the strategy.
+            The order of the elements in the list should match the order
+            of the strategy's hyperparameters, as returned by `self.params`.
+        plot_results : bool, optional
+            Whether to plot the results of the strategy after running it.
+
+        Returns
+        -------
+        float
+            The negative value of the strategy's score obtained with the
+            updated hyperparameters. The negative value is returned to
+            convert the maximization problem of the strategy's score into
+            a minimization problem, as required by optimization algorithms.
+
+        Raises
+        ------
+        IndexError
+            If the number of elements in `args` does not match the number
+            of hyperparameters in the strategy.
+
+        Notes
+        -----
+        This method is intended to be used as the objective function to
+        optimize the hyperparameters of the strategy using an optimization
+        algorithm. It updates the hyperparameters of the strategy with the
+        given `args`, then runs the strategy with the updated parameters,
+        and returns the negative of the score obtained by the strategy.
+        The negative is returned to convert the maximization problem of the
+        strategy's score into a minimization problem, as required by many
+        optimization algorithms.
+        """
+
+        params = {}
+        for i, arg in enumerate(args):
+            params[list(self.params.items())[i][0]] = arg
+
+        return -self._test_strategy(params, print_results=False, plot_results=plot_results)[0]

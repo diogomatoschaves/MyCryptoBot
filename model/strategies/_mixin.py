@@ -75,7 +75,7 @@ class StrategyMixin:
 
         return self.data
 
-    def set_data(self, data: pd.DataFrame) -> None:
+    def set_data(self, data: pd.DataFrame, strategy_obj=None) -> None:
         """
         Sets the DataFrame containing the historical price data for the asset.
 
@@ -83,11 +83,17 @@ class StrategyMixin:
         ----------
         data : pd.DataFrame
             The DataFrame containing the historical price data for the asset.
+        strategy_obj : Strategy object
+
         """
 
         if data is not None:
-            self.data = data
-            self.data = self.update_data()
+            if strategy_obj is not None:
+                strategy_obj.data = data
+                strategy_obj.update_data()
+            else:
+                self.data = data
+                self.update_data()
 
     def set_parameters(self, params=None) -> None:
         """

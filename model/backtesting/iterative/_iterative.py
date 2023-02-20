@@ -1,59 +1,157 @@
+import numpy as np
+
 from model.backtesting._mixin import BacktestMixin
 from shared.trading import Trader
 
 
 class IterativeBacktester(BacktestMixin, Trader):
+    """
+    A class for backtesting trading strategies iteratively using historical data.
+    """
 
     def __init__(self, strategy, amount=1000, symbol='BTCUSDT', trading_costs=0):
+        """
+        Initializes the IterativeBacktester object.
+
+        Parameters
+        ----------
+        strategy : object
+            The trading strategy to be tested.
+        amount : float, optional
+            The initial amount of currency to be traded with. Default is 1000.
+        symbol : str, optional
+            The trading symbol. Default is 'BTCUSDT'.
+        trading_costs : float, optional
+            The percentage of trading costs. Default is 0.
+        """
+
         BacktestMixin.__init__(self, symbol, trading_costs)
         Trader.__init__(self, amount)
 
+        self.amount = amount
+
         self.strategy = strategy
         self.positions_lst = []
+        self.equity = [self.amount]
+        self.returns = []
         self.positions = {
             symbol: 0
         }
 
     def __repr__(self):
+        """
+        Returns a string representation of the trading strategy.
+        """
         return self.strategy.__repr__()
 
-    def __getattr__(self, attr):
-        method = getattr(self.strategy, attr)
-
-        if not method:
-            return getattr(self, attr)
-        else:
-            return method
-
     def _set_position(self, symbol, value, **kwargs):
+        """
+        Sets the position for the given symbol.
+
+        Parameters
+        ----------
+        symbol : str
+            The trading symbol.
+        value : int
+            The position value.
+        """
         self.positions[symbol] = value
 
     def _get_position(self, symbol):
+        """
+        Gets the position for the given symbol.
+
+        Parameters
+        ----------
+        symbol : str
+            The trading symbol.
+
+        Returns
+        -------
+        float
+            The position value.
+        """
         return self.positions[symbol]
 
     def _reset_object(self):
-        # reset
+        """
+        Resets the object attributes to their initial values.
+        """
         self._set_position(self.symbol, 0)  # initial neutral position
         self.positions_lst = []
-        self.trades = 0  # no trades yet
+        self.equity = [self.amount]
+        self.trades = 0
         self.current_balance = self.initial_balance  # reset initial capital
 
     def _calculate_positions(self, data):
+        """
+        Calculates the positions for the given data.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            The historical data.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The data with the calculated positions.
+        """
         data["position"] = self.positions_lst
         return data
 
     def _get_trades(self, _):
+        """
+        Gets the number of trades executed.
+
+        Returns
+        -------
+        int
+            The number of trades executed.
+        """
         return self.trades
 
-    def get_values(self, _, row):
+    def _get_price(self, _, row):
+        """
+        Gets the price for the given row.
+
+        Parameters
+        ----------
+        _ : str
+            Not used.
+        row : pandas.Series
+            The data row.
+
+        Returns
+        -------
+        float
+            The price.
+        """
         price = row[self.price_col]
 
         return price
 
-    def test_strategy(self, params=None, plot_results=True):
-        """ Test a mean-reversion strategy (bollinger) with SMA and dev.
+    def _test_strategy(self, params=None, print_results=True, plot_results=True, plot_positions=False):
         """
+        Run a backtest for the given parameters and assess the performance of the strategy.
 
+        Parameters
+        ----------
+        params : dict, optional
+            Dictionary containing the keywords and respective values of the parameters to be updated.
+        print_results: bool, optional
+            Flag for whether to print the results of the backtest.
+        plot_results : bool, optional
+            Flag for whether to plot the results of the backtest.
+        plot_positions : bool, optional
+            Flag for whether to plot the position markers on the results plot.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the performance metrics of the backtest.
+
+        """
         self.set_parameters(params)
         self._reset_object()
 
@@ -64,43 +162,135 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         data = self._get_data().dropna().copy()
 
-        self.iterative_backtest(data)
+        self.iterative_backtest(data, print_results)
 
         title = self.__repr__()
 
-        return self._assess_strategy(data, title, plot_results)
+        return self._assess_strategy(data, title, print_results, plot_results, plot_positions)
 
-    def iterative_backtest(self, data):
+    def iterative_backtest(self, data, print_results=True):
+        """
+        Iterate through the data, trade accordingly, and calculate the strategy's performance.
 
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            Historical data used to backtest the strategy.
+        print_results: bool, optional
+            Flag for whether to print the results of the backtest.
+
+        """
         for bar, (timestamp, row) in enumerate(data.iterrows()):
-
             signal = self.get_signal(row)
 
             if bar != data.shape[0] - 1:
-                self.trade(self.symbol, signal, timestamp, row, amount="all")
+                self.trade(self.symbol, signal, timestamp, row, amount="all", print_results=print_results)
             else:
                 self.close_pos(self.symbol, timestamp, row)  # close position at the last bar
                 self._set_position(self.symbol, 0)
 
+            current_total_value = self._get_net_value(row)
+
+            self.returns.append(np.log(current_total_value / self.equity[-1]))
+            self.equity.append(current_total_value)
             self.positions_lst.append(self._get_position(self.symbol))
 
+    def _get_net_value(self, row):
+        """
+        Calculate the current net value of the strategy.
+
+        Parameters
+        ----------
+        row : pandas.Series
+            The current row of the data being processed.
+
+        Returns
+        -------
+        float
+            The current net value of the strategy.
+
+        """
+        price = self._get_price("", row)
+
+        return self.current_balance + self.units * price
+
     def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
+        """
+        Buy a specified number of units of the asset.
 
-        price = self.get_values(date, row)
+        Parameters
+        ----------
+        symbol : str
+            The symbol of the asset being traded.
+        date : str, optional
+            The date of the trade.
+        row : pandas.Series, optional
+            The row of the data being processed.
+        units : float, optional
+            The number of units to buy.
+        amount : float, optional
+            The amount of money to spend on the purchase.
+        header : str, optional
+            The header of the message printed to the console.
+        **kwargs : dict, optional
+            Additional keyword arguments.
 
-        price = price * (1 + self.tc)
+        """
+        print_results = kwargs.get('print_results')
+
+        price = self._get_price(date, row)
 
         if units is None:
             units = amount / price
 
-        self.current_balance -= units * price
+        trading_cost = (amount if amount else units * price) * self.tc
+
+        self.current_balance -= units * price + trading_cost
         self.units += units
         self.trades += 1
-        print(f"{date} |  Buying {round(units, 4)} {self.symbol} for {round(price, 5)}")
+
+        if print_results:
+            print(f"{date} |  Buying {round(units, 4)} {self.symbol} for {round(price, 5)}")
 
     def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
+        """
+        Sells a specified amount of the instrument at the given date or row. If `units` is not specified, it calculates the
+        number of units to sell based on the provided `amount` and the price of the instrument. It then calculates the trading cost
+        based on the amount or number of units sold, and updates the `current_balance`, `units` and `trades` attributes
+        accordingly. If `print_results` is set to True in `**kwargs`, it prints a message showing the date, number of units sold
+        and the selling price.
 
-        price = self.get_values(date, row)
+        Parameters
+        ----------
+        symbol : str
+            The symbol of the instrument to sell.
+        date : str or None, optional
+            The date to sell the instrument at, formatted as 'YYYY-MM-DD'. If None, row must be specified instead.
+        row : int or None, optional
+            The row index to sell the instrument at. If None, date must be specified instead.
+        units : float or None, optional
+            The number of units to sell. If None, amount must be specified instead.
+        amount : float or None, optional
+            The total amount to use to buy units of the instrument. If None, units must be specified instead.
+        header : str, optional
+            A header to print before the results.
+        **kwargs : dict, optional
+            Additional keyword arguments:
+            - print_results : bool, optional
+                Whether to print the results.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If both date and row are None or both units and amount are None.
+        """
+        print_results = kwargs.get('print_results')
+
+        price = self._get_price(date, row)
 
         price = price * (1 - self.tc)
 
@@ -110,10 +300,36 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.current_balance += units * price
         self.units -= units
         self.trades += 1
-        print(f"{date} |  Selling {round(units, 4)} {self.symbol} for {round(price, 5)}")
+
+        if print_results:
+            print(f"{date} |  Selling {round(units, 4)} {self.symbol} for {round(price, 5)}")
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
+        """
+        Closes the position of the specified instrument at the given date or row. If the number of units is less than or equal to
+        zero, it buys the instrument to close the position, otherwise it sells it. It then calculates the performance of the
+        trading account, updates the `current_balance`, `trades` and `units` attributes accordingly, and prints a message
+        showing the current balance, net performance and number of trades executed.
 
+        Parameters
+        ----------
+        symbol : str
+            The symbol of the instrument to close the position for.
+        date : str or None, optional
+            The date to close the position at, formatted as 'YYYY-MM-DD'. If None, row must be specified instead.
+        row : int or None, optional
+            The row index to close the position at. If None, date must be specified instead.
+        header : str, optional
+            A header to print before the results.
+        **kwargs : dict, optional
+            Additional keyword arguments:
+            - print_results : bool, optional
+                Whether to print the results.
+
+        Returns
+        -------
+        None
+        """
         print(75 * "-")
         print("{} |  +++ CLOSING FINAL POSITION +++".format(date))
 
@@ -131,6 +347,21 @@ class IterativeBacktester(BacktestMixin, Trader):
         print(75 * "-")
 
     def plot_data(self, cols=None):
+        """
+        Plots the data of the specified columns in the `data` attribute. If `cols` is not provided, it defaults to "close".
+
+        Plot data for the specified columns.
+
+        Parameters
+        ----------
+        cols : str or list of str,
+            The column(s) to plot. If not provided, it defaults to "close".
+
+        Returns
+        -------
+        None
+        """
+
         if cols is None:
             cols = "close"
         self.data[cols].plot(figsize=(12, 8), title='BTC/USD')
