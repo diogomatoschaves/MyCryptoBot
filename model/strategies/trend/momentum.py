@@ -5,7 +5,37 @@ from collections import OrderedDict
 
 
 class Momentum(StrategyMixin):
-    """ Class for the vectorized backtesting of SMA-based trading strategies.
+    """
+    this Momentum strategy calculates the rolling average return over a specified window of time,
+    and generates trading signals based on the sign of this rolling average. When the rolling average
+    return is positive, the strategy generates a long signal (i.e., buy), and when it is negative,
+    it generates a short signal (i.e., sell). The strategy takes a neutral position when the rolling average is zero.
+
+    Parameters
+    ----------
+    window : int
+        Rolling window for computing the momentum.
+    data : pd.DataFrame
+        Input data, with at least a 'returns_col' column.
+    **kwargs
+        Additional keyword arguments.
+
+    Attributes
+    ----------
+    _window : int
+        Rolling window for computing the momentum.
+    params : OrderedDict
+        Dictionary of hyperparameters for the strategy.
+
+    Methods
+    -------
+    update_data()
+        Retrieves and prepares the data.
+    _calculate_positions(data)
+        Calculates the positions of the strategy.
+    get_signal(row=None)
+        Returns the trading signal for a given row of data.
+
     """
 
     def __init__(self, window: int, data=None, **kwargs):
@@ -17,25 +47,57 @@ class Momentum(StrategyMixin):
         self.params = OrderedDict(window=lambda x: int(x))
 
     def __repr__(self):
+        """
+        Return a string representation of the class.
+        """
         return "{}(symbol = {}, window = {})".format(self.__class__.__name__, self.symbol, self._window)
 
     def _get_test_title(self):
+        """
+        Return a string with the title of the strategy for testing.
+        """
         return "Testing Momentum strategy | {} | window: {}".format(self.symbol, self._window)
 
     def update_data(self):
-        """ Retrieves and prepares the data.
+        """
+        Retrieves and prepares the data.
         """
         super(Momentum, self).update_data()
 
         self.data["rolling_returns"] = self.data[self.returns_col].rolling(self._window, min_periods=1).mean()
 
     def _calculate_positions(self, data):
+        """
+        Calculates the positions of the strategy.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Dataframe with the input data.
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with the positions of the strategy.
+        """
         data["position"] = np.sign(data[self.returns_col].rolling(self._window, min_periods=1).mean())
 
         return data
 
     def get_signal(self, row=None):
+        """
+        Returns the trading signal for a given row of data.
 
+        Parameters
+        ----------
+        row : pd.Series, optional
+            Row of data to calculate the signal for. If None, the last row of the data is used.
+
+        Returns
+        -------
+        int
+            The trading signal (-1 for sell, 1 for buy, 0 for hold).
+        """
         if row is None:
             row = self.data.iloc[-1]
 

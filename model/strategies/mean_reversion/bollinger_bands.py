@@ -6,7 +6,46 @@ from model.strategies._mixin import StrategyMixin
 
 
 class BollingerBands(StrategyMixin):
-    """ Class for the vectorized backtesting of SMA-based trading strategies.
+    """ Bollinger Bands Strategy:
+
+    This strategy follows the principle of mean reversion, ie. that
+    the price will revert back to the mean if it deviates by a certain amount,
+    essentially going long or short when the price crosses a
+    certain low and high threshold respectively.
+
+    Parameters:
+    -----------
+    ma : int
+        Moving average window.
+    sd : int
+        Standard deviation window.
+    data : pd.DataFrame, default None
+        Data to use in the strategy.
+    **kwargs
+        Additional arguments to pass to the `StrategyMixin` superclass.
+
+    Attributes:
+    -----------
+    params : OrderedDict
+        Ordered dictionary containing the strategy's parameters:
+        - `ma`: moving average window.
+        - `sd`: standard deviation window.
+
+    Methods:
+    --------
+    __repr__(self)
+        Return a string representation of the class instance.
+    _get_test_title(self)
+        Return a string with the title for the test.
+    update_data(self)
+        Retrieves and prepares the data.
+    _calculate_positions(self, data)
+        Calculate the position for each row in the data.
+    _get_position(self, symbol)
+        Return the position for a given symbol (not implemented).
+    get_signal(self, row=None)
+        Return the position signal for a given row.
+
     """
 
     def __init__(self, ma: int, sd: int, data=None, **kwargs):
