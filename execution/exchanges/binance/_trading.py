@@ -189,7 +189,7 @@ class BinanceTrader(BinanceHandler, Trader):
         logging.info(header + f"" + 100 * "-")
         logging.info(header + f"{date} | +++ CLOSED FINAL POSITION +++")
         logging.info(header + f"{date} | net performance (%) = {round(perf, 2)}")
-        logging.info(header + f"{date} | number of trades executed = {self.trades}")
+        logging.info(header + f"{date} | number of trades executed = {self.nr_trades}")
         logging.info(header + f"" + 100 * "-")
 
     @staticmethod

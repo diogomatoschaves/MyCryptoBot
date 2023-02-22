@@ -148,7 +148,7 @@ class BinanceFuturesTrader(BinanceTrader):
         self.current_balance[symbol] += factor * float(order['cummulative_quote_qty'])
         self.units[symbol] -= factor * units
 
-        self.trades += 1
+        self.nr_trades += 1
 
         self.report_trade(order, units, going, header, symbol=symbol)
 

@@ -1,3 +1,4 @@
+import numpy as np
 from model.backtesting._mixin import BacktestMixin
 
 
@@ -41,11 +42,73 @@ class VectorizedBacktester(BacktestMixin):
 
         self.set_parameters(params)
 
-        title = self.__repr__()
-
         data = self._get_data().dropna().copy()
 
-        return self._assess_strategy(data, title, print_results, plot_results, plot_positions)
+        self._vectorized_backtest(data)
+
+        nr_trades, perf, outperf = self._evaluate_backtest()
+
+        self._print_results(nr_trades, perf, outperf, print_results)
+
+        self.plot_results(plot_results, plot_positions)
+
+        return perf, outperf
+
+    def _vectorized_backtest(self, data):
+        """
+        Assess the performance of the trading strategy on historical data.
+
+        Parameters:
+        -----------
+        data : pandas.DataFrame
+            Historical price data for the trading symbol. Pre sanitized.
+
+        Returns:
+        --------
+        None
+        """
+        data = self._calculate_positions(data.copy())
+        data["trades"] = data.position.diff().fillna(0).abs()
+
+        data["strategy"] = data.position.shift(1) * data.returns
+        data["strategy_tc"] = data["strategy"] - data["trades"] * self.tc
+
+        data.dropna(inplace=True)
+
+        data["creturns"] = data[self.returns_col].cumsum().apply(np.exp)
+        data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
+        data["cstrategy_tc"] = data["strategy_tc"].cumsum().apply(np.exp)
+
+        self.results = data
+
+    def _evaluate_backtest(self):
+        """
+       Evaluates the performance of the trading strategy on the backtest run.
+
+       Parameters:
+       -----------
+       print_results : bool, default True
+           Whether to print the results.
+
+       Returns:
+       --------
+       float
+           The performance of the strategy.
+       float
+           The out-/underperformance of the strategy.
+       """
+
+        data = self.results
+
+        nr_trades = self._get_trades(data)
+
+        # absolute performance of the strategy
+        perf = data["cstrategy_tc"].iloc[-1]
+
+        # out-/underperformance of strategy
+        outperf = perf - data["creturns"].iloc[-1]
+
+        return nr_trades, perf, outperf
 
     def _get_trades(self, data):
-        return data.trades.sum()
+        return int(data["trades"].sum() / 2)

@@ -11,7 +11,10 @@ class Trader:
         self.initial_balance = amount
         self.current_balance = amount
         self.units = units
-        self.trades = 0
+        self.nr_trades = 0
+        self.trades = []
+        self.trades_tc = []  # Trades with trading costs
+        self.date_col = 'date'
 
     def _set_position(self, symbol, value, **kwargs):
         raise NotImplementedError
@@ -19,10 +22,30 @@ class Trader:
     def _get_position(self, symbol):
         raise NotImplementedError
 
-    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
+    def buy_instrument(
+        self,
+        symbol,
+        date=None,
+        row=None,
+        units=None,
+        amount=None,
+        header='',
+        open_trade=False,
+        **kwargs
+    ):
         raise NotImplementedError
 
-    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
+    def sell_instrument(
+        self,
+        symbol,
+        date=None,
+        row=None,
+        units=None,
+        amount=None,
+        header='',
+        open_trade=False,
+        **kwargs
+    ):
         raise NotImplementedError
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
@@ -46,11 +69,11 @@ class Trader:
             self.buy_instrument(symbol, date, row, units=existing_units, header=header, reducing=True, **kwargs)
 
         if units:
-            self.buy_instrument(symbol, date, row, units=units, header=header, **kwargs)
+            self.buy_instrument(symbol, date, row, units=units, header=header, open_trade=True, **kwargs)
         elif amount:
             if amount == "all":
                 amount = self._get_balances(symbol)[1]
-            self.buy_instrument(symbol, date, row, amount=amount, header=header, **kwargs)  # go long
+            self.buy_instrument(symbol, date, row, amount=amount, header=header, open_trade=True, **kwargs)  # go long
 
     # helper method
     def go_short(self, symbol, position, date, row, units=None, amount=None, header='', **kwargs):
@@ -59,12 +82,13 @@ class Trader:
 
         if position == 1:
             self.sell_instrument(symbol, date, row, units=existing_units, header=header, reducing=True, **kwargs)
+
         if units:
-            self.sell_instrument(symbol, date, row, units=units, header=header, **kwargs)
+            self.sell_instrument(symbol, date, row, units=units, header=header, open_trade=True, **kwargs)
         elif amount:
             if amount == "all":
                 amount = self._get_balances(symbol)[1]
-            self.sell_instrument(symbol, date, row, amount=amount, header=header, **kwargs)  # go short
+            self.sell_instrument(symbol, date, row, amount=amount, header=header, open_trade=True, **kwargs)  # go short
 
     def trade(self, symbol, signal, date=None, row=None, amount=None, units=None, header='', **kwargs):
 

@@ -1,6 +1,7 @@
 import numpy as np
 
 from model.backtesting._mixin import BacktestMixin
+from model.backtesting.helpers import Trade
 from shared.trading import Trader
 
 
@@ -80,7 +81,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         self._set_position(self.symbol, 0)  # initial neutral position
         self.positions_lst = []
         self.equity = [self.amount]
-        self.trades = 0
+        self.nr_trades = 0
         self.current_balance = self.initial_balance  # reset initial capital
 
     def _calculate_positions(self, data):
@@ -109,7 +110,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         int
             The number of trades executed.
         """
-        return self.trades
+        return self.nr_trades
 
     def _get_price(self, _, row):
         """
@@ -162,13 +163,17 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         data = self._get_data().dropna().copy()
 
-        self.iterative_backtest(data, print_results)
+        self._iterative_backtest(data, print_results)
 
-        title = self.__repr__()
+        nr_trades, perf, outperf = self._evaluate_backtest()
 
-        return self._assess_strategy(data, title, print_results, plot_results, plot_positions)
+        self._print_results(nr_trades, perf, outperf, print_results)
 
-    def iterative_backtest(self, data, print_results=True):
+        self.plot_results(plot_results, plot_positions)
+
+        return perf, outperf
+
+    def _iterative_backtest(self, data, print_results=True):
         """
         Iterate through the data, trade accordingly, and calculate the strategy's performance.
 
@@ -180,6 +185,8 @@ class IterativeBacktester(BacktestMixin, Trader):
             Flag for whether to print the results of the backtest.
 
         """
+        self.clean_data = data
+
         for bar, (timestamp, row) in enumerate(data.iterrows()):
             signal = self.get_signal(row)
 
@@ -194,6 +201,22 @@ class IterativeBacktester(BacktestMixin, Trader):
             self.returns.append(np.log(current_total_value / self.equity[-1]))
             self.equity.append(current_total_value)
             self.positions_lst.append(self._get_position(self.symbol))
+
+    def _evaluate_backtest(self):
+
+        returns_tc = [np.log(trade.exit_price / trade.entry_price) * trade.direction for trade in self.trades_tc]
+        perf = np.exp(np.sum(returns_tc))  # Performance with trading_costs
+
+        returns = [np.log(trade.exit_price / trade.entry_price) * trade.direction for trade in self.trades]
+        perf_no_tc = np.exp(np.sum(returns))  # Performance with no trading costs
+
+        returns_bh = np.log(self.clean_data.loc[self.clean_data.index[-1], self.price_col] /
+                            self.clean_data.loc[self.clean_data.index[0], self.price_col])
+        perf_bh = np.exp(np.sum(returns_bh))  # Performance for Buy & Hold strategy
+
+        outperf = perf - perf_bh
+
+        return self.nr_trades, perf, outperf
 
     def _get_net_value(self, row):
         """
@@ -214,9 +237,23 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         return self.current_balance + self.units * price
 
-    def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
+    def buy_instrument(
+        self,
+        symbol,
+        date=None,
+        row=None,
+        units=None,
+        amount=None,
+        open_trade=False,
+        header='',
+        **kwargs
+    ):
         """
-        Buy a specified number of units of the asset.
+        Buys a specified amount of the instrument at the given date or row. If `units` is not specified, it calculates the
+        number of units to buy based on the provided `amount` and the price of the instrument. It then calculates the trading cost
+        based on the amount or number of units sold, and updates the `current_balance`, `units` and `trades` attributes
+        accordingly. If `print_results` is set to True in `**kwargs`, it prints a message showing the date, number of units bought
+        and the buying price.
 
         Parameters
         ----------
@@ -230,6 +267,8 @@ class IterativeBacktester(BacktestMixin, Trader):
             The number of units to buy.
         amount : float, optional
             The amount of money to spend on the purchase.
+        open_trade : boolean, optional
+            A trade should be opened if True, and closed if False.
         header : str, optional
             The header of the message printed to the console.
         **kwargs : dict, optional
@@ -247,12 +286,24 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         self.current_balance -= units * price + trading_cost
         self.units += units
-        self.trades += 1
+
+        self._handle_trade(self.trades, open_trade, date, price, units, 1, update_trade_counter=True)
+        self._handle_trade(self.trades_tc, open_trade, date, price * (1 + self.tc), units * (1 - self.tc), 1)
 
         if print_results:
             print(f"{date} |  Buying {round(units, 4)} {self.symbol} for {round(price, 5)}")
 
-    def sell_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
+    def sell_instrument(
+        self,
+        symbol,
+        date=None,
+        row=None,
+        units=None,
+        amount=None,
+        open_trade=False,
+        header='',
+        **kwargs
+    ):
         """
         Sells a specified amount of the instrument at the given date or row. If `units` is not specified, it calculates the
         number of units to sell based on the provided `amount` and the price of the instrument. It then calculates the trading cost
@@ -266,12 +317,14 @@ class IterativeBacktester(BacktestMixin, Trader):
             The symbol of the instrument to sell.
         date : str or None, optional
             The date to sell the instrument at, formatted as 'YYYY-MM-DD'. If None, row must be specified instead.
-        row : int or None, optional
-            The row index to sell the instrument at. If None, date must be specified instead.
+        row : pandas.Series, optional
+            The row of the data being processed.
         units : float or None, optional
             The number of units to sell. If None, amount must be specified instead.
         amount : float or None, optional
             The total amount to use to buy units of the instrument. If None, units must be specified instead.
+        open_trade : boolean, optional
+            A trade should be opened if True, and closed if False.
         header : str, optional
             A header to print before the results.
         **kwargs : dict, optional
@@ -292,14 +345,18 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         price = self._get_price(date, row)
 
-        price = price * (1 - self.tc)
+        trading_cost = (amount if amount else units * price) * self.tc
+
+        # price = price * (1 - self.tc)
 
         if units is None:
             units = amount / price
 
-        self.current_balance += units * price
+        self.current_balance += units * price + trading_cost
         self.units -= units
-        self.trades += 1
+
+        self._handle_trade(self.trades, open_trade, date, price, units, -1, update_trade_counter=True)
+        self._handle_trade(self.trades_tc, open_trade, date, price * (1 - self.tc), units * (1 + self.tc), -1)
 
         if print_results:
             print(f"{date} |  Selling {round(units, 4)} {self.symbol} for {round(price, 5)}")
@@ -334,17 +391,27 @@ class IterativeBacktester(BacktestMixin, Trader):
         print("{} |  +++ CLOSING FINAL POSITION +++".format(date))
 
         if self.units <= 0:
-            self.buy_instrument(symbol, date, row, units=-self.units)
+            self.buy_instrument(symbol, date, row, open_trade=False, units=-self.units)
         else:
-            self.sell_instrument(symbol, date, row, units=self.units)
+            self.sell_instrument(symbol, date, row, open_trade=False, units=self.units)
 
         perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
 
         self.print_current_balance(date)
 
         print("{} |  net performance (%) = {}".format(date, round(perf, 2)))
-        print("{} |  number of trades executed = {}".format(date, self.trades))
+        print("{} |  number of trades executed = {}".format(date, self.nr_trades))
         print(75 * "-")
+
+    def _handle_trade(self, trades, open_trade, date, price, units, direction, update_trade_counter=False):
+        if open_trade:
+            trades.append(Trade(date, None, price, None, units, direction))
+        else:
+            trades[-1].exit_date = date
+            trades[-1].exit_price = price
+
+            if update_trade_counter:
+                self.nr_trades += 1
 
     def plot_data(self, cols=None):
         """

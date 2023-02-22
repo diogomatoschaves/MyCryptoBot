@@ -340,7 +340,7 @@ const NewPipeline = (props: Props) => {
                     <Popup
                       content={chosenStrategy.info}
                       header={`${chosenStrategy.name} Strategy`}
-                      position='right center'
+                      position='bottom left'
                       trigger={<Icon name='info circle' style={{marginLeft: '10px'}}/>}
                     />
                   </Fragment>

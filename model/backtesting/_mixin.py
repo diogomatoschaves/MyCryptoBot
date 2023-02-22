@@ -54,6 +54,9 @@ class BacktestMixin:
         self.tc = trading_costs / 100
         self.strategy = None
 
+        self.perf = 0
+        self.outperf = 0
+
     def __getattr__(self, attr):
         """
         Overrides the __getattr__ method to get attributes from the trading strategy object.
@@ -101,7 +104,10 @@ class BacktestMixin:
         --------
         None
         """
-        self._test_strategy(params, print_results, plot_results, plot_positions)
+        perf, outperf = self._test_strategy(params, print_results, plot_results, plot_positions)
+
+        self.perf = perf
+        self.outperf = outperf
 
     def optimize(self, params, **kwargs):
         """Optimizes the trading strategy using brute force.
@@ -146,71 +152,7 @@ class BacktestMixin:
         """
         raise NotImplementedError
 
-    def _assess_strategy(self, data, title, print_results=True, plot_results=True, plot_positions=True):
-        """
-        Assess the performance of the trading strategy on historical data.
-
-        Parameters:
-        -----------
-        data : pandas.DataFrame
-            Historical price data for the trading symbol.
-        title : str
-            Title for the plot.
-        print_results : bool, default True
-            Whether to print the results.
-        plot_results : bool, default True
-            Whether to plot the results.
-        plot_positions : bool, default True
-            Whether to plot the positions.
-
-        Returns:
-        --------
-        float
-            The performance of the strategy.
-        float
-            The out-/underperformance of the strategy.
-        """
-
-        data = self._calculate_positions(data.copy())
-        data["trades"] = data.position.diff().fillna(0).abs()
-
-        data["strategy"] = data.position.shift(1) * data.returns
-        data["strategy_tc"] = data["strategy"] - data.trades * self.tc
-
-        data.dropna(inplace=True)
-
-        data["creturns"] = data[self.returns_col].cumsum().apply(np.exp)
-        data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
-        data["cstrategy_tc"] = data["strategy_tc"].cumsum().apply(np.exp)
-
-        number_trades = self._get_trades(data)
-
-        self.results = data
-
-        if len(data) == 0:
-            return 0, None
-
-        # absolute performance of the strategy
-        perf = round(data["cstrategy_tc"].iloc[-1], 3)
-
-        # out-/underperformance of strategy
-        outperf = round(perf - data["creturns"].iloc[-1], 3)
-
-        if print_results:
-            print('--------------------------------')
-            print('\tResults')
-            print('')
-            print(f'\t# Trades: {number_trades}')
-            print(f'\tPerformance: {perf}')
-            print(f'\tOut Performance: {outperf}')
-            print('--------------------------------')
-
-        if plot_results:
-            self.plot_results(title, plot_positions)
-
-        return perf, outperf
-
-    def plot_results(self, title, plot_positions=True):
+    def plot_results(self, plot_results=True, plot_positions=True):
         """
         Plot the performance of the trading strategy compared to a buy and hold strategy.
 
@@ -218,64 +160,74 @@ class BacktestMixin:
         -----------
         title : str
             Title for the plot.
+        plot_results: boolean, default True
+            Whether to plot the results.
         plot_positions : bool, default True
             Whether to plot the positions.
         """
 
-        if self.results is None:
+        if not plot_results:
+            return
+
+        try:
+            _ = self.results
+        except AttributeError:
             print("No results to plot yet. Run the strategy first.")
+            return
+
+        plotting_cols = ["creturns"]
+        if self.tc != 0:
+            plotting_cols.append("cstrategy")
+
+        title = self.__repr__()
+
+        ax = self.results[plotting_cols].plot(title=title, figsize=(12, 8))\
+
+        if plot_positions:
+
+            # Convert labels to colors
+            label2color = {
+                1: 'green',
+                0: 'brown',
+                -1: 'red',
+            }
+            self.results['color'] = self.results['position'].apply(lambda label: label2color[label])
+
+            # Add px_last lines
+            for color, start, end in self._gen_repeating(self.results['color']):
+                if start > 0: # make sure lines connect
+                    start -= 1
+                idx = self.results.index[start:end+1]
+                self.results.loc[idx, 'cstrategy_tc'].plot(ax=ax, color=color, label='')
+                self.results.loc[idx, ['position']].plot(ax=ax, color=color, label='', secondary_y='position', alpha=0.3)
+
+            # Get artists and labels for legend and chose which ones to display
+            handles, labels = ax.get_legend_handles_labels()
+
+            # Create custom artists
+            g_line = plt.Line2D((0, 1), (0, 0), color='green')
+            y_line = plt.Line2D((0, 1), (0, 0), color='brown')
+            r_line = plt.Line2D((0, 1), (0, 0), color='red')
+
+            # Create legend from custom artist/label lists
+            ax.legend(
+                handles + [g_line, y_line, r_line],
+                labels + [
+                    'long position',
+                    'neutral_position',
+                    'short position',
+                ],
+                loc='best',
+            )
+
         else:
-            plotting_cols = ["creturns"]
-            if self.tc != 0:
-                plotting_cols.append("cstrategy")
+            ax.plot(self.results.index, self.results["cstrategy_tc"], c='g')
 
-            ax = self.results[plotting_cols].plot(title=title, figsize=(12, 8))\
+            plotting_cols.append("cstrategy_tc")
 
-            if plot_positions:
+            ax.legend([legend_mapping[col] for col in plotting_cols])
 
-                # Convert labels to colors
-                label2color = {
-                    1: 'green',
-                    0: 'brown',
-                    -1: 'red',
-                }
-                self.results['color'] = self.results['position'].apply(lambda label: label2color[label])
-
-                # Add px_last lines
-                for color, start, end in self._gen_repeating(self.results['color']):
-                    if start > 0: # make sure lines connect
-                        start -= 1
-                    idx = self.results.index[start:end+1]
-                    self.results.loc[idx, 'cstrategy_tc'].plot(ax=ax, color=color, label='')
-                    self.results.loc[idx, ['position']].plot(ax=ax, color=color, label='', secondary_y='position', alpha=0.3)
-
-                # Get artists and labels for legend and chose which ones to display
-                handles, labels = ax.get_legend_handles_labels()
-
-                # Create custom artists
-                g_line = plt.Line2D((0, 1), (0, 0), color='green')
-                y_line = plt.Line2D((0, 1), (0, 0), color='brown')
-                r_line = plt.Line2D((0, 1), (0, 0), color='red')
-
-                # Create legend from custom artist/label lists
-                ax.legend(
-                    handles + [g_line, y_line, r_line],
-                    labels + [
-                        'long position',
-                        'neutral_position',
-                        'short position',
-                    ],
-                    loc='best',
-                )
-
-            else:
-                ax.plot(self.results.index, self.results["cstrategy_tc"], c='g')
-
-                plotting_cols.append("cstrategy_tc")
-
-                ax.legend([legend_mapping[col] for col in plotting_cols])
-
-            plt.show()
+        plt.show()
 
     @staticmethod
     def _gen_repeating(s):
@@ -305,6 +257,17 @@ class BacktestMixin:
         color = 'r' if (group['position'] < 0).all() else 'g'
         lw = 2.0
         ax.plot(group.index, group.cstrategy_tc, c=color, linewidth=lw)
+
+    @staticmethod
+    def _print_results(nr_trades, perf, outperf, print_results):
+        if print_results:
+            print('--------------------------------')
+            print('\tResults')
+            print('')
+            print(f'\t# Trades: {nr_trades}')
+            print(f'\tPerformance: {perf}')
+            print(f'\tOut Performance: {outperf}')
+            print('--------------------------------')
 
     def _update_and_run(self, args, plot_results=False):
         """
