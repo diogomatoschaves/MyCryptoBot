@@ -17,7 +17,7 @@ RESPONSES = {
     "TOO_MANY_RETRIES": (False, "Stopping Pipeline. Too many retries."),
     "JOB_NOT_FOUND": (False, "Stopping Pipeline. Job not found."),
     "JOB_FAILED": (False, "Stopping Pipeline. Job failed."),
-    "FINISHED": (True, ""),
+    "SUCCESS": (True, ""),
 }
 
 
@@ -57,7 +57,12 @@ def wait_for_job_conclusion(job_id, pipeline_id, retry, header=''):
                 return trigger_signal(pipeline_id, header=header, retry=retry+1)
             elif response["code"] == "FINISHED":
                 logging.debug(header + f"Job {job_id} finished successfully.")
-                return RESPONSES["FINISHED"]
+
+                if response["success"]:
+                    return RESPONSES["SUCCESS"]
+                else:
+                    return RESPONSES["JOB_FAILED"]
+
             elif response["code"] in ["IN_QUEUE", "WAITING"]:
                 logging.debug(header + f"{job_id}: Waiting for job conclusion.")
                 retries += 1

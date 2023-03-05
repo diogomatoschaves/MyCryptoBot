@@ -18,19 +18,26 @@ class TestExternalRequests:
         [
             pytest.param(
                 [
-                    {"code": "FINISHED", "status": "finished"},
+                    {"code": "FINISHED", "success": True, "status": "finished"},
                 ],
-                RESPONSES["FINISHED"],
-                id="STATUS_FINISHED",
+                RESPONSES["SUCCESS"],
+                id="STATUS_FINISHED-SUCCESS",
+            ),
+            pytest.param(
+                [
+                    {"code": "FINISHED", "success": False, "status": "finished"},
+                ],
+                RESPONSES["JOB_FAILED"],
+                id="STATUS_FINISHED-FAIL",
             ),
             pytest.param(
                 [
                     {"code": "IN_QUEUE", "status": "in-queue"},
                     {"code": "WAITING", "status": "waiting"},
                     {"code": "WAITING", "status": "waiting"},
-                    {"code": "FINISHED", "status": "finished"},
+                    {"code": "FINISHED", "success": True, "status": "finished"},
                 ],
-                RESPONSES["FINISHED"],
+                RESPONSES["SUCCESS"],
                 id="STATUS_WAITING_IN-QUEUE",
             ),
             pytest.param(
@@ -43,9 +50,9 @@ class TestExternalRequests:
             pytest.param(
                 [
                     {"code": "JOB_NOT_FOUND", "status": "job not found"},
-                    {"code": "FINISHED", "status": "finished"},
+                    {"code": "FINISHED", "success": True, "status": "finished"},
                 ],
-                RESPONSES["FINISHED"],
+                RESPONSES["SUCCESS"],
                 id="STATUS_NOT_FOUND_ONCE",
             ),
             pytest.param(
@@ -109,15 +116,23 @@ class TestExternalRequests:
         assert mock_check_job_status_response.call_count == len(side_effects)
 
     @pytest.mark.parametrize(
-        "return_value,expected_value",
+        "generate_signal_return_value,wait_for_job_conclusion_return_value,expected_value",
         [
             pytest.param(
                 {"success": True, "job_id": 'abcdef'},
-                RESPONSES["FINISHED"],
-                id="SUCCESS",
+                (True, ""),
+                RESPONSES["SUCCESS"],
+                id="True-True-SUCCESS",
+            ),
+            pytest.param(
+                {"success": True, "job_id": 'abcdef'},
+                (False, 'Stopping Pipeline. Job failed.'),
+                RESPONSES["JOB_FAILED"],
+                id="True-False-FAIL",
             ),
             pytest.param(
                 {"success": False, "message": "Failed"},
+                (True, ""),
                 (False, "Failed"),
                 id="FAIL",
             )
@@ -125,7 +140,8 @@ class TestExternalRequests:
     )
     def test_trigger_signal(
         self,
-        return_value,
+        generate_signal_return_value,
+        wait_for_job_conclusion_return_value,
         expected_value,
         mock_generate_signal,
         mock_wait_for_job_conclusion,
@@ -139,8 +155,8 @@ class TestExternalRequests:
 
         """
 
-        mock_generate_signal.return_value = return_value
-        mock_wait_for_job_conclusion.return_value = True, ""
+        mock_generate_signal.return_value = generate_signal_return_value
+        mock_wait_for_job_conclusion.return_value = wait_for_job_conclusion_return_value
 
         params = {
             "pipeline_id": 1,
