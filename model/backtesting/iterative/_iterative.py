@@ -35,6 +35,8 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.positions_lst = []
         self.equity = [self.amount]
         self.returns = []
+        self.strategy_returns = []
+        self.strategy_returns_tc = []
         self.positions = {
             symbol: 0
         }
@@ -79,8 +81,10 @@ class IterativeBacktester(BacktestMixin, Trader):
         Resets the object attributes to their initial values.
         """
         self._set_position(self.symbol, 0)  # initial neutral position
-        self.positions_lst = []
         self.equity = [self.amount]
+        self.strategy_returns = []
+        self.strategy_returns_tc = []
+        self.positions_lst = [0]
         self.nr_trades = 0
         self.current_balance = self.initial_balance  # reset initial capital
 
@@ -169,7 +173,7 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         self._print_results(nr_trades, perf, outperf, print_results)
 
-        self.plot_results(plot_results, plot_positions)
+        self.plot_results(self.results, plot_results, plot_positions)
 
         return perf, outperf
 
@@ -190,19 +194,39 @@ class IterativeBacktester(BacktestMixin, Trader):
         for bar, (timestamp, row) in enumerate(data.iterrows()):
             signal = self.get_signal(row)
 
+            previous_position = self._get_position(self.symbol)
+
             if bar != data.shape[0] - 1:
                 self.trade(self.symbol, signal, timestamp, row, amount="all", print_results=print_results)
             else:
                 self.close_pos(self.symbol, timestamp, row)  # close position at the last bar
                 self._set_position(self.symbol, 0)
 
-            current_total_value = self._get_net_value(row)
+            new_position = self._get_position(self.symbol)
 
-            self.returns.append(np.log(current_total_value / self.equity[-1]))
-            self.equity.append(current_total_value)
-            self.positions_lst.append(self._get_position(self.symbol))
+            self.positions_lst.append(new_position)
+
+            trades = np.abs(new_position - previous_position)
+
+            self.strategy_returns.append(row[self.returns_col] * previous_position)
+            self.strategy_returns_tc.append(self.strategy_returns[-1] - trades * self.tc)
+
+            self.equity.append(self._get_net_value(row))
 
     def _evaluate_backtest(self):
+
+        results = self.clean_data.copy()
+        results["positions"] = self.positions_lst[:-1]
+        results["strategy_returns"] = self.strategy_returns
+        results["strategy_returns_tc"] = self.strategy_returns_tc
+
+        results["accumulated_returns"] = results[self.returns_col].cumsum().apply(np.exp)
+        results["accumulated_strategy_returns"] = results["strategy_returns"].cumsum().apply(np.exp)
+        results["accumulated_strategy_returns_tc"] = results["strategy_returns_tc"].cumsum().apply(np.exp)
+
+        results.dropna(inplace=True)
+
+        self.results = results
 
         returns_tc = [np.log(trade.exit_price / trade.entry_price) * trade.direction for trade in self.trades_tc]
         perf = np.exp(np.sum(returns_tc))  # Performance with trading_costs

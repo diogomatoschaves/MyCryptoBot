@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from scipy.optimize import brute
 
 legend_mapping = {
-    "creturns": "Hold & Buy",
-    "cstrategy": "Strategy returns (no trading costs)",
-    "cstrategy_tc": "Strategy returns (with trading costs)"
+    "accumulated_returns": "Hold & Buy",
+    "accumulated_strategy_returns": "Strategy returns (no trading costs)",
+    "accumulated_strategy_returns_tc": "Strategy returns (with trading costs)"
 }
 
 
@@ -152,36 +152,32 @@ class BacktestMixin:
         """
         raise NotImplementedError
 
-    def plot_results(self, plot_results=True, plot_positions=True):
+    def plot_results(self, results=None, plot_results=True, plot_positions=True):
         """
         Plot the performance of the trading strategy compared to a buy and hold strategy.
 
         Parameters:
         -----------
-        title : str
-            Title for the plot.
+        results: pd.DataFrame
+            Dataframe containing the results of the backtest to be plotted.
         plot_results: boolean, default True
             Whether to plot the results.
         plot_positions : bool, default True
             Whether to plot the positions.
         """
 
-        if not plot_results:
+        if not plot_results or results is None:
             return
 
-        try:
-            _ = self.results
-        except AttributeError:
-            print("No results to plot yet. Run the strategy first.")
-            return
-
-        plotting_cols = ["creturns"]
+        plotting_cols = ["accumulated_returns"]
         if self.tc != 0:
-            plotting_cols.append("cstrategy")
+            plotting_cols.append("accumulated_strategy_returns")
 
         title = self.__repr__()
 
-        ax = self.results[plotting_cols].plot(title=title, figsize=(12, 8))\
+        df = results[plotting_cols] * 100
+
+        ax = df.plot(title=title, figsize=(12, 8))\
 
         if plot_positions:
 
@@ -191,15 +187,15 @@ class BacktestMixin:
                 0: 'brown',
                 -1: 'red',
             }
-            self.results['color'] = self.results['position'].apply(lambda label: label2color[label])
+            results['color'] = results['position'].apply(lambda label: label2color[label])
 
             # Add px_last lines
             for color, start, end in self._gen_repeating(self.results['color']):
                 if start > 0: # make sure lines connect
                     start -= 1
                 idx = self.results.index[start:end+1]
-                self.results.loc[idx, 'cstrategy_tc'].plot(ax=ax, color=color, label='')
-                self.results.loc[idx, ['position']].plot(ax=ax, color=color, label='', secondary_y='position', alpha=0.3)
+                results.loc[idx, 'accumulated_strategy_returns_tc'].plot(ax=ax, color=color, label='')
+                results.loc[idx, ['position']].plot(ax=ax, color=color, label='', secondary_y='position', alpha=0.3)
 
             # Get artists and labels for legend and chose which ones to display
             handles, labels = ax.get_legend_handles_labels()
@@ -221,9 +217,11 @@ class BacktestMixin:
             )
 
         else:
-            ax.plot(self.results.index, self.results["cstrategy_tc"], c='g')
+            ax.plot(results.index, results["accumulated_strategy_returns_tc"] * 100, c='g')
 
-            plotting_cols.append("cstrategy_tc")
+            plt.ylabel('returns (%)')
+
+            plotting_cols.append("accumulated_strategy_returns_tc")
 
             ax.legend([legend_mapping[col] for col in plotting_cols])
 
@@ -265,8 +263,8 @@ class BacktestMixin:
             print('\tResults')
             print('')
             print(f'\t# Trades: {nr_trades}')
-            print(f'\tPerformance: {perf}')
-            print(f'\tOut Performance: {outperf}')
+            print(f'\tPerformance: {round(perf * 100, 2)}%')
+            print(f'\tOut Performance: {round(outperf * 100, 2)}%')
             print('--------------------------------')
 
     def _update_and_run(self, args, plot_results=False):

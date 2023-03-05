@@ -50,7 +50,7 @@ class VectorizedBacktester(BacktestMixin):
 
         self._print_results(nr_trades, perf, outperf, print_results)
 
-        self.plot_results(plot_results, plot_positions)
+        self.plot_results(self.results, plot_results, plot_positions)
 
         return perf, outperf
 
@@ -70,14 +70,14 @@ class VectorizedBacktester(BacktestMixin):
         data = self._calculate_positions(data.copy())
         data["trades"] = data.position.diff().fillna(0).abs()
 
-        data["strategy"] = data.position.shift(1) * data.returns
-        data["strategy_tc"] = data["strategy"] - data["trades"] * self.tc
+        data["strategy_returns"] = data.position.shift(1) * data.returns
+        data["strategy_returns_tc"] = data["strategy_returns"] - data["trades"] * self.tc
 
         data.dropna(inplace=True)
 
-        data["creturns"] = data[self.returns_col].cumsum().apply(np.exp)
-        data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
-        data["cstrategy_tc"] = data["strategy_tc"].cumsum().apply(np.exp)
+        data["accumulated_returns"] = data[self.returns_col].cumsum().apply(np.exp)
+        data["accumulated_strategy_returns"] = data["strategy_returns"].cumsum().apply(np.exp)
+        data["accumulated_strategy_returns_tc"] = data["strategy_returns_tc"].cumsum().apply(np.exp)
 
         self.results = data
 
@@ -103,10 +103,10 @@ class VectorizedBacktester(BacktestMixin):
         nr_trades = self._get_trades(data)
 
         # absolute performance of the strategy
-        perf = data["cstrategy_tc"].iloc[-1]
+        perf = data["accumulated_strategy_returns_tc"].iloc[-1]
 
         # out-/underperformance of strategy
-        outperf = perf - data["creturns"].iloc[-1]
+        outperf = perf - data["accumulated_returns"].iloc[-1]
 
         return nr_trades, perf, outperf
 
