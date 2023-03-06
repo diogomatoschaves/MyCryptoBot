@@ -6,7 +6,44 @@ from model.strategies._mixin import StrategyMixin
 
 
 class BollingerBands(StrategyMixin):
-    """ Class for the vectorized backtesting of SMA-based trading strategies.
+    """ Bollinger Bands Strategy:
+
+    This strategy follows the principle of mean reversion, ie. that
+    the price will revert back to the mean if it deviates by a certain amount,
+    essentially going long or short when the price crosses a
+    certain low and high threshold respectively.
+
+    Parameters:
+    -----------
+    ma : int
+        Moving average window.
+    sd : int
+        Standard deviation window.
+    data : pd.DataFrame, default None
+        Data to use in the strategy.
+    **kwargs
+        Additional arguments to pass to the `StrategyMixin` superclass.
+
+    Attributes:
+    -----------
+    params : OrderedDict
+        Ordered dictionary containing the strategy's parameters:
+        - `ma`: moving average window.
+        - `sd`: standard deviation window.
+
+    Methods:
+    --------
+    __repr__(self)
+        Return a string representation of the class instance.
+    update_data(self)
+        Retrieves and prepares the data.
+    _calculate_positions(self, data)
+        Calculate the position for each row in the data.
+    _get_position(self, symbol)
+        Return the position for a given symbol (not implemented).
+    get_signal(self, row=None)
+        Return the position signal for a given row.
+
     """
 
     def __init__(self, ma: int, sd: int, data=None, **kwargs):
@@ -24,21 +61,28 @@ class BollingerBands(StrategyMixin):
     def __repr__(self):
         return "{}(symbol = {}, ma = {}, sd = {})".format(self.__class__.__name__, self.symbol, self._ma, self._sd)
 
-    def _get_test_title(self):
-        return "Testing Bollinger Bands Strategy: {} | ma = {} & sd = {}".format(self.symbol, self._ma, self._sd)
-
-    def update_data(self):
-        """ Retrieves and prepares the data.
+    def update_data(self, data):
         """
-        super(BollingerBands, self).update_data()
+        Updates the input data with additional columns required for the strategy.
 
-        data = self.data
+        Parameters
+        ----------
+        data : pd.DataFrame
+            OHLCV data to be updated.
+
+        Returns
+        -------
+        pd.DataFrame
+            Updated OHLCV data containing additional columns.
+        """
+        super().update_data(data)
 
         data["sma"] = data[self.price_col].rolling(self._ma).mean()
         data["upper"] = data["sma"] + data[self.price_col].rolling(self._ma).std() * self._sd
         data["lower"] = data["sma"] - data[self.price_col].rolling(self._ma).std() * self._sd
 
-        self.data = self._calculate_positions(data)
+        data = self._calculate_positions(data)
+        return data
 
     def _calculate_positions(self, data):
         data["distance"] = data[self.price_col] - data["sma"]

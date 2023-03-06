@@ -19,7 +19,7 @@ class TestIterativeBacktester:
             for fixture_name, fixture in fixtures.items()
         ],
     )
-    def test_test_strategy(self, fixture, mocked_matplotlib_show):
+    def test_run(self, fixture, mocked_matplotlib_show):
 
         strategy = fixture["in"]["strategy"]
         params = fixture["in"]["params"]
@@ -27,15 +27,12 @@ class TestIterativeBacktester:
 
         strategy_instance = strategy(**params, data=data)
 
-        vect = IterativeBacktester(strategy_instance, trading_costs=trading_costs)
+        ite = IterativeBacktester(strategy_instance, trading_costs=trading_costs)
 
-        perf, outperf = vect.test_strategy()
+        ite.run()
 
-        print(vect.results.to_dict(orient="records"))
+        print(ite.results.to_dict(orient="records"))
 
-        assert perf == fixture["out"]["expected_performance"]
-        assert outperf == fixture["out"]["expected_outperformance"]
-
-        for i, d in enumerate(vect.results.to_dict(orient="records")):
+        for i, d in enumerate(ite.results.to_dict(orient="records")):
             for key in d:
                 assert d[key] == pytest.approx(fixture["out"]["expected_results"][i][key], 0.2)

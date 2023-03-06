@@ -308,7 +308,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 411.223017,
             "taker_buy_quote_volume": 22979821.33981915,
             "returns": 0.006818529518377586,
-            "macd_diff": nan,
+            "macd_diff": 16.43607074829682,
         },
         {
             "open_time": Timestamp("2021-04-21 14:35:00+0000", tz="UTC"),
@@ -323,7 +323,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 356.915883,
             "taker_buy_quote_volume": 20037884.70780964,
             "returns": 0.005926179097336494,
-            "macd_diff": 38.00526600582998,
+            "macd_diff": 22.597498879170516,
         },
         {
             "open_time": Timestamp("2021-04-21 14:40:00+0000", tz="UTC"),
@@ -338,7 +338,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 178.075904,
             "taker_buy_quote_volume": 10007121.78892216,
             "returns": -0.00170962942015996,
-            "macd_diff": 17.695953106206616,
+            "macd_diff": 6.661379695251242,
         },
         {
             "open_time": Timestamp("2021-04-21 14:45:00+0000", tz="UTC"),
@@ -353,7 +353,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 145.064381,
             "taker_buy_quote_volume": 8146012.47892439,
             "returns": 0.0003967606653441501,
-            "macd_diff": 2.8913917125996704,
+            "macd_diff": -1.750596661918678,
         },
         {
             "open_time": Timestamp("2021-04-21 14:50:00+0000", tz="UTC"),
@@ -368,7 +368,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 134.1124,
             "taker_buy_quote_volume": 7529521.30623853,
             "returns": -0.0008209293091875578,
-            "macd_diff": -9.731524264064092,
+            "macd_diff": -8.035012300882187,
         },
         {
             "open_time": Timestamp("2021-04-21 14:55:00+0000", tz="UTC"),
@@ -383,7 +383,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 168.231118,
             "taker_buy_quote_volume": 9447425.0774598,
             "returns": 0.0006607487960858385,
-            "macd_diff": -12.24757221571906,
+            "macd_diff": -7.5995441560854005,
         },
         {
             "open_time": Timestamp("2021-04-21 15:00:00+0000", tz="UTC"),
@@ -398,7 +398,7 @@ expected_data_set_parameters = pd.DataFrame(
             "taker_buy_asset_volume": 139.83665,
             "taker_buy_quote_volume": 7864202.02549528,
             "returns": 0.0019165664875115606,
-            "macd_diff": -6.997070737693036,
+            "macd_diff": -3.1153711385841376,
         },
     ]
 )

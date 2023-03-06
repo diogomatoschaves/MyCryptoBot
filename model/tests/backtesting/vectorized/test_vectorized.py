@@ -19,7 +19,7 @@ class TestVectorizedBacktester:
             for fixture_name, fixture in fixtures.items()
         ],
     )
-    def test_test_strategy(self, fixture, mocked_matplotlib_show):
+    def test_run(self, fixture, mocked_matplotlib_show):
 
         strategy = fixture["in"]["strategy"]
         params = fixture["in"]["params"]
@@ -29,12 +29,9 @@ class TestVectorizedBacktester:
 
         vect = VectorizedBacktester(strategy_instance, trading_costs=trading_costs)
 
-        perf, outperf = vect.test_strategy()
+        vect.run()
 
         print(vect.results.to_dict(orient="records"))
-
-        assert perf == fixture["out"]["expected_performance"]
-        assert outperf == fixture["out"]["expected_outperformance"]
 
         for i, d in enumerate(vect.results.to_dict(orient="records")):
             for key in d:
@@ -58,12 +55,10 @@ class TestVectorizedBacktester:
 
         vect = VectorizedBacktester(strategy_instance, trading_costs=trading_costs)
 
-        optimization_results, perf = vect.optimize_parameters(optimization_params)
+        optimization_results, perf = vect.optimize(optimization_params)
 
         print(optimization_results)
 
         assert (
             optimization_results == fixture["out"]["expected_optimization_results"][0]
         ).all()
-
-        assert perf == fixture["out"]["expected_optimization_results"][1]

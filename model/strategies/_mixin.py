@@ -1,28 +1,129 @@
 import numpy as np
+import pandas as pd
 
 
 class StrategyMixin:
+    """
+    A mixin class that provides basic functionality for backtesting trading strategies.
 
-    def __init__(self, data, price_col='close', returns_col='returns'):
+    Parameters
+    ----------
+    data : pd.DataFrame, optional
+        The DataFrame containing the historical price data for the asset.
+    price_col : str, optional
+        The name of the column in the data that contains the price data.
+    returns_col : str, optional
+        The name of the column in the data that will contain the returns data.
+
+    Attributes
+    ----------
+    data : pd.DataFrame
+        The DataFrame containing the historical price data for the asset.
+    price_col : str
+        The name of the column in the data that contains the price data.
+    returns_col : str
+        The name of the column in the data that will contain the returns data.
+    symbol : str
+        The name of the asset being traded.
+
+    Methods
+    -------
+    _get_test_title(self)
+        Return a string with the title for the backtest.
+    _get_data() -> pd.DataFrame
+        Returns the current DataFrame containing the historical price data for the asset.
+    set_data(data: pd.DataFrame) -> None
+        Sets the DataFrame containing the historical price data for the asset.
+    set_parameters(params: dict) -> None
+        Updates the parameters of the strategy.
+    _calculate_returns() -> None
+        Calculates the returns of the asset and updates the data DataFrame.
+    update_data() -> None
+        Updates the data DataFrame by calculating the returns of the asset.
+
+    """
+
+    def __init__(self, data=None, price_col='close', returns_col='returns'):
+        """
+        Initializes a new instance of the StrategyMixin class.
+
+        Parameters
+        ----------
+        data : pd.DataFrame, optional
+            The DataFrame containing the historical price data for the asset.
+        price_col : str, optional
+            The name of the column in the data that contains the price data.
+        returns_col : str, optional
+            The name of the column in the data that will contain the returns data.
+        """
 
         self.price_col = price_col
         self.returns_col = returns_col
         self.symbol = None
 
         if data is not None:
-            self.data = data.copy()
-            self.update_data()
+            self.data = self.update_data(data.copy())
 
-    def _get_data(self):
+    def __repr__(self):
+        """
+        Returns a string representation of the strategy.
+
+        Returns:
+        --------
+        str:
+            A string representation of the strategy.
+        """
+        return "{}".format(self.__class__.__name__)
+
+    def _get_test_title(self):
+        """
+        Returns the title for the backtest report.
+
+        Returns:
+        --------
+        str:
+            The title for the backtest report.
+        """
+        return f"{self.__repr__()} strategy backtest."
+
+    def _get_data(self) -> pd.DataFrame:
+        """
+        Returns the current DataFrame containing the historical price data for the asset.
+
+        Returns
+        -------
+        pd.DataFrame
+            The current DataFrame containing the historical price data for the asset.
+        """
+
         return self.data
 
-    def set_data(self, data):
-        if data is not None:
-            self.data = data
-            self.data = self.update_data()
+    def set_data(self, data: pd.DataFrame, strategy_obj=None) -> None:
+        """
+        Sets the DataFrame containing the historical price data for the asset.
 
-    def set_parameters(self, params=None):
-        """ Updates SMA parameters and resp. time series.
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The DataFrame containing the historical price data for the asset.
+        strategy_obj : Strategy object
+
+        """
+
+        if data is not None:
+            if strategy_obj is not None:
+                strategy_obj.data = strategy_obj.update_data(data)
+            else:
+                self.data = self.update_data(self.data)
+
+    def set_parameters(self, params=None) -> None:
+        """
+        Updates the parameters of the strategy.
+
+        Parameters
+        ----------
+        params : dict, optional
+            A dictionary containing the parameters to be updated.
         """
 
         if params is None:
@@ -31,15 +132,30 @@ class StrategyMixin:
         for param, new_value in params.items():
             setattr(self, f"_{param}", self.params[param](new_value))
 
-        self.update_data()
+        self.update_data(self.data)
 
-    def _calculate_returns(self):
-
-        data = self.data
+    def _calculate_returns(self, data) -> None:
+        """
+        Calculates the returns of the asset and updates the data DataFrame.
+        """
 
         data[self.returns_col] = np.log(data[self.price_col] / data[self.price_col].shift(1))
 
-        self.data = data
+        return data
 
-    def update_data(self):
-        self._calculate_returns()
+    def update_data(self, data) -> None:
+        """
+        Updates the input data with additional columns required for the strategy.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            OHLCV data to be updated.
+
+        Returns
+        -------
+        pd.DataFrame
+            Updated OHLCV data containing additional columns.
+        """
+
+        return self._calculate_returns(data)

@@ -148,7 +148,7 @@ class BinanceMarginTrader(BinanceTrader):
         self.current_balance += factor * float(order['cummulative_quote_qty'])
         self.units -= factor * units
 
-        self.trades += 1
+        self.nr_trades += 1
 
         self.report_trade(order, units, going, header)
 

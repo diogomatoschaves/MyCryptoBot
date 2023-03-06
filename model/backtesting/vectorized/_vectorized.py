@@ -1,6 +1,4 @@
 import numpy as np
-from scipy.optimize import brute
-
 from model.backtesting._mixin import BacktestMixin
 
 
@@ -8,60 +6,113 @@ class VectorizedBacktester(BacktestMixin):
     """ Class for vectorized backtesting.
     """
 
-    def __init__(self, strategy, symbol='BTCUSDT', trading_costs=0):
+    def __init__(self, strategy, symbol=None, trading_costs=0.0):
+        """
+
+        Parameters
+        ----------
+        strategy : StrategyType
+            A valid strategy class as defined in model.strategies __init__ file.
+        symbol : string
+            Symbol for which we are performing the backtest. default is None.
+        trading_costs : int
+            The trading cost per trade in percentage of the value being traded.
+        """
 
         BacktestMixin.__init__(self, symbol, trading_costs)
 
         self.strategy = strategy
+        self.strategy.symbol = symbol
 
     def __repr__(self):
         return self.strategy.__repr__()
 
-    def __getattr__(self, attr):
-        method = getattr(self.strategy, attr)
+    def _test_strategy(self, params=None, print_results=True, plot_results=True, plot_positions=False):
+        """
 
-        if not method:
-            return getattr(self, attr)
-        else:
-            return method
+        Parameters
+        ----------
+        params : dict
+            Dictionary containing the keywords and respective values of the parameters to be updated.
+        plot_results: boolean
+            Flag for whether to plot the results of the backtest.
+        plot_positions : boolean
+            Flag for whether to plot the positions markers on the results plot.
 
-    def test_strategy(self, params=None, plot_results=True, plot_positions=True):
-        """ Backtests the trading strategy.
         """
 
         self.set_parameters(params)
 
-        title = self.__repr__()
-
         data = self._get_data().dropna().copy()
 
-        return self._assess_strategy(data, title, plot_results, plot_positions)
+        if data.empty:
+            return 0, 0
+
+        self._vectorized_backtest(data)
+
+        nr_trades, perf, outperf = self._evaluate_backtest()
+
+        self._print_results(nr_trades, perf, outperf, print_results)
+
+        self.plot_results(self.results, plot_results, plot_positions)
+
+        return perf, outperf
+
+    def _vectorized_backtest(self, data):
+        """
+        Assess the performance of the trading strategy on historical data.
+
+        Parameters:
+        -----------
+        data : pandas.DataFrame
+            Historical price data for the trading symbol. Pre sanitized.
+
+        Returns:
+        --------
+        None
+        """
+        data = self._calculate_positions(data)
+        data["trades"] = data.position.diff().fillna(0).abs()
+
+        data["strategy_returns"] = data.position.shift(1) * data.returns
+        data["strategy_returns_tc"] = data["strategy_returns"] - data["trades"] * self.tc
+
+        data.dropna(inplace=True)
+
+        data["accumulated_returns"] = data[self.returns_col].cumsum().apply(np.exp)
+        data["accumulated_strategy_returns"] = data["strategy_returns"].cumsum().apply(np.exp)
+        data["accumulated_strategy_returns_tc"] = data["strategy_returns_tc"].cumsum().apply(np.exp)
+
+        self.results = data
+
+    def _evaluate_backtest(self):
+        """
+       Evaluates the performance of the trading strategy on the backtest run.
+
+       Parameters:
+       -----------
+       print_results : bool, default True
+           Whether to print the results.
+
+       Returns:
+       --------
+       float
+           The performance of the strategy.
+       float
+           The out-/underperformance of the strategy.
+       """
+
+        data = self.results
+
+        nr_trades = self._get_trades(data)
+
+        # absolute performance of the strategy
+        perf = data["accumulated_strategy_returns_tc"].iloc[-1]
+
+        # out-/underperformance of strategy
+        outperf = perf - data["accumulated_returns"].iloc[-1]
+
+        return nr_trades, perf, outperf
 
     def _get_trades(self, data):
-        return data.trades.sum()
-
-    def _update_and_run(self, args, plot_results=False):
-
-        params = {}
-        for i, arg in enumerate(args):
-            params[list(self.params.items())[i][0]] = arg
-
-        return -self.test_strategy(params, plot_results=plot_results)[0]
-
-    def optimize_parameters(self, params, **kwargs):
-
-        opt_params = []
-        for param in self.params:
-            if param in params:
-                opt_params.append(params[param])
-            else:
-                param_value = getattr(self, f"_{param}")
-                if isinstance(param_value, (float, int)):
-                    opt_params.append((param_value, param_value + 1, 1))
-
-        opt = brute(self._update_and_run, opt_params, finish=None)
-
-        if not isinstance(opt, (list, tuple, type(np.array([])))):
-            opt = np.array([opt])
-
-        return opt, -self._update_and_run(opt, plot_results=True)
+        return int(data["trades"].sum() / 2)
