@@ -52,19 +52,25 @@ class Momentum(StrategyMixin):
         """
         return "{}(symbol = {}, window = {})".format(self.__class__.__name__, self.symbol, self._window)
 
-    def _get_test_title(self):
+    def update_data(self, data):
         """
-        Return a string with the title of the strategy for testing.
-        """
-        return "Testing Momentum strategy | {} | window: {}".format(self.symbol, self._window)
+        Updates the input data with additional columns required for the strategy.
 
-    def update_data(self):
-        """
-        Retrieves and prepares the data.
-        """
-        super(Momentum, self).update_data()
+        Parameters
+        ----------
+        data : pd.DataFrame
+            OHLCV data to be updated.
 
-        self.data["rolling_returns"] = self.data[self.returns_col].rolling(self._window, min_periods=1).mean()
+        Returns
+        -------
+        pd.DataFrame
+            Updated OHLCV data containing additional columns.
+        """
+        super().update_data(data)
+
+        data["rolling_returns"] = data[self.returns_col].rolling(self._window, min_periods=1).mean()
+
+        return data
 
     def _calculate_positions(self, data):
         """

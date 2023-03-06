@@ -10,7 +10,7 @@ class IterativeBacktester(BacktestMixin, Trader):
     A class for backtesting trading strategies iteratively using historical data.
     """
 
-    def __init__(self, strategy, amount=1000, symbol='BTCUSDT', trading_costs=0):
+    def __init__(self, strategy, symbol=None, amount=1000, trading_costs=0):
         """
         Initializes the IterativeBacktester object.
 
@@ -18,10 +18,10 @@ class IterativeBacktester(BacktestMixin, Trader):
         ----------
         strategy : object
             The trading strategy to be tested.
+        symbol : str, optional
+            The trading symbol. Default is None.
         amount : float, optional
             The initial amount of currency to be traded with. Default is 1000.
-        symbol : str, optional
-            The trading symbol. Default is 'BTCUSDT'.
         trading_costs : float, optional
             The percentage of trading costs. Default is 0.
         """

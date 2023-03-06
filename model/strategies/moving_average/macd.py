@@ -83,29 +83,28 @@ class MovingAverageConvergenceDivergence(MACD, StrategyMixin):
             self.__class__.__name__, self.symbol, self._window_fast, self._window_slow, self._window_sign
         )
 
-    def _get_test_title(self) -> str:
+    def update_data(self, data) -> None:
         """
-        Returns the test title of the object.
+        Updates the input data with additional columns required for the strategy.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            OHLCV data to be updated.
 
         Returns
         -------
-        str
-            Test title of the object.
+        pd.DataFrame
+            Updated OHLCV data containing additional columns.
         """
-        return "Testing MACD strategy | {} | fast = {}, slow = {}, signal = {}".format(
-            self.symbol, self._window_fast, self._window_slow, self._window_sign
-        )
+        super().update_data(data)
 
-    def update_data(self) -> None:
-        """
-        Retrieves and prepares the data.
-        """
-        super(MovingAverageConvergenceDivergence, self).update_data()
-
-        self._close = self.data[self.price_col]
+        self._close = data[self.price_col]
         self._run()
 
-        self.data["macd_diff"] = self.macd_diff()
+        data["macd_diff"] = self.macd_diff()
+
+        return data
 
     def _calculate_positions(self, data: pd.DataFrame) -> pd.DataFrame:
         """

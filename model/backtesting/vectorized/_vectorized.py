@@ -6,7 +6,7 @@ class VectorizedBacktester(BacktestMixin):
     """ Class for vectorized backtesting.
     """
 
-    def __init__(self, strategy, symbol='BTCUSDT', trading_costs=0):
+    def __init__(self, strategy, symbol=None, trading_costs=0):
         """
 
         Parameters
@@ -14,7 +14,7 @@ class VectorizedBacktester(BacktestMixin):
         strategy : StrategyType
             A valid strategy class as defined in model.strategies __init__ file.
         symbol : string
-            Symbol for which we are performing the backtest.
+            Symbol for which we are performing the backtest. default is None.
         trading_costs : int
             The trading cost per trade in percentage of the value being traded.
         """
@@ -44,6 +44,9 @@ class VectorizedBacktester(BacktestMixin):
 
         data = self._get_data().dropna().copy()
 
+        if data.empty:
+            return 0, 0
+
         self._vectorized_backtest(data)
 
         nr_trades, perf, outperf = self._evaluate_backtest()
@@ -67,7 +70,7 @@ class VectorizedBacktester(BacktestMixin):
         --------
         None
         """
-        data = self._calculate_positions(data.copy())
+        data = self._calculate_positions(data)
         data["trades"] = data.position.diff().fillna(0).abs()
 
         data["strategy_returns"] = data.position.shift(1) * data.returns

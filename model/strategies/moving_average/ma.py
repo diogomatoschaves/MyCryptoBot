@@ -62,21 +62,30 @@ class MovingAverage(StrategyMixin):
     def __repr__(self):
         return "{}(symbol = {}, SMA = {})".format(self.__class__.__name__, self.symbol, self._ma)
 
-    def _get_test_title(self):
-        return "Testing SMA strategy | {} | SMA_S = {}".format(self.symbol, self._ma)
+    def update_data(self, data):
+        """
+        Updates the input data with additional columns required for the strategy.
 
-    def update_data(self):
+        Parameters
+        ----------
+        data : pd.DataFrame
+            OHLCV data to be updated.
+
+        Returns
+        -------
+        pd.DataFrame
+            Updated OHLCV data containing additional columns.
         """
-        Retrieves and prepares the data.
-        """
-        super(MovingAverage, self).update_data()
+        super().update_data(data)
 
         if self._moving_av == 'sma':
-            self.data["SMA"] = sma_indicator(close=self.data[self.price_col], window=self._ma)
+            data["SMA"] = sma_indicator(close=data[self.price_col], window=self._ma)
         elif self._moving_av == 'ema':
-            self.data["SMA"] = ema_indicator(close=self.data[self.price_col], window=self._ma)
+            data["SMA"] = ema_indicator(close=data[self.price_col], window=self._ma)
         else:
             raise('Method not supported')
+
+        return data
 
     def _calculate_positions(self, data):
         """

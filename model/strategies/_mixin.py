@@ -28,6 +28,8 @@ class StrategyMixin:
 
     Methods
     -------
+    _get_test_title(self)
+        Return a string with the title for the backtest.
     _get_data() -> pd.DataFrame
         Returns the current DataFrame containing the historical price data for the asset.
     set_data(data: pd.DataFrame) -> None
@@ -60,8 +62,29 @@ class StrategyMixin:
         self.symbol = None
 
         if data is not None:
-            self.data = data.copy()
-            self.update_data()
+            self.data = self.update_data(data.copy())
+
+    def __repr__(self):
+        """
+        Returns a string representation of the strategy.
+
+        Returns:
+        --------
+        str:
+            A string representation of the strategy.
+        """
+        return "{}".format(self.__class__.__name__)
+
+    def _get_test_title(self):
+        """
+        Returns the title for the backtest report.
+
+        Returns:
+        --------
+        str:
+            The title for the backtest report.
+        """
+        return f"{self.__repr__()} strategy backtest."
 
     def _get_data(self) -> pd.DataFrame:
         """
@@ -89,11 +112,9 @@ class StrategyMixin:
 
         if data is not None:
             if strategy_obj is not None:
-                strategy_obj.data = data
-                strategy_obj.update_data()
+                strategy_obj.data = strategy_obj.update_data(data)
             else:
-                self.data = data
-                self.update_data()
+                self.data = self.update_data(self.data)
 
     def set_parameters(self, params=None) -> None:
         """
@@ -111,22 +132,30 @@ class StrategyMixin:
         for param, new_value in params.items():
             setattr(self, f"_{param}", self.params[param](new_value))
 
-        self.update_data()
+        self.update_data(self.data)
 
-    def _calculate_returns(self) -> None:
+    def _calculate_returns(self, data) -> None:
         """
         Calculates the returns of the asset and updates the data DataFrame.
         """
 
-        data = self.data
-
         data[self.returns_col] = np.log(data[self.price_col] / data[self.price_col].shift(1))
 
-        self.data = data
+        return data
 
-    def update_data(self) -> None:
+    def update_data(self, data) -> None:
         """
-        Updates the data DataFrame by calculating the returns of the asset.
+        Updates the input data with additional columns required for the strategy.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            OHLCV data to be updated.
+
+        Returns
+        -------
+        pd.DataFrame
+            Updated OHLCV data containing additional columns.
         """
 
-        self._calculate_returns()
+        return self._calculate_returns(data)

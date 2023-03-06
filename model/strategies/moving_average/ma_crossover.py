@@ -41,12 +41,12 @@ class MovingAverageCrossover(StrategyMixin):
     """
 
     def __init__(
-            self,
-            sma_s: int,
-            sma_l: int,
-            moving_av: Literal["sma", "ema"] = 'sma',
-            data=None,
-            **kwargs
+        self,
+        sma_s: int,
+        sma_l: int,
+        moving_av: Literal["sma", "ema"] = 'sma',
+        data=None,
+        **kwargs
     ):
         """
         Constructs a new instance of the MovingAverageCrossover class.
@@ -84,24 +84,21 @@ class MovingAverageCrossover(StrategyMixin):
         """
         return "{}(symbol = {}, SMA_S = {}, SMA_L = {})".format(self.__class__.__name__, self.symbol, self._sma_s, self._sma_l)
 
-    def _get_test_title(self):
+    def update_data(self, data):
         """
-        Returns the title for the backtest report.
+        Updates the input data with additional columns required for the strategy.
 
-        Returns:
-        --------
-        str:
-            The title for the backtest report.
-        """
-        return "Testing SMA strategy | {} | SMA_S = {} & SMA_L = {}".format(self.symbol, self._sma_s, self._sma_l)
+        Parameters
+        ----------
+        data : pd.DataFrame
+            OHLCV data to be updated.
 
-    def update_data(self):
+        Returns
+        -------
+        pd.DataFrame
+            Updated OHLCV data containing additional columns.
         """
-        Retrieves and prepares the data for the strategy.
-        """
-        super(MovingAverageCrossover, self).update_data()
-
-        data = self.data
+        super().update_data(data)
 
         if self._moving_av == 'sma':
             data["SMA_S"] = sma_indicator(close=data[self.price_col], window=self._sma_s)
@@ -113,7 +110,7 @@ class MovingAverageCrossover(StrategyMixin):
         else:
             raise ('Method not supported')
 
-        self.data = data
+        return data
 
     def _calculate_positions(self, data):
         """
