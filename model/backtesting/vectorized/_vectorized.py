@@ -6,7 +6,7 @@ class VectorizedBacktester(BacktestMixin):
     """ Class for vectorized backtesting.
     """
 
-    def __init__(self, strategy, symbol=None, trading_costs=0):
+    def __init__(self, strategy, symbol=None, trading_costs=0.0):
         """
 
         Parameters
@@ -22,6 +22,7 @@ class VectorizedBacktester(BacktestMixin):
         BacktestMixin.__init__(self, symbol, trading_costs)
 
         self.strategy = strategy
+        self.strategy.symbol = symbol
 
     def __repr__(self):
         return self.strategy.__repr__()

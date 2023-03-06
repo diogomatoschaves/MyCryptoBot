@@ -32,6 +32,8 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.amount = amount
 
         self.strategy = strategy
+        self.strategy.symbol = symbol
+
         self.positions_lst = []
         self.equity = [self.amount]
         self.returns = []
