@@ -1,12 +1,38 @@
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import brute
 
+from model.backtesting.helpers.metrics import *
+
 legend_mapping = {
-    "accumulated_returns": "Hold & Buy",
+    "accumulated_returns": "Buy & Hold",
     "accumulated_strategy_returns": "Strategy returns (no trading costs)",
     "accumulated_strategy_returns_tc": "Strategy returns (with trading costs)"
+}
+
+
+results_mapping = {
+    'exposure_time': "Exposure Time [%]",
+    'equity_final': "Equity Final [USDT]",
+    'equity_peak': "Equity Peak [USDT]",
+    'return_pct': "Return [%]",
+    'return_pct_annualized': "Annualized Return [%]",
+    'volatility_pct_annualized': "Annualized Volatility [%]",
+    'sharpe_ratio': "Sharpe Ratio",
+    'sortino_ratio': "Sortino Ratio",
+    'calmar_ratio': "Calmar Ratio",
+    'max_drawdown': "Max Drawdown [%]",
+    'avg_drawdown': "Avg Drawdown [%]",
+    'max_drawdown_duration': "Max Drawdown Duration",
+    'avg_drawdown_duration': "Avg Drawdown Duration",
+    'win_rate': "Win Rate [%]",
+    'best_trade': "Best Trade [%]",
+    'worst_trade': "Worst Trade [%]",
+    'avg_trade': "Avg Trade [%]",
+    'max_trade_duration': "Max Trade Duration",
+    'avg_trade_duration': "Avg Trade Duration",
+    'profit_factor': "Profit Factor",
+    'expectancy': "Expectancy [%]",
+    'sqn': "System Quality Number"
 }
 
 
@@ -39,7 +65,7 @@ class BacktestMixin:
     plot_func(ax, group):
         A function used for plotting positions.
     """
-    def __init__(self, symbol, trading_costs):
+    def __init__(self, symbol, amount, trading_costs):
         """
         Initialize the BacktestMixin object.
 
@@ -50,12 +76,14 @@ class BacktestMixin:
         trading_costs : float
             The transaction costs (e.g. spread, commissions) as a percentage.
         """
+        self.amount = amount
         self.symbol = symbol
         self.tc = trading_costs / 100
         self.strategy = None
 
         self.perf = 0
         self.outperf = 0
+        self.results = None
 
     def __getattr__(self, attr):
         """
@@ -79,12 +107,12 @@ class BacktestMixin:
             return method
 
     def load_data(self, data=None, csv_path=None):
-        if data:
+        if data is not None:
             self.set_data(data, self.strategy)
 
-        if csv_path or not data:
+        if csv_path or data is None:
             csv_path = csv_path if csv_path else 'model/sample_data/bitcoin.csv'
-            self.set_data(pd.read_csv(csv_path, index_col='date'), self.strategy)
+            self.set_data(pd.read_csv(csv_path, index_col='date', parse_dates=True), self.strategy)
 
     def run(self, params=None, print_results=True, plot_results=True, plot_positions=False):
         """Runs the trading strategy and prints and/or plots the results.
@@ -104,10 +132,11 @@ class BacktestMixin:
         --------
         None
         """
-        perf, outperf = self._test_strategy(params, print_results, plot_results, plot_positions)
+        perf, outperf, results = self._test_strategy(params, print_results, plot_results, plot_positions)
 
         self.perf = perf
         self.outperf = outperf
+        self.results = results
 
     def optimize(self, params, **kwargs):
         """Optimizes the trading strategy using brute force.
@@ -151,6 +180,61 @@ class BacktestMixin:
             The parameters to use for the trading strategy
         """
         raise NotImplementedError
+
+    def _get_results(self, trades, processed_data):
+
+        exposure = exposure_time(processed_data["position"])
+        final_equity = equity_final(processed_data["accumulated_strategy_returns_tc"] * self.amount)
+        peak_equity = equity_peak(processed_data["accumulated_strategy_returns_tc"] * self.amount)
+        pct_return = return_pct(processed_data["accumulated_strategy_returns_tc"])
+        annualized_pct_return = return_pct_annualized(processed_data["accumulated_strategy_returns_tc"])
+        annualized_pct_volatility = volatility_pct_annualized(processed_data["strategy_returns_tc"])
+        sharpe = sharpe_ratio(processed_data["strategy_returns_tc"])
+        sortino = sortino_ratio(processed_data["strategy_returns_tc"])
+        calmar = calmar_ratio(processed_data["accumulated_strategy_returns_tc"])
+        max_drawdown = max_drawdown_pct(processed_data["accumulated_strategy_returns_tc"])
+        avg_drawdown = avg_drawdown_pct(processed_data["accumulated_strategy_returns_tc"])
+        max_drawdown_dur = max_drawdown_duration(processed_data["accumulated_strategy_returns_tc"])
+        avg_drawdown_dur = avg_drawdown_duration(processed_data["accumulated_strategy_returns_tc"])
+
+        win_rate = win_rate_pct(trades)
+        best_trade = best_trade_pct(trades)
+        worst_trade = worst_trade_pct(trades)
+        avg_trade = avg_trade_pct(trades)
+        max_trade_dur = max_trade_duration(trades)
+        avg_trade_dur = avg_trade_duration(trades)
+        profit_fctor = profit_factor(trades)
+        expectancy = expectancy_pct(trades)
+        sqn = system_quality_number(trades)
+
+        results = pd.Series(
+            dict(
+                exposure_time=exposure,
+                equity_final=final_equity,
+                equity_peak=peak_equity,
+                return_pct=pct_return,
+                return_pct_annualized=annualized_pct_return,
+                volatility_pct_annualized=annualized_pct_volatility,
+                sharpe_ratio=sharpe,
+                sortino_ratio=sortino,
+                calmar_ratio=calmar,
+                max_drawdown=max_drawdown,
+                avg_drawdown=avg_drawdown,
+                max_drawdown_duration=max_drawdown_dur,
+                avg_drawdown_duration=avg_drawdown_dur,
+                win_rate=win_rate,
+                best_trade=best_trade,
+                worst_trade=worst_trade,
+                avg_trade=avg_trade,
+                max_trade_duration=max_trade_dur,
+                avg_trade_duration=avg_trade_dur,
+                profit_factor=profit_fctor,
+                expectancy=expectancy,
+                sqn=sqn
+            )
+        )
+
+        return results
 
     def plot_results(self, results=None, plot_results=True, plot_positions=True):
         """
@@ -257,15 +341,15 @@ class BacktestMixin:
         ax.plot(group.index, group.cstrategy_tc, c=color, linewidth=lw)
 
     @staticmethod
-    def _print_results(nr_trades, perf, outperf, print_results):
+    def _print_results(results, nr_trades, print_results):
         if print_results:
-            print('--------------------------------')
+            print('---------------------------------------')
             print('\tResults')
             print('')
             print(f'\t# Trades: {nr_trades}')
-            print(f'\tPerformance: {round(perf * 100, 2)}%')
-            print(f'\tOut Performance: {round(outperf * 100, 2)}%')
-            print('--------------------------------')
+            for col, value in results.items():
+                print(f'\t{results_mapping[col]}: {round(value, 2)}')
+            print('---------------------------------------')
 
     def _update_and_run(self, args, plot_results=False):
         """

@@ -31,9 +31,9 @@ class TestVectorizedBacktester:
 
         vect.run()
 
-        print(vect.results.to_dict(orient="records"))
+        print(vect.processed_data.to_dict(orient="records"))
 
-        for i, d in enumerate(vect.results.to_dict(orient="records")):
+        for i, d in enumerate(vect.processed_data.to_dict(orient="records")):
             for key in d:
                 assert d[key] == pytest.approx(fixture["out"]["expected_results"][i][key], 0.2)
 

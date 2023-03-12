@@ -49,11 +49,11 @@ def test_return_pct():
 
 
 def test_annual_return_pct(cumulative_returns):
-    assert annual_return_pct(cumulative_returns) == pytest.approx(0.8, 3)
+    assert return_pct_annualized(cumulative_returns) == pytest.approx(0.8, 3)
 
 
 def test_annual_volatility_pct(log_returns):
-    assert annual_volatility_pct(log_returns) == pytest.approx(104.12, 3)
+    assert volatility_pct_annualized(log_returns) == pytest.approx(104.12, 3)
 
 
 def test_sharpe_ratio(log_returns):
@@ -129,6 +129,6 @@ def test_expectancy_pct(trades):
 
 
 def test_sqn(trades):
-    assert sqn(trades) == 0
+    assert system_quality_number(trades) == 0
 
 

@@ -7,6 +7,13 @@ import pandas as pd
 from model.backtesting.helpers import Trade
 
 
+def geometric_mean(returns: pd.Series) -> float:
+    returns = returns.fillna(0) + 1
+    if np.any(returns <= 0):
+        return 0
+    return np.exp(np.log(returns).sum() / (len(returns) or np.nan)) - 1
+
+
 def exposure_time(positions: np.ndarray) -> float:
     """Calculate the percentage of time the strategy was exposed to the market."""
     return np.count_nonzero(positions) / len(positions) * 100
@@ -27,7 +34,7 @@ def return_pct(equity_curve: np.ndarray) -> float:
     return (equity_curve[-1] / equity_curve[0] - 1) * 100
 
 
-def annual_return_pct(cum_returns: pd.Series) -> float:
+def return_pct_annualized(cum_returns: pd.Series) -> float:
     """Calculate the annualized return percentage."""
 
     years_df = cum_returns.resample('1Y').count()
@@ -35,7 +42,7 @@ def annual_return_pct(cum_returns: pd.Series) -> float:
     return ((cum_returns[-1] / cum_returns[0])**(1 / len(years_df))-1) * 100
 
 
-def annual_volatility_pct(returns: pd.Series) -> float:
+def volatility_pct_annualized(returns: pd.Series) -> float:
     """Calculate the annualized volatility percentage."""
 
     days_df = returns.resample('1D').sum()
@@ -49,19 +56,22 @@ def sharpe_ratio(returns: pd.Series, risk_free_rate: float = 0) -> float:
     return np.mean(excess_returns) / np.std(excess_returns) * np.sqrt(365)
 
 
-def sortino_ratio(returns: pd.Series, risk_free_rate: float = 0) -> float:
+def sortino_ratio(returns: pd.Series, target_return: float = 0, risk_free_rate: float = 0) -> float:
     """Calculate the Sortino ratio."""
-    downside_returns = returns[returns < risk_free_rate]
-    downside_volatility = np.std(downside_returns) * np.sqrt(365)
-    excess_returns = returns - risk_free_rate
-    return np.mean(excess_returns) / downside_volatility
+
+    downside_returns = returns.copy()
+    downside_returns[downside_returns > target_return] = 0
+    downside_deviation = volatility_pct_annualized(downside_returns)
+    cumulative_returns = returns.cumsum().apply(np.exp)
+    sortino_ratio = (return_pct_annualized(cumulative_returns) - risk_free_rate) / downside_deviation
+    return sortino_ratio
 
 
 def calmar_ratio(cum_returns: pd.Series, risk_free_rate: float = 0) -> float:
     """Calculate the Calmar ratio."""
-    max_drawdown = max_drawdown_pct(cum_returns)
-    annual_return = annual_return_pct(cum_returns)
-    return (annual_return - risk_free_rate) / max_drawdown
+    max_drawdown = max_drawdown_pct(cum_returns) / 100
+    annual_return = return_pct_annualized(cum_returns) / 100
+    return (annual_return - risk_free_rate) / -max_drawdown
 
 
 def max_drawdown_pct(cum_returns: pd.Series) -> float:
@@ -84,7 +94,8 @@ def avg_drawdown_pct(cum_returns: pd.Series) -> float:
     for dd in drawdowns:
         if dd == 0:
             if not is_zero:
-                drawdown_maximums.append(np.min(drawdown_period))
+                if len(drawdown_period) != 0:
+                    drawdown_maximums.append(np.min(drawdown_period))
             is_zero = True
         else:
             if is_zero:
@@ -187,12 +198,11 @@ def worst_trade_pct(trades: List[Trade]) -> float:
 
 def avg_trade_pct(trades: List[Trade]) -> float:
     """Calculate the average trade percentage."""
-    trades_pct = reduce(
-        lambda accum, trade: (trade.exit_price - trade.entry_price) / trade.entry_price * trade.direction,
-        trades,
-        []
+    trades_pct = map(
+        lambda trade: (trade.exit_price - trade.entry_price) / trade.entry_price * trade.direction,
+        trades
     )
-    return np.mean(trades_pct)
+    return geometric_mean(pd.Series(list(trades_pct))) * 100
 
 
 def max_trade_duration(trades: List[Trade]) -> int:
@@ -270,13 +280,13 @@ def expectancy_pct(trades: List[Trade]) -> float:
     elif len(win_trades) == 0:
         return np.mean(lose_trades) * 100
     else:
-        win_rate = win_rate_pct(trades)
-        avg_win = avg_trade_pct(win_trades)
-        avg_loss = avg_trade_pct(lose_trades)
+        win_rate = win_rate_pct(trades) / 100
+        avg_win = avg_trade_pct(win_trades) / 100
+        avg_loss = avg_trade_pct(lose_trades) / 100
         return (win_rate * avg_win - (1 - win_rate) * avg_loss) * 100
 
 
-def sqn(trades):
+def system_quality_number(trades):
     """Calculate the System Quality Number."""
 
     net_profit = trades_net_profit(trades)
