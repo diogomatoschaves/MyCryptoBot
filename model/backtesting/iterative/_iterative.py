@@ -171,11 +171,11 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         results, nr_trades, perf, outperf = self._evaluate_backtest(processed_data)
 
-        self._print_results(results, nr_trades, print_results)
+        self._print_results(results, print_results)
 
         self.plot_results(self.processed_data, plot_results, plot_positions)
 
-        return perf, outperf
+        return perf, outperf, results
 
     def _iterative_backtest(self, data, print_results=True):
         """
@@ -229,17 +229,14 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         self.processed_data = processed_data
 
-        returns_tc = [np.log(trade.exit_price / trade.entry_price) * trade.direction for trade in self.trades_tc]
-        perf = np.exp(np.sum(returns_tc))  # Performance with trading_costs
-
         returns = [np.log(trade.exit_price / trade.entry_price) * trade.direction for trade in self.trades]
-        perf_no_tc = np.exp(np.sum(returns))  # Performance with no trading costs
+        perf = np.exp(np.sum(returns))  # Performance with trading_costs
 
         perf_bh = processed_data["accumulated_returns"].iloc[-1]
 
         outperf = perf - perf_bh
 
-        results = self._get_results(self.trades_tc, processed_data)
+        results = self._get_results(self.trades, processed_data)
 
         return results, self.nr_trades, perf, outperf
 
@@ -303,18 +300,18 @@ class IterativeBacktester(BacktestMixin, Trader):
         print_results = kwargs.get('print_results')
 
         price = self._get_price(date, row)
+        price_tc = price * (1 + self.tc)
 
         if units is None:
-            units = amount / price
+            units = amount / price_tc
 
         if amount is None:
-            amount = units * price
+            amount = units * price_tc
 
-        self.current_balance -= amount * (1 + self.tc)
+        self.current_balance -= amount
         self.units += units
 
-        self._handle_trade(self.trades, open_trade, date, price, units, 1, update_trade_counter=True)
-        self._handle_trade(self.trades_tc, open_trade, date, price * (1 + self.tc), units * (1 - self.tc), 1)
+        self._handle_trade(self.trades, open_trade, date, price_tc, units, 1)
 
         if print_results:
             print(f"{date} |  Buying {round(units, 4)} {self.symbol} for {round(price, 5)}")
@@ -370,18 +367,18 @@ class IterativeBacktester(BacktestMixin, Trader):
         print_results = kwargs.get('print_results')
 
         price = self._get_price(date, row)
+        price_tc = price * (1 - self.tc)
 
         if units is None:
-            units = amount / price
+            units = amount / price_tc
 
         if amount is None:
-            amount = units * price
+            amount = units * price_tc
 
-        self.current_balance += amount * (1 - self.tc)
+        self.current_balance += amount
         self.units -= units
 
-        self._handle_trade(self.trades, open_trade, date, price, units, -1, update_trade_counter=True)
-        self._handle_trade(self.trades_tc, open_trade, date, price * (1 - self.tc), units * (1 + self.tc), -1)
+        self._handle_trade(self.trades, open_trade, date, price_tc, units, -1)
 
         if print_results:
             print(f"{date} |  Selling {round(units, 4)} {self.symbol} for {round(price, 5)}")
@@ -428,7 +425,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         print("{} |  number of trades executed = {}".format(date, self.nr_trades))
         print(75 * "-")
 
-    def _handle_trade(self, trades, open_trade, date, price, units, direction, update_trade_counter=False):
+    def _handle_trade(self, trades, open_trade, date, price, units, direction, update_trade_counter=True):
         if open_trade:
             trades.append(Trade(date, None, price, None, units, direction, None, None))
         else:

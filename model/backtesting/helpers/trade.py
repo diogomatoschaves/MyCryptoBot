@@ -35,5 +35,5 @@ class Trade:
     profit_pct: float
 
     def calculate_profit(self):
-        self.profit = (self.entry_price - self.exit_price) * self.units * self.direction
-        self.profit_pct = (self.entry_price - self.exit_price) / self.entry_price * self.direction * 100
+        self.profit = (self.exit_price - self.entry_price) * self.units * self.direction
+        self.profit_pct = (self.exit_price - self.entry_price) / self.entry_price * self.direction * 100

@@ -24,6 +24,7 @@ results_mapping = {
     'avg_drawdown': "Avg Drawdown [%]",
     'max_drawdown_duration': "Max Drawdown Duration",
     'avg_drawdown_duration': "Avg Drawdown Duration",
+    'nr_trades': "# Trades",
     'win_rate': "Win Rate [%]",
     'best_trade': "Best Trade [%]",
     'worst_trade': "Worst Trade [%]",
@@ -197,6 +198,7 @@ class BacktestMixin:
         max_drawdown_dur = max_drawdown_duration(processed_data["accumulated_strategy_returns_tc"])
         avg_drawdown_dur = avg_drawdown_duration(processed_data["accumulated_strategy_returns_tc"])
 
+        nr_trades = int(len(trades))
         win_rate = win_rate_pct(trades)
         best_trade = best_trade_pct(trades)
         worst_trade = worst_trade_pct(trades)
@@ -222,6 +224,7 @@ class BacktestMixin:
                 avg_drawdown=avg_drawdown,
                 max_drawdown_duration=max_drawdown_dur,
                 avg_drawdown_duration=avg_drawdown_dur,
+                nr_trades=nr_trades,
                 win_rate=win_rate,
                 best_trade=best_trade,
                 worst_trade=worst_trade,
@@ -341,12 +344,11 @@ class BacktestMixin:
         ax.plot(group.index, group.cstrategy_tc, c=color, linewidth=lw)
 
     @staticmethod
-    def _print_results(results, nr_trades, print_results):
+    def _print_results(results, print_results):
         if print_results:
             print('---------------------------------------')
             print('\tResults')
             print('')
-            print(f'\t# Trades: {nr_trades}')
             for col, value in results.items():
                 print(f'\t{results_mapping[col]}: {round(value, 2)}')
             print('---------------------------------------')

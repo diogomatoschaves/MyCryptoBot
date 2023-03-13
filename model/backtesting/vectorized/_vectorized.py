@@ -53,7 +53,7 @@ class VectorizedBacktester(BacktestMixin):
 
         results, nr_trades, perf, outperf = self._evaluate_backtest(processed_data)
 
-        self._print_results(results, nr_trades, print_results)
+        self._print_results(results, print_results)
 
         self.plot_results(self.processed_data, plot_results, plot_positions)
 
@@ -74,6 +74,8 @@ class VectorizedBacktester(BacktestMixin):
         """
         data = self._calculate_positions(data)
         data["trades"] = data.position.diff().fillna(0).abs()
+        data.loc[data.index[0], "trades"] = np.abs(data.iloc[0]["position"])
+        data.loc[data.index[-1], "trades"] = np.abs(data.iloc[-1]["position"])
 
         data["strategy_returns"] = (data.position.shift(1) * data.returns).fillna(0)
         data["strategy_returns_tc"] = (data["strategy_returns"] - data["trades"] * self.tc).fillna(0)
@@ -84,7 +86,7 @@ class VectorizedBacktester(BacktestMixin):
 
         return data
 
-    def _retrieve_trades(self, processed_data):
+    def _retrieve_trades(self, processed_data, trading_costs=0):
         """
         Computes the trades made based on the input processed data and returns a list of Trade objects.
 
@@ -92,6 +94,8 @@ class VectorizedBacktester(BacktestMixin):
         ----------
         processed_data : pandas.DataFrame
             The DataFrame containing the processed data for the strategy backtest.
+        trading_costs: float
+            The trading costs as a raw percent value of each trade.
 
         Returns
         -------
@@ -108,7 +112,7 @@ class VectorizedBacktester(BacktestMixin):
 
         """
 
-        processed_data.loc[processed_data.index[0], "trades"] = processed_data.iloc[0]["position"]
+        # processed_data.loc[processed_data.index[0], "trades"] = np.abs(processed_data.iloc[0]["position"])
         trades = processed_data[processed_data.trades != 0][[self.price_col, "position"]]
 
         trades = trades.reset_index()
@@ -116,14 +120,13 @@ class VectorizedBacktester(BacktestMixin):
         col = "date" if "date" in trades.columns else "index"
 
         trades = trades.rename(columns={self.price_col: "entry_price", col: "entry_date", "position": "direction"})
-        trades["exit_price"] = trades["entry_price"].shift(-1)
+        trades["exit_price"] = trades["entry_price"].shift(-1) * (1 - trading_costs * trades["direction"])
+        trades["entry_price"] = trades["entry_price"] * (1 + trading_costs * trades["direction"])
         trades["exit_date"] = trades["entry_date"].shift(-1)
         trades = trades[trades.direction != 0]
 
         trades = trades.reset_index(drop=True)
-
-        trades.loc[trades.index[-1], "exit_price"] = processed_data.loc[processed_data.index[-1], self.price_col]
-        trades.loc[trades.index[-1], "exit_date"] = processed_data.index[-1]
+        trades = trades.dropna()
 
         trades["units"] = None
         trades["profit"] = None
@@ -170,7 +173,7 @@ class VectorizedBacktester(BacktestMixin):
 
         nr_trades = self._get_nr_trades(processed_data)
 
-        trades = self._retrieve_trades(processed_data)
+        self.trades = self._retrieve_trades(processed_data, self.tc)
 
         # absolute performance of the strategy
         perf = processed_data["accumulated_strategy_returns_tc"].iloc[-1]
@@ -178,7 +181,7 @@ class VectorizedBacktester(BacktestMixin):
         # out-/underperformance of strategy
         outperf = perf - processed_data["accumulated_returns"].iloc[-1]
 
-        results = self._get_results(trades, processed_data)
+        results = self._get_results(self.trades, processed_data)
 
         return results, nr_trades, perf, outperf
     

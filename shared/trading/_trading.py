@@ -13,7 +13,6 @@ class Trader:
         self.units = units
         self.nr_trades = 0
         self.trades = []
-        self.trades_tc = []  # Trades with trading costs
         self.date_col = 'date'
 
     def _set_position(self, symbol, value, **kwargs):
