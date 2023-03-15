@@ -26,10 +26,8 @@ class IterativeBacktester(BacktestMixin, Trader):
             The percentage of trading costs. Default is 0.
         """
 
-        BacktestMixin.__init__(self, symbol, trading_costs)
+        BacktestMixin.__init__(self, symbol, amount, trading_costs)
         Trader.__init__(self, amount)
-
-        self.amount = amount
 
         self.strategy = strategy
         self.strategy.symbol = symbol
@@ -169,15 +167,15 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         data = self._get_data().dropna().copy()
 
-        self._iterative_backtest(data, print_results)
+        processed_data = self._iterative_backtest(data, print_results)
 
-        nr_trades, perf, outperf = self._evaluate_backtest()
+        results, nr_trades, perf, outperf = self._evaluate_backtest(processed_data)
 
-        self._print_results(nr_trades, perf, outperf, print_results)
+        self._print_results(results, print_results)
 
-        self.plot_results(self.results, plot_results, plot_positions)
+        self.plot_results(self.processed_data, plot_results, plot_positions)
 
-        return perf, outperf
+        return perf, outperf, results
 
     def _iterative_backtest(self, data, print_results=True):
         """
@@ -191,7 +189,6 @@ class IterativeBacktester(BacktestMixin, Trader):
             Flag for whether to print the results of the backtest.
 
         """
-        self.clean_data = data
 
         for bar, (timestamp, row) in enumerate(data.iterrows()):
             signal = self.get_signal(row)
@@ -215,34 +212,33 @@ class IterativeBacktester(BacktestMixin, Trader):
 
             self.equity.append(self._get_net_value(row))
 
-    def _evaluate_backtest(self):
+        return data
 
-        results = self.clean_data.copy()
-        results["positions"] = self.positions_lst[:-1]
-        results["strategy_returns"] = self.strategy_returns
-        results["strategy_returns_tc"] = self.strategy_returns_tc
+    def _evaluate_backtest(self, processed_data):
 
-        results["accumulated_returns"] = results[self.returns_col].cumsum().apply(np.exp)
-        results["accumulated_strategy_returns"] = results["strategy_returns"].cumsum().apply(np.exp)
-        results["accumulated_strategy_returns_tc"] = results["strategy_returns_tc"].cumsum().apply(np.exp)
+        processed_data["position"] = self.positions_lst[1:]
+        processed_data.loc[processed_data.index[0], "position"] = self.positions_lst[1]
+        processed_data["strategy_returns"] = self.strategy_returns
+        processed_data["strategy_returns_tc"] = self.strategy_returns_tc
 
-        results.dropna(inplace=True)
+        processed_data["accumulated_returns"] = processed_data[self.returns_col].cumsum().apply(np.exp)
+        processed_data["accumulated_strategy_returns"] = processed_data["strategy_returns"].cumsum().apply(np.exp)
+        processed_data["accumulated_strategy_returns_tc"] = processed_data["strategy_returns_tc"].cumsum().apply(np.exp)
 
-        self.results = results
+        processed_data.dropna(inplace=True)
 
-        returns_tc = [np.log(trade.exit_price / trade.entry_price) * trade.direction for trade in self.trades_tc]
-        perf = np.exp(np.sum(returns_tc))  # Performance with trading_costs
+        self.processed_data = processed_data
 
         returns = [np.log(trade.exit_price / trade.entry_price) * trade.direction for trade in self.trades]
-        perf_no_tc = np.exp(np.sum(returns))  # Performance with no trading costs
+        perf = np.exp(np.sum(returns))  # Performance with trading_costs
 
-        returns_bh = np.log(self.clean_data.loc[self.clean_data.index[-1], self.price_col] /
-                            self.clean_data.loc[self.clean_data.index[0], self.price_col])
-        perf_bh = np.exp(np.sum(returns_bh))  # Performance for Buy & Hold strategy
+        perf_bh = processed_data["accumulated_returns"].iloc[-1]
 
         outperf = perf - perf_bh
 
-        return self.nr_trades, perf, outperf
+        results = self._get_results(self.trades, processed_data)
+
+        return results, self.nr_trades, perf, outperf
 
     def _get_net_value(self, row):
         """
@@ -304,17 +300,18 @@ class IterativeBacktester(BacktestMixin, Trader):
         print_results = kwargs.get('print_results')
 
         price = self._get_price(date, row)
+        price_tc = price * (1 + self.tc)
 
         if units is None:
-            units = amount / price
+            units = amount / price_tc
 
-        trading_cost = (amount if amount else units * price) * self.tc
+        if amount is None:
+            amount = units * price_tc
 
-        self.current_balance -= units * price + trading_cost
+        self.current_balance -= amount
         self.units += units
 
-        self._handle_trade(self.trades, open_trade, date, price, units, 1, update_trade_counter=True)
-        self._handle_trade(self.trades_tc, open_trade, date, price * (1 + self.tc), units * (1 - self.tc), 1)
+        self._handle_trade(self.trades, open_trade, date, price_tc, units, 1)
 
         if print_results:
             print(f"{date} |  Buying {round(units, 4)} {self.symbol} for {round(price, 5)}")
@@ -370,19 +367,18 @@ class IterativeBacktester(BacktestMixin, Trader):
         print_results = kwargs.get('print_results')
 
         price = self._get_price(date, row)
-
-        trading_cost = (amount if amount else units * price) * self.tc
-
-        # price = price * (1 - self.tc)
+        price_tc = price * (1 - self.tc)
 
         if units is None:
-            units = amount / price
+            units = amount / price_tc
 
-        self.current_balance += units * price + trading_cost
+        if amount is None:
+            amount = units * price_tc
+
+        self.current_balance += amount
         self.units -= units
 
-        self._handle_trade(self.trades, open_trade, date, price, units, -1, update_trade_counter=True)
-        self._handle_trade(self.trades_tc, open_trade, date, price * (1 - self.tc), units * (1 + self.tc), -1)
+        self._handle_trade(self.trades, open_trade, date, price_tc, units, -1)
 
         if print_results:
             print(f"{date} |  Selling {round(units, 4)} {self.symbol} for {round(price, 5)}")
@@ -414,11 +410,13 @@ class IterativeBacktester(BacktestMixin, Trader):
         None
         """
         print(75 * "-")
-        print("{} |  +++ CLOSING FINAL POSITION +++".format(date))
 
-        if self.units <= 0:
+        if self.units != 0:
+            print("{} |  +++ CLOSING FINAL POSITION +++".format(date))
+
+        if self.units < 0:
             self.buy_instrument(symbol, date, row, open_trade=False, units=-self.units)
-        else:
+        elif self.units > 0:
             self.sell_instrument(symbol, date, row, open_trade=False, units=self.units)
 
         perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
@@ -429,12 +427,14 @@ class IterativeBacktester(BacktestMixin, Trader):
         print("{} |  number of trades executed = {}".format(date, self.nr_trades))
         print(75 * "-")
 
-    def _handle_trade(self, trades, open_trade, date, price, units, direction, update_trade_counter=False):
+    def _handle_trade(self, trades, open_trade, date, price, units, direction, update_trade_counter=True):
         if open_trade:
-            trades.append(Trade(date, None, price, None, units, direction))
+            trades.append(Trade(date, None, price, None, units, direction, None, None))
         else:
             trades[-1].exit_date = date
             trades[-1].exit_price = price
+
+            trades[-1].calculate_profit()
 
             if update_trade_counter:
                 self.nr_trades += 1
