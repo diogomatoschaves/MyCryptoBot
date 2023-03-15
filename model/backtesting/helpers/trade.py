@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -25,8 +26,8 @@ class Trade:
         Trade net profit in percentage of initial investment
     """
 
-    entry_date: str
-    exit_date: str
+    entry_date: datetime
+    exit_date: datetime
     entry_price: float
     exit_price: float
     units: float

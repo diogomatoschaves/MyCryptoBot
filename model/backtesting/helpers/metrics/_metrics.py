@@ -19,19 +19,19 @@ def exposure_time(positions: np.ndarray) -> float:
     return np.count_nonzero(positions) / len(positions) * 100
 
 
-def equity_final(equity_curve: np.ndarray) -> float:
+def equity_final(equity_curve: pd.Series) -> float:
     """Calculate the final equity value."""
-    return equity_curve[-1]
+    return equity_curve.iloc[-1]
 
 
-def equity_peak(equity_curve: np.ndarray) -> float:
+def equity_peak(equity_curve: pd.Series) -> float:
     """Calculate the peak equity value."""
     return np.max(equity_curve)
 
 
-def return_pct(equity_curve: np.ndarray) -> float:
+def return_pct(equity_curve: pd.Series) -> float:
     """Calculate the total return percentage."""
-    return (equity_curve[-1] / equity_curve[0] - 1) * 100
+    return (equity_curve.iloc[-1] / equity_curve.iloc[0] - 1) * 100
 
 
 def return_pct_annualized(cum_returns: pd.Series) -> float:
@@ -53,7 +53,8 @@ def volatility_pct_annualized(returns: pd.Series) -> float:
 def sharpe_ratio(returns: pd.Series, risk_free_rate: float = 0) -> float:
     """Calculate the Sharpe ratio."""
     excess_returns = returns - risk_free_rate
-    return np.mean(excess_returns) / np.std(excess_returns) * np.sqrt(365)
+    excess_returns_dev = np.std(excess_returns)
+    return np.mean(excess_returns) / excess_returns_dev * np.sqrt(365) if excess_returns_dev != 0 else np.nan
 
 
 def sortino_ratio(returns: pd.Series, target_return: float = 0, risk_free_rate: float = 0) -> float:
@@ -168,7 +169,9 @@ def win_rate_pct(trades: List[Trade]) -> float:
         0
     )
 
-    return winning_trades / len(trades) * 100
+    nr_trades = len(trades)
+
+    return winning_trades / nr_trades * 100 if nr_trades > 0 else 0
 
 
 def best_trade_pct(trades: List[Trade]) -> float:
@@ -207,12 +210,12 @@ def avg_trade_pct(trades: List[Trade]) -> float:
 
 def max_trade_duration(trades: List[Trade]) -> int:
     """Calculate the duration of the longest trade."""
-    durations = map(
+    durations = list(map(
         lambda trade: (trade.exit_date - trade.entry_date).total_seconds(),
         trades,
-    )
+    ))
 
-    return np.max(list(durations)) / (60 * 60 * 24)
+    return np.max(durations) / (60 * 60 * 24) if len(durations) > 0 else 0
 
 
 def avg_trade_duration(trades: List[Trade]) -> int:
@@ -276,9 +279,9 @@ def expectancy_pct(trades: List[Trade]) -> float:
     win_trades = winning_trades(trades)
     lose_trades = losing_trades(trades)
     if len(lose_trades) == 0:
-        return np.mean(win_trades) * 100
+        return avg_trade_pct(win_trades)
     elif len(win_trades) == 0:
-        return np.mean(lose_trades) * 100
+        return avg_trade_pct(lose_trades)
     else:
         win_rate = win_rate_pct(trades) / 100
         avg_win = avg_trade_pct(win_trades) / 100

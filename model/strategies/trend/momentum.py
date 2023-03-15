@@ -86,7 +86,7 @@ class Momentum(StrategyMixin):
         pd.DataFrame
             Dataframe with the positions of the strategy.
         """
-        data["position"] = np.sign(data[self.returns_col].rolling(self._window, min_periods=1).mean())
+        data["position"] = np.sign(data["rolling_returns"])
 
         return data
 

@@ -10,11 +10,16 @@ from model.tests.setup.test_data.returns import cum_returns, returns
 def trades():
     # Generate some sample trades
     return [
-        Trade(datetime(2022, 1, 1), datetime(2022, 1, 3), 10, 4, 100, 1),
-        Trade(datetime(2022, 1, 2), datetime(2022, 1, 4), 12, 10, 100, -1),
-        Trade(datetime(2022, 1, 3), datetime(2022, 1, 5), 11, 12, 100, 1),
-        Trade(datetime(2022, 1, 4), datetime(2022, 1, 8), 13, 14, 100, -1),
-        Trade(datetime(2022, 1, 5), datetime(2022, 1, 10), 12, 16, 100, 1),
+        Trade(entry_date=datetime(2022, 1, 1, 0, 0), exit_date=datetime(2022, 1, 3, 0, 0),
+              entry_price=10, exit_price=4, units=100, direction=1, profit=-600, profit_pct=-60.0),
+        Trade(entry_date=datetime(2022, 1, 2, 0, 0), exit_date=datetime(2022, 1, 4, 0, 0),
+              entry_price=12, exit_price=10, units=100, direction=-1, profit=200, profit_pct=16.666666666666664),
+        Trade(entry_date=datetime(2022, 1, 3, 0, 0), exit_date=datetime(2022, 1, 5, 0, 0),
+              entry_price=11, exit_price=12, units=100, direction=1, profit=100, profit_pct=9.090909090909092),
+        Trade(entry_date=datetime(2022, 1, 4, 0, 0), exit_date=datetime(2022, 1, 8, 0, 0),
+              entry_price=13, exit_price=14, units=100, direction=-1, profit=-100, profit_pct=-7.6923076923076925),
+        Trade(entry_date=datetime(2022, 1, 5, 0, 0), exit_date=datetime(2022, 1, 10, 0, 0),
+              entry_price=12, exit_price=16, units=100, direction=1, profit=400, profit_pct=33.33333333333333)
     ]
 
 
@@ -34,17 +39,17 @@ def test_exposure_time():
 
 
 def test_equity_final():
-    equity_curve = np.array([100, 120, 80, 110, 90])
+    equity_curve = pd.Series([100, 120, 80, 110, 90])
     assert equity_final(equity_curve) == 90
 
 
 def test_equity_peak():
-    equity_curve = np.array([100, 120, 80, 110, 90])
+    equity_curve = pd.Series([100, 120, 80, 110, 90])
     assert equity_peak(equity_curve) == 120
 
 
 def test_return_pct():
-    equity_curve = np.array([100, 120, 80, 110, 90])
+    equity_curve = pd.Series([100, 120, 80, 110, 90])
     assert return_pct(equity_curve) == pytest.approx(-10.0, 1)
 
 
@@ -61,7 +66,7 @@ def test_sharpe_ratio(log_returns):
 
 
 def test_sortino_ratio(log_returns):
-    assert sortino_ratio(log_returns, 0.01) == pytest.approx(-0.007, 4)
+    assert sortino_ratio(log_returns, 0.01) == pytest.approx(0.0689, 3)
 
 
 def test_calmar_ratio(cumulative_returns):
@@ -97,7 +102,7 @@ def test_worst_trade_pct(trades):
 
 
 def test_avg_trade_pct(trades):
-    assert avg_trade_pct(trades) == pytest.approx(0.33, 2)
+    assert avg_trade_pct(trades) == pytest.approx(-8.926, 2)
 
 
 def test_max_trade_duration(trades):

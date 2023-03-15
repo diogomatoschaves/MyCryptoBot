@@ -75,7 +75,11 @@ class VectorizedBacktester(BacktestMixin):
         data = self._calculate_positions(data)
         data["trades"] = data.position.diff().fillna(0).abs()
         data.loc[data.index[0], "trades"] = np.abs(data.iloc[0]["position"])
-        data.loc[data.index[-1], "trades"] = np.abs(data.iloc[-1]["position"])
+        data.loc[data.index[-1], "trades"] = np.abs(data.iloc[-2]["position"])
+        data.loc[data.index[-1], "position"] = 0
+
+        data["trades"] = data["trades"].astype('int')
+        data["position"] = data["position"].astype('int')
 
         data["strategy_returns"] = (data.position.shift(1) * data.returns).fillna(0)
         data["strategy_returns_tc"] = (data["strategy_returns"] - data["trades"] * self.tc).fillna(0)
@@ -111,13 +115,13 @@ class VectorizedBacktester(BacktestMixin):
             - units (float): The number of units of the asset traded.
 
         """
+        cols = [self.price_col, "position"]
 
-        # processed_data.loc[processed_data.index[0], "trades"] = np.abs(processed_data.iloc[0]["position"])
-        trades = processed_data[processed_data.trades != 0][[self.price_col, "position"]]
+        trades = processed_data[processed_data.trades != 0][cols]
 
         trades = trades.reset_index()
 
-        col = "date" if "date" in trades.columns else "index"
+        col = list(set(trades.columns).difference(set(cols)))[0]
 
         trades = trades.rename(columns={self.price_col: "entry_price", col: "entry_date", "position": "direction"})
         trades["exit_price"] = trades["entry_price"].shift(-1) * (1 - trading_costs * trades["direction"])

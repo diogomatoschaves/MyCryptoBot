@@ -216,7 +216,7 @@ class IterativeBacktester(BacktestMixin, Trader):
 
     def _evaluate_backtest(self, processed_data):
 
-        processed_data["position"] = self.positions_lst[:-1]
+        processed_data["position"] = self.positions_lst[1:]
         processed_data.loc[processed_data.index[0], "position"] = self.positions_lst[1]
         processed_data["strategy_returns"] = self.strategy_returns
         processed_data["strategy_returns_tc"] = self.strategy_returns_tc
@@ -410,11 +410,13 @@ class IterativeBacktester(BacktestMixin, Trader):
         None
         """
         print(75 * "-")
-        print("{} |  +++ CLOSING FINAL POSITION +++".format(date))
 
-        if self.units <= 0:
+        if self.units != 0:
+            print("{} |  +++ CLOSING FINAL POSITION +++".format(date))
+
+        if self.units < 0:
             self.buy_instrument(symbol, date, row, open_trade=False, units=-self.units)
-        else:
+        elif self.units > 0:
             self.sell_instrument(symbol, date, row, open_trade=False, units=self.units)
 
         perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
