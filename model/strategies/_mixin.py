@@ -10,7 +10,7 @@ class StrategyMixin:
     ----------
     data : pd.DataFrame, optional
         The DataFrame containing the historical price data for the asset.
-    price_col : str, optional
+    close_col : str, optional
         The name of the column in the data that contains the price data.
     returns_col : str, optional
         The name of the column in the data that will contain the returns data.
@@ -19,7 +19,7 @@ class StrategyMixin:
     ----------
     data : pd.DataFrame
         The DataFrame containing the historical price data for the asset.
-    price_col : str
+    close_col : str
         The name of the column in the data that contains the price data.
     returns_col : str
         The name of the column in the data that will contain the returns data.
@@ -43,7 +43,7 @@ class StrategyMixin:
 
     """
 
-    def __init__(self, data=None, price_col='close', returns_col='returns'):
+    def __init__(self, data=None, trade_on_close=True, close_col='close', open_col='open', returns_col='returns'):
         """
         Initializes a new instance of the StrategyMixin class.
 
@@ -51,13 +51,16 @@ class StrategyMixin:
         ----------
         data : pd.DataFrame, optional
             The DataFrame containing the historical price data for the asset.
-        price_col : str, optional
+        close_col : str, optional
             The name of the column in the data that contains the price data.
         returns_col : str, optional
             The name of the column in the data that will contain the returns data.
         """
 
-        self.price_col = price_col
+        self.close_col = close_col
+        self.open_col = open_col
+        self.trade_on_close = trade_on_close
+        self.price_col = close_col if trade_on_close else open_col
         self.returns_col = returns_col
         self.symbol = None
 
@@ -112,9 +115,9 @@ class StrategyMixin:
 
         if data is not None:
             if strategy_obj is not None:
-                strategy_obj.data = strategy_obj.update_data(data)
+                strategy_obj.data = strategy_obj.update_data(data.copy())
             else:
-                self.data = self.update_data(self.data)
+                self.data = self.update_data(self.data.copy())
 
     def set_parameters(self, params=None) -> None:
         """
@@ -139,7 +142,12 @@ class StrategyMixin:
         Calculates the returns of the asset and updates the data DataFrame.
         """
 
-        data[self.returns_col] = np.log(data[self.price_col] / data[self.price_col].shift(1))
+        if self.trade_on_close:
+            data[self.returns_col] = np.log(data[self.price_col] / data[self.price_col].shift(1))
+        else:
+            data[self.returns_col] = np.log(data[self.price_col].shift(-1) / data[self.price_col])
+            data.loc[data.index[-1], self.returns_col] = \
+                np.log(data.loc[data.index[-1], self.close_col] / data.loc[data.index[-1], self.open_col])
 
         return data
 

@@ -98,15 +98,15 @@ class MovingAverageCrossover(StrategyMixin):
         pd.DataFrame
             Updated OHLCV data containing additional columns.
         """
-        super().update_data(data)
+        data = super().update_data(data)
 
         if self._moving_av == 'sma':
-            data["SMA_S"] = sma_indicator(close=data[self.price_col], window=self._sma_s)
-            data["SMA_L"] = sma_indicator(close=data[self.price_col], window=self._sma_l)
+            data["SMA_S"] = sma_indicator(close=data[self.close_col], window=self._sma_s)
+            data["SMA_L"] = sma_indicator(close=data[self.close_col], window=self._sma_l)
 
         elif self._moving_av == 'ema':
-            data["SMA_S"] = ema_indicator(close=data[self.price_col], window=self._sma_s)
-            data["SMA_L"] = ema_indicator(close=data[self.price_col], window=self._sma_l)
+            data["SMA_S"] = ema_indicator(close=data[self.close_col], window=self._sma_s)
+            data["SMA_L"] = ema_indicator(close=data[self.close_col], window=self._sma_l)
         else:
             raise ('Method not supported')
 

@@ -18,7 +18,7 @@ expected_results = [
         "trades": 1.0,
         "taker_buy_asset_volume": 411.223017,
         "taker_buy_quote_volume": 22979821.33981915,
-        "returns": 0.006818529518377586,
+        "returns": 0,
         "SMA_S": 55565.7,
         "SMA_L": 55489.95428571429,
         "position": 1,

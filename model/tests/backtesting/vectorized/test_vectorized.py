@@ -44,7 +44,7 @@ class TestVectorizedBacktester:
             for key in d:
                 assert d[key] == pytest.approx(
                     fixture["out"]["expected_results"][i][key], 0.2
-                )
+                ), print(d, key)
 
     @pytest.mark.parametrize(
         "fixture",

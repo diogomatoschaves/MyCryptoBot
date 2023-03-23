@@ -75,19 +75,19 @@ class BollingerBands(StrategyMixin):
         pd.DataFrame
             Updated OHLCV data containing additional columns.
         """
-        super().update_data(data)
+        data = super().update_data(data)
 
-        data["sma"] = data[self.price_col].rolling(self._ma).mean()
-        data["upper"] = data["sma"] + data[self.price_col].rolling(self._ma).std() * self._sd
-        data["lower"] = data["sma"] - data[self.price_col].rolling(self._ma).std() * self._sd
+        data["sma"] = data[self.close_col].rolling(self._ma).mean()
+        data["upper"] = data["sma"] + data[self.close_col].rolling(self._ma).std() * self._sd
+        data["lower"] = data["sma"] - data[self.close_col].rolling(self._ma).std() * self._sd
 
         data = self._calculate_positions(data)
         return data
 
     def _calculate_positions(self, data):
-        data["distance"] = data[self.price_col] - data["sma"]
-        data["position"] = np.where(data[self.price_col] > data["upper"], -1, np.nan)
-        data["position"] = np.where(data[self.price_col] < data["lower"], 1, data["position"])
+        data["distance"] = data[self.close_col] - data["sma"]
+        data["position"] = np.where(data[self.close_col] > data["upper"], -1, np.nan)
+        data["position"] = np.where(data[self.close_col] < data["lower"], 1, data["position"])
         data["position"] = np.where(data["distance"] * data["distance"].shift(1) < 0, 0, data["position"])
         data["position"] = data["position"].ffill().fillna(0)
 

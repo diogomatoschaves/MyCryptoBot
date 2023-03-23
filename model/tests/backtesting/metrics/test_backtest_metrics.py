@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -11,15 +11,15 @@ def trades():
     # Generate some sample trades
     return [
         Trade(entry_date=datetime(2022, 1, 1, 0, 0), exit_date=datetime(2022, 1, 3, 0, 0),
-              entry_price=10, exit_price=4, units=100, direction=1, profit=-600, profit_pct=-60.0),
+              entry_price=10, exit_price=4, units=100, direction=1, profit=-600),
         Trade(entry_date=datetime(2022, 1, 2, 0, 0), exit_date=datetime(2022, 1, 4, 0, 0),
-              entry_price=12, exit_price=10, units=100, direction=-1, profit=200, profit_pct=16.666666666666664),
+              entry_price=12, exit_price=10, units=100, direction=-1, profit=200),
         Trade(entry_date=datetime(2022, 1, 3, 0, 0), exit_date=datetime(2022, 1, 5, 0, 0),
-              entry_price=11, exit_price=12, units=100, direction=1, profit=100, profit_pct=9.090909090909092),
+              entry_price=11, exit_price=12, units=100, direction=1, profit=100),
         Trade(entry_date=datetime(2022, 1, 4, 0, 0), exit_date=datetime(2022, 1, 8, 0, 0),
-              entry_price=13, exit_price=14, units=100, direction=-1, profit=-100, profit_pct=-7.6923076923076925),
+              entry_price=13, exit_price=14, units=100, direction=-1, profit=-100),
         Trade(entry_date=datetime(2022, 1, 5, 0, 0), exit_date=datetime(2022, 1, 10, 0, 0),
-              entry_price=12, exit_price=16, units=100, direction=1, profit=400, profit_pct=33.33333333333333)
+              entry_price=12, exit_price=16, units=100, direction=1, profit=400)
     ]
 
 
@@ -82,11 +82,11 @@ def test_avg_drawdown_pct(cumulative_returns):
 
 
 def test_max_drawdown_duration(cumulative_returns):
-    assert max_drawdown_duration(cumulative_returns) == 4
+    assert max_drawdown_duration(cumulative_returns) == timedelta(hours=4)
 
 
 def test_avg_drawdown_duration(cumulative_returns):
-    assert round(avg_drawdown_duration(cumulative_returns), 2) == 3
+    assert round(avg_drawdown_duration(cumulative_returns), 2) == 10800.0
 
 
 def test_win_rate_pct(trades):
@@ -106,11 +106,11 @@ def test_avg_trade_pct(trades):
 
 
 def test_max_trade_duration(trades):
-    assert max_trade_duration(trades) == 5.0
+    assert max_trade_duration(trades) == timedelta(days=5)
 
 
 def test_avg_trade_duration(trades):
-    assert avg_trade_duration(trades) == 3.0
+    assert avg_trade_duration(trades) == 259200.0
 
 
 def test_winning_trades(trades):

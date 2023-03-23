@@ -97,9 +97,9 @@ class MovingAverageConvergenceDivergence(MACD, StrategyMixin):
         pd.DataFrame
             Updated OHLCV data containing additional columns.
         """
-        super().update_data(data)
+        data = super().update_data(data)
 
-        self._close = data[self.price_col]
+        self._close = data[self.close_col]
         self._run()
 
         data["macd_diff"] = self.macd_diff()
