@@ -66,7 +66,7 @@ class Momentum(StrategyMixin):
         pd.DataFrame
             Updated OHLCV data containing additional columns.
         """
-        super().update_data(data)
+        data = super().update_data(data)
 
         data["rolling_returns"] = data[self.returns_col].rolling(self._window, min_periods=1).mean()
 

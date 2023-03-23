@@ -100,12 +100,11 @@ class BacktestMixin:
         object
             The attribute object.
         """
-        method = getattr(self.strategy, attr)
-
-        if not method:
-            return getattr(self, attr)
-        else:
+        try:
+            method = getattr(self.strategy, attr)
             return method
+        except AttributeError:
+            return getattr(self, attr)
 
     def load_data(self, data=None, csv_path=None):
         if data is not None:

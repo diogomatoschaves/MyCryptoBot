@@ -84,6 +84,8 @@ class VectorizedBacktester(BacktestMixin):
         data["strategy_returns"] = (data.position.shift(1) * data.returns).fillna(0)
         data["strategy_returns_tc"] = (data["strategy_returns"] - data["trades"] * self.tc).fillna(0)
 
+        data.loc[data.index[0], "returns"] = 0
+
         data["accumulated_returns"] = data[self.returns_col].cumsum().apply(np.exp).fillna(1)
         data["accumulated_strategy_returns"] = data["strategy_returns"].cumsum().apply(np.exp).fillna(1)
         data["accumulated_strategy_returns_tc"] = data["strategy_returns_tc"].cumsum().apply(np.exp).fillna(1)
@@ -115,7 +117,13 @@ class VectorizedBacktester(BacktestMixin):
             - units (float): The number of units of the asset traded.
 
         """
-        cols = [self.price_col, "position"]
+
+        cols = [self.price_col, "position", "accumulated_strategy_returns"]
+
+        processed_data = processed_data.copy()
+
+        if not self.trade_on_close:
+            processed_data[self.price_col] = processed_data[self.price_col].shift(-1)
 
         trades = processed_data[processed_data.trades != 0][cols]
 
@@ -129,28 +137,32 @@ class VectorizedBacktester(BacktestMixin):
         trades["exit_date"] = trades["entry_date"].shift(-1)
         trades = trades[trades.direction != 0]
 
+        trades["exit_price"] = np.where(
+            np.isnan(trades['exit_price']),
+            processed_data.loc[processed_data.index[-1], self.close_col],
+            trades['exit_price']
+        )
+
         trades = trades.reset_index(drop=True)
         trades = trades.dropna()
 
-        trades["units"] = None
-        trades["profit"] = None
-        trades["amount"] = None
-        for index, row in trades.iterrows():
-            if index == 0:
-                trades.loc[index, "units"] = self.amount / row["entry_price"]
-                trades.loc[index, "profit"] = trades.loc[index, "units"] * (row["exit_price"] - row["entry_price"]) * \
-                                              row["direction"]
-                trades.loc[index, "amount"] = self.amount + trades.loc[index, "profit"]
-            else:
-                trades.loc[index, "units"] = trades.loc[index - 1, "amount"] / row["entry_price"]
-                trades.loc[index, "profit"] = trades.loc[index, "units"] * (row["exit_price"] - row["entry_price"]) * \
-                                              row["direction"]
-                trades.loc[index, "amount"] = trades.loc[index - 1, "amount"] + trades.loc[index, "profit"]
+        trades["simple_return"] = (trades["exit_price"] - trades["entry_price"]) / trades["entry_price"]
+        trades["log_return"] = np.log(trades["exit_price"] / trades["entry_price"]) * trades["direction"]
 
-        trades["profit_pct"] = (trades["exit_price"] - trades["entry_price"]) / \
-                               trades["entry_price"] * trades["direction"] * 100
+        trades["simple_cum"] = (trades["simple_return"] * trades["direction"] + 1).cumprod()
+        trades["log_cum"] = trades["log_return"].cumsum().apply(np.exp)
 
-        trades.drop(['amount'], axis=1, inplace=True)
+        if len(trades) > 0:
+            trades["amount"] = self.amount * trades["log_cum"]
+            trades["units"] = (trades["amount"].shift(1) / trades["entry_price"]).fillna(self.amount / trades["entry_price"][0])
+            trades["profit"] = (trades["amount"] - trades["amount"].shift(1)).fillna(trades["amount"][0] - self.amount)
+
+        self._trades_df = trades.copy()
+
+        trades.drop(
+            ['simple_return', 'simple_cum', 'log_return', 'log_cum', 'accumulated_strategy_returns'],
+            axis=1, inplace=True
+        )
 
         trades_list = [Trade(**row) for _, row in trades.iterrows()]
 

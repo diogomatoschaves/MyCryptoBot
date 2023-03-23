@@ -11,15 +11,15 @@ def trades():
     # Generate some sample trades
     return [
         Trade(entry_date=datetime(2022, 1, 1, 0, 0), exit_date=datetime(2022, 1, 3, 0, 0),
-              entry_price=10, exit_price=4, units=100, direction=1, profit=-600, profit_pct=-60.0),
+              entry_price=10, exit_price=4, units=100, direction=1, profit=-600),
         Trade(entry_date=datetime(2022, 1, 2, 0, 0), exit_date=datetime(2022, 1, 4, 0, 0),
-              entry_price=12, exit_price=10, units=100, direction=-1, profit=200, profit_pct=16.666666666666664),
+              entry_price=12, exit_price=10, units=100, direction=-1, profit=200),
         Trade(entry_date=datetime(2022, 1, 3, 0, 0), exit_date=datetime(2022, 1, 5, 0, 0),
-              entry_price=11, exit_price=12, units=100, direction=1, profit=100, profit_pct=9.090909090909092),
+              entry_price=11, exit_price=12, units=100, direction=1, profit=100),
         Trade(entry_date=datetime(2022, 1, 4, 0, 0), exit_date=datetime(2022, 1, 8, 0, 0),
-              entry_price=13, exit_price=14, units=100, direction=-1, profit=-100, profit_pct=-7.6923076923076925),
+              entry_price=13, exit_price=14, units=100, direction=-1, profit=-100),
         Trade(entry_date=datetime(2022, 1, 5, 0, 0), exit_date=datetime(2022, 1, 10, 0, 0),
-              entry_price=12, exit_price=16, units=100, direction=1, profit=400, profit_pct=33.33333333333333)
+              entry_price=12, exit_price=16, units=100, direction=1, profit=400)
     ]
 
 

@@ -18,7 +18,7 @@ expected_results = [
         "trades": 1.0,
         "taker_buy_asset_volume": 178.075904,
         "taker_buy_quote_volume": 10007121.78892216,
-        "returns": -0.00170962942015996,
+        "returns": 0,
         "macd_diff": 37.90364648896147,
         "position": 1,
         "strategy_returns": 0.0,

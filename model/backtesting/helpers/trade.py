@@ -1,3 +1,5 @@
+import numpy as np
+
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -22,8 +24,6 @@ class Trade:
         Trade direction, either 1 for long or -1 for short.
     profit : float
         Trade net profit
-    profit_pct : float
-        Trade net profit in percentage of initial investment
     """
 
     entry_date: datetime
@@ -32,9 +32,9 @@ class Trade:
     exit_price: float
     units: float
     direction: int
-    profit: float
-    profit_pct: float
+    amount: float = None
+    profit: float = None
 
     def calculate_profit(self):
-        self.profit = (self.exit_price - self.entry_price) * self.units * self.direction
-        self.profit_pct = (self.exit_price - self.entry_price) / self.entry_price * self.direction * 100
+        self.profit = (np.exp(np.log(self.exit_price / self.entry_price) * self.direction) - 1) \
+                      * self.units * self.entry_price
