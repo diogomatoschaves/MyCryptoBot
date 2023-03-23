@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from functools import reduce
 from typing import List
 
@@ -12,6 +13,18 @@ def geometric_mean(returns: pd.Series) -> float:
     if np.any(returns <= 0):
         return 0
     return np.exp(np.log(returns).sum() / (len(returns) or np.nan)) - 1
+
+
+def get_total_duration(index: np.ndarray) -> timedelta:
+    return index[-1] - index[0]
+
+
+def get_start_date(index: np.ndarray) -> datetime:
+    return index[0]
+
+
+def get_end_date(index: np.ndarray) -> datetime:
+    return index[-1]
 
 
 def exposure_time(positions: np.ndarray) -> float:
@@ -32,6 +45,11 @@ def equity_peak(equity_curve: pd.Series) -> float:
 def return_pct(equity_curve: pd.Series) -> float:
     """Calculate the total return percentage."""
     return (equity_curve.iloc[-1] / equity_curve.iloc[0] - 1) * 100
+
+
+def return_buy_and_hold_pct(returns: pd.Series) -> float:
+    """Retrieve the buy and hold return pct."""
+    return (returns[-1] - 1) * 100
 
 
 def return_pct_annualized(cum_returns: pd.Series) -> float:
@@ -126,6 +144,9 @@ def max_drawdown_duration(cum_returns: pd.Series) -> int:
     """
     peak_index = 0
     max_drawdown_dur = 0
+    dd_start = cum_returns.index[0]
+    dd_end = cum_returns.index[-1]
+
     for i in range(1, len(cum_returns)):
         if cum_returns[i] > cum_returns[peak_index]:
             peak_index = i
@@ -133,10 +154,13 @@ def max_drawdown_duration(cum_returns: pd.Series) -> int:
             drawdown_duration = i - peak_index
             if drawdown_duration > max_drawdown_dur:
                 max_drawdown_dur = drawdown_duration
-    return max_drawdown_dur
+                dd_start = cum_returns.index[peak_index]
+                dd_end = cum_returns.index[i]
+
+    return dd_end - dd_start
 
 
-def avg_drawdown_duration(cum_returns: np.ndarray) -> float:
+def avg_drawdown_duration(cum_returns: pd.Series) -> float:
     """Calculate the average duration of drawdowns."""
     peak_index = 0
     drawdown_duration = 0
@@ -144,21 +168,26 @@ def avg_drawdown_duration(cum_returns: np.ndarray) -> float:
     durations = []
 
     drawdown = False
+    dd_duration = 0
+    dd_start = cum_returns.index[0]
+    dd_end = cum_returns.index[-1]
     for i in range(1, len(cum_returns)):
         if cum_returns[i] > cum_returns[peak_index]:
+            dd_start = cum_returns.index[i]
             peak_index = i
 
             if drawdown:
-                durations.append(drawdown_duration)
+                durations.append(dd_duration)
                 drawdown = False
         else:
             drawdown = True
-            drawdown_duration = i - peak_index
+            dd_end = cum_returns.index[i]
+            dd_duration = (dd_end - dd_start).total_seconds()
 
     if drawdown:
-        durations.append(drawdown_duration)
+        durations.append(dd_duration)
 
-    return np.mean(durations)
+    return np.mean(durations) if len(durations) > 0 else 0
 
 
 def win_rate_pct(trades: List[Trade]) -> float:
@@ -211,11 +240,11 @@ def avg_trade_pct(trades: List[Trade]) -> float:
 def max_trade_duration(trades: List[Trade]) -> int:
     """Calculate the duration of the longest trade."""
     durations = list(map(
-        lambda trade: (trade.exit_date - trade.entry_date).total_seconds(),
+        lambda trade: trade.exit_date - trade.entry_date,
         trades,
     ))
 
-    return np.max(durations) / (60 * 60 * 24) if len(durations) > 0 else 0
+    return np.max(durations) if len(durations) > 0 else 0
 
 
 def avg_trade_duration(trades: List[Trade]) -> int:
@@ -225,7 +254,9 @@ def avg_trade_duration(trades: List[Trade]) -> int:
         trades,
     )
 
-    return np.mean(list(durations)) / (60 * 60 * 24)
+    durations = list(durations)
+
+    return np.mean(durations) if len(durations) > 0 else 0
 
 
 def winning_trades(trades: List[Trade]) -> List[Trade]:

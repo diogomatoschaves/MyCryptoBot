@@ -322,6 +322,17 @@ setproctitle = ["setproctitle"]
 tornado = ["tornado (>=0.2)"]
 
 [[package]]
+name = "humanfriendly"
+version = "10.0"
+description = "Human friendly output for text interfaces using Python"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[package.dependencies]
+pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_version >= \"3.8\""}
+
+[[package]]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -665,6 +676,14 @@ python-versions = ">=3.6.8"
 
 [package.extras]
 diagrams = ["railroad-diagrams", "jinja2"]
+
+[[package]]
+name = "pyreadline3"
+version = "3.4.1"
+description = "A python implementation of GNU readline."
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "pytest"
@@ -1116,7 +1135,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.8"
-content-hash = "ec720a77db14650ff672317a544d0e3fb0afb21aec3a7749c68d20ecda336fc1"
+content-hash = "9b0b028404ddd61ea6329ef895ab3c41e53259b6d6de28625dc32325b6174b5b"
 
 [metadata.files]
 aiohttp = [
@@ -1199,6 +1218,7 @@ geneal = []
 gunicorn = [
     {file = "gunicorn-20.1.0.tar.gz", hash = "sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8"},
 ]
+humanfriendly = []
 idna = []
 importlib-metadata = []
 iniconfig = []
@@ -1237,6 +1257,7 @@ py = []
 pygments = []
 pyjwt = []
 pyparsing = []
+pyreadline3 = []
 pytest = []
 pytest-cov = []
 pytest-django = []

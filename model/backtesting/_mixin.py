@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+import humanfriendly
 import matplotlib.pyplot as plt
 from scipy.optimize import brute
 
@@ -11,10 +14,11 @@ legend_mapping = {
 
 
 results_mapping = {
+    'buy_and_hold_return': "Buy & Hold Return [%]",
     'exposure_time': "Exposure Time [%]",
     'equity_final': "Equity Final [USDT]",
     'equity_peak': "Equity Peak [USDT]",
-    'return_pct': "Return [%]",
+    'return_pct': "Total Return [%]",
     'return_pct_annualized': "Annualized Return [%]",
     'volatility_pct_annualized': "Annualized Volatility [%]",
     'sharpe_ratio': "Sharpe Ratio",
@@ -24,7 +28,7 @@ results_mapping = {
     'avg_drawdown': "Avg Drawdown [%]",
     'max_drawdown_duration': "Max Drawdown Duration",
     'avg_drawdown_duration': "Avg Drawdown Duration",
-    'nr_trades': "# Trades",
+    'nr_trades': "Total Trades",
     'win_rate': "Win Rate [%]",
     'best_trade': "Best Trade [%]",
     'worst_trade': "Worst Trade [%]",
@@ -34,6 +38,16 @@ results_mapping = {
     'profit_factor': "Profit Factor",
     'expectancy': "Expectancy [%]",
     'sqn': "System Quality Number"
+}
+
+results_aesthetics = {
+    'total_duration': lambda delta: f"\tTotal Duration: {humanfriendly.format_timespan(delta)}",
+    'start_date': lambda delta: f"\tStart Date: {delta}",
+    'end_date': lambda delta: f"\tEnd Date: {delta}",
+    'max_drawdown_duration': lambda delta: f"\tMax Drawdown Duration: {humanfriendly.format_timespan(delta)}",
+    'avg_drawdown_duration': lambda sec: f"\tAvg Drawdown Duration: {humanfriendly.format_timespan(timedelta(seconds=sec))}",
+    'max_trade_duration': lambda delta: f"\tMax Trade Duration: {humanfriendly.format_timespan(delta)}",
+    'avg_trade_duration': lambda sec: f"\tAvg Trade Duration: {humanfriendly.format_timespan(timedelta(seconds=sec))}",
 }
 
 
@@ -183,9 +197,14 @@ class BacktestMixin:
 
     def _get_results(self, trades, processed_data):
 
+        total_duration = get_total_duration(processed_data.index)
+        start_date = get_start_date(processed_data.index)
+        end_date = get_end_date(processed_data.index)
+
         exposure = exposure_time(processed_data["position"])
         final_equity = equity_final(processed_data["accumulated_strategy_returns_tc"] * self.amount)
         peak_equity = equity_peak(processed_data["accumulated_strategy_returns_tc"] * self.amount)
+        buy_and_hold_return = return_buy_and_hold_pct(processed_data["accumulated_returns"])
         pct_return = return_pct(processed_data["accumulated_strategy_returns_tc"])
         annualized_pct_return = return_pct_annualized(processed_data["accumulated_strategy_returns_tc"])
         annualized_pct_volatility = volatility_pct_annualized(processed_data["strategy_returns_tc"])
@@ -210,10 +229,15 @@ class BacktestMixin:
 
         results = pd.Series(
             dict(
+                total_duration=total_duration,
+                start_date=start_date,
+                end_date=end_date,
+                nr_trades=nr_trades,
                 exposure_time=exposure,
+                buy_and_hold_return=buy_and_hold_return,
+                return_pct=pct_return,
                 equity_final=final_equity,
                 equity_peak=peak_equity,
-                return_pct=pct_return,
                 return_pct_annualized=annualized_pct_return,
                 volatility_pct_annualized=annualized_pct_volatility,
                 sharpe_ratio=sharpe,
@@ -223,7 +247,6 @@ class BacktestMixin:
                 avg_drawdown=avg_drawdown,
                 max_drawdown_duration=max_drawdown_dur,
                 avg_drawdown_duration=avg_drawdown_dur,
-                nr_trades=nr_trades,
                 win_rate=win_rate,
                 best_trade=best_trade,
                 worst_trade=worst_trade,
@@ -349,7 +372,10 @@ class BacktestMixin:
             print('\tResults')
             print('')
             for col, value in results.items():
-                print(f'\t{results_mapping[col]}: {round(value, 2)}')
+                try:
+                    print(results_aesthetics[col](value))
+                except KeyError:
+                    print(f'\t{results_mapping[col]}: {round(value, 2)}')
             print('---------------------------------------')
 
     def _update_and_run(self, args, plot_results=False):

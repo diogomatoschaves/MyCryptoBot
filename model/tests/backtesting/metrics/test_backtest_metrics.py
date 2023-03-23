@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -82,11 +82,11 @@ def test_avg_drawdown_pct(cumulative_returns):
 
 
 def test_max_drawdown_duration(cumulative_returns):
-    assert max_drawdown_duration(cumulative_returns) == 4
+    assert max_drawdown_duration(cumulative_returns) == timedelta(hours=4)
 
 
 def test_avg_drawdown_duration(cumulative_returns):
-    assert round(avg_drawdown_duration(cumulative_returns), 2) == 3
+    assert round(avg_drawdown_duration(cumulative_returns), 2) == 10800.0
 
 
 def test_win_rate_pct(trades):
@@ -106,11 +106,11 @@ def test_avg_trade_pct(trades):
 
 
 def test_max_trade_duration(trades):
-    assert max_trade_duration(trades) == 5.0
+    assert max_trade_duration(trades) == timedelta(days=5)
 
 
 def test_avg_trade_duration(trades):
-    assert avg_trade_duration(trades) == 3.0
+    assert avg_trade_duration(trades) == 259200.0
 
 
 def test_winning_trades(trades):
