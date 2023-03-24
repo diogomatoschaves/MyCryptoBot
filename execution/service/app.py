@@ -3,7 +3,6 @@ import os
 import sys
 
 import django
-from binance.exceptions import BinanceAPIException
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required

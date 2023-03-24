@@ -158,7 +158,10 @@ class BinanceFuturesTrader(BinanceTrader):
 
         if amount is not None and units is None:
             price = round(float(self.get_symbol_ticker(symbol=symbol)['price']), price_precision)
-            return round(amount / price * units_factor, quantity_precision)
+            units = round(amount / price * units_factor, quantity_precision)
+            logging.debug(f"Units: {units}")
+            logging.debug(f"quantity precision: {quantity_precision}")
+            return units
         else:
             return round(units * units_factor, quantity_precision)
 
@@ -187,7 +190,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self.units[symbol] = initial_position * units
 
-        factor = (initial_position - 1) * -1
+        factor = 1 - initial_position
 
         self.current_balance[symbol] = factor * amount
         self.initial_balance[symbol] = amount
