@@ -41,6 +41,7 @@ def test_mock_setup(
     mocker,
     create_exchange,
     create_symbol,
+    create_pipeline_with_balance,
     ping,
     init_session,
     futures_change_leverage,
@@ -59,7 +60,7 @@ class TestBinanceFuturesTrader:
         "parameters,symbols,times_called,balance,initial_position",
         [
             pytest.param(
-                {"symbol": "BTCUSDT", "equity": 100},
+                {"symbol": "BTCUSDT", "equity": 100, "pipeline_id": 4},
                 {},
                 (0, 1, 0),
                 100,
@@ -67,7 +68,7 @@ class TestBinanceFuturesTrader:
                 id="SymbolStarted",
             ),
             pytest.param(
-                {"symbol": "BTCUSDT",  "equity": 100, "leverage": 10},
+                {"symbol": "BTCUSDT",  "equity": 100, "leverage": 10, "pipeline_id": 4},
                 {},
                 (1, 1, 0),
                 100,
@@ -75,7 +76,7 @@ class TestBinanceFuturesTrader:
                 id="SymbolStarted-ChangeLeverage",
             ),
             pytest.param(
-                {"symbol": "BTCUSDT",  "equity": 100, "initial_position": 1},
+                {"symbol": "BTCUSDT",  "equity": 100, "initial_position": 1, "pipeline_id": 4},
                 {},
                 (0, 1, 0),
                 100,
@@ -83,7 +84,7 @@ class TestBinanceFuturesTrader:
                 id="SymbolStarted-WithInitialPositionLONG",
             ),
             pytest.param(
-                {"symbol": "BTCUSDT",  "equity": 100, "initial_position": -1},
+                {"symbol": "BTCUSDT",  "equity": 100, "initial_position": -1, "pipeline_id": 4},
                 {},
                 (0, 1, 0),
                 100,
@@ -110,8 +111,8 @@ class TestBinanceFuturesTrader:
 
         symbol = parameters["symbol"]
 
-        assert binance_trader.units[symbol] == initial_position * 0.005
-        assert binance_trader.current_balance[symbol] == (initial_position - 1) * -1 * balance
+        assert binance_trader.units[symbol] == 0 if initial_position == 0 else -2
+        assert binance_trader.current_balance[symbol] == 100 if initial_position == 0 else 2000
         assert binance_trader.initial_balance[symbol] == balance
         assert binance_trader.positions[symbol] == initial_position
 

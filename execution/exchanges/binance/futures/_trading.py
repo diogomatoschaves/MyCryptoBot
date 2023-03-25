@@ -7,6 +7,7 @@ from datetime import datetime
 import django
 from binance.exceptions import BinanceAPIException
 
+from database.model.models import Pipeline
 from execution.exchanges.binance import BinanceTrader
 from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
@@ -29,7 +30,6 @@ class BinanceFuturesTrader(BinanceTrader):
         Trader.__init__(self, 0)
 
         self.paper_trading = paper_trading
-        self.max_borrow_amount = {}
         self.symbols = {}
         self.positions = {}
         self.equity = {}
@@ -75,7 +75,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._set_initial_position(symbol, initial_position, header, pipeline_id=pipeline_id, **kwargs)
 
-        self._set_initial_balance(symbol, equity, initial_position, header=header)
+        self._set_initial_balance(symbol, equity, initial_position,  pipeline_id=pipeline_id, header=header,)
 
     def stop_symbol_trading(self, symbol, header='', **kwargs):
 
@@ -145,8 +145,12 @@ class BinanceFuturesTrader(BinanceTrader):
 
         factor = 1 if order_side == self.SIDE_SELL else -1
 
-        self.current_balance[symbol] += factor * float(order['cummulative_quote_qty'])
-        self.units[symbol] -= factor * units
+        self._update_current_balance(
+            symbol,
+            factor * float(order['cummulative_quote_qty']),
+            factor * units,
+            pipeline_id
+        )
 
         self.nr_trades += 1
 
@@ -159,8 +163,10 @@ class BinanceFuturesTrader(BinanceTrader):
         if amount is not None and units is None:
             price = round(float(self.get_symbol_ticker(symbol=symbol)['price']), price_precision)
             units = round(amount / price * units_factor, quantity_precision)
-            logging.debug(f"Units: {units}")
-            logging.debug(f"quantity precision: {quantity_precision}")
+
+            # in case units are negative
+            units = max(0, units)
+
             return units
         else:
             return round(units * units_factor, quantity_precision)
@@ -182,18 +188,36 @@ class BinanceFuturesTrader(BinanceTrader):
             pipeline_id=pipeline_id
         )
 
-    # TODO: Add last order position
-    def _set_initial_balance(self, symbol, amount, initial_position, header=''):
+    def _set_initial_balance(self, symbol, amount, initial_position, pipeline_id, header=''):
         logging.debug(header + f"Updating balance for symbol: {symbol}.")
 
-        units = self._convert_units(amount, None, symbol)
-
-        self.units[symbol] = initial_position * units
-
-        factor = 1 - initial_position
-
-        self.current_balance[symbol] = factor * amount
         self.initial_balance[symbol] = amount
+        self.current_balance[symbol] = 0
+        self.units[symbol] = 0
+
+        if initial_position == 0:
+            factor = 1 - initial_position
+            self._update_current_balance(symbol, factor * amount, 0, pipeline_id)
+        else:
+            balance, units = self._retrieve_current_balance(pipeline_id)
+            self._update_current_balance(symbol, balance, -units, pipeline_id)
+
+        self.print_current_balance(datetime.now(), header=header, symbol=symbol)
+
+    @staticmethod
+    def _retrieve_current_balance(pipeline_id):
+        pipeline = Pipeline.objects.get(id=pipeline_id)
+
+        return pipeline.balance, pipeline.units
+
+    def _update_current_balance(self, symbol, amount, units, pipeline_id):
+        self.current_balance[symbol] += amount
+        self.units[symbol] -= units
+
+        Pipeline.objects.filter(id=pipeline_id).update(
+            balance=self.current_balance[symbol],
+            units=self.units[symbol]
+        )
 
     def _get_symbol_info(self, symbol):
 

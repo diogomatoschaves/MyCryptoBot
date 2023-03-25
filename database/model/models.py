@@ -182,6 +182,8 @@ class Pipeline(models.Model):
     color = models.TextField()
     leverage = models.IntegerField(blank=True, default=1)
     deleted = models.BooleanField(default=False, blank=True)
+    balance = models.FloatField(default=0, blank=True)
+    units = models.FloatField(default=0, blank=True)
 
     def get_profit_loss(self):
         result = reduce(
@@ -211,7 +213,9 @@ class Pipeline(models.Model):
             numberTrades=self.trade_set.count(),
             profitLoss=self.get_profit_loss(),
             color=self.color,
-            leverage=self.leverage
+            leverage=self.leverage,
+            balance=self.balance,
+            units=self.units
         )
 
     class Meta:
