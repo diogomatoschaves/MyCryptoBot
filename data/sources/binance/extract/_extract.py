@@ -7,6 +7,7 @@ import pandas as pd
 import pytz
 
 import shared.exchanges.binance.constants as const
+from shared.data.queries import get_data
 from shared.utils.decorators.failed_connection import retry_failed_connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -23,12 +24,11 @@ def get_start_date(model_class, symbol, candle_size):
 
     logging.debug(start_date)
 
-    return int(start_date.timestamp() * 1000)
+    return start_date
 
 
 @retry_failed_connection(num_times=3)
 def yield_kline(kline_generator):
-    logging.debug('Getting next kline.')
     return next(kline_generator)
 
 
@@ -36,7 +36,6 @@ def extract_data(
     model_class,
     klines_generator,
     symbol,
-    base_candle_size,
     candle_size,
     start_date=None,
     header=''
@@ -50,7 +49,6 @@ def extract_data(
     model_class: class - required. Database model class to save data on.
     klines_generator: method - required. Historical data fetching function.
     symbol: str - required. Symbol for which to retrieve data.
-    base_candle_size: str - required. Candle size at which raw data is retrieved.
     candle_size: str - optional. Candle size at which data should be retrieved.
     start_date: datetime object - optional. Start date from which to retrieve data.
                 If not specified, data will be fetched from the last entry on.
@@ -64,10 +62,11 @@ def extract_data(
 
     if start_date is None:
         start_date = get_start_date(model_class, symbol, candle_size)
+        start_date = int(start_date.timestamp() * 1000)
 
     logging.info(header + f"Fetching missing historical data.")
 
-    klines = klines_generator(symbol, base_candle_size, start_date)
+    klines = klines_generator(symbol, candle_size, start_date)
 
     data = []
     i = 1
@@ -79,6 +78,7 @@ def extract_data(
 
         fields = {field: get_value(kline) for field, get_value in const.BINANCE_KEY.items()}
         data.append(fields)
+        logging.debug(fields)
 
         if i % 1E3 == 0:
             logging.debug(header + f"Processed {i} new rows.")
@@ -86,3 +86,12 @@ def extract_data(
         i += 1
 
     return pd.DataFrame(data)
+
+
+def extract_data_db(exchange_data, model_class, symbol, candle_size):
+
+    start_date = get_start_date(model_class, symbol, candle_size)
+
+    data = get_data(exchange_data, start_date, symbol, candle_size, exchange='binance')
+
+    return data.reset_index()

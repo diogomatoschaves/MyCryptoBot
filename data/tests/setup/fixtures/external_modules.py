@@ -24,7 +24,7 @@ def mock_binance_handler_klines(mocker):
     mocker.patch.object(
         BinanceHandler,
         "get_historical_klines_generator",
-        lambda self, symbol, candle_size, stat_date: mock_get_historical_klines_generator(symbol, candle_size, stat_date)
+        lambda self, symbol, candle_size, start_date: mock_get_historical_klines_generator(symbol, candle_size, start_date)
     )
 
 

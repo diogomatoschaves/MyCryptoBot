@@ -226,7 +226,6 @@ def mock_redis():
 
         def __init__(self):
             setattr(self, "bearer_token", "mock bearer_token")
-            print("Redis initialized")
 
         def set(self, object_name, object_value):
             setattr(self, object_name, object_value)

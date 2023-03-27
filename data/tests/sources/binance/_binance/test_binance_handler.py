@@ -1,7 +1,7 @@
 from data.service.helpers.exceptions import CandleSizeInvalid
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
-from data.tests.setup.test_data.sample_data import processed_historical_data
+from data.tests.setup.test_data.sample_data import processed_historical_data_5m
 from shared.utils.exceptions import SymbolInvalid
 from shared.utils.tests.test_setup import get_fixtures
 from shared.utils.tests.fixtures.external_modules import *
@@ -41,7 +41,7 @@ class TestBinanceDataHandler:
                 {
                     "expected_number_objs_structured": 1,
                     "expected_number_objs_exchange": 15,
-                    "expected_value": 2
+                    "expected_times_called": 1
                 },
                 id="1hNoPipelineID",
             ),
@@ -54,7 +54,7 @@ class TestBinanceDataHandler:
                 {
                     "expected_number_objs_structured": 1,
                     "expected_number_objs_exchange": 15,
-                    "expected_value": 2
+                    "expected_times_called": 1
                 },
                 id="1hWithPipelineID",
             ),
@@ -66,7 +66,7 @@ class TestBinanceDataHandler:
                 {
                     "expected_number_objs_structured": 14,
                     "expected_number_objs_exchange": 15,
-                    "expected_value": 2
+                    "expected_times_called": 1
                 },
                 id="5mNoPipelineID",
             ),
@@ -79,7 +79,7 @@ class TestBinanceDataHandler:
                 {
                     "expected_number_objs_structured": 14,
                     "expected_number_objs_exchange": 15,
-                    "expected_value": 2
+                    "expected_times_called": 1
                 },
                 id="5mWithPipelineID",
             ),
@@ -100,7 +100,7 @@ class TestBinanceDataHandler:
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"]
         assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
-        assert StructuredData.objects.first().open_time.date() == processed_historical_data[0]["open_time"].date()
+        assert StructuredData.objects.first().open_time.date() == processed_historical_data_5m[0]["open_time"].date()
 
         if "pipeline_id" in input_params:
             pipeline_id = input_params["pipeline_id"]
@@ -108,7 +108,7 @@ class TestBinanceDataHandler:
             pipeline_id = None
 
         assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id,)
-        assert spy_binance_handler_klines.call_count == 1
+        assert spy_binance_handler_klines.call_count == output["expected_times_called"]
 
         binance_data_handler.stop_data_ingestion()
 

@@ -10,7 +10,7 @@ import shared.exchanges.binance.constants as const
 from data.service.external_requests import start_stop_symbol_trading, get_open_positions
 from data.service.helpers.exceptions import CandleSizeInvalid, DataPipelineCouldNotBeStopped
 from data.sources import trigger_signal
-from data.sources.binance.extract import extract_data
+from data.sources.binance.extract import extract_data, extract_data_db
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.exchanges.binance import BinanceHandler
@@ -32,9 +32,9 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     only time based steps).
     """
 
-    def __init__(self, symbol, candle_size, pipeline_id=None):
+    def __init__(self, symbol, candle_size, pipeline_id=None, base_candle_size='5m'):
 
-        BinanceHandler.__init__(self)
+        BinanceHandler.__init__(self, base_candle_size=base_candle_size)
         ThreadedWebsocketManager.__init__(self, self.binance_api_key, self.binance_api_secret)
 
         self._validate_input(symbol, candle_size)
@@ -98,6 +98,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
             StructuredData,
             self.candle_size,
             data=data,
+            use_db=self.candle_size != self.base_candle_size,
             remove_zeros=True,
             remove_rows=True,
             count_updates=False,
@@ -142,34 +143,13 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
         Position.objects.filter(pipeline_id=self.pipeline_id).update(open=False, position=0)
 
-    def _start_kline_websockets(self, symbol, callback, header=''):
-
-        # streams = [
-        #     f"{symbol.lower()}_perpetual@continuousKline_{self.base_candle_size}",
-        #     f"{symbol.lower()}_perpetual@continuousKline_{self.candle_size}"
-        # ]
-
-        streams = [
-            f"{symbol.lower()}@kline_{self.base_candle_size}",
-            f"{symbol.lower()}@kline_{self.candle_size}"
-        ]
-
-        logging.info(header + f"Starting {', '.join(streams)} data stream(s).")
-
-        self.streams = streams
-
-        self.conn_key = self.start_multiplex_socket(lambda row: callback(row, header), streams)
-
-    # TODO: Wrap this in AttributeError exception handling
-    def _stop_websocket(self):
-        self.stop_socket(self.conn_key)
-
     def _etl_pipeline(
         self,
         model_class,
         candle_size,
         reference_candle_size='5m',
         data=None,
+        use_db=False,
         remove_zeros=False,
         remove_rows=False,
         columns_aggregation=const.COLUMNS_AGGREGATION,
@@ -180,7 +160,9 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         # Extract
         if data is None:
             data = extract_data(model_class, self.get_historical_klines_generator, self.symbol,
-                                self.base_candle_size, candle_size, header=header)
+                                candle_size, header=header)
+        if use_db:
+            data = extract_data_db(ExchangeData, model_class, self.symbol, self.base_candle_size)
 
         # Transform
         transformed_data = transform_data(
@@ -199,6 +181,27 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         new_entries = load_data(model_class, transformed_data, count_updates=count_updates, header=header)
 
         return data, new_entries
+
+    def _start_kline_websockets(self, symbol, callback, header=''):
+
+        # streams = [
+        #     f"{symbol.lower()}_perpetual@continuousKline_{self.base_candle_size}",
+        #     f"{symbol.lower()}_perpetual@continuousKline_{self.candle_size}"
+        # ]
+
+        streams = [
+            f"{symbol.lower()}@kline_{self.base_candle_size}",
+            f"{symbol.lower()}@kline_{self.candle_size}"
+        ]
+
+        logging.info(header + f"Starting {', '.join(streams)} data stream(s).")
+
+        self.streams = streams
+
+        self.conn_key = self.start_multiplex_socket(lambda row: callback(row, header), streams)
+
+    def _stop_websocket(self):
+        self.stop_socket(self.conn_key)
 
     def generate_new_signal(self, header, retries=0):
 

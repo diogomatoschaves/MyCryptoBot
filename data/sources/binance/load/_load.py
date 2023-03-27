@@ -33,11 +33,16 @@ def save_new_entry_db(model_class, fields, count_updates=True):
     try:
         with transaction.atomic():
             model_class.objects.create(**fields)
-    except ValueError:
+    except ValueError as e:
+        logging.debug(e)
+        logging.debug(fields)
+
         fields["close_time"] = None
         with transaction.atomic():
             model_class.objects.create(**fields)
     except django.db.utils.IntegrityError as e:
+        logging.debug(e)
+        logging.debug(fields)
 
         fields_subset = {key: value for key, value in fields.items() if key in unique_fields}
 

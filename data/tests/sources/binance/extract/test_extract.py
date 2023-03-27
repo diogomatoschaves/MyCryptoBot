@@ -23,14 +23,12 @@ class TestBinanceExtract:
 
         model_class = fixture["in"]["model_class"]
         symbol = fixture["in"]["symbol"]
-        base_candle_size = fixture["in"]["base_candle_size"]
         candle_size = fixture["in"]["candle_size"]
 
         params_dict = dict(
             model_class=model_class,
             klines_generator=mock_get_historical_klines_generator,
             symbol=symbol,
-            base_candle_size=base_candle_size,
             candle_size=candle_size
         )
 
