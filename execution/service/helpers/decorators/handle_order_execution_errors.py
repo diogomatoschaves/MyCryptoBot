@@ -3,6 +3,8 @@ import logging
 
 from binance.exceptions import BinanceAPIException
 
+from execution.service.helpers.exceptions import SymbolNotBeingTraded
+
 
 def handle_order_execution_errors(symbol, trader_instance, header, num_times=3):
 
@@ -22,7 +24,10 @@ def handle_order_execution_errors(symbol, trader_instance, header, num_times=3):
 
                     logging.warning(e)
 
-                    trader_instance.stop_symbol_trading(symbol=symbol, header=header)
+                    try:
+                        trader_instance.stop_symbol_trading(symbol=symbol, header=header)
+                    except SymbolNotBeingTraded:
+                        pass
 
                     message = e.message
                     logging.warning(message)
