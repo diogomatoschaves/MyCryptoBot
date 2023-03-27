@@ -21,6 +21,7 @@ def retry_failed_connection(_func=None, *, num_times=2):
 
                 if retries <= num_times:
                     retries += 1
+                    logging.debug('Retrying failed connection.')
                     continue
 
                 break

@@ -14,7 +14,6 @@ django.setup()
 
 
 def get_start_date(model_class, symbol, candle_size):
-
     try:
         start_date = model_class.objects \
                          .filter(exchange='binance', symbol=symbol, interval=candle_size) \
@@ -22,11 +21,14 @@ def get_start_date(model_class, symbol, candle_size):
     except AttributeError:
         start_date = datetime(2019, 9, 1).astimezone(pytz.utc)
 
+    logging.debug(start_date)
+
     return int(start_date.timestamp() * 1000)
 
 
 @retry_failed_connection(num_times=3)
 def yield_kline(kline_generator):
+    logging.debug('Getting next kline.')
     return next(kline_generator)
 
 
@@ -52,6 +54,7 @@ def extract_data(
     candle_size: str - optional. Candle size at which data should be retrieved.
     start_date: datetime object - optional. Start date from which to retrieve data.
                 If not specified, data will be fetched from the last entry on.
+    header: Header for logging line.
 
     Returns
     -------
