@@ -12,6 +12,8 @@ unique_fields = {"open_time", "exchange", "symbol", "interval"}
 
 def load_data(model_class, data, count_updates=True, header=''):
 
+    logging.debug(f'Saving data with {data.shape[0]} rows and {data.shape[1]} columns.')
+
     if data.index.name == 'open_time':
         data = data.reset_index()
 

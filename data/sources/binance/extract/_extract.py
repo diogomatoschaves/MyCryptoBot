@@ -7,7 +7,6 @@ import pandas as pd
 import pytz
 
 import shared.exchanges.binance.constants as const
-from shared.data.queries import get_data
 from shared.utils.decorators.failed_connection import retry_failed_connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -64,7 +63,7 @@ def extract_data(
         start_date = get_start_date(model_class, symbol, candle_size)
         start_date = int(start_date.timestamp() * 1000)
 
-    logging.info(header + f"Fetching missing historical data.")
+    logging.info(header + f"Extracting missing historical data.")
 
     klines = klines_generator(symbol, candle_size, start_date)
 
