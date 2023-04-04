@@ -1,6 +1,6 @@
-import os
-
 import pytest
+import numpy as np
+import pandas as pd
 
 from data.sources.binance.transform import transform_data
 from shared.utils.tests.fixtures.models import *
@@ -36,4 +36,7 @@ class TestBinanceTransform:
 
         for i, d in enumerate(result):
             for key in d:
-                assert d[key] == pytest.approx(fixture["out"]["expected_value"][i][key], 0.2)
+                if pd.isna(d[key]):
+                    assert np.isnan(fixture["out"]["expected_value"][i][key])
+                else:
+                    assert d[key] == pytest.approx(fixture["out"]["expected_value"][i][key], 0.2)

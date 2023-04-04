@@ -11,6 +11,7 @@ BINANCE_API_SECRET_TEST = "BINANCE_API_SECRET_TEST"
 BINANCE_SPOT_TRADING = "SPOT"
 BINANCE_MARGIN_TRADING = "MARGIN"
 
+
 CANDLE_SIZES_MAPPER = {
     '1m': '1T',
     '5m': '5T',
@@ -31,6 +32,7 @@ CANDLE_SIZES_ORDERED = [
     '1d',
 ]
 
+
 COUNT_MAPPER = {
     '5m': {'5m': 1},
     '10m': {'5m': 2, '10m': 1},
@@ -39,6 +41,18 @@ COUNT_MAPPER = {
     '1h': {'5m': 12, '10m': 6, '15m': 4, '30m': 2, '1h': 1},
     '1d': {'5m': 288},
 }
+
+
+CANDLE_SIZE_TIMEDELTA = {
+    '1m': {"seconds": 59.9999},
+    '5m': {"minutes": 4.9999},
+    '10m': {"minutes": 9.9999},
+    '15m': {"minutes": 14.9999},
+    '30m': {"minutes": 29.9999},
+    '1h': {"minutes": 59.9999},
+    '1d': {"hours": 23.9999},
+}
+
 
 COLUMNS_AGGREGATION = {
     "close_time": 'last',

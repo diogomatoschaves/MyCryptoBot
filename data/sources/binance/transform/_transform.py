@@ -1,7 +1,7 @@
 import logging
+import datetime
 
 import numpy as np
-import pandas as pd
 
 import shared.exchanges.binance.constants as const
 
@@ -23,9 +23,17 @@ def remove_columns(data, columns=('id',)):
 
 
 def resample_data(data, candle_size, aggregation_method):
-    return data \
+    new_data = data \
         .resample(const.CANDLE_SIZES_MAPPER[candle_size]) \
         .agg(aggregation_method)
+
+    new_data["close_time"] = np.where(
+        new_data["close_time"].isnull(),
+        new_data.index + datetime.timedelta(**const.CANDLE_SIZE_TIMEDELTA[candle_size]),
+        new_data["close_time"]
+    )
+
+    return new_data
 
 
 def remove_zeros(data):
