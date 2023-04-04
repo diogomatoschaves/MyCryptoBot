@@ -92,8 +92,6 @@ def extract_data_db(exchange_data, model_class, symbol, candle_size):
 
     start_date = get_start_date(model_class, symbol, candle_size)
 
-    start_date = start_date.strftime('%Y-%m-%d %H:%M:%S')
-
     data = get_data(exchange_data, start_date, symbol, candle_size, exchange='binance')
 
     return data.reset_index()
