@@ -16,6 +16,8 @@ def get_query(model_class, start_date, symbol, interval, exchange='binance'):
     pattern = r"\d{4}-\d{2}-\d{2}\s*\d+:\d+:\d+[-+]\d+:\d+"
     sql_query = re.sub(pattern, r"'\g<0>'", sql_query)
 
+    print(sql_query)
+
     return sql_query
 
 
