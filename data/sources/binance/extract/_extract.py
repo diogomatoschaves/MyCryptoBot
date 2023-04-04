@@ -7,6 +7,7 @@ import pandas as pd
 import pytz
 
 import shared.exchanges.binance.constants as const
+from shared.data.queries import get_data
 from shared.utils.decorators.failed_connection import retry_failed_connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
