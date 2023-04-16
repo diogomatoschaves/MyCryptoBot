@@ -1,3 +1,4 @@
+import numpy as np
 import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
@@ -5,7 +6,7 @@ from plotly.subplots import make_subplots
 pio.renderers.default = "browser"
 
 
-def plot_backtest_results(data, trades, with_tc=False):
+def plot_backtest_results(data, trades, with_tc=False, title=''):
     """
     Plots backtesting results for a trading strategy.
 
@@ -14,6 +15,7 @@ def plot_backtest_results(data, trades, with_tc=False):
     data : pandas.DataFrame
         DataFrame containing the following columns:
         - 'accumulated_strategy_returns_tc': accumulated returns including trading costs
+        - 'accumulated_strategy_returns': accumulated returns without trading costs
         - 'accumulated_returns': accumulated returns without trading costs
     trades : pandas.DataFrame
         DataFrame containing trade information, including the following columns:
@@ -23,6 +25,8 @@ def plot_backtest_results(data, trades, with_tc=False):
         - 'units': size of the position
     with_tc : bool, optional
         Whether or not to plot equity without trading costs (default is False)
+    title : str, optional
+        Title to show on the backtesting results
 
     Returns
     -------
@@ -45,7 +49,7 @@ def plot_backtest_results(data, trades, with_tc=False):
     fig.add_trace(go.Scatter(
         x=data.index,
         y=data['accumulated_returns'],
-        name='Buy and Hold',
+        name='Buy & Hold',
         line=dict(
             color='PaleVioletRed',
             width=1.5
@@ -65,15 +69,19 @@ def plot_backtest_results(data, trades, with_tc=False):
 
     if len(trades) > 0:
 
+        trades["pnl_pct"] = np.round(trades["pnl"] * 100, 2)
+
         # define a boolean column indicating if each trade is long or short
         trades['is_long'] = trades['direction'].apply(lambda x: x > 0)
 
         # define marker size as a percentage of position size
-        marker_size = abs(trades['units']) / trades['units'].max() * 30
+        position_size = trades['units'] * trades["entry_price"]
+
+        marker_size = abs(position_size) / position_size.max() * 30
 
         # create separate traces for long and short trades
         fig.add_trace(go.Scatter(
-            x=trades[trades['is_long']]["entry_date"], y=trades.loc[trades['is_long'], 'profit'],
+            x=trades[trades['is_long']]["entry_date"], y=trades.loc[trades['is_long'], 'pnl_pct'],
             name='Long', mode='markers', marker=dict(
                 symbol='triangle-up',
                 color='limegreen',
@@ -85,7 +93,7 @@ def plot_backtest_results(data, trades, with_tc=False):
             )
         ), row=2, col=1)
         fig.add_trace(go.Scatter(
-            x=trades[~trades['is_long']]["entry_date"], y=trades.loc[~trades['is_long'], 'profit'],
+            x=trades[~trades['is_long']]["entry_date"], y=trades.loc[~trades['is_long'], 'pnl_pct'],
             name='Short', mode='markers', marker=dict(
                 symbol='triangle-down',
                 color='red',
@@ -97,12 +105,12 @@ def plot_backtest_results(data, trades, with_tc=False):
             )
         ), row=2, col=1)
 
-    fig.update_layout(title='Backtesting Results',
+    fig.update_layout(title=f'Backtesting Results: {title}',
                       xaxis_title='Date',
                       height=800,
                       showlegend=True)
 
-    fig.update_yaxes(title_text='Value', row=1, col=1)
-    fig.update_yaxes(title_text='Price', row=2, col=1)
+    fig.update_yaxes(title_text='Value (USD)', row=1, col=1)
+    fig.update_yaxes(title_text='Trade PnL (%)', row=2, col=1)
 
     fig.show()

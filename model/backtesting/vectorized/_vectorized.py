@@ -154,6 +154,8 @@ class VectorizedBacktester(BacktestMixin):
             trades["amount"] = self.amount * trades["log_cum"]
             trades["units"] = (trades["amount"].shift(1) / trades["entry_price"]).fillna(self.amount / trades["entry_price"][0])
             trades["profit"] = (trades["amount"] - trades["amount"].shift(1)).fillna(trades["amount"][0] - self.amount)
+            trades["pnl"] = ((trades["amount"] - trades["amount"].shift(1)) / trades["amount"].shift(1))\
+                .fillna((trades["amount"][0] - self.amount) / self.amount)
 
         self._trades_df = trades.copy()
 

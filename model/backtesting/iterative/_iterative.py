@@ -437,6 +437,7 @@ class IterativeBacktester(BacktestMixin, Trader):
             trades[-1].amount = amount
 
             trades[-1].calculate_profit()
+            trades[-1].calculate_pnl_pct(trades[-2].amount if len(trades) >= 2 else self.amount)
 
             self.nr_trades += 1
 

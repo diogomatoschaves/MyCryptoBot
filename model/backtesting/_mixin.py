@@ -277,12 +277,12 @@ class BacktestMixin:
             "accumulated_returns",
             "accumulated_strategy_returns",
             "accumulated_strategy_returns_tc"
-        ]]
+        ]] * self.amount
 
         trades_df = pd.DataFrame(self.trades)
 
         if plot_results:
-            plot_backtest_results(data, trades_df, with_tc=self.tc != 0)
+            plot_backtest_results(data, trades_df, with_tc=self.tc != 0, title=self.__repr__())
 
     @staticmethod
     def _print_results(results, print_results):
