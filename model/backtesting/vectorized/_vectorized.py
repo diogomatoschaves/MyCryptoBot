@@ -28,7 +28,7 @@ class VectorizedBacktester(BacktestMixin):
     def __repr__(self):
         return self.strategy.__repr__()
 
-    def _test_strategy(self, params=None, print_results=True, plot_results=True, plot_positions=False):
+    def _test_strategy(self, params=None, print_results=True, plot_results=True):
         """
 
         Parameters
@@ -37,8 +37,6 @@ class VectorizedBacktester(BacktestMixin):
             Dictionary containing the keywords and respective values of the parameters to be updated.
         plot_results: boolean
             Flag for whether to plot the results of the backtest.
-        plot_positions : boolean
-            Flag for whether to plot the positions markers on the results plot.
 
         """
 
@@ -55,7 +53,7 @@ class VectorizedBacktester(BacktestMixin):
 
         self._print_results(results, print_results)
 
-        self.plot_results(self.processed_data, plot_results, plot_positions)
+        self.plot_results(self.processed_data, plot_results)
 
         return perf, outperf, results
 
