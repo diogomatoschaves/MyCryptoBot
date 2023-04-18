@@ -28,15 +28,19 @@ class VectorizedBacktester(BacktestMixin):
     def __repr__(self):
         return self.strategy.__repr__()
 
-    def _test_strategy(self, params=None, print_results=True, plot_results=True):
+    def _test_strategy(self, params=None, print_results=True, plot_results=True, show_plot_no_tc=False):
         """
 
         Parameters
         ----------
         params : dict
             Dictionary containing the keywords and respective values of the parameters to be updated.
+        print_results: bool, optional
+            Flag for whether to print the results of the backtest.
         plot_results: boolean
             Flag for whether to plot the results of the backtest.
+        show_plot_no_tc: bool, optional
+            Whether to plot the equity curve without the trading_costs applied
 
         """
 
@@ -53,7 +57,7 @@ class VectorizedBacktester(BacktestMixin):
 
         self._print_results(results, print_results)
 
-        self.plot_results(self.processed_data, plot_results)
+        self.plot_results(self.processed_data, plot_results, show_plot_no_tc=show_plot_no_tc)
 
         return perf, outperf, results
 

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from functools import reduce
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -93,18 +93,24 @@ def calmar_ratio(cum_returns: pd.Series, risk_free_rate: float = 0) -> float:
     return (annual_return - risk_free_rate) / -max_drawdown
 
 
-def max_drawdown_pct(cum_returns: pd.Series) -> float:
-    """Calculate the maximum drawdown percentage."""
+def get_drawdowns(cum_returns: pd.Series) -> pd.Series:
+    """Retrieves the drawdown periods."""
     peaks = np.maximum.accumulate(cum_returns)
     drawdowns = (cum_returns - peaks) / peaks
+
+    return drawdowns
+
+
+def max_drawdown_pct(cum_returns: pd.Series) -> float:
+    """Calculate the maximum drawdown percentage."""
+    drawdowns = get_drawdowns(cum_returns)
 
     return np.min(drawdowns) * 100
 
 
 def avg_drawdown_pct(cum_returns: pd.Series) -> float:
     """Calculate the average drawdown percentage."""
-    peaks = np.maximum.accumulate(cum_returns)
-    drawdowns = (cum_returns - peaks) / peaks
+    drawdowns = get_drawdowns(cum_returns)
 
     drawdown_maximums = []
     drawdown_period = []
@@ -160,17 +166,16 @@ def max_drawdown_duration(cum_returns: pd.Series) -> int:
     return dd_end - dd_start
 
 
-def avg_drawdown_duration(cum_returns: pd.Series) -> float:
-    """Calculate the average duration of drawdowns."""
+def get_dd_durations_limits(cum_returns: pd.Series) -> Tuple[List, List]:
     peak_index = 0
-    drawdown_duration = 0
 
     durations = []
+    limits = []
 
     drawdown = False
     dd_duration = 0
+    dd_start_end = (None, None)
     dd_start = cum_returns.index[0]
-    dd_end = cum_returns.index[-1]
     for i in range(1, len(cum_returns)):
         if cum_returns[i] > cum_returns[peak_index]:
             dd_start = cum_returns.index[i]
@@ -178,14 +183,24 @@ def avg_drawdown_duration(cum_returns: pd.Series) -> float:
 
             if drawdown:
                 durations.append(dd_duration)
+                limits.append(dd_start_end)
                 drawdown = False
         else:
             drawdown = True
             dd_end = cum_returns.index[i]
+            dd_start_end = (dd_start, dd_end)
             dd_duration = (dd_end - dd_start).total_seconds()
 
     if drawdown:
         durations.append(dd_duration)
+        limits.append(dd_start_end)
+
+    return durations, limits
+
+
+def avg_drawdown_duration(cum_returns: pd.Series) -> float:
+    """Calculate the average duration of drawdowns."""
+    durations, _ = get_dd_durations_limits(cum_returns)
 
     return np.mean(durations) if len(durations) > 0 else 0
 

@@ -261,7 +261,7 @@ class BacktestMixin:
 
         return results
 
-    def plot_results(self, processed_data, plot_results=True):
+    def plot_results(self, processed_data, plot_results=True, show_plot_no_tc=False):
         """
         Plot the performance of the trading strategy compared to a buy and hold strategy.
 
@@ -271,6 +271,8 @@ class BacktestMixin:
             Dataframe containing the results of the backtest to be plotted.
         plot_results: boolean, default True
             Whether to plot the results.
+        show_plot_no_tc: boolean, default False
+            Whether to show the plot of the equity curve with no trading costs
         """
 
         data = processed_data.copy()[[
@@ -282,7 +284,7 @@ class BacktestMixin:
         trades_df = pd.DataFrame(self.trades)
 
         if plot_results:
-            plot_backtest_results(data, trades_df, with_tc=self.tc != 0, title=self.__repr__())
+            plot_backtest_results(data, trades_df, show_plot_no_tc=show_plot_no_tc, title=self.__repr__())
 
     @staticmethod
     def _print_results(results, print_results):

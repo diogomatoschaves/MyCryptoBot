@@ -136,7 +136,7 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         return price
 
-    def _test_strategy(self, params=None, print_results=True, plot_results=True):
+    def _test_strategy(self, params=None, print_results=True, plot_results=True, show_plot_no_tc=False):
         """
         Run a backtest for the given parameters and assess the performance of the strategy.
 
@@ -148,6 +148,8 @@ class IterativeBacktester(BacktestMixin, Trader):
             Flag for whether to print the results of the backtest.
         plot_results : bool, optional
             Flag for whether to plot the results of the backtest.
+        show_plot_no_tc: bool, optional
+            Whether to plot the equity curve without the trading_costs applied
 
         Returns
         -------
@@ -171,7 +173,7 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         self._print_results(results, print_results)
 
-        self.plot_results(self.processed_data, plot_results)
+        self.plot_results(self.processed_data, plot_results, show_plot_no_tc=show_plot_no_tc)
 
         return perf, outperf, results
 

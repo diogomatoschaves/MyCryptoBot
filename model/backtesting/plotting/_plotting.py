@@ -3,10 +3,12 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
 
+from model.backtesting.helpers.metrics import get_drawdowns, get_dd_durations_limits
+
 pio.renderers.default = "browser"
 
 
-def plot_backtest_results(data, trades, with_tc=False, title=''):
+def plot_backtest_results(data, trades, show_plot_no_tc=False, title=''):
     """
     Plots backtesting results for a trading strategy.
 
@@ -23,7 +25,7 @@ def plot_backtest_results(data, trades, with_tc=False, title=''):
         - 'direction': direction of the trade (-1 for short, 1 for long)
         - 'profit': profit of the trade
         - 'units': size of the position
-    with_tc : bool, optional
+    show_plot_no_tc : bool, optional
         Whether or not to plot equity without trading costs (default is False)
     title : str, optional
         Title to show on the backtesting results
@@ -36,13 +38,30 @@ def plot_backtest_results(data, trades, with_tc=False, title=''):
 
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1)
 
+    plot_equity_curves(fig, data, show_plot_no_tc)
+
+    plot_trades(fig, trades)
+
+    fig.update_layout(title=f'Backtesting Results: {title}',
+                      xaxis_title='Date',
+                      height=800,
+                      showlegend=True)
+
+    fig.update_yaxes(title_text='Value (USD)', row=1, col=1)
+    fig.update_yaxes(title_text='Trade PnL (%)', row=2, col=1)
+
+    fig.show()
+
+
+def plot_equity_curves(fig, data, show_plot_no_tc):
+
     fig.add_trace(go.Scatter(
         x=data.index,
         y=data['accumulated_strategy_returns_tc'],
         name='Equity',
         line=dict(
             width=1.5,
-            color='LightGreen'
+            color='SteelBlue'
         )
     ), row=1, col=1)
 
@@ -51,12 +70,12 @@ def plot_backtest_results(data, trades, with_tc=False, title=''):
         y=data['accumulated_returns'],
         name='Buy & Hold',
         line=dict(
-            color='PaleVioletRed',
+            color='Silver',
             width=1.5
         )
     ), row=1, col=1)
 
-    if with_tc:
+    if show_plot_no_tc:
         fig.add_trace(go.Scatter(
             x=data.index,
             y=data['accumulated_strategy_returns'],
@@ -66,6 +85,79 @@ def plot_backtest_results(data, trades, with_tc=False, title=''):
                 color='Silver'
             )
         ), row=1, col=1)
+
+    # plot max drawdown duration
+    durations, limits = get_dd_durations_limits(data['accumulated_strategy_returns_tc'])
+
+    max_duration_index = np.argmax(durations)
+
+    start, end = limits[max_duration_index]
+    value = data['accumulated_strategy_returns_tc'][start]
+
+    fig.add_trace(go.Scatter(
+        x=[start, end],
+        y=[value, value],
+        name=f'Max Drawdown Duration',
+        mode='lines',
+        line=dict(
+            color='Red',
+            width=1
+        )
+    ), row=1, col=1)
+
+    # plot peak equity point
+    peak_index = data['accumulated_strategy_returns_tc'].argmax()
+    peak_time = data.index[peak_index]
+    peak_value = data['accumulated_strategy_returns_tc'][peak_index]
+
+    fig.add_trace(go.Scatter(
+        x=[peak_time],
+        y=[peak_value],
+        name='Peak',
+        mode='markers',
+        marker=dict(
+            color='MediumBlue',
+            size=8
+        )
+    ), row=1, col=1)
+
+    # Plot lowest equity point
+    low_index = data['accumulated_strategy_returns_tc'].argmin()
+    low_time = data.index[low_index]
+    low_value = data['accumulated_strategy_returns_tc'][low_index]
+
+    fig.add_trace(go.Scatter(
+        x=[low_time],
+        y=[low_value],
+        name='Lowest',
+        mode='markers',
+        marker=dict(
+            color='Maroon',
+            size=8
+        )
+    ), row=1, col=1)
+
+    # Plot max drawdown
+    drawdowns = get_drawdowns(data['accumulated_strategy_returns_tc'])
+
+    max_drawdown_index = drawdowns.argmin()
+    max_drawdown_time = drawdowns.index[max_drawdown_index]
+    max_drawdown_equity = data['accumulated_strategy_returns_tc'][max_drawdown_index]
+    max_drawdown_value = drawdowns[max_drawdown_index]
+
+    fig.add_trace(go.Scatter(
+        x=[max_drawdown_time],
+        y=[max_drawdown_equity],
+        name=f'Max Drawdown ({round(max_drawdown_value * 100, 1)} %)',
+        mode='markers',
+        marker=dict(
+            color='Crimson',
+            size=7
+        )
+    ), row=1, col=1)
+
+
+def plot_trades(fig, trades):
 
     if len(trades) > 0:
 
@@ -104,13 +196,3 @@ def plot_backtest_results(data, trades, with_tc=False, title=''):
                 )
             )
         ), row=2, col=1)
-
-    fig.update_layout(title=f'Backtesting Results: {title}',
-                      xaxis_title='Date',
-                      height=800,
-                      showlegend=True)
-
-    fig.update_yaxes(title_text='Value (USD)', row=1, col=1)
-    fig.update_yaxes(title_text='Trade PnL (%)', row=2, col=1)
-
-    fig.show()
