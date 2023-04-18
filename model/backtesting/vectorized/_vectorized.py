@@ -28,17 +28,19 @@ class VectorizedBacktester(BacktestMixin):
     def __repr__(self):
         return self.strategy.__repr__()
 
-    def _test_strategy(self, params=None, print_results=True, plot_results=True, plot_positions=False):
+    def _test_strategy(self, params=None, print_results=True, plot_results=True, show_plot_no_tc=False):
         """
 
         Parameters
         ----------
         params : dict
             Dictionary containing the keywords and respective values of the parameters to be updated.
+        print_results: bool, optional
+            Flag for whether to print the results of the backtest.
         plot_results: boolean
             Flag for whether to plot the results of the backtest.
-        plot_positions : boolean
-            Flag for whether to plot the positions markers on the results plot.
+        show_plot_no_tc: bool, optional
+            Whether to plot the equity curve without the trading_costs applied
 
         """
 
@@ -55,7 +57,7 @@ class VectorizedBacktester(BacktestMixin):
 
         self._print_results(results, print_results)
 
-        self.plot_results(self.processed_data, plot_results, plot_positions)
+        self.plot_results(self.processed_data, plot_results, show_plot_no_tc=show_plot_no_tc)
 
         return perf, outperf, results
 
@@ -156,6 +158,8 @@ class VectorizedBacktester(BacktestMixin):
             trades["amount"] = self.amount * trades["log_cum"]
             trades["units"] = (trades["amount"].shift(1) / trades["entry_price"]).fillna(self.amount / trades["entry_price"][0])
             trades["profit"] = (trades["amount"] - trades["amount"].shift(1)).fillna(trades["amount"][0] - self.amount)
+            trades["pnl"] = ((trades["amount"] - trades["amount"].shift(1)) / trades["amount"].shift(1))\
+                .fillna((trades["amount"][0] - self.amount) / self.amount)
 
         self._trades_df = trades.copy()
 

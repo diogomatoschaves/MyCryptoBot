@@ -1,4 +1,5 @@
 import matplotlib
+import plotly
 import pytest
 from rq.exceptions import NoSuchJobError
 
@@ -39,5 +40,5 @@ def mocked_rq_enqueue_call(mocker):
 
 
 @pytest.fixture
-def mocked_matplotlib_show(mocker):
-    mocker.patch.object(matplotlib.pyplot, "show", lambda: None)
+def mocked_plotly_figure_show(mocker):
+    mocker.patch.object(plotly.graph_objs.Figure, "show", lambda self: None)

@@ -603,6 +603,18 @@ docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-inline
 tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
+name = "plotly"
+version = "5.14.1"
+description = "An open-source, interactive data visualization library for Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+packaging = "*"
+tenacity = ">=6.2.0"
+
+[[package]]
 name = "pluggy"
 version = "1.0.0"
 description = "plugin and hook calling mechanisms for python"
@@ -989,6 +1001,17 @@ numpy = "*"
 pandas = "*"
 
 [[package]]
+name = "tenacity"
+version = "8.2.2"
+description = "Retry code until it succeeds"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+doc = ["reno", "sphinx", "tornado (>=4.5)"]
+
+[[package]]
 name = "threadpoolctl"
 version = "3.1.0"
 description = "threadpoolctl"
@@ -1135,7 +1158,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.8"
-content-hash = "9b0b028404ddd61ea6329ef895ab3c41e53259b6d6de28625dc32325b6174b5b"
+content-hash = "b8100f7c8d2500ed3b915f907cc61c3eade3319ee6c7ad08bb31541880882d06"
 
 [metadata.files]
 aiohttp = [
@@ -1247,6 +1270,7 @@ pickleshare = [
     {file = "pickleshare-0.7.5.tar.gz", hash = "sha256:87683d47965c1da65cdacaf31c8441d12b8044cdec9aca500cd78fc2c683afca"},
 ]
 pillow = []
+plotly = []
 pluggy = []
 prompt-toolkit = []
 ptyprocess = [
@@ -1310,6 +1334,7 @@ statsmodels = [
 ta = [
     {file = "ta-0.7.0.tar.gz", hash = "sha256:41b108d526ff426619d18c15ffa0d1b545a281168bf0d06f32194ae7de3acacb"},
 ]
+tenacity = []
 threadpoolctl = []
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},

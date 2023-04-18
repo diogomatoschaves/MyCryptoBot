@@ -1,10 +1,9 @@
-from datetime import timedelta
-
 import humanfriendly
-import matplotlib.pyplot as plt
 from scipy.optimize import brute
+import plotly.io as pio
 
 from model.backtesting.helpers.metrics import *
+from model.backtesting.plotting import plot_backtest_results
 
 legend_mapping = {
     "accumulated_returns": "Buy & Hold",
@@ -49,6 +48,9 @@ results_aesthetics = {
     'max_trade_duration': lambda delta: f"\tMax Trade Duration: {humanfriendly.format_timespan(delta)}",
     'avg_trade_duration': lambda sec: f"\tAvg Trade Duration: {humanfriendly.format_timespan(timedelta(seconds=sec))}",
 }
+
+
+pio.renderers.default = "browser"
 
 
 class BacktestMixin:
@@ -128,7 +130,7 @@ class BacktestMixin:
             csv_path = csv_path if csv_path else 'model/sample_data/bitcoin.csv'
             self.set_data(pd.read_csv(csv_path, index_col='date', parse_dates=True), self.strategy)
 
-    def run(self, params=None, print_results=True, plot_results=True, plot_positions=False):
+    def run(self, params=None, print_results=True, plot_results=True):
         """Runs the trading strategy and prints and/or plots the results.
 
         Parameters:
@@ -139,14 +141,12 @@ class BacktestMixin:
             If True, print the results of the backtest.
         plot_results : bool
             If True, plot the performance of the trading strategy compared to a buy and hold strategy.
-        plot_positions : bool
-            If True, plot the trading positions.
 
         Returns:
         --------
         None
         """
-        perf, outperf, results = self._test_strategy(params, print_results, plot_results, plot_positions)
+        perf, outperf, results = self._test_strategy(params, print_results, plot_results)
 
         self.perf = perf
         self.outperf = outperf
@@ -185,7 +185,7 @@ class BacktestMixin:
 
         return opt, -self._update_and_run(opt, plot_results=True)
 
-    def _test_strategy(self, params=None, print_results=True, plot_results=True, plot_positions=False):
+    def _test_strategy(self, params=None, print_results=True, plot_results=True):
         """Tests the trading strategy on historical data.
 
         Parameters:
@@ -261,109 +261,30 @@ class BacktestMixin:
 
         return results
 
-    def plot_results(self, results=None, plot_results=True, plot_positions=True):
+    def plot_results(self, processed_data, plot_results=True, show_plot_no_tc=False):
         """
         Plot the performance of the trading strategy compared to a buy and hold strategy.
 
         Parameters:
         -----------
-        results: pd.DataFrame
+        processed_data: pd.DataFrame
             Dataframe containing the results of the backtest to be plotted.
         plot_results: boolean, default True
             Whether to plot the results.
-        plot_positions : bool, default True
-            Whether to plot the positions.
+        show_plot_no_tc: boolean, default False
+            Whether to show the plot of the equity curve with no trading costs
         """
 
-        if not plot_results or results is None:
-            return
+        data = processed_data.copy()[[
+            "accumulated_returns",
+            "accumulated_strategy_returns",
+            "accumulated_strategy_returns_tc"
+        ]] * self.amount
 
-        plotting_cols = ["accumulated_returns"]
-        if self.tc != 0:
-            plotting_cols.append("accumulated_strategy_returns")
+        trades_df = pd.DataFrame(self.trades)
 
-        title = self.__repr__()
-
-        df = results[plotting_cols] * 100
-
-        ax = df.plot(title=title, figsize=(12, 8))\
-
-        if plot_positions:
-
-            # Convert labels to colors
-            label2color = {
-                1: 'green',
-                0: 'brown',
-                -1: 'red',
-            }
-            results['color'] = results['position'].apply(lambda label: label2color[label])
-
-            # Add px_last lines
-            for color, start, end in self._gen_repeating(self.results['color']):
-                if start > 0: # make sure lines connect
-                    start -= 1
-                idx = self.results.index[start:end+1]
-                results.loc[idx, 'accumulated_strategy_returns_tc'].plot(ax=ax, color=color, label='')
-                results.loc[idx, ['position']].plot(ax=ax, color=color, label='', secondary_y='position', alpha=0.3)
-
-            # Get artists and labels for legend and chose which ones to display
-            handles, labels = ax.get_legend_handles_labels()
-
-            # Create custom artists
-            g_line = plt.Line2D((0, 1), (0, 0), color='green')
-            y_line = plt.Line2D((0, 1), (0, 0), color='brown')
-            r_line = plt.Line2D((0, 1), (0, 0), color='red')
-
-            # Create legend from custom artist/label lists
-            ax.legend(
-                handles + [g_line, y_line, r_line],
-                labels + [
-                    'long position',
-                    'neutral_position',
-                    'short position',
-                ],
-                loc='best',
-            )
-
-        else:
-            ax.plot(results.index, results["accumulated_strategy_returns_tc"] * 100, c='g')
-
-            plt.ylabel('returns (%)')
-
-            plotting_cols.append("accumulated_strategy_returns_tc")
-
-            ax.legend([legend_mapping[col] for col in plotting_cols])
-
-        plt.show()
-
-    @staticmethod
-    def _gen_repeating(s):
-        """
-        A generator function that groups repeated elements in an iterable.
-
-        Parameters:
-        -----------
-        s : Iterable
-            An iterable object.
-
-        Yields:
-        -------
-        Tuple
-            A tuple containing the element, start index, and end index of a group of repeated elements.
-        """
-        i = 0
-        while i < len(s):
-            j = i
-            while j < len(s) and s.iloc[j] == s.iloc[i]:
-                j += 1
-            yield (s.iloc[i], i, j-1)
-            i = j
-
-    @staticmethod
-    def plot_func(ax, group):
-        color = 'r' if (group['position'] < 0).all() else 'g'
-        lw = 2.0
-        ax.plot(group.index, group.cstrategy_tc, c=color, linewidth=lw)
+        if plot_results:
+            plot_backtest_results(data, trades_df, show_plot_no_tc=show_plot_no_tc, title=self.__repr__())
 
     @staticmethod
     def _print_results(results, print_results):

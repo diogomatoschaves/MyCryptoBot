@@ -34,7 +34,15 @@ class Trade:
     direction: int
     amount: float = None
     profit: float = None
+    pnl: float = None
 
     def calculate_profit(self):
         self.profit = (np.exp(np.log(self.exit_price / self.entry_price) * self.direction) - 1) \
                       * self.units * self.entry_price
+
+    def calculate_pnl_pct(self, prev_amount):
+
+        if self.amount is None:
+            return
+
+        self.pnl = (self.amount - prev_amount) / prev_amount
