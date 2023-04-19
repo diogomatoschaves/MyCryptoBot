@@ -86,9 +86,32 @@ def plot_equity_curves(fig, data, show_plot_no_tc):
             )
         ), row=1, col=1)
 
-    # plot max drawdown duration
+    # plot drawdowns
     durations, limits = get_dd_durations_limits(data['accumulated_strategy_returns_tc'])
 
+    x = []
+    y = []
+    for limit in limits:
+        x.extend(limit)
+        x.append(None)
+
+        value = data['accumulated_strategy_returns_tc'][limit[0]]
+
+        y.extend([value, value])
+        y.append(None)
+
+    fig.add_trace(go.Scatter(
+        x=x,
+        y=y,
+        name='Drawdown',
+        mode='lines',
+        line=dict(
+            color='Gold',
+            width=1
+        )
+    ), row=1, col=1)
+
+    # plot max drawdown duration
     max_duration_index = np.argmax(durations)
 
     start, end = limits[max_duration_index]
