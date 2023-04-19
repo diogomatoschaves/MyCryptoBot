@@ -19,12 +19,9 @@ and refining trading strategies, whether for personal use or for professional tr
 
 ## Backtesting 
 
-<p align="left">
-  <img src="shared/utils/drawings/backtest-plot" style="width: 60%" />
-</p>
-
 This module offers 2 types of Backtesting - Vectorized and Iterative. Below they are described in more detail
-and an example usage is given.
+and examples are given. It is also shown how to use the optimization API in order to fine tune the strategies and 
+find the best parameters.
 
 ### Vectorized Backtesting
 
@@ -37,17 +34,53 @@ Below is an example of how to use it for the `MovingAverageConvergenceDivergence
 
 ```python
 from model.backtesting import VectorizedBacktester
-from model.strategies import MovingAverageConvergenceDivergence
+from model.strategies import MovingAverageCrossover
 
 symbol = "BTCUSDT"
 trading_costs = 0.1 # This should be in percentage, i.e. 0.1% 
 
-macd = MovingAverageConvergenceDivergence(26, 12, 9)
+mov_avg = MovingAverageCrossover(50, 200)
 
-vect = VectorizedBacktester(macd, symbol=symbol, trading_costs=trading_costs) # Initializes the VectorizedBacktester class with the strategy
-vect.load_data() # Load the default sample data. You can pass your own DataFrame to load_data
+vect = VectorizedBacktester(mov_avg, symbol, amount=1000, trading_costs=trading_costs) # Initializes the IterativeBacktester class with the strategy.
+vect.load_data() # Load the default sample data. You can pass your own DataFrame to 'load_data'
 vect.run() # Runs the backtest and shows the results
 ```
+
+This will output the results in textual and graphical form.
+
+```
+Total Duration: 4 years, 38 weeks and 4 days
+Start Date: 2018-05-23 13:00:00
+End Date: 2023-02-13 00:00:00
+Total Trades: 267
+Exposure Time [%]: 100.0
+Buy & Hold Return [%]: 175.98
+Total Return [%]: 221.6
+Equity Final [USDT]: 3212.75
+Equity Peak [USDT]: 5351.51
+Annualized Return [%]: 21.49
+Annualized Volatility [%]: 73.95
+Sharpe Ratio: 0.07
+Sortino Ratio: 0.28
+Calmar Ratio: 0.35
+Max Drawdown [%]: -61.18
+Avg Drawdown [%]: -8.2
+Max Drawdown Duration: 1 year, 38 weeks and 8 hours
+Avg Drawdown Duration: 3 weeks, 2 days and 13 hours
+Win Rate [%]: 32.21
+Best Trade [%]: 87.77
+Worst Trade [%]: -26.76
+Avg Trade [%]: 0.09
+Max Trade Duration: 5 weeks, 3 days and 14 hours
+Avg Trade Duration: 6 days, 11 hours and 11 minutes
+Profit Factor: 1.0
+Expectancy [%]: 5.75
+System Quality Number: -0.02
+```
+
+<p align="left">
+  <img src="shared/utils/drawings/vectorized_results.png" style="width: 100%" />
+</p>
 
 ### Iterative Backtesting
 
@@ -58,16 +91,83 @@ strategy.
 
 ```python
 from model.backtesting import IterativeBacktester
-from model.strategies import MovingAverageCrossover
+from model.strategies import MovingAverageConvergenceDivergence
 
 symbol = "BTCUSDT"
 
-mov_avg = MovingAverageCrossover(50, 200)
+macd = MovingAverageConvergenceDivergence(26, 12, 9)
 
-ite = IterativeBacktester(mov_avg, symbol, amount=1000) # Initializes the IterativeBacktester class with the strategy.
-ite.load_data() # Load the default sample data. You can pass your own DataFrame to 'load_data'
+ite = IterativeBacktester(macd, symbol=symbol) # Initializes the VectorizedBacktester class with the strategy
+ite.load_data() # Load the default sample data. You can pass your own DataFrame to load_data
 ite.run() # Runs the backtest and shows the results
 ```
+This will output the results in textual and graphical form.
+
+```
+Total Duration: 4 years, 39 weeks and 4 days
+Start Date: 2018-05-16 15:00:00
+End Date: 2023-02-13 00:00:00
+Total Trades: 3140
+Exposure Time [%]: 100.0
+Buy & Hold Return [%]: 163.16
+Total Return [%]: 1642.05
+Equity Final [USDT]: 17420.49
+Equity Peak [USDT]: 29566.42
+Annualized Return [%]: 61.01
+Annualized Volatility [%]: 70.98
+Sharpe Ratio: 0.17
+Sortino Ratio: 0.8
+Calmar Ratio: 1.09
+Max Drawdown [%]: -56.09
+Avg Drawdown [%]: -5.46
+Max Drawdown Duration: 1 year, 22 weeks and 4 days
+Avg Drawdown Duration: 1 week, 1 day and 20 hours
+Win Rate [%]: 34.84
+Best Trade [%]: 31.32
+Worst Trade [%]: -14.73
+Avg Trade [%]: 0.05
+Max Trade Duration: 2 days and 14 hours
+Avg Trade Duration: 13 hours, 14 minutes and 55.41 seconds
+Profit Factor: 1.01
+Expectancy [%]: 1.7
+System Quality Number: 0.17
+```
+<p align="left">
+  <img src="shared/utils/drawings/iterative_results.png" style="width: 100%" />
+</p>
+
+### Optimization
+
+You can use the optimization API of either the iterative or vectorized backtester in order to find the best combination 
+of parameters for a backtest. Below is an example of how to achive this.
+
+```python
+from model.backtesting import VectorizedBacktester
+from model.strategies import Momentum
+
+symbol = "BTCUSDT"
+trading_costs = 0.1
+
+mom = Momentum(30) # Initialize the strategy object with any values. 
+
+vect = VectorizedBacktester(mom, symbol=symbol, trading_costs=trading_costs) # It could also have been the
+                                                                             # IterativeBacktester class
+
+vect.load_data() # Load the default sample data. You can pass your own DataFrame to load_data
+
+vect.optimize(dict(window=(40, 90))) # Pass as an argument a dictionary with the parameters as keywords and 
+                                     # with a tuple with the limits to test as the value. In this case we are
+                                     # testing the strategy with the parameter 'window' between the values of
+                                     # 40 and 90
+
+```
+
+This will output the best parameters and show the corresponding results.
+
+<p align="left">
+  <img src="shared/utils/drawings/optimization_results.png" style="width: 100%" />
+</p>
+
 
 ## Strategies
 
