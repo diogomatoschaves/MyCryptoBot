@@ -7,7 +7,7 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Pipeline, ExchangeData
+from database.model.models import Pipeline
 from data.service.blueprints.bots_api import stop_instance
 
 
@@ -22,7 +22,7 @@ def check_app_is_running():
 
         logging.info(f'Checking pipeline {pipeline.id}...')
 
-        if datetime.now() - pipeline.last_entry > timedelta(seconds=10 * 60):
+        if datetime.now() - pipeline.last_entry > timedelta(minutes=10):
 
             logging.info(f'{pipeline.id} found to be stuck. Sending stop request...')
 
