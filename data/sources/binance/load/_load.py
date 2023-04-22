@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+import pytz
 from django.db import connection, transaction
 import django
 
@@ -29,7 +30,7 @@ def load_data(model_class, data, pipeline_id, count_updates=True, header=''):
 
     logging.info(header + f"Added {new_entries} new rows into {model_class}.")
 
-    Pipeline.objects.filter(id=pipeline_id).update(last_entry=datetime.now())
+    Pipeline.objects.filter(id=pipeline_id).update(last_entry=datetime.now(pytz.utc))
 
     return new_entries > 0
 

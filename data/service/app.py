@@ -9,6 +9,8 @@ from flask_cors import CORS
 import redis
 from flask_jwt_extended import JWTManager, create_access_token
 
+from data.service.cron_jobs.main import start_background_scheduler
+
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
@@ -32,6 +34,8 @@ cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
 
 def startup_task(app):
+
+    start_background_scheduler()
 
     open_positions = Position.objects.filter(pipeline__active=True)
 

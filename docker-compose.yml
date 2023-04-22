@@ -21,23 +21,6 @@ services:
       - ./data:/usr/src/app/data
       - ./database:/usr/src/app/database
       - ./shared:/usr/src/app/shared
-  data-scheduler:
-      build:
-        context: .
-        dockerfile: data/Dockerfile.clock
-      image: data-scheduler
-      environment:
-        - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB}
-        - REDIS_URL=redis://redis:6379
-        - APP_NAME=crypto-bot-data
-        - MODEL_APP_URL=http://host.docker.internal:5001
-        - EXECUTION_APP_URL=http://host.docker.internal:5002
-        - PORT=5000
-        - LOGGER_LEVEL=DEBUG
-      volumes:
-        - ./data:/usr/src/app/data
-        - ./database:/usr/src/app/database
-        - ./shared:/usr/src/app/shared
   model-service:
     build:
       context: .

@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 import django
+import pytz
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -22,7 +23,7 @@ def check_app_is_running():
 
         logging.info(f'Checking pipeline {pipeline.id}...')
 
-        if datetime.now() - pipeline.last_entry > timedelta(minutes=10):
+        if datetime.now(pytz.utc) - pipeline.last_entry > timedelta(minutes=10):
 
             logging.info(f'{pipeline.id} found to be stuck. Sending stop request...')
 
