@@ -354,6 +354,7 @@ class TestExecutionService:
     def test_failed_leverage_setting(
         self,
         mock_binance_futures_trader_raise_leverage_setting_fail,
+        create_pipeline,
         client,
     ):
         res = client.post(f"start_symbol_trading", json={"pipeline_id": 1})
