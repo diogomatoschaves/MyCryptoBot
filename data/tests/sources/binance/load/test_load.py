@@ -18,12 +18,13 @@ class TestBinanceLoad:
             for fixture_name, fixture in fixtures.items()
         ],
     )
-    def test_load_data(self, fixture, exchange_data):
+    def test_load_data(self, fixture, exchange_data, create_pipeline):
 
         params_dict = dict(
             model_class=fixture["in"]["model_class"],
             data=fixture["in"]["data"],
-            count_updates=fixture["in"]["count_updates"]
+            count_updates=fixture["in"]["count_updates"],
+            pipeline_id=1
         )
 
         assert load_data(**params_dict) == fixture["out"]["expected_value"]

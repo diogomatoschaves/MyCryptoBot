@@ -184,6 +184,7 @@ class Pipeline(models.Model):
     deleted = models.BooleanField(default=False, blank=True)
     balance = models.FloatField(default=0, blank=True)
     units = models.FloatField(default=0, blank=True)
+    last_entry = models.DateTimeField(null=True, default=None)
 
     def get_profit_loss(self):
         result = reduce(

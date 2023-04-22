@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 
 from django.db import connection, transaction
 import django
@@ -7,10 +8,12 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
+from database.model.models import Pipeline
+
 unique_fields = {"open_time", "exchange", "symbol", "interval"}
 
 
-def load_data(model_class, data, count_updates=True, header=''):
+def load_data(model_class, data, pipeline_id, count_updates=True, header=''):
 
     logging.debug(f'Saving data with {data.shape[0]} rows and {data.shape[1]} columns.')
 
@@ -25,6 +28,8 @@ def load_data(model_class, data, count_updates=True, header=''):
         new_entries += 1 if new_entry else 0
 
     logging.info(header + f"Added {new_entries} new rows into {model_class}.")
+
+    Pipeline.objects.filter(id=pipeline_id).update(last_entry=datetime.now())
 
     return new_entries > 0
 
