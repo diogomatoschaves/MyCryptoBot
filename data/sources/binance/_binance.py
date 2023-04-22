@@ -191,8 +191,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     def _start_kline_websockets(self, symbol, callback, header=''):
 
         streams = [
-            f"{symbol.lower()}_perpetual@continuousKline_{self.base_candle_size}",
-            f"{symbol.lower()}_perpetual@continuousKline_{self.candle_size}"
+            f"{symbol.lower()}@kline_{self.base_candle_size}",
+            f"{symbol.lower()}@kline_{self.candle_size}"
         ]
 
         logging.info(header + f"Starting {', '.join(streams)} data stream(s).")
