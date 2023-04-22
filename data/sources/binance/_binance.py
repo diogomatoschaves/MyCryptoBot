@@ -178,7 +178,13 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         )
 
         # Load
-        new_entries = load_data(model_class, transformed_data, count_updates=count_updates, header=header)
+        new_entries = load_data(
+            model_class,
+            transformed_data,
+            pipeline_id=self.pipeline_id,
+            count_updates=count_updates,
+            header=header,
+        )
 
         return data, new_entries
 
