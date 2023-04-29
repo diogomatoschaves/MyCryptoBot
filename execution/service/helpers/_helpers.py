@@ -7,12 +7,13 @@ import django
 import pytz
 import redis
 
-from database.model.models import PortfolioTimeSeries, Pipeline
 from execution.service.helpers.exceptions import SignalRequired, SignalInvalid
 from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
+
+from database.model.models import PortfolioTimeSeries, Pipeline
 
 
 fields = [
@@ -58,19 +59,3 @@ def extract_and_validate(request_data):
     header = get_header(pipeline_id)
 
     return pipeline, Parameters(header, binance_account_type, pipeline.equity, pipeline.leverage)
-
-
-def get_current_equity(pipeline):
-
-    last_entry = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline.id).last()
-
-    if last_entry is None:
-        current_equity = pipeline.equity
-
-        pipeline_obj = Pipeline.objects.get(id=pipeline.id)
-
-        PortfolioTimeSeries.objects.create(pipeline=pipeline_obj, time=datetime.now(pytz.utc), value=current_equity)
-    else:
-        current_equity = last_entry.value
-
-    return current_equity

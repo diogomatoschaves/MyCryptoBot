@@ -128,6 +128,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         response = start_stop_symbol_trading({"pipeline_id": self.pipeline_id}, 'stop')
 
+        Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
+
         if not response["success"]:
             logging.info(response["message"])
 
@@ -140,7 +142,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                         or (not pipeline.paper_trading and positions["positions"]["live"] != 0):
                     raise DataPipelineCouldNotBeStopped(response["message"])
 
-        Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
         Position.objects.filter(pipeline_id=self.pipeline_id).update(open=False, position=0)
 
     def _etl_pipeline(

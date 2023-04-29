@@ -7,23 +7,24 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required
 
-from execution.service.helpers import get_current_equity
+from execution.service.cron_jobs.main import start_background_scheduler
 from execution.service.helpers.decorators import binance_error_handler, handle_app_errors, handle_order_execution_errors
 from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_signal, extract_and_validate, get_header
-from execution.service.helpers.exceptions import EquityRequired, PipelineNotActive
+from execution.service.helpers.exceptions import PipelineNotActive
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.exchanges.binance.futures import BinanceFuturesTrader
 from shared.utils.decorators import handle_db_connection_error
+from shared.utils.exceptions import EquityRequired
 from shared.utils.helpers import get_pipeline_data
 from shared.utils.logger import configure_logger
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Position, PortfolioTimeSeries
+from database.model.models import Position
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -53,6 +54,9 @@ def get_binance_trader_instance(binance_account_type, paper_trading):
 
 
 def startup_task():
+
+    start_background_scheduler([binance_futures_mock_trader, binance_futures_trader])
+
     open_positions = Position.objects.filter(pipeline__active=True)
 
     for open_position in open_positions:
@@ -68,11 +72,9 @@ def start_pipeline_trade(pipeline, binance_account_type, header, initial_positio
 
     bt = get_binance_trader_instance(binance_account_type, pipeline.paper_trading)
 
-    starting_equity = get_current_equity(pipeline)
-
     bt.start_symbol_trading(
         pipeline.symbol,
-        equity=starting_equity,
+        pipeline.equity,
         leverage=pipeline.leverage,
         initial_position=initial_position,
         header=header,

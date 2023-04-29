@@ -4,7 +4,7 @@ import logging
 from flask import jsonify
 
 from data.service.helpers.exceptions import *
-from shared.utils.exceptions import SymbolInvalid
+from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid
 
 
 def handle_app_errors(_func=None):
@@ -71,6 +71,12 @@ def handle_app_errors(_func=None):
             except PipelineStartFail as e:
                 logging.info(e.message)
                 return jsonify(Responses.PIPELINE_START_FAIL(e.message))
+            except EquityInvalid as e:
+                logging.info(e.message)
+                return jsonify(Responses.EQUITY_INVALID(e.message))
+            except EquityRequired as e:
+                logging.info(e.message)
+                return jsonify(Responses.EQUITY_REQUIRED(e.message))
 
         return wrapper
 

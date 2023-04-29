@@ -5,10 +5,10 @@ import os
 from datetime import datetime
 
 import django
-from binance.exceptions import BinanceAPIException
 
 from database.model.models import Pipeline
 from execution.exchanges.binance import BinanceTrader
+from execution.service.cron_jobs.save_pipelines_snapshot import save_pipelines_snapshot
 from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
 from shared.exchanges import BinanceHandler
@@ -32,7 +32,6 @@ class BinanceFuturesTrader(BinanceTrader):
         self.paper_trading = paper_trading
         self.symbols = {}
         self.positions = {}
-        self.equity = {}
         self.initial_balance = {}
         self.current_balance = {}
         self.units = {}
@@ -42,11 +41,10 @@ class BinanceFuturesTrader(BinanceTrader):
         self.conn_key = None
         self.exchange = "binance"
 
-    # TODO: Make equity mandatory
     def start_symbol_trading(
         self,
         symbol,
-        starting_equity=0,
+        starting_equity,
         leverage=None,
         header='',
         initial_position=0,
@@ -55,8 +53,6 @@ class BinanceFuturesTrader(BinanceTrader):
     ):
         if symbol in self.symbols:
             raise SymbolAlreadyTraded(symbol)
-
-        self.equity[symbol] = starting_equity
 
         if isinstance(leverage, int):
 
@@ -75,7 +71,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._set_initial_position(symbol, initial_position, header, pipeline_id=pipeline_id, **kwargs)
 
-        self._set_initial_balance(symbol, starting_equity, initial_position,  pipeline_id=pipeline_id, header=header,)
+        self._set_initial_balance(symbol, starting_equity, pipeline_id=pipeline_id, header=header,)
 
     def stop_symbol_trading(self, symbol, header='', **kwargs):
 
@@ -85,6 +81,10 @@ class BinanceFuturesTrader(BinanceTrader):
         logging.info(header + f"Closing position for symbol: {symbol}")
 
         try:
+            pipeline_id = kwargs["pipeline_id"]
+
+            save_pipelines_snapshot([self, self], pipeline_id=pipeline_id)
+
             self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
         except NoUnits:
             logging.info(header + "There's no position to be closed.")
@@ -118,7 +118,6 @@ class BinanceFuturesTrader(BinanceTrader):
         header='',
         **kwargs
     ):
-
         units_factor = 1
         if "reducing" in kwargs:
             kwargs.update({"reduceOnly": True})
@@ -188,19 +187,15 @@ class BinanceFuturesTrader(BinanceTrader):
             pipeline_id=pipeline_id
         )
 
-    def _set_initial_balance(self, symbol, amount, initial_position, pipeline_id, header=''):
+    def _set_initial_balance(self, symbol, starting_equity, pipeline_id, header=''):
         logging.debug(header + f"Updating balance for symbol: {symbol}.")
 
-        self.initial_balance[symbol] = amount
+        self.initial_balance[symbol] = starting_equity
         self.current_balance[symbol] = 0
         self.units[symbol] = 0
 
-        if initial_position == 0:
-            factor = 1 - initial_position
-            self._update_current_balance(symbol, factor * amount, 0, pipeline_id)
-        else:
-            balance, units = self._retrieve_current_balance(pipeline_id)
-            self._update_current_balance(symbol, balance, -units, pipeline_id)
+        balance, units = self._retrieve_current_balance(pipeline_id)
+        self._update_current_balance(symbol, balance, -units, pipeline_id)
 
         self.print_current_balance(datetime.now(), header=header, symbol=symbol)
 
@@ -210,8 +205,8 @@ class BinanceFuturesTrader(BinanceTrader):
 
         return pipeline.balance, pipeline.units
 
-    def _update_current_balance(self, symbol, amount, units, pipeline_id):
-        self.current_balance[symbol] += amount
+    def _update_current_balance(self, symbol, equity, units, pipeline_id):
+        self.current_balance[symbol] += equity
         self.units[symbol] -= units
 
         Pipeline.objects.filter(id=pipeline_id).update(

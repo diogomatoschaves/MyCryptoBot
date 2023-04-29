@@ -5,7 +5,7 @@ from datetime import datetime
 import django
 import pytz
 
-from data.service.external_requests import get_price
+from execution.service.blueprints.market_data import get_ticker
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -13,7 +13,7 @@ django.setup()
 from database.model.models import PortfolioTimeSeries, Position
 
 
-def save_pipelines_snapshot(pipeline_id=None):
+def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
 
     logging.debug('Saving pipelines snapshot...')
 
@@ -28,13 +28,21 @@ def save_pipelines_snapshot(pipeline_id=None):
 
     for position in open_positions:
 
+        binance_obj = binance_trader_objects[0] if position.paper_trading else binance_trader_objects[1]
+
+        symbol = position.symbol.name
+
         time = datetime.now(pytz.utc)
 
-        current_price = float(get_price(position.symbol.name)["price"])
+        response = get_ticker(position.symbol.name)
+
+        if response is None:
+            continue
+
+        current_price = float(response["price"])
 
         try:
-            current_value = position.buying_price * position.amount * \
-                            (1 + position.position * (1 - current_price / position.buying_price))
+            current_value = binance_obj.current_balance[symbol] + binance_obj.units[symbol] * current_price
 
             PortfolioTimeSeries.objects.create(pipeline=position.pipeline, time=time, value=current_value)
 

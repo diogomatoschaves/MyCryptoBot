@@ -8,7 +8,7 @@ import pytz
 
 from data.service.helpers.exceptions import *
 from data.service.helpers.exceptions.data_pipeline_ongoing import DataPipelineOngoing
-from shared.utils.exceptions import SymbolInvalid
+from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -31,7 +31,7 @@ EXECUTION_APP_ENDPOINTS = {
 }
 
 
-def check_input(binance_client, strategies, **kwargs):
+def check_input(strategies, **kwargs):
 
     if "pipeline_id" in kwargs and kwargs["pipeline_id"] and Pipeline.objects.filter(id=kwargs["pipeline_id"]).exists():
         return True
@@ -108,10 +108,19 @@ def check_input(binance_client, strategies, **kwargs):
         if not isinstance(kwargs["leverage"], int):
             raise LeverageInvalid(kwargs["leverage"])
 
+    if "equity" not in kwargs or kwargs["equity"] is None:
+        raise EquityRequired
+    else:
+        equity = kwargs["equity"]
+
+        if not isinstance(equity, (int, float)):
+            raise EquityInvalid(equity)
+
     return False
 
 
 def get_existing_pipeline(fields):
+
     pipeline = Pipeline.objects.get(**fields)
 
     if pipeline.active:
@@ -130,7 +139,7 @@ def get_or_create_pipeline(
     pipeline_id,
     name,
     color,
-    allocation,
+    initial_equity,
     symbol,
     candle_size,
     strategy,
@@ -139,6 +148,7 @@ def get_or_create_pipeline(
     paper_trading,
     leverage
 ):
+
     if exists:
         pipeline = get_existing_pipeline(dict(id=pipeline_id))
 
@@ -146,14 +156,15 @@ def get_or_create_pipeline(
         columns = dict(
             name=name,
             color=color,
-            allocation=allocation,
+            allocation=initial_equity,
             symbol_id=symbol,
             interval=candle_size,
             strategy=strategy,
             exchange_id=exchange,
             params=json.dumps(params),
             paper_trading=paper_trading,
-            leverage=leverage
+            leverage=leverage,
+            balance=initial_equity
         )
 
         try:

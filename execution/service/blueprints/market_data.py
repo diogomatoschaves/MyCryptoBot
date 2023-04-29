@@ -17,16 +17,20 @@ client = BinanceHandler()
 testnet_client = BinanceHandler(paper_trading=True)
 
 
-@market_data.route('/prices', methods=['GET'])
-def get_current_price():
-
-    symbol = request.args.get("symbol", None)
-
+def get_ticker(symbol):
     try:
         client.validate_symbol(symbol)
         return client.futures_symbol_ticker(symbol=symbol)
     except SymbolInvalid:
         return {}
+
+
+@market_data.route('/prices', methods=['GET'])
+def get_current_price():
+
+    symbol = request.args.get("symbol", None)
+
+    return get_ticker(symbol)
 
 
 @market_data.route('/futures_account_balance', methods=['GET'])

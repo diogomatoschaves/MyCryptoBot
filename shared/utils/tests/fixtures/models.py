@@ -56,6 +56,8 @@ def create_pipeline(db, create_exchange, create_symbol):
         active=True,
         allocation=100,
         leverage=1,
+        balance=1000,
+        units=0
     )
 
 
@@ -72,7 +74,9 @@ def create_pipeline_2(db, create_exchange, create_symbol):
         interval="1h",
         active=True,
         allocation=100,
-        leverage=10
+        leverage=10,
+        balance=1000,
+        units=0
     )
 
 
@@ -85,7 +89,9 @@ def create_inactive_pipeline(db, create_exchange, create_symbol):
         params="{}",
         exchange_id='binance',
         interval="1h",
-        active=False
+        active=False,
+        balance=1000,
+        units=0
     )
 
 
@@ -105,6 +111,25 @@ def create_pipeline_with_balance(db, create_exchange, create_symbol):
         leverage=1,
         balance=2000,
         units=-2
+    )
+
+
+@pytest.fixture
+def create_pipeline_with_balance_2(db, create_exchange, create_symbol):
+    return Pipeline.objects.create(
+        id=5,
+        color="purple",
+        name='pipeline with balance 2',
+        symbol_id='BTCUSDT',
+        strategy='MovingAverage',
+        params='{"ma": 30}',
+        exchange_id='binance',
+        interval="1h",
+        active=True,
+        allocation=1000,
+        leverage=1,
+        balance=1000,
+        units=0
     )
 
 
