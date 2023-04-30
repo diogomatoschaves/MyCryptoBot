@@ -210,16 +210,17 @@ def convert_client_request(data):
     }
 
 
-def get_pipeline_equity_timeseries(pipeline_id, time_frame_converted='1H'):
+def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, time_frame_converted='1H'):
 
-    pipeline = Pipeline.objects.get(id=pipeline_id)
-    timeseries = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).values('time', 'value')
+    if pipeline_id is not None:
+        timeseries = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).values('time', 'value')
+    else:
+        timeseries = PortfolioTimeSeries.objects.filter(type=account_type).values('time', 'value')
 
     if len(timeseries) == 0:
         return []
 
     df = pd.DataFrame(timeseries).set_index('time').rename(columns={"value": "$"})
-    df["$"] = df["$"] / pipeline.leverage
     df = df.resample(time_frame_converted).first().ffill().reset_index()
 
     return json.loads(df.to_json(orient='records'))

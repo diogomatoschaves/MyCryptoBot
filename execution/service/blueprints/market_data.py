@@ -25,6 +25,14 @@ def get_ticker(symbol):
         return {}
 
 
+def get_balances():
+
+    testnet_balance = testnet_client.futures_account_balance()
+    live_balance = client.futures_account_balance()
+
+    return {"testnet": testnet_balance, "live": live_balance}
+
+
 @market_data.route('/prices', methods=['GET'])
 def get_current_price():
 
@@ -38,7 +46,7 @@ def get_current_price():
 @jwt_required()
 def get_futures_account_balance():
 
-    balances = {"testnet": testnet_client.futures_account_balance(), "live": client.futures_account_balance()}
+    balances = get_balances()
 
     return jsonify(balances)
 

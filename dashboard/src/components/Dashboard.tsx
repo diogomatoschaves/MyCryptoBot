@@ -1,6 +1,6 @@
 import {Grid, Header, Label, Segment} from "semantic-ui-react";
 import {
-  BalanceObj,
+  BalanceObj, EquityTimeSeries,
   PipelinesMetrics,
   PipelinesObject,
   Position,
@@ -19,6 +19,7 @@ import {
 } from "../reducers/positionsReducer";
 import {getTradesMetrics} from "../apiCalls";
 import TradesStats from "./TradesStats";
+import PortfolioChart from "./PortfolioChart";
 
 
 interface Props {
@@ -28,6 +29,7 @@ interface Props {
   positions: Position[],
   currentPrices: Object
   pipelinesMetrics: PipelinesMetrics
+  equityTimeSeries: EquityTimeSeries
   updatePipelinesMetrics: UpdatePipelinesMetrics
 }
 
@@ -38,7 +40,7 @@ function Dashboard(props: Props) {
     totalPipelines,
     activePipelines,
     bestWinRate,
-    mostTrades}, updatePipelinesMetrics} = props
+    mostTrades}, updatePipelinesMetrics, equityTimeSeries} = props
 
   const previous = useRef({trades, positions, pipelines, currentPrices}).current;
 
@@ -233,23 +235,22 @@ function Dashboard(props: Props) {
                   <Grid.Row>
                   </Grid.Row>
                 </Grid>
-                {/*{positions.length > 0 &&*/}
-                {/*<PieChart*/}
-                {/*  viewBoxSize={[100, 65]}*/}
-                {/*  center={[50, 25]}*/}
-                {/*  data={pieChartData}*/}
-                {/*  label={({dataEntry}) => `${dataEntry.title}`}*/}
-                {/*  labelStyle={(index) => ({*/}
-                {/*    fill: pieChartData[index].color,*/}
-                {/*    fontSize: '3px',*/}
-                {/*    fontFamily: 'sans-serif',*/}
-                {/*  })}*/}
-                {/*  lineWidth={65}*/}
-                {/*  radius={27}*/}
-                {/*  labelPosition={110}*/}
-                {/*/>}*/}
               </Segment>
               <TradesStats tradesMetrics={tradesMetrics} style={styles.tradesStatsStyle}/>
+            </Grid.Row>
+            <Grid.Row style={{width: '100%'}} className="flex-row">
+              <Segment secondary raised style={{...styles.rowSegment}}>
+                <Header size={'medium'} color="blue">
+                  Equity (live)
+                </Header>
+                <PortfolioChart dataProp={equityTimeSeries.live}/>
+              </Segment>
+              <Segment secondary raised style={{...styles.rowSegment}}>
+                <Header size={'medium'} color="blue">
+                  Equity (test)
+                </Header>
+                <PortfolioChart dataProp={equityTimeSeries.test}/>
+              </Segment>
             </Grid.Row>
           </Grid.Column>
         </Grid>

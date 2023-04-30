@@ -249,7 +249,7 @@ export const userLogin = async (requestData) => {
   return await response.json()
 }
 
-export const pipelineEquity = async ({pipelineId, timeFrame}) => {
+export const getEquityTimeSeries = async ({pipelineId, timeFrame}) => {
 
   const url = `${urlPrefix}/pipeline-equity${pipelineId ? '/' + pipelineId : ''}${timeFrame ? `?timeFrame=${timeFrame}` : ''}`
 

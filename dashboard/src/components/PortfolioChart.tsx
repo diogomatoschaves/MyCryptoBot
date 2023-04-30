@@ -1,6 +1,8 @@
 import React, {useEffect, useState, Fragment} from 'react';
 import {XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart} from 'recharts';
-import {pipelineEquity} from "../apiCalls";
+import {getEquityTimeSeries} from "../apiCalls";
+import {Data} from "../types";
+import {convertDate} from "../utils/helpers";
 
 const data1 = [
   { time: '2022-01-01', $: 1000 },
@@ -12,36 +14,36 @@ const data1 = [
 ];
 
 interface Props {
-  pipelineId: string
+  pipelineId?: string
+  dataProp?: Data[]
 }
 
-const convertDate = (timeStamp: number) => {
-  return new Date(timeStamp).toISOString();
+const formatYAxis = (tick: string) => {
+  return `${tick} USDT`
 }
-
 
 const PortfolioChart = (props: Props) => {
 
-  const { pipelineId } = props
+  const { pipelineId, dataProp } = props
 
   const [data, setData] = useState([])
 
   const fetchEquityData = (pipelineId: string) => {
-    pipelineEquity({pipelineId, timeFrame: null})
+    getEquityTimeSeries({pipelineId, timeFrame: '15m'})
       .then((response) => {
         if (response.success) {
-          setData(response.data.map((entry: any) => {
-            return {
-              ...entry,
-              time: convertDate(entry.time)
-            }
-          }))
+          setData(response.data)
         }
       })
   }
 
   useEffect(() => {
-    fetchEquityData(pipelineId)
+    if (pipelineId) {
+      fetchEquityData(pipelineId)
+    } else if (dataProp){
+      // @ts-ignore
+      setData(dataProp)
+    }
   }, [])
 
   return (
@@ -53,15 +55,15 @@ const PortfolioChart = (props: Props) => {
               height={80}
               data={data}
               margin={{
-                top: 5,
+                top: 30,
                 right: 0,
                 left: 0,
-                bottom: 5,
+                bottom: 0,
               }}
             >
-              <XAxis dataKey="time" hide/>
-              <YAxis hide />
-              <Tooltip />
+              <XAxis dataKey="time" hide tickFormatter={convertDate}/>
+              <YAxis tickFormatter={formatYAxis}/>
+              <Tooltip labelFormatter={convertDate}/>
               <Area type="monotone" dataKey="$" stroke="#8884d8" fill="#8884d8" strokeWidth={1.5} />
             </AreaChart>
           </ResponsiveContainer>

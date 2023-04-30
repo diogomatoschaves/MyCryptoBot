@@ -261,9 +261,21 @@ def get_pipeline_equity(pipeline_id):
 
     if pipeline_id:
 
-        data = get_pipeline_equity_timeseries(pipeline_id, time_frame_converted=time_frame_converted)
+        data = get_pipeline_equity_timeseries(pipeline_id=pipeline_id, time_frame_converted=time_frame_converted)
 
         return jsonify({"success": True, "data": data})
 
     else:
-        pass
+        data = {
+            'live': [],
+            'testnet': []
+        }
+
+        for account_type in data:
+
+            data[account_type] = get_pipeline_equity_timeseries(
+                account_type=account_type,
+                time_frame_converted=time_frame_converted
+            )
+
+        return jsonify({"success": True, "data": data})

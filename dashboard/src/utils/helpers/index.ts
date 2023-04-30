@@ -237,3 +237,16 @@ export const getRoi = (original: number, current: number, side: number, leverage
 export const capitalize = (s: string) => {
   return s[0].toUpperCase() + s.slice(1);
 }
+
+let options = {
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+}
+
+export const convertDate = (timeStamp: number) => {
+  // @ts-ignore
+  return new Date(timeStamp).toLocaleDateString('en-GB', options);
+}

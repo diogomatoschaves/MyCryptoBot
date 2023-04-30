@@ -294,3 +294,4 @@ class PortfolioTimeSeries(models.Model):
     pipeline = models.ForeignKey(Pipeline, on_delete=models.SET_NULL, null=True)
     time = models.DateTimeField()
     value = models.FloatField()
+    type = models.TextField(null=True, blank=True, default=None)
