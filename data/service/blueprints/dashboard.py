@@ -9,14 +9,15 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from data.service.external_requests import get_strategies
-from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict, convert_client_request
+from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict, convert_client_request, \
+    get_pipeline_equity_timeseries
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol, Exchange, Pipeline, Position, Trade
+from database.model.models import Symbol, Exchange, Pipeline, Position, Trade, PortfolioTimeSeries
 
 dashboard = Blueprint('dashboard', __name__)
 
@@ -243,3 +244,26 @@ def get_pipelines_metrics():
     })
 
     return jsonify(pipelines_metrics)
+
+
+@dashboard.route('/pipeline-equity', methods=["GET"], defaults={'pipeline_id': None})
+@dashboard.route('/pipeline-equity/<pipeline_id>')
+@jwt_required()
+@handle_db_connection_error
+def get_pipeline_equity(pipeline_id):
+
+    time_frame = request.args.get("timeFrame", '1h')
+
+    try:
+        time_frame_converted = CANDLE_SIZES_MAPPER[time_frame]
+    except KeyError:
+        return jsonify({"success": False, "message": "The provided time frame is not valid."})
+
+    if pipeline_id:
+
+        data = get_pipeline_equity_timeseries(pipeline_id, time_frame_converted=time_frame_converted)
+
+        return jsonify({"success": True, "data": data})
+
+    else:
+        pass

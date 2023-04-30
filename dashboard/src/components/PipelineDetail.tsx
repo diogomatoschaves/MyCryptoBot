@@ -12,6 +12,7 @@ import styled from "styled-components";
 import TradesStats from "./TradesStats";
 import TradesTable from "./TradesTable";
 import PipelineItem from "./Pipeline";
+import PortfolioChart from "./PortfolioChart";
 
 
 const Container = styled.div`
@@ -112,6 +113,7 @@ function PipelineDetail(props: Props) {
             <TradesStats tradesMetrics={pipelineMetrics} style={{height: '100%'}}/>
           </Grid.Column>
         </StatsContainer>
+        <PortfolioChart pipelineId={pipelineId}/>
         <TradesContainer>
           <TradesTable
             filteredTrades={Object.keys(trades).filter((tradeId) => trades[tradeId].pipelineId === Number(pipelineId))}

@@ -4,6 +4,7 @@ import logging
 import os
 
 import django
+import pandas as pd
 import pytz
 
 from data.service.helpers.exceptions import *
@@ -13,7 +14,7 @@ from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Exchange, Pipeline, Symbol
+from database.model.models import Exchange, Pipeline, Symbol, PortfolioTimeSeries
 import shared.exchanges.binance.constants as const
 
 MODEL_APP_ENDPOINTS = {
@@ -207,3 +208,18 @@ def convert_client_request(data):
         "color": data["color"],
         "leverage": data["leverage"]
     }
+
+
+def get_pipeline_equity_timeseries(pipeline_id, time_frame_converted='1H'):
+
+    pipeline = Pipeline.objects.get(id=pipeline_id)
+    timeseries = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).values('time', 'value')
+
+    if len(timeseries) == 0:
+        return []
+
+    df = pd.DataFrame(timeseries).set_index('time').rename(columns={"value": "$"})
+    df["$"] = df["$"] / pipeline.leverage
+    df = df.resample(time_frame_converted).first().ffill().reset_index()
+
+    return json.loads(df.to_json(orient='records'))

@@ -248,3 +248,18 @@ export const userLogin = async (requestData) => {
 
   return await response.json()
 }
+
+export const pipelineEquity = async ({pipelineId, timeFrame}) => {
+
+  const url = `${urlPrefix}/pipeline-equity${pipelineId ? '/' + pipelineId : ''}${timeFrame ? `?timeFrame=${timeFrame}` : ''}`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+      "Authorization": getToken()
+    }
+  })
+
+  return await response.json()
+}
