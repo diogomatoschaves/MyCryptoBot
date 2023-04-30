@@ -3,7 +3,7 @@ services:
   data-service:
     build:
       context: .
-      dockerfile: data/Dockerfile.web
+      dockerfile: data/Dockerfile
     image: data-server
     ports:
       - "5000:5000"
@@ -16,7 +16,8 @@ services:
       - MODEL_APP_URL=http://host.docker.internal:5001
       - EXECUTION_APP_URL=http://host.docker.internal:5002
       - PORT=5000
-      - LOGGER_LEVEL=DEBUG
+      - LOGGER_LEVEL=INFO
+      - CHECKS_INTERVAL=1800
     volumes:
       - ./data:/usr/src/app/data
       - ./database:/usr/src/app/database
@@ -66,6 +67,7 @@ services:
       - APP_NAME=crypto-bot-execution
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
+      - SNAPSHOTS_INTERVAL=30
     volumes:
       - ./execution:/usr/src/app/execution
       - ./database:/usr/src/app/database

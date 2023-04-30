@@ -98,7 +98,7 @@ def start_bot():
     pipeline_id = data.get("pipelineId", None)
     name = data.get("name", None)
     color = data.get("color", None)
-    allocation = data.get("allocation", None)
+    equity = data.get("allocation", None)
     symbol = data.get("symbol", None)
     strategy = data.get("strategy", None)
     params = data.get("params", {})
@@ -108,12 +108,11 @@ def start_bot():
     leverage = data.get("leverage", 1)
 
     exists = check_input(
-        binance_client,
         STRATEGIES,
         pipeline_id=pipeline_id,
         name=name,
         color=color,
-        allocation=allocation,
+        equity=equity,
         symbol=symbol,
         strategy=strategy,
         params=params,
@@ -130,7 +129,7 @@ def start_bot():
         pipeline_id=pipeline_id,
         name=name,
         color=color,
-        allocation=allocation,
+        initial_equity=equity,
         symbol=symbol,
         candle_size=candle_size,
         strategy=strategy,

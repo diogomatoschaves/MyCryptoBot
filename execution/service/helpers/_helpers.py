@@ -1,8 +1,10 @@
 import json
 import os
 from collections import namedtuple
+from datetime import datetime
 
 import django
+import pytz
 import redis
 
 from execution.service.helpers.exceptions import SignalRequired, SignalInvalid
@@ -10,6 +12,8 @@ from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
+
+from database.model.models import PortfolioTimeSeries, Pipeline
 
 
 fields = [

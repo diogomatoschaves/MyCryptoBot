@@ -22,7 +22,7 @@ class MockBinanceTrader:
         self.raise_symbol_already_traded = raise_symbol_already_traded
         self.raise_leverage_setting_failure = raise_leverage_setting_failure
 
-    def start_symbol_trading(self, symbol, header='', **kwargs):
+    def start_symbol_trading(self, symbol, starting_equity, header='', **kwargs):
         if self.raise_error_start_stop:
             raise BinanceAPIException(
                 '',
@@ -147,4 +147,10 @@ def spy_start_pipeline_trade(mocker):
     return mocker.spy(execution.service.app, "start_pipeline_trade")
 
 
-
+@pytest.fixture
+def mock_futures_symbol_ticker(mocker):
+    return mocker.patch.object(
+        execution.service.cron_jobs.save_pipelines_snapshot._save_pipelines_snapshot,
+        'get_ticker',
+        lambda symbol: {"price": 1000}
+    )

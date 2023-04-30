@@ -18,7 +18,7 @@ import {
     RawTrade,
     PipelinesMetrics,
     RawPipeline,
-    PipelinesObject, TradesObject, EditPipeline
+    PipelinesObject, TradesObject, EditPipeline, EquityTimeSeries
 } from "../types";
 import {
     getTrades,
@@ -29,17 +29,18 @@ import {
     startBot,
     stopBot,
     getPrice,
-    deleteBot, getPipelinesMetrics, editBot,
+    deleteBot, getPipelinesMetrics, editBot, getEquityTimeSeries,
 } from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
-import {parseTrade, organizePositions, organizePipeline} from "../utils/helpers";
+import {parseTrade, organizePositions, organizePipeline, convertDate} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import {StyledSegment} from "../styledComponents";
 import Dashboard from "./Dashboard";
 import {Header} from "semantic-ui-react";
+import {balanceReducer} from "../reducers/balancesReducer";
 
 
 const AppDiv: any = styled.div`
@@ -78,6 +79,7 @@ interface State {
     pipelines: PipelinesObject;
     positions: Position[];
     balances: BalanceObj
+    equityTimeSeries: EquityTimeSeries
     menuOption: MenuOption,
     strategies: any
     symbols: string[],
@@ -127,6 +129,10 @@ class App extends Component<Props, State> {
         balances: {
             test: {USDT: {availableBalance: 0, totalBalance: 0}},
             live: {USDT: {availableBalance: 0, totalBalance: 0}}
+        },
+        equityTimeSeries: {
+            test: [],
+            live: []
         },
         menuOption: {
             icon: 'line graph',
@@ -179,6 +185,8 @@ class App extends Component<Props, State> {
 
         this.getAccountBalance()
 
+        this.getTotalEquityTimeSeries()
+
         this.updatePipelinesMetrics()
     }
 
@@ -200,6 +208,7 @@ class App extends Component<Props, State> {
 
             if (pathname.includes('/dashboard')) {
                 this.getAccountBalance()
+                this.getTotalEquityTimeSeries()
                 this.getCurrentPrices()
                 this.getPricesInterval = setInterval(() => {
                     this.getCurrentPrices()
@@ -346,14 +355,17 @@ class App extends Component<Props, State> {
         }).catch(() => {})
     }
 
-    balanceReducer = (balance: any, coin: { asset: string; balance: string; withdrawAvailable: string; }) => {
-        return {
-            ...balance,
-            [coin.asset]: {
-                totalBalance: Number(coin.balance),
-                availableBalance: Number(coin.withdrawAvailable)
-            }
-        }
+    getTotalEquityTimeSeries = () => {
+        getEquityTimeSeries({pipelineId: null, timeFrame: '15m'})
+          .then(response => {
+              this.setState({
+                equityTimeSeries: {
+                    live: response.data.live,
+                    test: response.data.testnet,
+                }
+              })
+          })
+          .catch(() => {})
     }
 
     getAccountBalance = () => {
@@ -363,8 +375,8 @@ class App extends Component<Props, State> {
                   return {
                       ...state,
                       balances: {
-                          live: response.live.reduce(this.balanceReducer, {}),
-                          test: response.testnet.reduce(this.balanceReducer, {})
+                          live: response.live.reduce(balanceReducer, {}),
+                          test: response.testnet.reduce(balanceReducer, {})
                       }
                   }
               })
@@ -447,6 +459,7 @@ class App extends Component<Props, State> {
             strategies,
             currentPrices,
             pipelinesMetrics,
+            equityTimeSeries
         } = this.state
 
         const { decimals, menuProperties, location, removeToken, updateMessage } = this.props
@@ -517,6 +530,7 @@ class App extends Component<Props, State> {
                                   positions={positions}
                                   currentPrices={currentPrices}
                                   pipelinesMetrics={pipelinesMetrics}
+                                  equityTimeSeries={equityTimeSeries}
                                   updatePipelinesMetrics={this.updatePipelinesMetrics}
                                 />
                             </Route>

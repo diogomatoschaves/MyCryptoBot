@@ -23,7 +23,9 @@ RESPONSES = namedtuple(
         "COLOR_REQUIRED",
         "LEVERAGE_INVALID",
         "PIPELINE_START_FAIL",
-        "DATA_PIPELINE_COULD_NOT_BE_STOPPED"
+        "DATA_PIPELINE_COULD_NOT_BE_STOPPED",
+        "EQUITY_INVALID",
+        "EQUITY_REQUIRED"
     ]
 )
 
@@ -48,7 +50,9 @@ ReturnCodes = RESPONSES(
     COLOR_REQUIRED="COLOR_REQUIRED",
     LEVERAGE_INVALID="LEVERAGE_INVALID",
     PIPELINE_START_FAIL="PIPELINE_START_FAIL",
-    DATA_PIPELINE_COULD_NOT_BE_STOPPED="DATA_PIPELINE_COULD_NOT_BE_STOPPED"
+    DATA_PIPELINE_COULD_NOT_BE_STOPPED="DATA_PIPELINE_COULD_NOT_BE_STOPPED",
+    EQUITY_INVALID="EQUITY_INVALID",
+    EQUITY_REQUIRED="EQUITY_REQUIRED",
 )
 
 
@@ -95,5 +99,7 @@ Responses = RESPONSES(
     LEVERAGE_INVALID=lambda message: {"code": ReturnCodes.LEVERAGE_INVALID,
                                       "message": message, "success": False},
     PIPELINE_START_FAIL=lambda message: {"code": ReturnCodes.PIPELINE_START_FAIL,
-                                         "message": message, "success": False}
+                                         "message": message, "success": False},
+    EQUITY_INVALID=lambda message: {"code": ReturnCodes.EQUITY_INVALID, "message": message, "success": False},
+    EQUITY_REQUIRED=lambda message: {"code": ReturnCodes.EQUITY_REQUIRED, "message": message, "success": False}
 )

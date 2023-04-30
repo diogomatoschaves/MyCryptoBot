@@ -17,11 +17,7 @@ client = BinanceHandler()
 testnet_client = BinanceHandler(paper_trading=True)
 
 
-@market_data.route('/prices', methods=['GET'])
-def get_current_price():
-
-    symbol = request.args.get("symbol", None)
-
+def get_ticker(symbol):
     try:
         client.validate_symbol(symbol)
         return client.futures_symbol_ticker(symbol=symbol)
@@ -29,12 +25,28 @@ def get_current_price():
         return {}
 
 
+def get_balances():
+
+    testnet_balance = testnet_client.futures_account_balance()
+    live_balance = client.futures_account_balance()
+
+    return {"testnet": testnet_balance, "live": live_balance}
+
+
+@market_data.route('/prices', methods=['GET'])
+def get_current_price():
+
+    symbol = request.args.get("symbol", None)
+
+    return get_ticker(symbol)
+
+
 @market_data.route('/futures_account_balance', methods=['GET'])
 @retry_failed_connection(num_times=2)
 @jwt_required()
 def get_futures_account_balance():
 
-    balances = {"testnet": testnet_client.futures_account_balance(), "live": client.futures_account_balance()}
+    balances = get_balances()
 
     return jsonify(balances)
 

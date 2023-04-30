@@ -287,3 +287,11 @@ class Trade(models.Model):
             pipelineColor=self.pipeline.color if self.pipeline else None,
             leverage=self.leverage if self.leverage else self.pipeline.leverage if self.pipeline else None,
         )
+
+
+class PortfolioTimeSeries(models.Model):
+
+    pipeline = models.ForeignKey(Pipeline, on_delete=models.SET_NULL, null=True)
+    time = models.DateTimeField()
+    value = models.FloatField()
+    type = models.TextField(null=True, blank=True, default=None)

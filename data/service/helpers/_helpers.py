@@ -4,16 +4,17 @@ import logging
 import os
 
 import django
+import pandas as pd
 import pytz
 
 from data.service.helpers.exceptions import *
 from data.service.helpers.exceptions.data_pipeline_ongoing import DataPipelineOngoing
-from shared.utils.exceptions import SymbolInvalid
+from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Exchange, Pipeline, Symbol
+from database.model.models import Exchange, Pipeline, Symbol, PortfolioTimeSeries
 import shared.exchanges.binance.constants as const
 
 MODEL_APP_ENDPOINTS = {
@@ -31,7 +32,7 @@ EXECUTION_APP_ENDPOINTS = {
 }
 
 
-def check_input(binance_client, strategies, **kwargs):
+def check_input(strategies, **kwargs):
 
     if "pipeline_id" in kwargs and kwargs["pipeline_id"] and Pipeline.objects.filter(id=kwargs["pipeline_id"]).exists():
         return True
@@ -108,10 +109,19 @@ def check_input(binance_client, strategies, **kwargs):
         if not isinstance(kwargs["leverage"], int):
             raise LeverageInvalid(kwargs["leverage"])
 
+    if "equity" not in kwargs or kwargs["equity"] is None:
+        raise EquityRequired
+    else:
+        equity = kwargs["equity"]
+
+        if not isinstance(equity, (int, float)):
+            raise EquityInvalid(equity)
+
     return False
 
 
 def get_existing_pipeline(fields):
+
     pipeline = Pipeline.objects.get(**fields)
 
     if pipeline.active:
@@ -130,7 +140,7 @@ def get_or_create_pipeline(
     pipeline_id,
     name,
     color,
-    allocation,
+    initial_equity,
     symbol,
     candle_size,
     strategy,
@@ -139,6 +149,7 @@ def get_or_create_pipeline(
     paper_trading,
     leverage
 ):
+
     if exists:
         pipeline = get_existing_pipeline(dict(id=pipeline_id))
 
@@ -146,14 +157,15 @@ def get_or_create_pipeline(
         columns = dict(
             name=name,
             color=color,
-            allocation=allocation,
+            allocation=initial_equity,
             symbol_id=symbol,
             interval=candle_size,
             strategy=strategy,
             exchange_id=exchange,
             params=json.dumps(params),
             paper_trading=paper_trading,
-            leverage=leverage
+            leverage=leverage,
+            balance=initial_equity
         )
 
         try:
@@ -196,3 +208,19 @@ def convert_client_request(data):
         "color": data["color"],
         "leverage": data["leverage"]
     }
+
+
+def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, time_frame_converted='1H'):
+
+    if pipeline_id is not None:
+        timeseries = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).values('time', 'value')
+    else:
+        timeseries = PortfolioTimeSeries.objects.filter(type=account_type).values('time', 'value')
+
+    if len(timeseries) == 0:
+        return []
+
+    df = pd.DataFrame(timeseries).set_index('time').rename(columns={"value": "$"})
+    df = df.resample(time_frame_converted).first().ffill().reset_index()
+
+    return json.loads(df.to_json(orient='records'))

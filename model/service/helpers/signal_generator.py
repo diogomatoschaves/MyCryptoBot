@@ -72,6 +72,9 @@ def trigger_order(pipeline_id, signal, bearer_token, header=''):
 
     response = execute_order(pipeline_id, signal, bearer_token, header=header)
 
+    if response is None:
+        return False
+
     if "success" in response and response["success"]:
         logging.debug(header + "Order was executed successfully.")
         return True

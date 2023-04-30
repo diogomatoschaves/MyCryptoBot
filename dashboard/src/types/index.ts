@@ -195,6 +195,16 @@ export type TradesMetrics = {
     losingTrades: number
 }
 
+export type Data = {
+    time: number | string
+    $: number
+}
+
+export type EquityTimeSeries = {
+    live: Data[]
+    test: Data[]
+}
+
 export type StartPipeline = (pipelineParams: PipelineParams) => Promise<void>
 export type StopPipeline = (pipelineId: number) => Promise<void>
 export type EditPipeline = (pipelineParams: PipelineParams, pipelineId?: number) => Promise<void>

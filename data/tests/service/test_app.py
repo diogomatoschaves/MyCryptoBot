@@ -141,6 +141,19 @@ class TestDataService:
                 'A name must be included in the request.',
                 id="NAME_REQUIRED",
             ),
+            pytest.param(
+                {
+                    "name": "Hello World",
+                    "symbol": "BTCUSDT",
+                    "strategy": "MovingAverage",
+                    "params": {"ma": 30},
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
+                },
+                "EQUITY_REQUIRED",
+                'Parameter \'equity\' is required.',
+                id="EQUITY_REQUIRED",
+            ),
         ],
     )
     def test_start_bot_required_input_response(
@@ -244,6 +257,21 @@ class TestDataService:
                 lambda input_params: f'{input_params["leverage"]} is not a valid leverage.',
                 id="LEVERAGE_INVALID",
             ),
+            pytest.param(
+                {
+                    "name": "TEST",
+                    "symbol": "BTCUSDT",
+                    "strategy": "MovingAverage",
+                    "params": {"ma": 30},
+                    "candleSize": "1h",
+                    "exchanges": "Binance",
+                    "leverage": 20,
+                    "allocation": "refr"
+                },
+                "EQUITY_INVALID",
+                lambda input_params: f'{input_params["allocation"]} is not a valid equity.',
+                id="EQUITY_INVALID",
+            ),
         ],
     )
     def test_start_bot_invalid_input_response(
@@ -301,7 +329,8 @@ class TestDataService:
                     "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance",
-                    "leverage": 3
+                    "leverage": 3,
+                    "allocation": 1000
                 },
                 "DATA_PIPELINE_START_OK",
                 id="DATA_PIPELINE_START_OK",
@@ -345,7 +374,8 @@ class TestDataService:
                     "strategy": "MovingAverage",
                     "params": {"ma": 30},
                     "candleSize": "1h",
-                    "exchanges": "Binance"
+                    "exchanges": "Binance",
+                    "allocation": 1000
                 },
                 id="DATA_PIPELINE_FAIL_EXTERNAL_CALL",
             ),

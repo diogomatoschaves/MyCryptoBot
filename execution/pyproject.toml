@@ -6,7 +6,7 @@ authors = ["Diogo Matos Chaves <diogo_chaves@hotmail.com>"]
 
 [tool.poetry.dependencies]
 python = "~3.8"
-python-binance = "1.0.14"
+python-binance = "1.0.17"
 python-dotenv = "^0.17.0"
 Flask = "2.2.2"
 Django = "^3.1.7"
@@ -16,6 +16,7 @@ requests = "^2.25.1"
 redis = "^4.0.2"
 Flask-Cors = "^3.0.10"
 Flask-JWT-Extended = "4.4.4"
+APScheduler = "^3.10.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
@@ -24,7 +25,6 @@ pytest-mock = "^3.6.0"
 pytest-django = "^4.2.0"
 pytest-flask = "^1.2.0"
 ipython = "^7.22.0"
-pandas = "^1.2.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

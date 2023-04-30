@@ -205,7 +205,7 @@ class TestBinanceDataHandler:
                 {"success": False, "message": 'API ERROR'},
                 {"success": True, "positions": {"test": 1, "live": 1}},
                 {
-                    "pipeline_active": True,
+                    "pipeline_active": False,
                     "position_active": True,
                     "position_side": 1,
                 },
@@ -252,6 +252,7 @@ class TestBinanceDataHandler:
             binance_data_handler.stop_data_ingestion()
 
         pipeline = Pipeline.objects.get(id=pipeline_id)
+
         assert pipeline.active is expected_values["pipeline_active"]
 
         position = Position.objects.get(pipeline_id=pipeline_id)
