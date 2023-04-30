@@ -25,6 +25,7 @@ pytest-mock = "^3.6.0"
 pytest-django = "^4.2.0"
 pytest-flask = "^1.2.0"
 ipython = "^7.22.0"
+pandas = "^2.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
