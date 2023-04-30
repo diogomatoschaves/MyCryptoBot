@@ -13,7 +13,7 @@ from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotB
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
 from shared.exchanges import BinanceHandler
 from shared.trading import Trader
-from execution.service.helpers.decorators import binance_error_handler, handle_order_execution_errors
+from execution.service.helpers.decorators import handle_order_execution_errors
 from shared.utils.decorators.failed_connection import retry_failed_connection
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -120,8 +120,8 @@ class BinanceFuturesTrader(BinanceTrader):
     ):
         units_factor = 1
         if "reducing" in kwargs:
-            kwargs.update({"reduceOnly": True})
-            units_factor = 1.2
+            kwargs.update({"reduceOnly": False})
+            units_factor = 1
 
         units = self._convert_units(amount, units, symbol, units_factor)
 
