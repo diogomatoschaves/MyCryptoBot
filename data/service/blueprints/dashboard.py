@@ -279,3 +279,28 @@ def get_pipeline_equity(pipeline_id):
             )
 
         return jsonify({"success": True, "data": data})
+
+
+@dashboard.route('/pipelines-pnl', methods=["GET"], defaults={'pipeline_ids': ''})
+@dashboard.route('/pipelines-pnl/<pipeline_ids>')
+@jwt_required()
+@handle_db_connection_error
+def get_pipeline_pnl(pipeline_ids):
+
+    pipeline_ids = [int(pipeline_id) for pipeline_id in pipeline_ids.split(',')]
+
+    pipelines_pnl = {}
+    for pipeline_id in pipeline_ids:
+        first = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).first()
+        last = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).first()
+
+        if first and last:
+            pipelines_pnl[pipeline_id]["profit"] = (last.value - first.value)
+            pipelines_pnl[pipeline_id]["pnl"] = (last.value - first.value) / (first.value / first.pipeline.leverage)
+
+    return jsonify({"success": True, "pipelinesPnl": pipelines_pnl})
+
+
+
+
+

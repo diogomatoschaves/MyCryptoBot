@@ -212,7 +212,7 @@ class Pipeline(models.Model):
             paperTrading=self.paper_trading,
             openTime=self.open_time.isoformat() if self.open_time else None,
             numberTrades=self.trade_set.count(),
-            profitLoss=self.get_profit_loss(),
+            # profitLoss=self.get_profit_loss(),
             color=self.color,
             leverage=self.leverage,
             balance=self.balance,

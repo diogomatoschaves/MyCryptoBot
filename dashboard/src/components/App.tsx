@@ -29,7 +29,7 @@ import {
     startBot,
     stopBot,
     getPrice,
-    deleteBot, getPipelinesMetrics, editBot, getEquityTimeSeries,
+    deleteBot, getPipelinesMetrics, editBot, getEquityTimeSeries, getPipelinesPnl,
 } from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
 import Menu from "./Menu";
@@ -85,6 +85,7 @@ interface State {
     symbols: string[],
     currentPrices: Object
     pipelinesMetrics: PipelinesMetrics
+    pipelinesPnl: Object
 }
 
 interface Props {
@@ -103,6 +104,7 @@ class App extends Component<Props, State> {
     getPricesInterval: any
     getTradesInterval: any
     getPositionsInterval: any
+    getPipelinesPnlInterval: any
 
     static defaultProps = {
         decimals: {
@@ -147,7 +149,8 @@ class App extends Component<Props, State> {
             activePipelines: 0,
             bestWinRate: {winRate: 0},
             mostTrades: {totalTrades: 0}
-        }
+        },
+        pipelinesPnl: {}
     }
 
     componentDidMount() {
@@ -188,6 +191,8 @@ class App extends Component<Props, State> {
         this.getTotalEquityTimeSeries()
 
         this.updatePipelinesMetrics()
+
+        this.getPipelinesPnl()
     }
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
@@ -205,6 +210,7 @@ class App extends Component<Props, State> {
             clearInterval(this.getPricesInterval)
             clearInterval(this.getTradesInterval)
             clearInterval(this.getPositionsInterval)
+            clearInterval(this.getPipelinesPnlInterval)
 
             if (pathname.includes('/dashboard')) {
                 this.getAccountBalance()
@@ -223,7 +229,13 @@ class App extends Component<Props, State> {
 
             } else if (pathname.includes('/pipelines')){
                 this.updatePipelines()
+                this.getPipelinesPnl()
                 this.getCurrentPrices()
+
+                this.getPipelinesPnlInterval = setInterval(() => {
+                    this.getPipelinesPnl()
+                }, 60 * 1000)
+
 
             } else if (pathname.includes('/positions')){
                 this.updatePositions()
@@ -366,6 +378,21 @@ class App extends Component<Props, State> {
               })
           })
           .catch(() => {})
+    }
+
+    getPipelinesPnl = () => {
+        const {pipelines} = this.state
+        getPipelinesPnl(Object.keys(pipelines))
+          .then((response) => {
+              this.setState((state) => {
+                  return {
+                      pipelinesPnl: {
+                          ...state.pipelines,
+                          ...response.pipelinesPnl
+                      }
+                  }
+              })
+          })
     }
 
     getAccountBalance = () => {
