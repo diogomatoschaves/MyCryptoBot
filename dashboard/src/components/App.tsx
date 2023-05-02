@@ -197,10 +197,14 @@ class App extends Component<Props, State> {
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
 
-        const { symbols, trades } = this.state
+        const { symbols, trades, pipelines } = this.state
 
         if (prevState.symbols.length !== symbols.length) {
             this.getCurrentPrices()
+        }
+
+        if (Object.keys(prevState.pipelines).length !== Object.keys(pipelines).length) {
+            this.getPipelinesPnl()
         }
 
         const { pathname } = this.props.location
@@ -387,7 +391,7 @@ class App extends Component<Props, State> {
               this.setState((state) => {
                   return {
                       pipelinesPnl: {
-                          ...state.pipelines,
+                          ...state.pipelinesPnl,
                           ...response.pipelinesPnl
                       }
                   }
@@ -486,7 +490,8 @@ class App extends Component<Props, State> {
             strategies,
             currentPrices,
             pipelinesMetrics,
-            equityTimeSeries
+            equityTimeSeries,
+            pipelinesPnl
         } = this.state
 
         const { decimals, menuProperties, location, removeToken, updateMessage } = this.props
@@ -547,6 +552,7 @@ class App extends Component<Props, State> {
                                   trades={trades}
                                   currentPrices={currentPrices}
                                   updateTrades={this.updateTrades}
+                                  pipelinesPnl={pipelinesPnl}
                                 />
                               )}/>
                             <Route path="/dashboard">

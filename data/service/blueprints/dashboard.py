@@ -1,5 +1,6 @@
 import json
 import os
+from collections import defaultdict
 from functools import reduce
 
 import django
@@ -289,18 +290,13 @@ def get_pipeline_pnl(pipeline_ids):
 
     pipeline_ids = [int(pipeline_id) for pipeline_id in pipeline_ids.split(',')]
 
-    pipelines_pnl = {}
+    pipelines_pnl = defaultdict(lambda: {})
     for pipeline_id in pipeline_ids:
         first = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).first()
-        last = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).first()
+        last = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).last()
 
         if first and last:
-            pipelines_pnl[pipeline_id]["profit"] = (last.value - first.value)
-            pipelines_pnl[pipeline_id]["pnl"] = (last.value - first.value) / (first.value / first.pipeline.leverage)
+            pipelines_pnl[pipeline_id]["profit"] = round((last.value - first.value), 2)
+            pipelines_pnl[pipeline_id]["pnl"] = round((last.value - first.value) / (first.value / first.pipeline.leverage) * 100, 2)
 
     return jsonify({"success": True, "pipelinesPnl": pipelines_pnl})
-
-
-
-
-
