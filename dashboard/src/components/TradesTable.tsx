@@ -106,7 +106,7 @@ const TradesTable = (props: Props) => {
             <Table.HeaderCell>Leverage</Table.HeaderCell>
             <Table.HeaderCell>Entry Price</Table.HeaderCell>
             <Table.HeaderCell>Exit Price</Table.HeaderCell>
-            <Table.HeaderCell>Net Profit</Table.HeaderCell>
+            <Table.HeaderCell>PnL (ROI%)</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>

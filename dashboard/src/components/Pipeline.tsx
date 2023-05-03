@@ -171,7 +171,7 @@ function PipelineItem(props: Props) {
                     </Grid.Column>
                     <Grid.Column width={3}>
                         <Grid.Column floated='left' style={styles.header}>
-                            PnL (ROI%){!pipeline.active && '(All time)'}
+                            PnL (ROI%)
                         </Grid.Column>
                         <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
                             {pnl}

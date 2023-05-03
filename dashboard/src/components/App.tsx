@@ -396,7 +396,7 @@ class App extends Component<Props, State> {
                       }
                   }
               })
-          })
+          }).catch(() => {})
     }
 
     getAccountBalance = () => {
