@@ -1,6 +1,7 @@
 import json
 import sys
 from functools import reduce
+import math
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 
@@ -212,7 +213,7 @@ class Pipeline(models.Model):
             paperTrading=self.paper_trading,
             openTime=self.open_time.isoformat() if self.open_time else None,
             numberTrades=self.trade_set.count(),
-            profitLoss=self.get_profit_loss(),
+            # profitLoss=self.get_profit_loss(),
             color=self.color,
             leverage=self.leverage,
             balance=self.balance,
@@ -268,6 +269,9 @@ class Trade(models.Model):
     mock = models.BooleanField(null=True, default=False)
     pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
     leverage = models.IntegerField(null=True, default=None)
+
+    def get_profit_loss(self):
+        return math.exp(math.log(self.close_price / self.open_price) * self.side) - 1
 
     def as_json(self):
         return dict(

@@ -48,6 +48,7 @@ interface Props {
     balances: BalanceObj;
     pipelines: PipelinesObject;
     positions: Position[];
+    pipelinesPnl: any
 }
 
 
@@ -69,7 +70,8 @@ function PipelineItem(props: Props) {
         strategies,
         balances,
         positions,
-        pipelines
+        pipelines,
+        pipelinesPnl
     } = props
 
     const [open, setOpen] = useState(false)
@@ -81,9 +83,10 @@ function PipelineItem(props: Props) {
 
     const age = pipeline.openTime ? timeFormatterDate(pipeline.openTime) : "-"
 
-    const pnl = pipeline.profitLoss ? `${(pipeline.profitLoss * 100).toFixed(2)}%` : '-'
+    const pipelinePnl = pipelinesPnl[pipeline.id] || {profit: 0, pnl: 0}
+    const pnl = pipelinePnl ? `${pipelinePnl.profit} (${pipelinePnl.pnl}%)` : '-'
 
-    const color = pipeline.profitLoss > 0 ? GREEN : pipeline.profitLoss < 0 ? RED : "000000"
+    const color = pipelinePnl.profit > 0 ? GREEN : pipelinePnl.profit < 0 ? RED : "000000"
 
     return (
         <Segment
@@ -168,7 +171,7 @@ function PipelineItem(props: Props) {
                     </Grid.Column>
                     <Grid.Column width={3}>
                         <Grid.Column floated='left' style={styles.header}>
-                            PnL {!pipeline.active && '(All time)'}
+                            PnL (ROI%)
                         </Grid.Column>
                         <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
                             {pnl}

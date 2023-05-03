@@ -1,5 +1,6 @@
 import json
 import os
+from collections import defaultdict
 from functools import reduce
 
 import django
@@ -8,7 +9,7 @@ from django.db.models import Count, Max, Avg, F, Min, Q, Sum
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
-from data.service.external_requests import get_strategies
+from data.service.external_requests import get_strategies, get_price
 from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict, convert_client_request, \
     get_pipeline_equity_timeseries
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
@@ -279,3 +280,50 @@ def get_pipeline_equity(pipeline_id):
             )
 
         return jsonify({"success": True, "data": data})
+
+
+@dashboard.route('/pipelines-pnl', methods=["GET"], defaults={'pipeline_ids': ''})
+@dashboard.route('/pipelines-pnl/<pipeline_ids>')
+@jwt_required()
+@handle_db_connection_error
+def get_pipeline_pnl(pipeline_ids):
+
+    pipeline_ids = [int(pipeline_id) for pipeline_id in pipeline_ids.split(',')]
+
+    pipelines = Pipeline.objects.filter(id__in=pipeline_ids)
+
+    pipelines_pnl = defaultdict(lambda: {})
+    for pipeline in pipelines:
+
+        if pipeline.active:
+
+            response = get_price(pipeline.symbol.name)
+
+            if response is None:
+                continue
+
+            price = float(response["price"])
+
+        else:
+            if Trade.objects.filter(pipeline__id=pipeline.id).exists():
+                last_trade = Trade.objects.filter(pipeline__id=pipeline.id).last()
+                price = last_trade.close_price
+            else:
+                continue
+
+        try:
+            current_value = pipeline.balance + pipeline.units * price
+
+            initial_equity = pipeline.allocation
+            leverage = pipeline.leverage
+
+            profit = (current_value - initial_equity)
+            pnl = profit / (initial_equity / leverage)
+
+            pipelines_pnl[pipeline.id]["profit"] = round(profit, 2)
+            pipelines_pnl[pipeline.id]["pnl"] = round(pnl * 100, 2)
+
+        except TypeError:
+            continue
+
+    return jsonify({"success": True, "pipelinesPnl": pipelines_pnl})

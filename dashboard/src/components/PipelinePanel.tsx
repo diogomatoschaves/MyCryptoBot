@@ -44,6 +44,7 @@ interface Props {
     trades: TradesObject
     currentPrices: Object
     updateTrades: UpdateTrades
+    pipelinesPnl: Object
 }
 
 
@@ -117,6 +118,7 @@ function PipelinePanel(props: Props) {
         decimals,
         currentPrices,
         updateTrades,
+        pipelinesPnl,
         match: {params: {pipelineId}}
     } = props
 
@@ -172,7 +174,7 @@ function PipelinePanel(props: Props) {
                 strategiesOptions={strategiesOptions}
                 candleSizeOptions={candleSizeOptions}
                 exchangeOptions={exchangeOptions}
-
+                pipelinesPnl={pipelinesPnl}
               />
             ) : (
               <Wrapper>
@@ -237,6 +239,7 @@ function PipelinePanel(props: Props) {
                         pipeline={pipelines[pipelineId]}
                         lastRow={true}
                         position={positions.find((position) => String(position.pipelineId) === pipelineId)}
+                        pipelinesPnl={pipelinesPnl}
                     />
                   </Link>
                 ))}

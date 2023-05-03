@@ -57,6 +57,7 @@ interface Props {
   exchangeOptions: DropdownOptions[];
   strategies: any;
   balances: BalanceObj;
+  pipelinesPnl: Object
 }
 
 
@@ -81,6 +82,7 @@ function PipelineDetail(props: Props) {
     exchangeOptions,
     strategies,
     balances,
+    pipelinesPnl
   } = props
 
   const pipeline = pipelines[pipelineId]
@@ -107,6 +109,7 @@ function PipelineDetail(props: Props) {
               position={positions.find((position) => String(position.pipelineId) === pipelineId)}
               segmentStyle={styles.segment}
               lastRow={true}
+              pipelinesPnl={pipelinesPnl}
             />
           </Grid.Column>
           <Grid.Column width={6}>

@@ -29,10 +29,10 @@ function PositionRow(props: Props) {
     const markPrice = currentPrices[position.symbol]
 
     // @ts-ignore
-    const roi = markPrice ? getRoi(position.price, currentPrices[position.symbol], position.position, position.leverage)
+    const roi = markPrice ? getRoi(position.price, currentPrices[position.symbol], position.position, position.leverage) * 100
       : 0
 
-    const pnl = markPrice ? Math.abs((markPrice - position.price) * position.amount) : 0
+    const profit = markPrice ? (markPrice - position.price) * position.amount * position.position : 0
 
     const pnlColor = roi > 0 ? GREEN : RED
 
@@ -57,7 +57,7 @@ function PositionRow(props: Props) {
         <Table.Cell style={styles.quantityCell}>{markPrice ? markPrice.toFixed(quoteDecimal) : '-'}</Table.Cell>
         <Table.Cell style={styles.quantityCell}>{position.leverage}</Table.Cell>
         <Table.Cell style={{...styles.quantityCell, color: pnlColor}}>
-          {roi && `${pnl.toFixed(quoteDecimal)} USDT (${roi}%)`}
+          {roi && `${profit.toFixed(quoteDecimal)} USDT (${roi.toFixed(2)}%)`}
         </Table.Cell>
         <Table.Cell style={styles.defaultCell}>{position.exchange === 'binance' && <Image src={binanceLogo} size='tiny'/>}</Table.Cell>
       </Table.Row>

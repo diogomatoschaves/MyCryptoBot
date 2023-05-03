@@ -48,7 +48,10 @@ def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
         try:
             current_value = binance_obj.current_balance[symbol] + binance_obj.units[symbol] * current_price
 
-            current_value = current_value / position.pipeline.leverage
+            initial_equity = position.pipeline.allocation
+            leverage = position.pipeline.leverage
+
+            current_value = (current_value - initial_equity) + initial_equity / leverage
 
             PortfolioTimeSeries.objects.create(pipeline=position.pipeline, time=time, value=current_value)
 
@@ -59,7 +62,7 @@ def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
         except TypeError:
             continue
 
-    if pipeline_id is None:
+    if pipeline_id is None and len(open_positions) > 0:
         balances = get_balances()
 
         for account_type in balances:

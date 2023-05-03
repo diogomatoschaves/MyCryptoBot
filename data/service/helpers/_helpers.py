@@ -206,7 +206,9 @@ def convert_client_request(data):
         "params": json.dumps(data["params"]),
         "paper_trading": data["paperTrading"],
         "color": data["color"],
-        "leverage": data["leverage"]
+        "leverage": data["leverage"],
+        "balance": data["allocation"],
+        "units": 0
     }
 
 

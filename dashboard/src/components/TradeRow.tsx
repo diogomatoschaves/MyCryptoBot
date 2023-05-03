@@ -31,12 +31,14 @@ function TradeRow(props: Props) {
   const openPrice = Number(trade.openPrice)
   const closePrice = Number(trade.closePrice)
 
-  let pnl, pnlColor
-  if (trade.profitLoss !== null) {
+  let profit, pnl, pnlColor
+  if (trade.profitLoss !== null && trade.closePrice !== null) {
     pnlColor = trade.profitLoss > 0 ? GREEN : RED
+    profit = ((trade.closePrice - trade.openPrice) * trade.amount * trade.side).toFixed(2)
     pnl = (trade.profitLoss * trade.leverage * 100).toFixed(2)
   } else {
     pnlColor = '#000000'
+    profit = '-'
     pnl = '-'
   }
 
@@ -75,7 +77,7 @@ function TradeRow(props: Props) {
               {closePrice.toFixed(quoteDecimal)}
             </Table.Cell>
             <Table.Cell style={{...styles.defaultCell, ...styles.quantityCell, color: pnlColor}}>
-              {pnl && `${pnl}%`}
+              {`${profit} USDT (${pnl}%)`}
             </Table.Cell>
         </Table.Row>
     );

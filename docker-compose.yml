@@ -67,7 +67,7 @@ services:
       - APP_NAME=crypto-bot-execution
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
-      - SNAPSHOTS_INTERVAL=30
+      - SNAPSHOTS_INTERVAL=900
     volumes:
       - ./execution:/usr/src/app/execution
       - ./database:/usr/src/app/database

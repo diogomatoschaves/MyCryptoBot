@@ -231,7 +231,7 @@ export const timeFormatterDiff = (difference: number) => {
 }
 
 export const getRoi = (original: number, current: number, side: number, leverage: number) => {
-  return ((side * ((current / original) - 1)) * leverage * 100).toFixed(2)
+  return (Math.exp(Math.log(current / original) * side) - 1) * leverage
 }
 
 export const capitalize = (s: string) => {
