@@ -8,7 +8,7 @@ import {
     StopPipeline,
     UpdateMessage
 } from "../types";
-import {Button, Grid, Icon, Label, Segment} from "semantic-ui-react";
+import {Button, Grid, Icon, Label, Popup, Segment} from "semantic-ui-react";
 import {BLUE, DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import Ribbon from "../styledComponents/Ribbon";
 import styled from "styled-components";
@@ -126,14 +126,30 @@ function PipelineItem(props: Props) {
                             {pipeline.symbol}
                         </Grid.Column>
                     </Grid.Column>
-                    <Grid.Column width={4}>
-                        <Grid.Column floated='left' style={styles.header}>
-                            Strategy
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={styles.rightColumn} >
-                            {pipeline.strategy}
-                        </Grid.Column>
-                    </Grid.Column>
+                    <Popup
+                      floated='right'
+                      textAlign='right'
+                      pinned
+                      size={'large'}
+                      content={
+                          <div>
+                              {Object.keys(pipeline.params).map((param) => {
+                                  // @ts-ignore
+                                  return <div><span style={{fontWeight: 'bold'}}>{param}:</span> {pipeline.params[param]}</div>
+                              })}
+                          </div>
+                      }
+                      trigger={
+                          <Grid.Column width={4}>
+                              <Grid.Column floated='left' style={styles.header}>
+                                  Strategy
+                              </Grid.Column>
+                              <Grid.Column floated='right' style={styles.rightColumn}>
+                                  {pipeline.strategy}
+                              </Grid.Column>
+                          </Grid.Column>
+                      }
+                    />
                     <Grid.Column width={3}>
                         <Grid.Column floated='left' style={styles.header}>
                             Active since
