@@ -141,7 +141,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
         if previous_position != 0:
 
-            closing_order = orders.pop(0)
+            closing_order = orders.pop()
 
             last_trade = Trade.objects.filter(pipeline_id=pipeline_id, symbol_id=symbol).last()
 

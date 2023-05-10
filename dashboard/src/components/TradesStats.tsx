@@ -1,4 +1,5 @@
 import {Grid, Header, Segment} from "semantic-ui-react";
+import {Link} from 'react-router-dom'
 import {timeFormatterDiff} from "../utils/helpers";
 import {GREEN, RED} from "../utils/constants";
 import {TradesMetrics} from "../types";
@@ -32,63 +33,65 @@ const TradesStats = (props: Props) => {
 
   return (
     <Segment secondary raised style={{...styles.rowSegment, ...(style && style)}}>
-      <Header size={'medium'} color="purple">
-        Trades
-      </Header>
-      <Grid columns={3} style={{height: '100%'}}>
-        <Grid.Row>
-          <Grid.Column>
-            <Grid.Column style={styles.tradesHeader}>
-              # trades
+      <Link to='/trades'>
+        <Header size={'medium'} color="purple">
+          Trades
+        </Header>
+        <Grid columns={3} style={{height: '100%'}}>
+          <Grid.Row>
+            <Grid.Column>
+              <Grid.Column style={styles.tradesHeader}>
+                # trades
+              </Grid.Column>
+              <Grid.Column style={styles.tradesColumn} >
+                {numberTrades}
+              </Grid.Column>
             </Grid.Column>
-            <Grid.Column style={styles.tradesColumn} >
-              {numberTrades}
+            <Grid.Column>
+              <Grid.Column floated='left' style={styles.tradesHeader}>
+                Max trade duration
+              </Grid.Column>
+              <Grid.Column floated='right' style={styles.tradesColumn}>
+                {timeFormatterDiff(maxTradeDuration)}
+              </Grid.Column>
             </Grid.Column>
-          </Grid.Column>
-          <Grid.Column>
-            <Grid.Column floated='left' style={styles.tradesHeader}>
-              Max trade duration
+            <Grid.Column>
+              <Grid.Column floated='left' style={styles.tradesHeader}>
+                Avg trade duration
+              </Grid.Column>
+              <Grid.Column floated='right' style={styles.tradesColumn} >
+                {timeFormatterDiff(avgTradeDuration)}
+              </Grid.Column>
             </Grid.Column>
-            <Grid.Column floated='right' style={styles.tradesColumn}>
-              {timeFormatterDiff(maxTradeDuration)}
+          </Grid.Row>
+          <Grid.Row>
+            <Grid.Column>
+              <Grid.Column style={styles.tradesHeader}>
+                Win Rate
+              </Grid.Column>
+              <Grid.Column style={styles.tradesColumn} >
+                {winRate.toFixed(0)}%
+              </Grid.Column>
             </Grid.Column>
-          </Grid.Column>
-          <Grid.Column>
-            <Grid.Column floated='left' style={styles.tradesHeader}>
-              Avg trade duration
+            <Grid.Column>
+              <Grid.Column style={styles.tradesHeader}>
+                Best Trade
+              </Grid.Column>
+              <Grid.Column style={{...styles.tradesColumn, color: bestTrade > 0 ? GREEN : RED}} >
+                {(bestTrade * 100).toFixed(2)}%
+              </Grid.Column>
             </Grid.Column>
-            <Grid.Column floated='right' style={styles.tradesColumn} >
-              {timeFormatterDiff(avgTradeDuration)}
+            <Grid.Column>
+              <Grid.Column style={styles.tradesHeader}>
+                Worst Trade
+              </Grid.Column>
+              <Grid.Column style={{...styles.tradesColumn, color: worstTrade > 0 ? GREEN : RED}} >
+                {(worstTrade * 100).toFixed(2)}%
+              </Grid.Column>
             </Grid.Column>
-          </Grid.Column>
-        </Grid.Row>
-        <Grid.Row>
-          <Grid.Column>
-            <Grid.Column style={styles.tradesHeader}>
-              Win Rate
-            </Grid.Column>
-            <Grid.Column style={styles.tradesColumn} >
-              {winRate.toFixed(0)}%
-            </Grid.Column>
-          </Grid.Column>
-          <Grid.Column>
-            <Grid.Column style={styles.tradesHeader}>
-              Best Trade
-            </Grid.Column>
-            <Grid.Column style={{...styles.tradesColumn, color: bestTrade > 0 ? GREEN : RED}} >
-              {(bestTrade * 100).toFixed(2)}%
-            </Grid.Column>
-          </Grid.Column>
-          <Grid.Column>
-            <Grid.Column style={styles.tradesHeader}>
-              Worst Trade
-            </Grid.Column>
-            <Grid.Column style={{...styles.tradesColumn, color: worstTrade > 0 ? GREEN : RED}} >
-              {(worstTrade * 100).toFixed(2)}%
-            </Grid.Column>
-          </Grid.Column>
-        </Grid.Row>
-      </Grid>
+          </Grid.Row>
+        </Grid>
+      </Link>
     </Segment>
   )
 }

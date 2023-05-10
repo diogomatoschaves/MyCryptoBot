@@ -4,6 +4,7 @@ import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import React from "react";
 import {getRoi, timeFormatterDate} from "../utils/helpers";
 import binanceLogo from '../utils/resources/binance.png'
+import TradingBotLabel from "./TradingBotLabel";
 
 
 interface Props {
@@ -37,13 +38,12 @@ function PositionRow(props: Props) {
     const pnlColor = roi > 0 ? GREEN : RED
 
     const pipeline = pipelines[position.pipelineId]
-    const pipelineColor = pipeline ? pipeline.color : undefined
+    const pipelineColor = pipeline && pipeline.color
 
     return (
       <Table.Row key={index}>
         <Table.Cell style={styles.defaultCell}>
-          {/*@ts-ignore*/}
-            <Label ribbon color={pipelineColor}><span style={styles.ribbon}>{position.pipelineName}</span></Label>
+            <TradingBotLabel pipelineId={position.pipelineId} name={position.pipelineName} color={pipelineColor}/>
         </Table.Cell>
         <Table.Cell style={{...styles.defaultCell, fontWeight: 600}}>
           <Label basic color='blue'>{position.paperTrading ? "test" : "live"}</Label>
@@ -76,11 +76,4 @@ const styles = {
         color: 'rgb(70, 70, 70)',
         fontWeight: '600',
     },
-    ribbon: {
-        display: 'inline-block',
-        maxWidth: '80px',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-    }
 }

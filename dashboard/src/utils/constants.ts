@@ -10,6 +10,7 @@ export const TEAL = '#00B5AD'
 
 
 export const COLORS = [PURPLE, VIOLET, PINK, BLUE, TEAL, GREEN, RED, YELLOW]
+export const COLORS_ALT = [TEAL, BLUE, VIOLET, PURPLE, PINK, GREEN, RED, YELLOW]
 export const COLORS_NAMES = ['PURPLE', 'VIOLET', 'PINK', 'BLUE', 'TEAL', 'GREEN', 'RED', 'YELLOW']
 
 

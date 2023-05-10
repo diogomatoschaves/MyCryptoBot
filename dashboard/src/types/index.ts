@@ -200,6 +200,12 @@ export type Data = {
     $: number
 }
 
+export type PieChartData = {
+    name: string
+    value: number
+    color: string
+}
+
 export type EquityTimeSeries = {
     live: Data[]
     test: Data[]

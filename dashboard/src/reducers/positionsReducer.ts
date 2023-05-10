@@ -13,10 +13,9 @@ export const positionsReducerCallback = (currentPrices: Object) => (metrics: any
 
   return {
     openPositions: metrics.openPositions + 1,
-
     totalEquityPositions: metrics.totalEquityPositions + currentValue,
     totalInitialEquity: metrics.totalInitialEquity + initialValue,
-    pnl: metrics.pnl + pnl * initialValue,
+    pnl: position.amount ? metrics.pnl + pnl * initialValue : metrics.pnl,
     symbolsCount: {
       ...metrics.symbolsCount,
       [position.symbol]: metrics.symbolsCount[position.symbol] ? metrics.symbolsCount[position.symbol] + 1 : 1

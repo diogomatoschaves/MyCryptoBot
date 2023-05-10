@@ -9,8 +9,8 @@ import {
 } from "../types";
 import {StyledSegment} from "../styledComponents";
 import {useEffect, useReducer, useRef, useState} from "react";
-import {PieChart} from 'react-minimal-pie-chart';
-import {COLORS, GREEN, RED} from "../utils/constants";
+import {COLORS, COLORS_ALT, GREEN, RED} from "../utils/constants";
+import {Link} from 'react-router-dom'
 import {
   positionsReducer,
   positionsReducerCallback,
@@ -20,6 +20,8 @@ import {
 import {getTradesMetrics} from "../apiCalls";
 import TradesStats from "./TradesStats";
 import PortfolioChart from "./PortfolioChart";
+import TradingBotLabel from "./TradingBotLabel";
+import CustomPieChart from "./CustomPieChart";
 
 
 interface Props {
@@ -61,7 +63,8 @@ function Dashboard(props: Props) {
     winningTrades: 0,
     losingTrades: 0,
     bestTrade: 0,
-    worstTrade: 0
+    worstTrade: 0,
+    tradesCount: []
   })
 
   const fetchTradesData = async () => {
@@ -108,11 +111,19 @@ function Dashboard(props: Props) {
     pnlColor = '#6435C9'
   }
 
-  const pieChartData = Object.keys(symbolsCount).map((symbol, index) => ({
-    title: symbol,
-    value: (symbolsCount[symbol] / openPositions * 100),
+  const positionsPieChartData = Object.keys(symbolsCount).map((symbol, index) => ({
+    name: symbol,
+    value: symbolsCount[symbol],
     color: COLORS[index],
   }))
+
+  const tradesPieChartData = tradesMetrics.tradesCount.map((entry, index) => {
+    return {
+      // @ts-ignore
+      ...entry,
+      color: COLORS_ALT[index],
+    }
+  })
 
 
   return (
@@ -120,136 +131,169 @@ function Dashboard(props: Props) {
         <Grid style={{width: '100%'}}>
           <Grid.Column style={{width: '100%'}} className="flex-column">
             <Grid.Row style={{width: '100%'}} className="flex-row">
-              <Segment secondary raised style={styles.rowSegment}>
+              <Segment secondary raised style={{...styles.rowSegment}}>
                 <Header size={'medium'} color="blue">
-                  Balance
-                </Header>
-                <Grid columns={3}>
-                  {Object.keys(balances).map(account => (
-                    <Grid.Row>
-                      <Grid.Column style={styles.balanceTitle}>
-                        <Label basic color='blue' size="large">
-                          {account}
-                        </Label>
-                      </Grid.Column>
-                      <Grid.Column>
-                        <Grid.Column style={styles.balanceHeader}>
-                          Total Equity
-                        </Grid.Column>
-                        <Grid.Column style={styles.balanceColumn} >
-                          {/*@ts-ignore*/}
-                          {`${balances[account].USDT.totalBalance.toFixed(1)} $USDT`}
-                        </Grid.Column>
-                      </Grid.Column>
-                      <Grid.Column>
-                        <Grid.Column style={styles.balanceHeader}>
-                          Available Equity
-                        </Grid.Column>
-                        <Grid.Column style={styles.balanceColumn} >
-                          {/*@ts-ignore*/}
-                          {`${balances[account].USDT.availableBalance.toFixed(1)} $USDT`}
-                        </Grid.Column>
-                      </Grid.Column>
-                    </Grid.Row>
-                  ))}
-                </Grid>
-              </Segment>
-              <Segment secondary raised style={styles.rowSegment}>
-                <Header size={'medium'} color="teal">
-                  Trading Bots
+                  Equity
+                  <Label basic color='blue' >
+                    {'live'}
+                  </Label>
                 </Header>
                 <Grid columns={2}>
                   <Grid.Row>
                     <Grid.Column>
-                      <Grid.Column style={styles.pipelinesHeader}>
-                        # trading bots
+                      <Grid.Column style={styles.balanceHeader}>
+                        Total Equity
                       </Grid.Column>
-                      <Grid.Column style={styles.pipelinesColumn} >
-                        {totalPipelines}
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.pipelinesHeader}>
-                        # active trading bots
-                      </Grid.Column>
-                      <Grid.Column floated='right' style={styles.pipelinesColumn}>
-                        {activePipelines}
-                      </Grid.Column>
-                    </Grid.Column>
-                  </Grid.Row>
-                  <Grid.Row>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.pipelinesHeader}>
-                        Best Win Rate
-                      </Grid.Column>
-                      <Grid.Column floated='right' style={styles.pipelinesColumn}>
+                      <Grid.Column style={styles.balanceColumn} >
                         {/*@ts-ignore*/}
-                        {bestWinRate && <Label color={bestWinRate.color}>{bestWinRate.name}</Label>}
+                        {`${balances.live.USDT.totalBalance.toFixed(1)} $USDT`}
                       </Grid.Column>
                     </Grid.Column>
                     <Grid.Column>
-                      <Grid.Column style={styles.pipelinesHeader}>
-                        Most Trades
+                      <Grid.Column style={styles.balanceHeader}>
+                        Available Equity
                       </Grid.Column>
-                      <Grid.Column style={styles.pipelinesColumn}>
+                      <Grid.Column style={styles.balanceColumn} >
                         {/*@ts-ignore*/}
-                        {mostTrades && <Label color={mostTrades.color}>{mostTrades.name}</Label>}
+                        {`${balances.live.USDT.availableBalance.toFixed(1)} $USDT`}
                       </Grid.Column>
                     </Grid.Column>
                   </Grid.Row>
                 </Grid>
-              </Segment>
-            </Grid.Row>
-            <Grid.Row style={{width: '100%'}} className="flex-row">
-              <Segment secondary raised style={{...styles.rowSegment}}>
-                <Header size={'medium'} color="pink">
-                  Positions
-                </Header>
-                <Grid columns={3}>
-                  <Grid.Row>
-                    <Grid.Column>
-                      <Grid.Column style={styles.positionsHeader}>
-                        # positions
-                      </Grid.Column>
-                      <Grid.Column style={styles.positionsColumn} >
-                        {openPositions}
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.positionsHeader}>
-                        Total Size
-                      </Grid.Column>
-                      <Grid.Column floated='right' style={styles.positionsColumn} >
-                        {totalEquityPositions.toFixed(1)} USDT
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.positionsHeader}>
-                        Net profit
-                      </Grid.Column>
-                      <Grid.Column floated='right' style={{...styles.positionsColumn, color: pnlColor}} >
-                        {totalPnl}
-                      </Grid.Column>
-                    </Grid.Column>
-                  </Grid.Row>
-                  <Grid.Row>
-                  </Grid.Row>
-                </Grid>
-              </Segment>
-              <TradesStats tradesMetrics={tradesMetrics} style={styles.tradesStatsStyle}/>
-            </Grid.Row>
-            <Grid.Row style={{width: '100%'}} className="flex-row">
-              <Segment secondary raised style={{...styles.rowSegment}}>
-                <Header size={'medium'} color="blue">
-                  Equity (live)
-                </Header>
                 <PortfolioChart dataProp={equityTimeSeries.live}/>
               </Segment>
               <Segment secondary raised style={{...styles.rowSegment}}>
                 <Header size={'medium'} color="blue">
-                  Equity (test)
+                  Equity
+                  <Label basic color='blue' >
+                    {'test'}
+                  </Label>
                 </Header>
+                <Grid columns={2}>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <Grid.Column style={styles.balanceHeader}>
+                        Total Equity
+                      </Grid.Column>
+                      <Grid.Column style={styles.balanceColumn} >
+                        {/*@ts-ignore*/}
+                        {`${balances.test.USDT.totalBalance.toFixed(1)} $USDT`}
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column style={styles.balanceHeader}>
+                        Available Equity
+                      </Grid.Column>
+                      <Grid.Column style={styles.balanceColumn} >
+                        {/*@ts-ignore*/}
+                        {`${balances.test.USDT.availableBalance.toFixed(1)} $USDT`}
+                      </Grid.Column>
+                    </Grid.Column>
+                  </Grid.Row>
+                </Grid>
                 <PortfolioChart dataProp={equityTimeSeries.test}/>
+              </Segment>
+            </Grid.Row>
+            <Grid.Row style={{width: '100%'}} className="flex-row">
+              <Segment secondary raised style={styles.rowSegment}>
+                <Link to="/pipelines">
+                  <Header size={'medium'} color="teal">
+                    Trading Bots
+                  </Header>
+                  <Grid columns={2}>
+                    <Grid.Row>
+                      <Grid.Column>
+                        <Grid.Column style={styles.pipelinesHeader}>
+                          # trading bots
+                        </Grid.Column>
+                        <Grid.Column style={styles.pipelinesColumn} >
+                          {totalPipelines}
+                        </Grid.Column>
+                      </Grid.Column>
+                      <Grid.Column>
+                        <Grid.Column floated='left' style={styles.pipelinesHeader}>
+                          # active trading bots
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={styles.pipelinesColumn}>
+                          {activePipelines}
+                        </Grid.Column>
+                      </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row>
+                      <Grid.Column>
+                        <Grid.Column floated='left' style={styles.pipelinesHeader}>
+                          Best Win Rate
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={styles.pipelinesColumn}>
+                          {bestWinRate && <TradingBotLabel pipelineId={bestWinRate.id} name={bestWinRate.name} color={bestWinRate.color}/>}
+                        </Grid.Column>
+                      </Grid.Column>
+                      <Grid.Column>
+                        <Grid.Column style={styles.pipelinesHeader}>
+                          Most Trades
+                        </Grid.Column>
+                        <Grid.Column style={styles.pipelinesColumn}>
+                          {mostTrades && <TradingBotLabel pipelineId={mostTrades.id} name={mostTrades.name} color={mostTrades.color}/>}
+                        </Grid.Column>
+                      </Grid.Column>
+                    </Grid.Row>
+                  </Grid>
+                </Link>
+              </Segment>
+              <TradesStats tradesMetrics={tradesMetrics} style={styles.tradesStatsStyle}/>
+            </Grid.Row>
+            <Grid.Row style={{width: '100%'}} className="flex-row">
+              <Segment secondary raised style={{...styles.rowSegment, minHeight: '245px'}}>
+                <Link to='/positions'>
+                  <Header size={'medium'} color="pink">
+                    Positions
+                  </Header>
+                  <Grid columns={3}>
+                    <Grid.Row>
+                      <Grid.Column>
+                        <Grid.Column style={styles.positionsHeader}>
+                          # positions
+                        </Grid.Column>
+                        <Grid.Column style={styles.positionsColumn} >
+                          {openPositions}
+                        </Grid.Column>
+                      </Grid.Column>
+                      <Grid.Column>
+                        <Grid.Column floated='left' style={styles.positionsHeader}>
+                          Total Size
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={styles.positionsColumn} >
+                          {totalEquityPositions.toFixed(1)} USDT
+                        </Grid.Column>
+                      </Grid.Column>
+                      <Grid.Column>
+                        <Grid.Column floated='left' style={styles.positionsHeader}>
+                          Net profit
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={{...styles.positionsColumn, color: pnlColor}} >
+                          {totalPnl}
+                        </Grid.Column>
+                      </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row>
+                    </Grid.Row>
+                  </Grid>
+                </Link>
+              </Segment>
+              <Segment secondary raised style={{...styles.rowSegment}}>
+                <Header size={'medium'} color="pink">
+                  Currencies
+                </Header>
+                <Grid>
+                  <Grid.Row columns={2}>
+                    <Grid.Column>
+                      <CustomPieChart title={'Positions'} pieChartData={positionsPieChartData}/>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <CustomPieChart title={'Trades'} pieChartData={tradesPieChartData}/>
+                    </Grid.Column>
+                  </Grid.Row>
+                </Grid>
               </Segment>
             </Grid.Row>
           </Grid.Column>

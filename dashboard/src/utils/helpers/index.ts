@@ -95,9 +95,9 @@ export const validatePipelineCreation = async (
   }
 
   if (edit) {
-    editPipeline(payload, pipelineId)
+    await editPipeline(payload, pipelineId)
   } else {
-    startPipeline(payload)
+    await startPipeline(payload)
   }
 
   return true
@@ -108,16 +108,19 @@ export const validateParams = (params: any, strategy: any) => {
   const requiredParams = strategy.paramsOrder.reduce((reduced: any, param: string) => {
     if (!params.hasOwnProperty(param) || (params[param] === "")) {
       return {
-        success: reduced.success && false,
+        success: false,
         params: reduced.params
       }
     }
 
-    const typedParam = eval(strategy.params[param].type.func)(params[param])
-    if (isNaN(typedParam) || typeof(typedParam) !== strategy.params[param].type.type) {
-      return {
-        success: reduced.success && false,
-        params: reduced.params
+    let typedParam
+    if (strategy.params[param].type) {
+      typedParam = eval(strategy.params[param].type.func)(params[param])
+      if (isNaN(typedParam) || typeof(typedParam) !== strategy.params[param].type.type) {
+        return {
+          success: false,
+          params: reduced.params
+        }
       }
     }
 
@@ -125,7 +128,7 @@ export const validateParams = (params: any, strategy: any) => {
       success: reduced.success,
       params: {
         ...reduced.params,
-        [param]: typedParam
+        [param]: typedParam ? typedParam : params[param]
       }
     }
   }, {success: true, params: {}})
@@ -142,11 +145,14 @@ export const validateParams = (params: any, strategy: any) => {
     const paramData = strategy.optionalParams[param]
     const paramValue = paramData.options ? paramData.options[params[param]] : params[param]
 
-    const typedParam = eval(strategy.optionalParams[param].type.func)(paramValue)
-    if (typedParam !== typedParam || typeof(typedParam) !== paramData.type.type) {
-      return {
-        success: reduced.success && false,
-        params: reduced.params
+    let typedParam
+    if (strategy.params[param].type) {
+      const typedParam = eval(strategy.optionalParams[param].type.func)(paramValue)
+      if (typedParam !== typedParam || typeof (typedParam) !== paramData.type.type) {
+        return {
+          success: reduced.success && false,
+          params: reduced.params
+        }
       }
     }
 
@@ -154,7 +160,7 @@ export const validateParams = (params: any, strategy: any) => {
       success: reduced.success,
       params: {
         ...reduced.params,
-        [param]: typedParam
+        [param]: typedParam ? typedParam : paramValue
       }
     }
   }, {success: true, params: {}})
