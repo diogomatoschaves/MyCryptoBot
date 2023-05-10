@@ -39,7 +39,7 @@ import {parseTrade, organizePositions, organizePipeline, convertDate} from "../u
 import PositionsPanel from "./PositionsPanel";
 import {StyledSegment} from "../styledComponents";
 import Dashboard from "./Dashboard";
-import {Header} from "semantic-ui-react";
+import {Header, Label} from "semantic-ui-react";
 import {balanceReducer} from "../reducers/balancesReducer";
 
 
@@ -57,15 +57,16 @@ const MenuColumn = styled.div`
     bottom: 0;
     top: 0;
     width: 25vw;
+    max-width: 300px;
 `
 
 const AppColumn: any = styled.div`
     position: absolute;
-    left: 25vw;
+    left: min(25vw, 300px);
     bottom: 0;
     top: 0;
     right: 0;
-    width: 75vw;
+    width: calc(100vw - min(25vw, 300px));
     height: 100vh;
     overflow-x: ${(props: any) => props.overflowX ? props.overflowX : 'hidden'};
 `
@@ -516,9 +517,11 @@ class App extends Component<Props, State> {
                         className="flex-column"
                     >
                         {menuOption && (
-                          <Header size={'large'} dividing style={{height: '40px'}}>
-                            <span style={{marginRight: 10}}>{menuOption.emoji}</span>
-                            {menuOption.text}
+                          <Header size={'large'} style={{height: '40px', marginTop: '10px'}}>
+                              <Label size={'big'}>
+                                {menuOption.text}
+                                <span style={{marginLeft: 10}}>{menuOption.emoji}</span>
+                              </Label>
                           </Header>
                         )}
                         <Switch>
