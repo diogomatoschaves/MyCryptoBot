@@ -1,3 +1,4 @@
 from model.strategies.moving_average.ma import MovingAverage
 from model.strategies.moving_average.ma_crossover import MovingAverageCrossover
 from model.strategies.moving_average.macd import MovingAverageConvergenceDivergence
+from model.strategies.moving_average.test_strategy import BollingerBandsMACD

@@ -50,7 +50,7 @@ const CustomPieChart = (props: Props) => {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Legend />
+            {pieChartData.length <= 3 && <Legend />}
             <Tooltip />
           </PieChart>
         </ResponsiveContainer>
