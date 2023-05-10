@@ -9,8 +9,7 @@ import {
 } from "../types";
 import {StyledSegment} from "../styledComponents";
 import {useEffect, useReducer, useRef, useState} from "react";
-import {PieChart} from 'react-minimal-pie-chart';
-import {COLORS, GREEN, RED} from "../utils/constants";
+import {COLORS, COLORS_ALT, GREEN, RED} from "../utils/constants";
 import {Link} from 'react-router-dom'
 import {
   positionsReducer,
@@ -22,6 +21,7 @@ import {getTradesMetrics} from "../apiCalls";
 import TradesStats from "./TradesStats";
 import PortfolioChart from "./PortfolioChart";
 import TradingBotLabel from "./TradingBotLabel";
+import CustomPieChart from "./CustomPieChart";
 
 
 interface Props {
@@ -63,7 +63,8 @@ function Dashboard(props: Props) {
     winningTrades: 0,
     losingTrades: 0,
     bestTrade: 0,
-    worstTrade: 0
+    worstTrade: 0,
+    tradesCount: []
   })
 
   const fetchTradesData = async () => {
@@ -110,11 +111,19 @@ function Dashboard(props: Props) {
     pnlColor = '#6435C9'
   }
 
-  const pieChartData = Object.keys(symbolsCount).map((symbol, index) => ({
-    title: symbol,
-    value: (symbolsCount[symbol] / openPositions * 100),
+  const positionsPieChartData = Object.keys(symbolsCount).map((symbol, index) => ({
+    name: symbol,
+    value: symbolsCount[symbol],
     color: COLORS[index],
   }))
+
+  const tradesPieChartData = tradesMetrics.tradesCount.map((entry, index) => {
+    return {
+      // @ts-ignore
+      ...entry,
+      color: COLORS_ALT[index],
+    }
+  })
 
 
   return (
@@ -122,40 +131,70 @@ function Dashboard(props: Props) {
         <Grid style={{width: '100%'}}>
           <Grid.Column style={{width: '100%'}} className="flex-column">
             <Grid.Row style={{width: '100%'}} className="flex-row">
-              <Segment secondary raised style={styles.rowSegment}>
+              <Segment secondary raised style={{...styles.rowSegment}}>
                 <Header size={'medium'} color="blue">
-                  Balance
+                  Equity
+                  <Label basic color='blue' >
+                    {'live'}
+                  </Label>
                 </Header>
-                <Grid columns={3}>
-                  {Object.keys(balances).map(account => (
-                    <Grid.Row>
-                      <Grid.Column style={styles.balanceTitle}>
-                        <Label basic color='blue' size="large">
-                          {account}
-                        </Label>
+                <Grid columns={2}>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <Grid.Column style={styles.balanceHeader}>
+                        Total Equity
                       </Grid.Column>
-                      <Grid.Column>
-                        <Grid.Column style={styles.balanceHeader}>
-                          Total Equity
-                        </Grid.Column>
-                        <Grid.Column style={styles.balanceColumn} >
-                          {/*@ts-ignore*/}
-                          {`${balances[account].USDT.totalBalance.toFixed(1)} $USDT`}
-                        </Grid.Column>
+                      <Grid.Column style={styles.balanceColumn} >
+                        {/*@ts-ignore*/}
+                        {`${balances.live.USDT.totalBalance.toFixed(1)} $USDT`}
                       </Grid.Column>
-                      <Grid.Column>
-                        <Grid.Column style={styles.balanceHeader}>
-                          Available Equity
-                        </Grid.Column>
-                        <Grid.Column style={styles.balanceColumn} >
-                          {/*@ts-ignore*/}
-                          {`${balances[account].USDT.availableBalance.toFixed(1)} $USDT`}
-                        </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column style={styles.balanceHeader}>
+                        Available Equity
                       </Grid.Column>
-                    </Grid.Row>
-                  ))}
+                      <Grid.Column style={styles.balanceColumn} >
+                        {/*@ts-ignore*/}
+                        {`${balances.live.USDT.availableBalance.toFixed(1)} $USDT`}
+                      </Grid.Column>
+                    </Grid.Column>
+                  </Grid.Row>
                 </Grid>
+                <PortfolioChart dataProp={equityTimeSeries.live}/>
               </Segment>
+              <Segment secondary raised style={{...styles.rowSegment}}>
+                <Header size={'medium'} color="blue">
+                  Equity
+                  <Label basic color='blue' >
+                    {'test'}
+                  </Label>
+                </Header>
+                <Grid columns={2}>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <Grid.Column style={styles.balanceHeader}>
+                        Total Equity
+                      </Grid.Column>
+                      <Grid.Column style={styles.balanceColumn} >
+                        {/*@ts-ignore*/}
+                        {`${balances.test.USDT.totalBalance.toFixed(1)} $USDT`}
+                      </Grid.Column>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <Grid.Column style={styles.balanceHeader}>
+                        Available Equity
+                      </Grid.Column>
+                      <Grid.Column style={styles.balanceColumn} >
+                        {/*@ts-ignore*/}
+                        {`${balances.test.USDT.availableBalance.toFixed(1)} $USDT`}
+                      </Grid.Column>
+                    </Grid.Column>
+                  </Grid.Row>
+                </Grid>
+                <PortfolioChart dataProp={equityTimeSeries.test}/>
+              </Segment>
+            </Grid.Row>
+            <Grid.Row style={{width: '100%'}} className="flex-row">
               <Segment secondary raised style={styles.rowSegment}>
                 <Link to="/pipelines">
                   <Header size={'medium'} color="teal">
@@ -201,9 +240,10 @@ function Dashboard(props: Props) {
                   </Grid>
                 </Link>
               </Segment>
+              <TradesStats tradesMetrics={tradesMetrics} style={styles.tradesStatsStyle}/>
             </Grid.Row>
             <Grid.Row style={{width: '100%'}} className="flex-row">
-              <Segment secondary raised style={{...styles.rowSegment}}>
+              <Segment secondary raised style={{...styles.rowSegment, minHeight: '245px'}}>
                 <Link to='/positions'>
                   <Header size={'medium'} color="pink">
                     Positions
@@ -240,20 +280,20 @@ function Dashboard(props: Props) {
                   </Grid>
                 </Link>
               </Segment>
-              <TradesStats tradesMetrics={tradesMetrics} style={styles.tradesStatsStyle}/>
-            </Grid.Row>
-            <Grid.Row style={{width: '100%'}} className="flex-row">
               <Segment secondary raised style={{...styles.rowSegment}}>
-                <Header size={'medium'} color="blue">
-                  Equity (live)
+                <Header size={'medium'} color="pink">
+                  Currencies
                 </Header>
-                <PortfolioChart dataProp={equityTimeSeries.live}/>
-              </Segment>
-              <Segment secondary raised style={{...styles.rowSegment}}>
-                <Header size={'medium'} color="blue">
-                  Equity (test)
-                </Header>
-                <PortfolioChart dataProp={equityTimeSeries.test}/>
+                <Grid>
+                  <Grid.Row columns={2}>
+                    <Grid.Column>
+                      <CustomPieChart title={'Positions'} pieChartData={positionsPieChartData}/>
+                    </Grid.Column>
+                    <Grid.Column>
+                      <CustomPieChart title={'Trades'} pieChartData={tradesPieChartData}/>
+                    </Grid.Column>
+                  </Grid.Row>
+                </Grid>
               </Segment>
             </Grid.Row>
           </Grid.Column>

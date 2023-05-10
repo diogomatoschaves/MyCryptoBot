@@ -49,15 +49,13 @@ const PortfolioChart = (props: Props) => {
   return (
       <Fragment>
         {data.length > 0 && (
-          <ResponsiveContainer width="97%" height={200}>
+          <ResponsiveContainer width="97%" height={180}>
             <AreaChart
-              width={200}
-              height={80}
               data={data}
               margin={{
                 top: 30,
                 right: 0,
-                left: 0,
+                left: 5,
                 bottom: 0,
               }}
             >

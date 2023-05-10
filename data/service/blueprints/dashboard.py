@@ -18,7 +18,7 @@ from shared.utils.decorators import handle_db_connection_error
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol, Exchange, Pipeline, Position, Trade, PortfolioTimeSeries
+from database.model.models import Symbol, Exchange, Pipeline, Position, Trade
 
 dashboard = Blueprint('dashboard', __name__)
 
@@ -187,6 +187,17 @@ def get_trades_metrics():
     )
 
     aggregate_values = convert_trades_to_dict(aggregate_values)
+
+    symbols_objs = Symbol.objects.annotate(trade_count=Count('trade', filter=~Q(trade__close_time=None)))
+    symbols = []
+
+    for symbol in symbols_objs:
+        if symbol.trade_count > 0:
+            symbol_dict = {"name": symbol.name, "value": symbol.trade_count}
+
+            symbols.append(symbol_dict)
+
+    aggregate_values["tradesCount"] = symbols
 
     return jsonify(aggregate_values)
 

@@ -95,9 +95,9 @@ export const validatePipelineCreation = async (
   }
 
   if (edit) {
-    editPipeline(payload, pipelineId)
+    await editPipeline(payload, pipelineId)
   } else {
-    startPipeline(payload)
+    await startPipeline(payload)
   }
 
   return true
