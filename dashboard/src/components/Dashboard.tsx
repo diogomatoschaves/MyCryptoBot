@@ -21,6 +21,7 @@ import {
 import {getTradesMetrics} from "../apiCalls";
 import TradesStats from "./TradesStats";
 import PortfolioChart from "./PortfolioChart";
+import TradingBotLabel from "./TradingBotLabel";
 
 
 interface Props {
@@ -185,8 +186,7 @@ function Dashboard(props: Props) {
                           Best Win Rate
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.pipelinesColumn}>
-                          {/*@ts-ignore*/}
-                          {bestWinRate && <Label color={bestWinRate.color}>{bestWinRate.name}</Label>}
+                          {bestWinRate && <TradingBotLabel pipelineId={bestWinRate.id} name={bestWinRate.name} color={bestWinRate.color}/>}
                         </Grid.Column>
                       </Grid.Column>
                       <Grid.Column>
@@ -194,8 +194,7 @@ function Dashboard(props: Props) {
                           Most Trades
                         </Grid.Column>
                         <Grid.Column style={styles.pipelinesColumn}>
-                          {/*@ts-ignore*/}
-                          {mostTrades && <Label color={mostTrades.color}>{mostTrades.name}</Label>}
+                          {mostTrades && <TradingBotLabel pipelineId={mostTrades.id} name={mostTrades.name} color={mostTrades.color}/>}
                         </Grid.Column>
                       </Grid.Column>
                     </Grid.Row>

@@ -3,6 +3,7 @@ import {Label, Table} from "semantic-ui-react";
 import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
 import {getRoi, timeFormatterDate} from "../utils/helpers";
 import React from "react";
+import TradingBotLabel from "./TradingBotLabel";
 
 
 interface Props {
@@ -47,8 +48,7 @@ function TradeRow(props: Props) {
     return (
         <Table.Row key={index} >
             <Table.Cell style={styles.defaultCell}>
-                {/*@ts-ignore*/}
-              <Label color={trade.pipelineColor as any}><span style={styles.ribbon}>{trade.pipelineName}</span></Label>
+              <TradingBotLabel pipelineId={trade.pipelineId} name={trade.pipelineName} color={trade.pipelineColor}/>
             </Table.Cell>
             <Table.Cell style={styles.defaultCell}>
                 <Label basic color='blue'>{trade.mock ? "test" : "live"}</Label>
