@@ -11,6 +11,7 @@ import {StyledSegment} from "../styledComponents";
 import {useEffect, useReducer, useRef, useState} from "react";
 import {PieChart} from 'react-minimal-pie-chart';
 import {COLORS, GREEN, RED} from "../utils/constants";
+import {Link} from 'react-router-dom'
 import {
   positionsReducer,
   positionsReducerCallback,
@@ -155,86 +156,90 @@ function Dashboard(props: Props) {
                 </Grid>
               </Segment>
               <Segment secondary raised style={styles.rowSegment}>
-                <Header size={'medium'} color="teal">
-                  Trading Bots
-                </Header>
-                <Grid columns={2}>
-                  <Grid.Row>
-                    <Grid.Column>
-                      <Grid.Column style={styles.pipelinesHeader}>
-                        # trading bots
+                <Link to="/pipelines">
+                  <Header size={'medium'} color="teal">
+                    Trading Bots
+                  </Header>
+                  <Grid columns={2}>
+                    <Grid.Row>
+                      <Grid.Column>
+                        <Grid.Column style={styles.pipelinesHeader}>
+                          # trading bots
+                        </Grid.Column>
+                        <Grid.Column style={styles.pipelinesColumn} >
+                          {totalPipelines}
+                        </Grid.Column>
                       </Grid.Column>
-                      <Grid.Column style={styles.pipelinesColumn} >
-                        {totalPipelines}
+                      <Grid.Column>
+                        <Grid.Column floated='left' style={styles.pipelinesHeader}>
+                          # active trading bots
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={styles.pipelinesColumn}>
+                          {activePipelines}
+                        </Grid.Column>
                       </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.pipelinesHeader}>
-                        # active trading bots
+                    </Grid.Row>
+                    <Grid.Row>
+                      <Grid.Column>
+                        <Grid.Column floated='left' style={styles.pipelinesHeader}>
+                          Best Win Rate
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={styles.pipelinesColumn}>
+                          {/*@ts-ignore*/}
+                          {bestWinRate && <Label color={bestWinRate.color}>{bestWinRate.name}</Label>}
+                        </Grid.Column>
                       </Grid.Column>
-                      <Grid.Column floated='right' style={styles.pipelinesColumn}>
-                        {activePipelines}
+                      <Grid.Column>
+                        <Grid.Column style={styles.pipelinesHeader}>
+                          Most Trades
+                        </Grid.Column>
+                        <Grid.Column style={styles.pipelinesColumn}>
+                          {/*@ts-ignore*/}
+                          {mostTrades && <Label color={mostTrades.color}>{mostTrades.name}</Label>}
+                        </Grid.Column>
                       </Grid.Column>
-                    </Grid.Column>
-                  </Grid.Row>
-                  <Grid.Row>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.pipelinesHeader}>
-                        Best Win Rate
-                      </Grid.Column>
-                      <Grid.Column floated='right' style={styles.pipelinesColumn}>
-                        {/*@ts-ignore*/}
-                        {bestWinRate && <Label color={bestWinRate.color}>{bestWinRate.name}</Label>}
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column style={styles.pipelinesHeader}>
-                        Most Trades
-                      </Grid.Column>
-                      <Grid.Column style={styles.pipelinesColumn}>
-                        {/*@ts-ignore*/}
-                        {mostTrades && <Label color={mostTrades.color}>{mostTrades.name}</Label>}
-                      </Grid.Column>
-                    </Grid.Column>
-                  </Grid.Row>
-                </Grid>
+                    </Grid.Row>
+                  </Grid>
+                </Link>
               </Segment>
             </Grid.Row>
             <Grid.Row style={{width: '100%'}} className="flex-row">
               <Segment secondary raised style={{...styles.rowSegment}}>
-                <Header size={'medium'} color="pink">
-                  Positions
-                </Header>
-                <Grid columns={3}>
-                  <Grid.Row>
-                    <Grid.Column>
-                      <Grid.Column style={styles.positionsHeader}>
-                        # positions
+                <Link to='/positions'>
+                  <Header size={'medium'} color="pink">
+                    Positions
+                  </Header>
+                  <Grid columns={3}>
+                    <Grid.Row>
+                      <Grid.Column>
+                        <Grid.Column style={styles.positionsHeader}>
+                          # positions
+                        </Grid.Column>
+                        <Grid.Column style={styles.positionsColumn} >
+                          {openPositions}
+                        </Grid.Column>
                       </Grid.Column>
-                      <Grid.Column style={styles.positionsColumn} >
-                        {openPositions}
+                      <Grid.Column>
+                        <Grid.Column floated='left' style={styles.positionsHeader}>
+                          Total Size
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={styles.positionsColumn} >
+                          {totalEquityPositions.toFixed(1)} USDT
+                        </Grid.Column>
                       </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.positionsHeader}>
-                        Total Size
+                      <Grid.Column>
+                        <Grid.Column floated='left' style={styles.positionsHeader}>
+                          Net profit
+                        </Grid.Column>
+                        <Grid.Column floated='right' style={{...styles.positionsColumn, color: pnlColor}} >
+                          {totalPnl}
+                        </Grid.Column>
                       </Grid.Column>
-                      <Grid.Column floated='right' style={styles.positionsColumn} >
-                        {totalEquityPositions.toFixed(1)} USDT
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column floated='left' style={styles.positionsHeader}>
-                        Net profit
-                      </Grid.Column>
-                      <Grid.Column floated='right' style={{...styles.positionsColumn, color: pnlColor}} >
-                        {totalPnl}
-                      </Grid.Column>
-                    </Grid.Column>
-                  </Grid.Row>
-                  <Grid.Row>
-                  </Grid.Row>
-                </Grid>
+                    </Grid.Row>
+                    <Grid.Row>
+                    </Grid.Row>
+                  </Grid>
+                </Link>
               </Segment>
               <TradesStats tradesMetrics={tradesMetrics} style={styles.tradesStatsStyle}/>
             </Grid.Row>
