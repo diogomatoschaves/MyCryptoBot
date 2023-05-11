@@ -4,8 +4,11 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from data.service.cron_jobs.check_app_is_running import check_app_is_running
+from shared.utils.decorators import general_app_error, handle_db_connection_error
 
 
+@general_app_error
+@handle_db_connection_error
 def start_background_scheduler():
 
     logging.info('Starting scheduler.')

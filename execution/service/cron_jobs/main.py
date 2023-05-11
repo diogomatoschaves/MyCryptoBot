@@ -4,8 +4,10 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from execution.service.cron_jobs.save_pipelines_snapshot import save_pipelines_snapshot
+from shared.utils.decorators import handle_db_connection_error
 
 
+@handle_db_connection_error
 def start_background_scheduler(binance_trader_objects):
 
     logging.info('Starting scheduler.')
