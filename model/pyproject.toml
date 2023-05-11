@@ -27,6 +27,7 @@ Flask-JWT-Extended = "4.4.4"
 humanfriendly = "^10.0"
 plotly = "^5.14.1"
 urllib3 = "1.26.15"
+tzdata = "2022.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"

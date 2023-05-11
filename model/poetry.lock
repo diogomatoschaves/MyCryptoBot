@@ -1060,7 +1060,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "tzdata"
-version = "2023.3"
+version = "2022.1"
 description = "Provider of IANA time zone data"
 category = "main"
 optional = false
@@ -1160,7 +1160,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.8"
-content-hash = "5828da525ac8a37f4358bc127458cff9f291b757118810bb170e476367bab0c6"
+content-hash = "8fb59782e35b3a39a80d25f95e59b3d38dfbe3df8c8488ea4cab5e915dfd5c14"
 
 [metadata.files]
 aiohttp = []
