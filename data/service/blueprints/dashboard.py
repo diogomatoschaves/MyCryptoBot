@@ -103,7 +103,7 @@ def handle_pipelines(page):
             response["pipelines"] = [pipeline.as_json() for pipeline in Pipeline.objects.filter(id=pipeline_id)]
 
         else:
-            pipelines = Pipeline.objects.filter(deleted=False).order_by('id')
+            pipelines = Pipeline.objects.filter(deleted=False).order_by('-last_entry')
 
             paginator = Paginator(pipelines, 20)
 
