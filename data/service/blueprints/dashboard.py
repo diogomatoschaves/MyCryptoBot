@@ -1,4 +1,3 @@
-import json
 import os
 from collections import defaultdict
 from functools import reduce
@@ -12,6 +11,7 @@ from flask_jwt_extended import jwt_required
 from data.service.external_requests import get_strategies, get_price
 from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict, convert_client_request, \
     get_pipeline_equity_timeseries
+from shared.utils.decorators import general_app_error
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
 
@@ -24,6 +24,7 @@ dashboard = Blueprint('dashboard', __name__)
 
 
 @dashboard.route('/resources/<resources>')
+@general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_resources(resources):
@@ -53,6 +54,7 @@ def get_resources(resources):
 
 @dashboard.route('/trades', defaults={'page': None}, methods=["GET"])
 @dashboard.route('/trades/<page>')
+@general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_trades(page):
@@ -86,6 +88,7 @@ def get_trades(page):
 
 @dashboard.route('/pipelines', defaults={'page': None}, methods=["GET", "PUT", "DELETE"])
 @dashboard.route('/pipelines/<page>')
+@general_app_error
 @handle_db_connection_error
 @jwt_required()
 def handle_pipelines(page):
@@ -100,7 +103,7 @@ def handle_pipelines(page):
             response["pipelines"] = [pipeline.as_json() for pipeline in Pipeline.objects.filter(id=pipeline_id)]
 
         else:
-            pipelines = Pipeline.objects.filter(deleted=False).order_by('id')
+            pipelines = Pipeline.objects.filter(deleted=False).order_by('-last_entry')
 
             paginator = Paginator(pipelines, 20)
 
@@ -144,6 +147,7 @@ def handle_pipelines(page):
 
 @dashboard.route('/positions', defaults={'page': None})
 @dashboard.route('/positions/<page>')
+@general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_positions(page):
@@ -168,6 +172,7 @@ def get_positions(page):
 
 
 @dashboard.route('/trades-metrics', methods=["GET"])
+@general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_trades_metrics():
@@ -203,6 +208,7 @@ def get_trades_metrics():
 
 
 @dashboard.route('/pipelines-metrics', methods=["GET"])
+@general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_pipelines_metrics():
@@ -260,6 +266,7 @@ def get_pipelines_metrics():
 
 @dashboard.route('/pipeline-equity', methods=["GET"], defaults={'pipeline_id': None})
 @dashboard.route('/pipeline-equity/<pipeline_id>')
+@general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_pipeline_equity(pipeline_id):
@@ -295,6 +302,7 @@ def get_pipeline_equity(pipeline_id):
 
 @dashboard.route('/pipelines-pnl', methods=["GET"], defaults={'pipeline_ids': ''})
 @dashboard.route('/pipelines-pnl/<pipeline_ids>')
+@general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_pipeline_pnl(pipeline_ids):
@@ -310,7 +318,7 @@ def get_pipeline_pnl(pipeline_ids):
 
             response = get_price(pipeline.symbol.name)
 
-            if response is None:
+            if "success" in response and not response["success"]:
                 continue
 
             price = float(response["price"])

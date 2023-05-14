@@ -10,6 +10,7 @@ import pytz
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import unset_jwt_cookies, create_access_token, get_jwt, get_jwt_identity, jwt_required
 
+from shared.utils.decorators import general_app_error
 from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -43,6 +44,7 @@ def refresh_expiring_jwts(response):
 
 
 @user_management.post('/token')
+@general_app_error
 @handle_db_connection_error
 def create_token():
     username = request.json.get("username", None)
@@ -66,6 +68,7 @@ def create_token():
 
 
 @user_management.post("/logout")
+@general_app_error
 @handle_db_connection_error
 def logout():
     response = jsonify({"msg": "logout successful"})

@@ -1,3 +1,4 @@
+import sys
 import time
 
 import pytest
@@ -42,6 +43,16 @@ def mock_requests_get(mocker):
 @pytest.fixture
 def requests_get_spy(mocker):
     return mocker.spy(requests, "get")
+
+
+@pytest.fixture
+def spy_sys_exit(mocker):
+    return mocker.spy(sys, "exit")
+
+
+@pytest.fixture
+def mock_sys_exit(mocker):
+    return mocker.patch.object(sys, "exit", lambda x: {})
 
 
 @pytest.fixture

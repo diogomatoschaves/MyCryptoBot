@@ -12,7 +12,7 @@ with pytest.MonkeyPatch().context() as ctx:
 
 from database.model.models import Pipeline
 from shared.utils.tests.fixtures.models import *
-from shared.utils.tests.fixtures.external_modules import mock_jwt_required
+from shared.utils.tests.fixtures.external_modules import mock_jwt_required, spy_sys_exit, mock_sys_exit
 
 API_PREFIX = '/api'
 
@@ -529,15 +529,18 @@ class TestDataService:
         call_count,
         client,
         mock_get_strategies_raise_exception,
-        spy_db_connection
+        mock_sys_exit,
+        spy_db_connection,
+        spy_sys_exit
     ):
 
         mock_get_strategies_raise_exception.side_effect = side_effect
 
         if raises_error:
-            with pytest.raises(InterfaceError):
-                client.get(f'{API_PREFIX}/resources/strategies')
+            client.get(f'{API_PREFIX}/resources/strategies')
         else:
             client.get(f'{API_PREFIX}/resources/strategies')
 
         assert spy_db_connection.call_count == call_count
+
+        assert spy_sys_exit.call_count > 0 if raises_error else spy_sys_exit.call_count == 0

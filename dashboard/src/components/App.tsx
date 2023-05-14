@@ -456,8 +456,6 @@ class App extends Component<Props, State> {
                               [pipeline.id]: organizePipeline(pipeline)
                           }
                       }, {})},
-                      // @ts-ignore
-                      symbols: [...new Set(response.pipelines.map(pipeline => pipeline.symbol))]
                   }
               })
           })
@@ -468,9 +466,12 @@ class App extends Component<Props, State> {
         getPositions()
           .then(positions => {
               this.setState(state => {
+                  const newPositions = organizePositions(positions.positions)
                   return {
                       ...state,
-                      positions: organizePositions(positions.positions)
+                      positions: newPositions,
+                      // @ts-ignore
+                      symbols: [...new Set(newPositions.map(position => position.symbol))]
                   }
               })
           })

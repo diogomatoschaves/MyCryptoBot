@@ -11,6 +11,7 @@ from flask_jwt_extended import jwt_required
 
 from data.service.external_requests import get_strategies, start_stop_symbol_trading
 from data.service.helpers import check_input, get_or_create_pipeline
+from shared.utils.decorators import general_app_error
 from data.service.helpers.decorators.handle_app_errors import handle_app_errors
 from data.service.helpers.exceptions import PipelineStartFail, DataPipelineDoesNotExist
 from data.service.helpers.responses import Responses
@@ -82,6 +83,7 @@ def start_symbol_trading(pipeline):
 
 
 @bots_api.put('/start_bot')
+@general_app_error
 @handle_app_errors
 @jwt_required()
 @handle_db_connection_error
@@ -159,6 +161,7 @@ def start_bot():
 
 
 @bots_api.put('/stop_bot')
+@general_app_error
 @handle_app_errors()
 @jwt_required()
 @handle_db_connection_error
