@@ -67,7 +67,7 @@ const availableBalanceReducer = (state: any, action: any) => {
             const pipelineType = pipeline.paperTrading ? "test" : "live"
             return {
               ...accum,
-              [pipelineType]: accum[pipelineType] - (pipeline.equity / pipeline.leverage)
+              [pipelineType]: accum[pipelineType] - (pipeline.equity)
             }
           } else {
             return accum
@@ -312,7 +312,7 @@ const NewPipeline = (props: Props) => {
                   style={{width: '80%'}}
                   value={equity}
                   placeholder={
-                    `Avbl: ${balance.toFixed(1)} USDT Max: ${(balance * leverage).toFixed(1)} USDT
+                    `Avbl: ${balance.toFixed(1)} USDT
                   `}
                 />
               </Form.Field>

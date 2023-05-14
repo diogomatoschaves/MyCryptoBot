@@ -50,8 +50,9 @@ def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
 
             initial_equity = position.pipeline.equity
             leverage = position.pipeline.leverage
+            leveraged_equity = initial_equity * leverage
 
-            current_value = (current_value - initial_equity) + initial_equity / leverage
+            current_value = (current_value - leveraged_equity) + initial_equity
 
             PortfolioTimeSeries.objects.create(pipeline=position.pipeline, time=time, value=current_value)
 

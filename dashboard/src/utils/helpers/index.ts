@@ -62,9 +62,9 @@ export const validatePipelineCreation = async (
     return false
   }
 
-  const allocationFloat = Number(equity)
+  const equityFloat = Number(equity)
 
-  if (!allocationFloat) {
+  if (!equityFloat) {
     dispatch({
       type: UPDATE_MESSAGE,
       message: {text: "Equity must be a number.", success: false}
@@ -72,10 +72,10 @@ export const validatePipelineCreation = async (
     return false
   }
 
-  if (allocationFloat > (balance * leverage)) {
+  if (equityFloat > balance) {
     dispatch({
       type: UPDATE_MESSAGE,
-      message: {text: `Chosen equity must be smaller than ${(balance * leverage).toFixed(1)} USDT`, success: false}
+      message: {text: `Chosen equity must be smaller than ${(balance).toFixed(1)} USDT`, success: false}
     })
     return false
   }
@@ -88,7 +88,7 @@ export const validatePipelineCreation = async (
     exchanges: exchanges.length > 0 ? exchangeOptions[exchanges[0] - 1].text : "",
     params,
     name,
-    equity: allocationFloat,
+    equity: equityFloat,
     leverage,
     paperTrading: !liveTrading,
     color

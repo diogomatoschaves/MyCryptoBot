@@ -165,7 +165,7 @@ def get_or_create_pipeline(
             params=json.dumps(params),
             paper_trading=paper_trading,
             leverage=leverage,
-            balance=initial_equity
+            balance=initial_equity * leverage
         )
 
         try:
