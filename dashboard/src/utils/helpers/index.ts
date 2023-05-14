@@ -13,7 +13,7 @@ import {UPDATE_MESSAGE} from "../../reducers/modalReducer";
 export const validatePipelineCreation = async (
     {
       name,
-      allocation,
+      equity,
       symbol,
       color,
       symbolsOptions,
@@ -34,7 +34,7 @@ export const validatePipelineCreation = async (
       pipelineId
     }: {
       name: string | undefined,
-      allocation: string | undefined,
+      equity: string | undefined,
       symbol: number | undefined,
       color: string | undefined,
       symbolsOptions: DropdownOptions[],
@@ -54,7 +54,7 @@ export const validatePipelineCreation = async (
       editPipeline: EditPipeline,
       pipelineId?: number
     }) => {
-  if (!name || !color || !allocation || !symbol || !strategy || !candleSize || exchanges.length === 0) {
+  if (!name || !color || !equity || !symbol || !strategy || !candleSize || exchanges.length === 0) {
     dispatch({
       type: UPDATE_MESSAGE,
       message: {text: "All parameters must be specified.", success: false}
@@ -62,7 +62,7 @@ export const validatePipelineCreation = async (
     return false
   }
 
-  const allocationFloat = Number(allocation)
+  const allocationFloat = Number(equity)
 
   if (!allocationFloat) {
     dispatch({
@@ -88,7 +88,7 @@ export const validatePipelineCreation = async (
     exchanges: exchanges.length > 0 ? exchangeOptions[exchanges[0] - 1].text : "",
     params,
     name,
-    allocation: allocationFloat,
+    equity: allocationFloat,
     leverage,
     paperTrading: !liveTrading,
     color

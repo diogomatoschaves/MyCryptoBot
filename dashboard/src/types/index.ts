@@ -53,7 +53,7 @@ export type Pipeline = {
     params: Object
     candleSize: string
     name: string,
-    allocation: number,
+    equity: number,
     exchange: string
     symbol: string
     active: boolean
@@ -72,7 +72,7 @@ export type RawPipeline = {
     params: Object
     candleSize: string
     name: string,
-    allocation: number,
+    equity: number,
     exchange: string
     symbol: string
     active: boolean
@@ -87,7 +87,7 @@ export type RawPipeline = {
 export type PipelineParams = {
     pipelineId?: number
     name: string,
-    allocation: number,
+    equity: number,
     leverage: number,
     symbol: string
     strategy: string

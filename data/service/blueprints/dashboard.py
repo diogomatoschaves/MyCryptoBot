@@ -333,7 +333,7 @@ def get_pipeline_pnl(pipeline_ids):
         try:
             current_value = pipeline.balance + pipeline.units * price
 
-            initial_equity = pipeline.allocation
+            initial_equity = pipeline.equity
             leverage = pipeline.leverage
 
             profit = (current_value - initial_equity)

@@ -175,7 +175,7 @@ class Pipeline(models.Model):
     interval = models.TextField()
     strategy = models.TextField()
     params = models.TextField(blank=True, default="{}")
-    allocation = models.FloatField(null=True)
+    equity = models.FloatField(null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
     active = models.BooleanField(default=True, blank=True)
@@ -205,7 +205,7 @@ class Pipeline(models.Model):
             id=self.id,
             strategy=self.strategy,
             params=json.loads(self.params),
-            allocation=self.allocation,
+            equity=self.equity,
             candleSize=self.interval,
             exchange=self.exchange.name,
             symbol=self.symbol.name,

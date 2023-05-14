@@ -69,7 +69,7 @@ def get_pipeline_data(pipeline_id):
         exchange=pipeline.exchange.name,
         paper_trading=pipeline.paper_trading,
         active=pipeline.active,
-        equity=pipeline.allocation,
+        equity=pipeline.equity,
         leverage=pipeline.leverage
     )
 

@@ -48,7 +48,7 @@ def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
         try:
             current_value = binance_obj.current_balance[symbol] + binance_obj.units[symbol] * current_price
 
-            initial_equity = position.pipeline.allocation
+            initial_equity = position.pipeline.equity
             leverage = position.pipeline.leverage
 
             current_value = (current_value - initial_equity) + initial_equity / leverage

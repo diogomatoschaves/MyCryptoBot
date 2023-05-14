@@ -266,10 +266,10 @@ class TestDataService:
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": 20,
-                    "allocation": "refr"
+                    "equity": "refr"
                 },
                 "EQUITY_INVALID",
-                lambda input_params: f'{input_params["allocation"]} is not a valid equity.',
+                lambda input_params: f'{input_params["equity"]} is not a valid equity.',
                 id="EQUITY_INVALID",
             ),
         ],
@@ -298,7 +298,7 @@ class TestDataService:
                     "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance",
-                    "allocation": 100,
+                    "equity": 100,
                     "leverage": 1
                 },
                 "DATA_PIPELINE_ONGOING",
@@ -330,7 +330,7 @@ class TestDataService:
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": 3,
-                    "allocation": 1000
+                    "equity": 1000
                 },
                 "DATA_PIPELINE_START_OK",
                 id="DATA_PIPELINE_START_OK",
@@ -375,7 +375,7 @@ class TestDataService:
                     "params": {"ma": 30},
                     "candleSize": "1h",
                     "exchanges": "Binance",
-                    "allocation": 1000
+                    "equity": 1000
                 },
                 id="DATA_PIPELINE_FAIL_EXTERNAL_CALL",
             ),

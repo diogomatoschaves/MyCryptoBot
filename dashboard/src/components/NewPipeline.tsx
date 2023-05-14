@@ -67,7 +67,7 @@ const availableBalanceReducer = (state: any, action: any) => {
             const pipelineType = pipeline.paperTrading ? "test" : "live"
             return {
               ...accum,
-              [pipelineType]: accum[pipelineType] - (pipeline.allocation / pipeline.leverage)
+              [pipelineType]: accum[pipelineType] - (pipeline.equity / pipeline.leverage)
             }
           } else {
             return accum
@@ -109,7 +109,7 @@ const NewPipeline = (props: Props) => {
     symbol,
     candleSize,
     name,
-    allocation,
+    equity,
     leverage,
     exchanges,
     secondModalOpen,
@@ -306,11 +306,11 @@ const NewPipeline = (props: Props) => {
                   onChange={(e: any, {value}: {value?: any}) => {
                     dispatch({
                       type: UPDATE_PARAMS,
-                      value: {allocation: value}
+                      value: {equity: value}
                     })
                   }}
                   style={{width: '80%'}}
-                  value={allocation}
+                  value={equity}
                   placeholder={
                     `Avbl: ${balance.toFixed(1)} USDT Max: ${(balance * leverage).toFixed(1)} USDT
                   `}
@@ -520,7 +520,7 @@ const NewPipeline = (props: Props) => {
                     event.stopPropagation()
                     const success = await validatePipelineCreation({
                       name,
-                      allocation,
+                      equity,
                       color,
                       symbol,
                       strategy,
