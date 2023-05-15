@@ -98,7 +98,9 @@ class BinanceFuturesTrader(BinanceTrader):
 
         logging.info(header + f"Closing position for symbol: {symbol}")
 
-        if self.units[symbol] == 0:
+        units = self._convert_units(None, self.units[symbol], symbol)
+
+        if units in [0, -0]:
             raise NoUnits
 
         if self.units[symbol] < 0:
