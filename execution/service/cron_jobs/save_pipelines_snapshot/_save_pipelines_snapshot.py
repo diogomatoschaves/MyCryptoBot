@@ -46,19 +46,19 @@ def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
         current_price = float(response["price"])
 
         try:
-            current_value = binance_obj.current_balance[symbol] + binance_obj.units[symbol] * current_price
+            leveraged_current_equity = binance_obj.current_balance[symbol] + binance_obj.units[symbol] * current_price
 
             initial_equity = position.pipeline.equity
             leverage = position.pipeline.leverage
-            leveraged_equity = initial_equity * leverage
+            leveraged_initial_equity = initial_equity * leverage
 
-            current_value = (current_value - leveraged_equity) + initial_equity
+            current_portfolio_value = initial_equity + (leveraged_current_equity - leveraged_initial_equity)
 
-            PortfolioTimeSeries.objects.create(pipeline=position.pipeline, time=time, value=current_value)
+            PortfolioTimeSeries.objects.create(pipeline=position.pipeline, time=time, value=current_portfolio_value)
 
-            key = 'testnet' if position.pipeline.paper_trading else 'live'
+            account_type = 'testnet' if position.pipeline.paper_trading else 'live'
 
-            total_current_value[key] += current_value
+            total_current_value[account_type] += current_portfolio_value
 
         except TypeError:
             continue
@@ -70,6 +70,6 @@ def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
             for asset in balances[account_type]:
                 if asset['asset'] == 'USDT':
 
-                    current_value = float(asset["withdrawAvailable"]) + total_current_value[account_type]
+                    current_asset_value = float(asset["withdrawAvailable"]) + total_current_value[account_type]
 
-                    PortfolioTimeSeries.objects.create(time=time, value=current_value, type=account_type)
+                    PortfolioTimeSeries.objects.create(time=time, value=current_asset_value, type=account_type)
