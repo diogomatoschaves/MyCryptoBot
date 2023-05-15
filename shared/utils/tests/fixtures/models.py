@@ -134,6 +134,25 @@ def create_pipeline_with_balance_2(db, create_exchange, create_symbol):
 
 
 @pytest.fixture
+def create_pipeline_with_balance_3(db, create_exchange, create_symbol):
+    return Pipeline.objects.create(
+        id=6,
+        color="purple",
+        name='pipeline with balance 3',
+        symbol_id='BTCUSDT',
+        strategy='MovingAverage',
+        params='{"ma": 30}',
+        exchange_id='binance',
+        interval="1h",
+        active=True,
+        equity=100,
+        leverage=1,
+        balance=100,
+        units=0
+    )
+
+
+@pytest.fixture
 def create_orders(db, create_exchange, create_symbol, create_pipeline):
     order_1 = Orders.objects.create(
         order_id=randint(1, 1E9),

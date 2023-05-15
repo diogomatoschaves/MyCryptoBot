@@ -9,7 +9,7 @@ import django
 from database.model.models import Pipeline
 from execution.exchanges.binance import BinanceTrader
 from execution.service.cron_jobs.save_pipelines_snapshot import save_pipelines_snapshot
-from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits
+from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits, NegativeEquity
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
 from shared.exchanges import BinanceHandler
 from shared.trading import Trader
@@ -78,10 +78,12 @@ class BinanceFuturesTrader(BinanceTrader):
         if symbol not in self.symbols:
             raise SymbolNotBeingTraded(symbol)
 
-        logging.info(header + f"Closing position for symbol: {symbol}")
+        logging.info(header + f"Stopping trading.")
 
         try:
             pipeline_id = kwargs["pipeline_id"]
+
+            self.close_pipeline(pipeline_id)
 
             save_pipelines_snapshot([self, self], pipeline_id=pipeline_id)
 
@@ -93,6 +95,8 @@ class BinanceFuturesTrader(BinanceTrader):
         self.symbols.pop(symbol)
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
+
+        logging.info(header + f"Closing position for symbol: {symbol}")
 
         if self.units[symbol] == 0:
             raise NoUnits
@@ -144,16 +148,18 @@ class BinanceFuturesTrader(BinanceTrader):
 
         factor = 1 if order_side == self.SIDE_SELL else -1
 
+        self.nr_trades += 1
+
         self._update_current_balance(
             symbol,
             factor * float(order['cummulative_quote_qty']),
             factor * units,
-            pipeline_id
+            pipeline_id,
         )
 
-        self.nr_trades += 1
-
         self.report_trade(order, units, going, header, symbol=symbol)
+
+        self.check_negative_equity(symbol, reducing="reducing" in kwargs)
 
     def _convert_units(self, amount, units, symbol, units_factor=1):
         price_precision = self.symbols[symbol]["price_precision"]
@@ -206,6 +212,7 @@ class BinanceFuturesTrader(BinanceTrader):
         return pipeline.balance, pipeline.units
 
     def _update_current_balance(self, symbol, equity, units, pipeline_id):
+
         self.current_balance[symbol] += equity
         self.units[symbol] -= units
 
@@ -224,3 +231,13 @@ class BinanceFuturesTrader(BinanceTrader):
             "price_precision": symbol_obj.price_precision,
             "quantity_precision": symbol_obj.quantity_precision
         }
+
+    @staticmethod
+    def close_pipeline(pipeline_id):
+
+        Pipeline.objects.filter(id=pipeline_id).update(active=False, open_time=None)
+
+    def check_negative_equity(self, symbol, reducing):
+        if reducing:
+            if self.current_balance[symbol] < 0:
+                raise NegativeEquity(self.current_balance[symbol])

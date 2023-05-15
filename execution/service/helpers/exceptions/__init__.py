@@ -6,3 +6,4 @@ from execution.service.helpers.exceptions.symbol_already_traded import SymbolAlr
 from execution.service.helpers.exceptions.symbol_not_being_traded import SymbolNotBeingTraded
 from execution.service.helpers.exceptions.no_units import NoUnits
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
+from execution.service.helpers.exceptions.negative_equity import NegativeEquity

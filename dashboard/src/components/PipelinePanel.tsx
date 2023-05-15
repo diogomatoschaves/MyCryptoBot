@@ -71,8 +71,6 @@ const reducer = (state: any, action: any) => {
 
                     return ((pipeline.active === active && active) || (pipeline.active === !stopped && stopped))
                     && ((pipeline.paperTrading === test && test) || (pipeline.paperTrading === !live && live))
-                }).sort((pipeline1: string, pipeline2: string) => {
-                    return pipelines[pipeline2].active - pipelines[pipeline1].active
                 })
             }
         case TOGGLE_OPTIONS:
