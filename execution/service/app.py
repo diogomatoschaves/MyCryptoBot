@@ -74,7 +74,7 @@ def start_pipeline_trade(pipeline, binance_account_type, header, initial_positio
 
     bt.start_symbol_trading(
         pipeline.symbol,
-        pipeline.equity,
+        pipeline.equity * pipeline.leverage,
         leverage=pipeline.leverage,
         initial_position=initial_position,
         header=header,

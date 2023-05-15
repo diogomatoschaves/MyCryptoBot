@@ -56,6 +56,7 @@ margin_order_creation = {
     "clientOrderId": "6gCrw2kRUAF9CvJDGP16IP",
     "transactTime": 1507725176595,
     "price": "3998.3",
+    "avgPrice": "3998.3",
     "origQty": "10.00000000",
     "executedQty": "10.00000000",
     "cummulativeQuoteQty": "10.00000000",

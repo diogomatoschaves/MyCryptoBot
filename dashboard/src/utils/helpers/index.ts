@@ -13,7 +13,7 @@ import {UPDATE_MESSAGE} from "../../reducers/modalReducer";
 export const validatePipelineCreation = async (
     {
       name,
-      allocation,
+      equity,
       symbol,
       color,
       symbolsOptions,
@@ -34,7 +34,7 @@ export const validatePipelineCreation = async (
       pipelineId
     }: {
       name: string | undefined,
-      allocation: string | undefined,
+      equity: string | undefined,
       symbol: number | undefined,
       color: string | undefined,
       symbolsOptions: DropdownOptions[],
@@ -54,7 +54,7 @@ export const validatePipelineCreation = async (
       editPipeline: EditPipeline,
       pipelineId?: number
     }) => {
-  if (!name || !color || !allocation || !symbol || !strategy || !candleSize || exchanges.length === 0) {
+  if (!name || !color || !equity || !symbol || !strategy || !candleSize || exchanges.length === 0) {
     dispatch({
       type: UPDATE_MESSAGE,
       message: {text: "All parameters must be specified.", success: false}
@@ -62,9 +62,9 @@ export const validatePipelineCreation = async (
     return false
   }
 
-  const allocationFloat = Number(allocation)
+  const equityFloat = Number(equity)
 
-  if (!allocationFloat) {
+  if (!equityFloat) {
     dispatch({
       type: UPDATE_MESSAGE,
       message: {text: "Equity must be a number.", success: false}
@@ -72,10 +72,10 @@ export const validatePipelineCreation = async (
     return false
   }
 
-  if (allocationFloat > (balance * leverage)) {
+  if (equityFloat > balance) {
     dispatch({
       type: UPDATE_MESSAGE,
-      message: {text: `Chosen equity must be smaller than ${(balance * leverage).toFixed(1)} USDT`, success: false}
+      message: {text: `Chosen equity must be smaller than ${(balance).toFixed(1)} USDT`, success: false}
     })
     return false
   }
@@ -88,7 +88,7 @@ export const validatePipelineCreation = async (
     exchanges: exchanges.length > 0 ? exchangeOptions[exchanges[0] - 1].text : "",
     params,
     name,
-    allocation: allocationFloat,
+    equity: equityFloat,
     leverage,
     paperTrading: !liveTrading,
     color

@@ -50,7 +50,7 @@ function PipelineButton(props: Props) {
                 startPipeline({
                     pipelineId: pipeline.id,
                     name: pipeline.name,
-                    allocation: pipeline.allocation,
+                    equity: pipeline.equity,
                     symbol: pipeline.symbol,
                     strategy: pipeline.strategy,
                     candleSize: pipeline.candleSize,

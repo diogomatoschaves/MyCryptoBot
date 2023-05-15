@@ -157,7 +157,7 @@ def get_or_create_pipeline(
         columns = dict(
             name=name,
             color=color,
-            allocation=initial_equity,
+            equity=initial_equity,
             symbol_id=symbol,
             interval=candle_size,
             strategy=strategy,
@@ -165,7 +165,7 @@ def get_or_create_pipeline(
             params=json.dumps(params),
             paper_trading=paper_trading,
             leverage=leverage,
-            balance=initial_equity
+            balance=initial_equity * leverage
         )
 
         try:
@@ -198,7 +198,7 @@ def convert_trades_to_dict(trades_metrics):
 def convert_client_request(data):
     return {
         "name": data["name"],
-        "allocation": data["allocation"],
+        "equity": data["equity"],
         "symbol_id": data["symbol"],
         "strategy": data["strategy"],
         "interval": data["candleSize"],
@@ -207,7 +207,7 @@ def convert_client_request(data):
         "paper_trading": data["paperTrading"],
         "color": data["color"],
         "leverage": data["leverage"],
-        "balance": data["allocation"],
+        "balance": data["equity"],
         "units": 0
     }
 

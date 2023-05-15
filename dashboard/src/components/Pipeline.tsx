@@ -234,7 +234,7 @@ function PipelineItem(props: Props) {
                             Allocated Equity
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.rightColumn} >
-                            {`${pipeline.allocation} USDT`}
+                            {`${pipeline.equity} USDT`}
                         </Grid.Column>
                     </Grid.Column>
                     <Grid.Column width={4}>

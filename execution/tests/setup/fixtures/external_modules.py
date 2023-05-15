@@ -10,7 +10,7 @@ from execution.tests.setup.test_data.binance_api_responses import (
 )
 
 
-def binance_client_mock_factory(method, type_='mock', account_type='margin'):
+def binance_client_mock_factory(method, type_='mock', account_type='margin', extra_info=None):
 
     class MockBinanceHandler(object):
         def __init__(self, **kwargs):
@@ -55,6 +55,7 @@ def binance_client_mock_factory(method, type_='mock', account_type='margin'):
             return {'symbol': symbol, 'leverage': leverage, 'maxNotionalValue': 'INF'}
 
         def futures_create_order(self, symbol, side, type, newOrderRespType, quantity, **kwargs):
+
             return {
                 **futures_order_creation,
                 "symbol": symbol,
@@ -116,3 +117,17 @@ def binance_mock_trader_spy_factory(method):
         )
 
     return spy_binance_client
+
+
+class SideEffect:
+    def __init__(self, *fns):
+        self.fs = iter(fns)
+
+    def __call__(self, *args, **kwargs):
+        f = next(self.fs)
+        return f(*args, **kwargs)
+
+
+@pytest.fixture
+def futures_create_order_negative_equity(mocker):
+    return mocker.patch('execution.exchanges.binance.futures._trading.BinanceFuturesTrader.futures_create_order')

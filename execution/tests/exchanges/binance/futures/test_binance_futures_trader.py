@@ -5,7 +5,7 @@ import pytest
 
 with pytest.MonkeyPatch().context() as ctx:
     ctx.setenv("TEST", True)
-    from execution.service.helpers.exceptions import SymbolNotBeingTraded, NoUnits, SymbolAlreadyTraded
+    from execution.service.helpers.exceptions import SymbolNotBeingTraded, NoUnits, SymbolAlreadyTraded, NegativeEquity
     from execution.exchanges.binance.futures import BinanceFuturesTrader
     from execution.tests.setup.fixtures.external_modules import *
     from execution.tests.setup.fixtures.internal_modules import mock_futures_symbol_ticker
@@ -18,18 +18,18 @@ django.setup()
 from shared.utils.tests.fixtures.models import *
 
 
-def inject_fixture(mock_name, method):
-    globals()[f"{mock_name}"] = binance_client_mock_factory(method, 'mock', 'futures')
+def inject_fixture(mock_name, method, extra_info):
+    globals()[f"{mock_name}"] = binance_client_mock_factory(method, 'mock', 'futures', extra_info)
     globals()[f"{mock_name}_spy"] = binance_client_mock_factory(method, 'spy', 'futures')
 
 
 METHODS = [
-    ("init_session", "_init_session"),
-    ("ping", "ping"),
-    ("futures_change_leverage", "futures_change_leverage"),
-    ("futures_create_order", "futures_create_order"),
-    ("futures_exchange_info", "futures_exchange_info"),
-    ("get_symbol_ticker", "get_symbol_ticker")
+    ("init_session", "_init_session", None),
+    ("ping", "ping", None),
+    ("futures_change_leverage", "futures_change_leverage", None),
+    ("futures_create_order", "futures_create_order", None),
+    ("futures_exchange_info", "futures_exchange_info", None),
+    ("get_symbol_ticker", "get_symbol_ticker", None)
 ]
 
 
@@ -380,6 +380,85 @@ class TestBinanceFuturesTrader:
             assert bt.positions[parameters["symbol"]] == 0
             assert futures_create_order_spy.call_count == times_called
 
+    @pytest.mark.parametrize(
+        "side_effect,positions,times_called,expected_value",
+        [
+            pytest.param(
+                [
+                    {
+                        **futures_order_creation,
+                        "side": -1,
+                        "orderId": randint(0, 1E9),
+                        "cumQuote": 120,
+                        "executedQty": "0.005"
+                    },
+                    {
+                        **futures_order_creation,
+                        "side": 1,
+                        "orderId": randint(0, 1E9),
+                        "cumQuote": 10,
+                        "executedQty": "0.005"
+                    },
+                ],
+                (1, -1),
+                2,
+                NegativeEquity,
+                id="NegativeEquity-(1, -1)",
+            ),
+            pytest.param(
+                [
+                    {
+                        **futures_order_creation,
+                        "side": -1,
+                        "orderId": randint(0, 1E9),
+                        "cumQuote": 50,
+                        "executedQty": "0.005"
+                    },
+                    {
+                        **futures_order_creation,
+                        "side": 1,
+                        "orderId": randint(0, 1E9),
+                        "cumQuote": 200,
+                        "executedQty": "0.005"
+                    },
+                ],
+                (-1, 1),
+                2,
+                NegativeEquity,
+                id="NegativeEquity-(-1, 1)",
+            ),
+        ]
+    )
+    def test_exception_trade(
+        self,
+        side_effect,
+        positions,
+        times_called,
+        expected_value,
+        test_mock_setup,
+        create_pipeline_with_balance_3,
+        futures_create_order_negative_equity,
+        create_orders,
+        futures_create_order_spy,
+    ):
+
+        futures_create_order_negative_equity.side_effect = side_effect
+
+        with pytest.raises(Exception) as exception:
+
+            pipeline_id = 6
+            initial_balance = 100
+
+            binance_trader = BinanceFuturesTrader()
+            binance_trader.start_symbol_trading(self.symbol, initial_balance, pipeline_id=pipeline_id)
+            binance_trader.trade(self.symbol, positions[0], amount="all", pipeline_id=pipeline_id)
+
+            binance_trader.trade(self.symbol, positions[1], amount="all", pipeline_id=pipeline_id)
+            binance_trader.trade(self.symbol, positions[0], amount="all", pipeline_id=pipeline_id)
+
+        assert exception.type == expected_value
+        assert futures_create_order_spy.call_count == times_called
+
     @staticmethod
     def stop_symbol_trading(parameters, symbols, position, units):
         binance_trader = BinanceFuturesTrader()
@@ -389,8 +468,8 @@ class TestBinanceFuturesTrader:
 
         binance_trader._set_position(symbol, position, pipeline_id=1)
         binance_trader.units[symbol] = units
-        binance_trader.initial_balance[symbol] = 100
-        binance_trader.current_balance[symbol] = 100
+        binance_trader.initial_balance[symbol] = 1000
+        binance_trader.current_balance[symbol] = 1000
 
         return_value = binance_trader.stop_symbol_trading(**parameters)
 

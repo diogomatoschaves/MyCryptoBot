@@ -33,7 +33,7 @@ export const modalReducer = (state: any, action: any) => {
         symbol: null,
         candleSize: null,
         name: "",
-        allocation: "",
+        equity: "",
         leverage: 1,
         exchanges: [],
         liveTrading: false,
@@ -60,7 +60,7 @@ export const modalReducer = (state: any, action: any) => {
       return {
         ...state,
         liveTrading,
-        allocation: ""
+        equity: ""
       }
     case UPDATE_MESSAGE:
       return {
@@ -107,7 +107,7 @@ export const getInitialState = (
       symbol: symbol && symbol.value,
       candleSize: candleSize && candleSize.value,
       name: pipeline.name,
-      allocation: String(pipeline.allocation),
+      equity: String(pipeline.equity),
       leverage: pipeline.leverage,
       exchanges: exchange && [exchange.value],
       params: pipeline.params,
@@ -123,7 +123,7 @@ export const getInitialState = (
       symbol: null,
       candleSize: null,
       name: "",
-      allocation: "",
+      equity: "",
       leverage: 1,
       exchanges: [],
       liveTrading: false,

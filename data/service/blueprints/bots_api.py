@@ -100,7 +100,7 @@ def start_bot():
     pipeline_id = data.get("pipelineId", None)
     name = data.get("name", None)
     color = data.get("color", None)
-    equity = data.get("allocation", None)
+    equity = data.get("equity", None)
     symbol = data.get("symbol", None)
     strategy = data.get("strategy", None)
     params = data.get("params", {})

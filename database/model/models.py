@@ -175,7 +175,7 @@ class Pipeline(models.Model):
     interval = models.TextField()
     strategy = models.TextField()
     params = models.TextField(blank=True, default="{}")
-    allocation = models.FloatField(null=True)
+    equity = models.FloatField(null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
     active = models.BooleanField(default=True, blank=True)
@@ -187,25 +187,13 @@ class Pipeline(models.Model):
     units = models.FloatField(default=0, blank=True)
     last_entry = models.DateTimeField(null=True, default=None)
 
-    def get_profit_loss(self):
-        result = reduce(
-            lambda accum, trade: [
-                accum[0] + trade.profit_loss * trade.amount * (trade.leverage if trade.leverage else self.leverage),
-                accum[1] + trade.amount
-            ] if trade.profit_loss else accum,
-            self.trade_set.iterator(),
-            [0, 0]
-        )
-
-        return round(result[0] / result[1] if result[1] > 0 else 0, 5)
-
     def as_json(self):
         return dict(
             name=self.name,
             id=self.id,
             strategy=self.strategy,
             params=json.loads(self.params),
-            allocation=self.allocation,
+            equity=self.equity,
             candleSize=self.interval,
             exchange=self.exchange.name,
             symbol=self.symbol.name,
@@ -213,7 +201,6 @@ class Pipeline(models.Model):
             paperTrading=self.paper_trading,
             openTime=self.open_time.isoformat() if self.open_time else None,
             numberTrades=self.trade_set.count(),
-            # profitLoss=self.get_profit_loss(),
             color=self.color,
             leverage=self.leverage,
             balance=self.balance,

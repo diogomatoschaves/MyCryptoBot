@@ -4,7 +4,8 @@ import pytest
 from binance.exceptions import BinanceAPIException
 
 import execution
-from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded, LeverageSettingFail
+from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded, LeverageSettingFail, \
+    NegativeEquity
 
 
 class MockBinanceTrader:
@@ -14,15 +15,18 @@ class MockBinanceTrader:
         raise_error_start_stop=False,
         raise_symbol_not_being_traded=False,
         raise_symbol_already_traded=False,
-        raise_leverage_setting_failure=False
+        raise_leverage_setting_failure=False,
+        raise_negative_equity_error=False
     ):
         self.raise_error_trade = raise_error_trade
         self.raise_error_start_stop = raise_error_start_stop
         self.raise_symbol_not_being_traded = raise_symbol_not_being_traded
         self.raise_symbol_already_traded = raise_symbol_already_traded
         self.raise_leverage_setting_failure = raise_leverage_setting_failure
+        self.raise_negative_equity_error = raise_negative_equity_error
 
     def start_symbol_trading(self, symbol, starting_equity, header='', **kwargs):
+
         if self.raise_error_start_stop:
             raise BinanceAPIException(
                 '',
@@ -51,6 +55,8 @@ class MockBinanceTrader:
                 400,
                 '{"msg": "Precision is over the maximum defined for this asset.", "code": -1111}'
             )
+        elif self.raise_negative_equity_error:
+            raise NegativeEquity(1)
 
 
 @pytest.fixture
@@ -121,6 +127,11 @@ def mock_redis_connection(mocker):
 @pytest.fixture
 def mock_binance_futures_trader_raise_exception_trade(mocker):
     return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader(raise_error_trade=True))
+
+
+@pytest.fixture
+def mock_binance_futures_trader_raise_negative_equity_error(mocker):
+    return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader(raise_negative_equity_error=True))
 
 
 @pytest.fixture

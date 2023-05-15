@@ -13,8 +13,6 @@ from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import PortfolioTimeSeries, Pipeline
-
 
 fields = [
     "header",
