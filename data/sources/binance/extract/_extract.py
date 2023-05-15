@@ -88,10 +88,10 @@ def extract_data(
     return pd.DataFrame(data)
 
 
-def extract_data_db(exchange_data, model_class, symbol, candle_size):
+def extract_data_db(exchange_data, model_class, symbol, candle_size, base_candle_size):
 
     start_date = get_start_date(model_class, symbol, candle_size)
 
-    data = get_data(exchange_data, start_date, symbol, candle_size, exchange='binance')
+    data = get_data(exchange_data, start_date, symbol, base_candle_size, exchange='binance')
 
     return data.reset_index()

@@ -163,7 +163,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
             data = extract_data(model_class, self.get_historical_klines_generator, self.symbol,
                                 candle_size, header=header)
         if use_db:
-            data = extract_data_db(ExchangeData, model_class, self.symbol, self.base_candle_size)
+            data = extract_data_db(ExchangeData, model_class, self.symbol, candle_size, self.base_candle_size)
 
         # Transform
         transformed_data = transform_data(
