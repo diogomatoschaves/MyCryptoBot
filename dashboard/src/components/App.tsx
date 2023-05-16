@@ -520,6 +520,7 @@ class App extends Component<Props, State> {
                         <Switch>
                             <Route path='/trades' exact={true}>
                                 <TradesPanel
+                                  size={size}
                                   trades={trades}
                                   pipelines={pipelines}
                                   currentPrices={currentPrices}
@@ -529,6 +530,7 @@ class App extends Component<Props, State> {
                             </Route>
                             <Route path="/pipelines/:pipelineId?" render={({match}) => (
                                 <PipelinePanel
+                                  size={size}
                                   match={match}
                                   symbolsOptions={symbolsOptions}
                                   strategiesOptions={strategiesOptions}

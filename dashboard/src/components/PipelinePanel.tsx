@@ -25,6 +25,7 @@ import {Wrapper} from "../styledComponents";
 
 
 interface Props {
+    size: string
     symbolsOptions: DropdownOptions[];
     strategiesOptions: DropdownOptions[];
     candleSizeOptions: DropdownOptions[];
@@ -99,6 +100,7 @@ const initialOptions = {
 function PipelinePanel(props: Props) {
 
     const {
+        size,
         symbolsOptions,
         strategiesOptions,
         pipelines,
@@ -154,6 +156,7 @@ function PipelinePanel(props: Props) {
         <Fragment>
             {pipelineMatch ? (
               <PipelineDetail
+                size={size}
                 pipelines={pipelines}
                 pipelineId={pipelineMatch}
                 pipelineMetrics={pipelinesMetrics[pipelineId]}

@@ -39,6 +39,7 @@ const StatsContainer = styled(Grid.Row)`
 `
 
 interface Props {
+  size: string
   pipelines: PipelinesObject
   positions: Position[]
   pipelineId: string
@@ -64,6 +65,7 @@ interface Props {
 function PipelineDetail(props: Props) {
 
   const {
+    size,
     pipelines,
     positions,
     pipelineId,
@@ -119,6 +121,7 @@ function PipelineDetail(props: Props) {
         <PortfolioChart pipelineId={pipelineId}/>
         <TradesContainer>
           <TradesTable
+            size={size}
             filteredTrades={Object.keys(trades).filter((tradeId) => trades[tradeId].pipelineId === Number(pipelineId))}
             trades={trades}
             decimals={decimals}
