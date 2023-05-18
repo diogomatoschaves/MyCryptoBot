@@ -6,6 +6,7 @@ import PositionRow from "./PositionRow";
 
 
 interface Props {
+  size: string
   positions: Position[];
   pipelines: PipelinesObject;
   currentPrices: Object;
@@ -14,36 +15,48 @@ interface Props {
 
 const PositionsPanel = (props: Props) => {
 
-  const { positions, currentPrices, pipelines, decimals } = props
+  const { size, positions, currentPrices, pipelines, decimals } = props
+
+  const mobile = ['mobile'].includes(size)
+  const cellType = mobile ? 'div' : 'th'
+  const headerStyle = mobile ? styles.header : {}
+
+  const positionsHeader = [
+    <Table.HeaderCell as={cellType} style={headerStyle} width={2}>Trading Bot</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Mode</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Symbol</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Open since</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Side</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Size</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Units</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Entry Price</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Mark Price</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Leverage</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>PnL (ROI%)</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Exchange</Table.HeaderCell>,
+  ]
 
   return (
       <StyledSegment padding={'40px'} basic className="flex-column">
         <Table basic='very' striped compact textAlign={'center'}>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell width={2}>Trading Bot</Table.HeaderCell>
-              <Table.HeaderCell>Mode</Table.HeaderCell>
-              <Table.HeaderCell>Symbol</Table.HeaderCell>
-              <Table.HeaderCell>Open since</Table.HeaderCell>
-              <Table.HeaderCell>Side</Table.HeaderCell>
-              <Table.HeaderCell>Size</Table.HeaderCell>
-              <Table.HeaderCell>Units</Table.HeaderCell>
-              <Table.HeaderCell>Entry Price</Table.HeaderCell>
-              <Table.HeaderCell>Mark Price</Table.HeaderCell>
-              <Table.HeaderCell>Leverage</Table.HeaderCell>
-              <Table.HeaderCell>PnL (ROI%)</Table.HeaderCell>
-              <Table.HeaderCell>Exchange</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
+          {!mobile && (
+            <Table.Header>
+              <Table.Row>
+                {positionsHeader.map(entry => entry)}
+              </Table.Row>
+            </Table.Header>
+          )}
           <Table.Body>
             {positions.map((position, index) => {
               return (
                 <PositionRow
+                  size={size}
                   index={index}
                   position={position}
                   pipelines={pipelines}
                   currentPrices={currentPrices}
                   decimals={decimals}
+                  positionsHeader={positionsHeader}
                 />
               )
             })}
@@ -61,3 +74,9 @@ const PositionsPanel = (props: Props) => {
 };
 
 export default PositionsPanel;
+
+const styles = {
+  header: {
+    fontWeight: '600'
+  }
+}

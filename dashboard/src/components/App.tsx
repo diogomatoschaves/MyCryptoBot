@@ -568,6 +568,7 @@ class App extends Component<Props, State> {
                             </Route>
                             <Route path="/positions">
                                 <PositionsPanel
+                                  size={size}
                                   positions={positions}
                                   pipelines={pipelines}
                                   currentPrices={currentPrices}
