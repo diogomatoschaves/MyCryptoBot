@@ -95,6 +95,7 @@ function PipelineDetail(props: Props) {
         <StatsContainer>
           <Grid.Column width={10}>
             <PipelineItem
+              size={size}
               strategies={strategies}
               balances={balances}
               pipelines={pipelines}

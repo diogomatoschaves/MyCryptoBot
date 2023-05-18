@@ -1,5 +1,5 @@
 import React, {Fragment} from 'react'
-import {Button, Icon, Message} from "semantic-ui-react";
+import {Button, Grid, Icon, Message} from "semantic-ui-react";
 import {Link} from 'react-router-dom';
 import {
     DropdownOptions,
@@ -49,10 +49,14 @@ interface Props {
 }
 
 
-const ButtonWrapper = styled.div`
+const ButtonWrapper = styled(Grid)`
     margin-bottom: 40px;
     width: 100%;
     justify-content: space-around;
+`
+
+const NewPipelineWrapper = styled(Grid.Column)`
+    margin-top: ${(props: any) => props.isMobile && '20px !important'};
 `
 
 const FILTER_PIPELINES = 'FILTER_PIPELINES'
@@ -152,6 +156,8 @@ function PipelinePanel(props: Props) {
 
     const pipelineMatch = Object.keys(pipelines).find(pipeline => pipeline === pipelineId)
 
+    const isMobile = ['mobile'].includes(size)
+
     return (
         <Fragment>
             {pipelineMatch ? (
@@ -179,51 +185,60 @@ function PipelinePanel(props: Props) {
               />
             ) : (
               <Wrapper>
-                <ButtonWrapper className="flex-row">
-                    <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                        {['live', 'test'].map((option, index) => (
-                            <Button key={index} onClick={() => dispatch({
-                                type: TOGGLE_OPTIONS,
-                                [option]: !options[option]
-                            })} color={options && options[option] && 'grey'}>
-                                {option}
-                            </Button>
-                        ))}
-                    </Button.Group>
-                    <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                        {['active', 'stopped'].map((option, index) => (
-                          <Button key={index} onClick={() => dispatch({
-                              type: TOGGLE_OPTIONS,
-                              [option]: !options[option]
-                          })} color={options && options[option] && 'grey'}>
-                              {option}
-                          </Button>
-                        ))}
-                    </Button.Group>
-                    <NewPipeline
-                        strategies={strategies}
-                        balances={balances}
-                        pipelines={pipelines}
-                        positions={positions}
-                        symbolsOptions={symbolsOptions}
-                        strategiesOptions={strategiesOptions}
-                        candleSizeOptions={candleSizeOptions}
-                        exchangeOptions={exchangeOptions}
-                        startPipeline={startPipeline}
-                        editPipeline={editPipeline}
-                    >
-                        <Button inverted secondary>
-                          <span style={{marginRight: '10px'}}>
-                              <Icon name={'plus'}/>
-                          </span>
-                            New Trading Bot
-                        </Button>
-                    </NewPipeline>
+                <ButtonWrapper columns={3}>
+                    <Grid.Row style={{marginBottom: '30px'}}>
+                        <Grid.Column>
+                        <Button.Group size="mini" style={{alignSelf: 'center'}}>
+                            {['live', 'test'].map((option, index) => (
+                                <Button key={index} onClick={() => dispatch({
+                                    type: TOGGLE_OPTIONS,
+                                    [option]: !options[option]
+                                })} color={options && options[option] && 'grey'}>
+                                    {option}
+                                </Button>
+                            ))}
+                        </Button.Group>
+                        </Grid.Column>
+                        <Grid.Column>
+                            <Button.Group size="mini" style={{alignSelf: 'center'}}>
+                                {['active', 'stopped'].map((option, index) => (
+                                  <Button key={index} onClick={() => dispatch({
+                                      type: TOGGLE_OPTIONS,
+                                      [option]: !options[option]
+                                  })} color={options && options[option] && 'grey'}>
+                                      {option}
+                                  </Button>
+                                ))}
+                            </Button.Group>
+                        </Grid.Column>
+                        <NewPipelineWrapper width={isMobile && 16} isMobile={isMobile}>
+                            <NewPipeline
+                                strategies={strategies}
+                                balances={balances}
+                                pipelines={pipelines}
+                                positions={positions}
+                                symbolsOptions={symbolsOptions}
+                                strategiesOptions={strategiesOptions}
+                                candleSizeOptions={candleSizeOptions}
+                                exchangeOptions={exchangeOptions}
+                                startPipeline={startPipeline}
+                                editPipeline={editPipeline}
+                            >
+                                <Button inverted secondary>
+                                  <span style={{marginRight: '10px'}}>
+                                      <Icon name={'plus'}/>
+                                  </span>
+                                    New Trading Bot
+                                </Button>
+                            </NewPipeline>
+                        </NewPipelineWrapper>
+                    </Grid.Row>
                 </ButtonWrapper>
                   <div className="flex-column">
                 {filteredPipelines.map((pipelineId: string, index: number) => (
-                  <Link to={`/pipelines/${pipelineId}`} className="flex-row" style={{width: 'calc(80% - 50px)'}}>
+                  <Link to={`/pipelines/${pipelineId}`} className="flex-row" style={{width: isMobile ? 'calc(100% - 30px)' : 'calc(80% - 50px)'}}>
                     <PipelineItem
+                        size={size}
                         strategies={strategies}
                         balances={balances}
                         pipelines={pipelines}
