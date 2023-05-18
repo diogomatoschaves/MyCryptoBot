@@ -25,9 +25,8 @@ const Container = styled.div`
 
 const TradesContainer = styled(Grid.Row)`
   width: 100%;
-  // height: 80vh;
   padding-top: 0 !important;
-  margin-top: 10px;
+  margin-top: ${(props: any) => props.isMobile ? '20px !important' : '10px'} ;
 `
 
 const StatsContainer = styled(Grid.Row)`
@@ -122,7 +121,7 @@ function PipelineDetail(props: Props) {
           </Grid.Column>
         </StatsContainer>
         <PortfolioChart pipelineId={pipelineId} width={'90%'}/>
-        <TradesContainer>
+        <TradesContainer isMobile={isMobile} >
           <TradesTable
             size={size}
             filteredTrades={Object.keys(trades).filter((tradeId) => trades[tradeId].pipelineId === Number(pipelineId))}

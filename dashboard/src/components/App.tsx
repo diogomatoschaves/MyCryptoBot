@@ -556,6 +556,7 @@ class App extends Component<Props, State> {
                             <Route path="/dashboard">
                                 <Dashboard
                                   balances={balances}
+                                  size={size}
                                   pipelines={pipelines}
                                   trades={trades}
                                   positions={positions}
