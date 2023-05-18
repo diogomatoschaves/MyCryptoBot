@@ -16,6 +16,7 @@ const data1 = [
 interface Props {
   pipelineId?: string
   dataProp?: Data[]
+  width?: string
 }
 
 const formatYAxis = (tick: string) => {
@@ -24,7 +25,7 @@ const formatYAxis = (tick: string) => {
 
 const PortfolioChart = (props: Props) => {
 
-  const { pipelineId, dataProp } = props
+  const { pipelineId, dataProp, width } = props
 
   const [data, setData] = useState([])
 
@@ -49,7 +50,7 @@ const PortfolioChart = (props: Props) => {
   return (
       <Fragment>
         {data.length > 0 && (
-          <ResponsiveContainer width="97%" height={180}>
+          <ResponsiveContainer width={width ? width : "97%"} height={180}>
             <AreaChart
               data={data}
               margin={{

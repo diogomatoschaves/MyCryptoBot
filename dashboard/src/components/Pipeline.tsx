@@ -6,7 +6,6 @@ import {
     Position,
     StartPipeline,
     StopPipeline,
-    UpdateMessage
 } from "../types";
 import {Button, Grid, Icon, Label, Popup, Segment} from "semantic-ui-react";
 import {BLUE, DARK_YELLOW, GREEN, RED} from "../utils/constants";
@@ -21,6 +20,8 @@ import NewPipeline from "./NewPipeline";
 
 const StyledColumn = styled(Grid.Column)`
     display: flex !important;
+    padding-left: ${(props: any) => props.padding && '0 !important'};
+    padding-right: ${(props: any) => props.padding && '0 !important'}
 `
 
 const StyledRow = styled(Grid.Row)`
@@ -32,6 +33,7 @@ const StyledRow = styled(Grid.Row)`
 `
 
 interface Props {
+    size: string
     pipeline: Pipeline
     startPipeline: StartPipeline
     stopPipeline: StopPipeline
@@ -55,6 +57,7 @@ interface Props {
 function PipelineItem(props: Props) {
 
     const {
+        size,
         pipeline,
         position,
         startPipeline,
@@ -88,6 +91,8 @@ function PipelineItem(props: Props) {
 
     const color = pipelinePnl.profit > 0 ? GREEN : pipelinePnl.profit < 0 ? RED : "000000"
 
+    const isMobile = ['mobile'].includes(size)
+
     return (
         <Segment
             secondary
@@ -118,7 +123,7 @@ function PipelineItem(props: Props) {
             </Label>
             <Grid columns={4}>
                 <StyledRow>
-                    <Grid.Column width={3}>
+                    <Grid.Column width={isMobile ? 5 : 3}>
                         <Grid.Column style={styles.header}>
                             Trading Pair
                         </Grid.Column>
@@ -140,7 +145,7 @@ function PipelineItem(props: Props) {
                           </div>
                       }
                       trigger={
-                          <Grid.Column width={4}>
+                          <Grid.Column width={isMobile ? 6 : 4}>
                               <Grid.Column floated='left' style={styles.header}>
                                   Strategy
                               </Grid.Column>
@@ -150,26 +155,28 @@ function PipelineItem(props: Props) {
                           </Grid.Column>
                       }
                     />
-                    <Grid.Column width={3}>
-                        <Grid.Column floated='left' style={styles.header}>
+                    <Grid.Column width={isMobile ? 5 : 3}>
+                        <Grid.Column only={'wee'} floated='left' style={styles.header}>
                             Active since
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.rightColumn} >
                             {age}
                         </Grid.Column>
                     </Grid.Column>
-                    <StyledColumn width={6} className="flex-row">
-                        <PipelineDeleteButton
+                    {!isMobile && (
+                      <StyledColumn width={isMobile ? 8 : 6} className="flex-row">
+                          <PipelineDeleteButton
                             pipeline={pipeline}
                             deletePipeline={deletePipeline}
                             stopPipeline={stopPipeline}
                             open={open}
                             setOpen={setOpen}
-                        />
-                    </StyledColumn>
+                          />
+                      </StyledColumn>
+                    )}
                 </StyledRow>
                 <StyledRow>
-                    <Grid.Column width={3}>
+                    <Grid.Column width={isMobile ? 5 : 3}>
                         <Grid.Column floated='left' style={styles.header}>
                             Candle size
                         </Grid.Column>
@@ -177,7 +184,7 @@ function PipelineItem(props: Props) {
                             {pipeline.candleSize}
                         </Grid.Column>
                     </Grid.Column>
-                    <Grid.Column width={4}>
+                    <Grid.Column width={isMobile ? 6 : 4}>
                         <Grid.Column floated='left' style={styles.header}>
                             Exchange
                         </Grid.Column>
@@ -185,7 +192,7 @@ function PipelineItem(props: Props) {
                             {pipeline.exchange}
                         </Grid.Column>
                     </Grid.Column>
-                    <Grid.Column width={3}>
+                    <Grid.Column width={isMobile ? 5 : 3}>
                         <Grid.Column floated='left' style={styles.header}>
                             PnL (ROI%)
                         </Grid.Column>
@@ -193,43 +200,45 @@ function PipelineItem(props: Props) {
                             {pnl}
                         </Grid.Column>
                     </Grid.Column>
-                    <StyledColumn width={6} className="flex-row">
-                        <div style={{width: '100%', alignSelf: 'center'}} className='flex-column'>
-                            <NewPipeline
-                              strategies={strategies}
-                              balances={balances}
-                              pipelines={pipelines}
-                              positions={positions}
-                              symbolsOptions={symbolsOptions}
-                              strategiesOptions={strategiesOptions}
-                              candleSizeOptions={candleSizeOptions}
-                              exchangeOptions={exchangeOptions}
-                              startPipeline={startPipeline}
-                              editPipeline={editPipeline}
-                              pipeline={pipeline}
-                              edit={true}
-                            >
-                                <Button
-                                  onClick={(event) => {
-                                    event.preventDefault();
-                                    event.stopPropagation()
-                                  }}
-                                  style={{width: '80%'}}
-                                  icon
-                                  disabled={pipeline.active}
+                    {!isMobile && (
+                        <StyledColumn width={6} className="flex-row">
+                            <div style={{width: '100%', alignSelf: 'center'}} className='flex-column'>
+                                <NewPipeline
+                                  strategies={strategies}
+                                  balances={balances}
+                                  pipelines={pipelines}
+                                  positions={positions}
+                                  symbolsOptions={symbolsOptions}
+                                  strategiesOptions={strategiesOptions}
+                                  candleSizeOptions={candleSizeOptions}
+                                  exchangeOptions={exchangeOptions}
+                                  startPipeline={startPipeline}
+                                  editPipeline={editPipeline}
+                                  pipeline={pipeline}
+                                  edit={true}
                                 >
-                                <span style={{marginRight: '10px'}}>
-                                  <Icon name={'edit'}/>
-                                </span>
-                                    Edit Bot
-                                </Button>
-                            </NewPipeline>
-                        </div>
-                    </StyledColumn>
+                                    <Button
+                                      onClick={(event) => {
+                                        event.preventDefault();
+                                        event.stopPropagation()
+                                      }}
+                                      style={{width: '80%'}}
+                                      icon
+                                      disabled={pipeline.active}
+                                    >
+                                    <span style={{marginRight: '10px'}}>
+                                      <Icon name={'edit'}/>
+                                    </span>
+                                        Edit Bot
+                                    </Button>
+                                </NewPipeline>
+                            </div>
+                        </StyledColumn>
+                    )}
                 </StyledRow>
                 {lastRow && (
                   <StyledRow>
-                    <Grid.Column width={3}>
+                    <Grid.Column width={isMobile ? 5 : 3}>
                         <Grid.Column floated='left' style={styles.header}>
                             Allocated Equity
                         </Grid.Column>
@@ -237,7 +246,7 @@ function PipelineItem(props: Props) {
                             {`${pipeline.equity} USDT`}
                         </Grid.Column>
                     </Grid.Column>
-                    <Grid.Column width={4}>
+                    <Grid.Column width={isMobile ? 6 : 4}>
                         <Grid.Column floated='left' style={styles.header}>
                             Leverage
                         </Grid.Column>
@@ -245,7 +254,7 @@ function PipelineItem(props: Props) {
                             {pipeline.leverage}
                         </Grid.Column>
                     </Grid.Column>
-                    <Grid.Column width={3}>
+                    <Grid.Column width={isMobile ? 5 : 3}>
                         <Grid.Column floated='left' style={styles.header}>
                             # trades
                         </Grid.Column>
@@ -253,7 +262,62 @@ function PipelineItem(props: Props) {
                             {pipeline.numberTrades}
                         </Grid.Column>
                     </Grid.Column>
-                      <StyledColumn width={6} className="flex-row">
+                      {!isMobile && (
+                        <StyledColumn width={6} className="flex-row">
+                            <PipelineButton
+                              pipeline={pipeline}
+                              startPipeline={startPipeline}
+                              stopPipeline={stopPipeline}
+                            />
+                        </StyledColumn>
+                      )}
+                  </StyledRow>
+                )}
+                {isMobile && (
+                  <StyledRow columns={3}>
+                      <StyledColumn padding={isMobile} width={5} className="flex-row">
+                          <PipelineDeleteButton
+                            pipeline={pipeline}
+                            deletePipeline={deletePipeline}
+                            stopPipeline={stopPipeline}
+                            open={open}
+                            setOpen={setOpen}
+                          />
+                      </StyledColumn>
+                      <StyledColumn padding={isMobile} width={6} className="flex-row">
+                          <div style={{width: '100%', alignSelf: 'center'}} className='flex-column'>
+                              <NewPipeline
+                                strategies={strategies}
+                                balances={balances}
+                                pipelines={pipelines}
+                                positions={positions}
+                                symbolsOptions={symbolsOptions}
+                                strategiesOptions={strategiesOptions}
+                                candleSizeOptions={candleSizeOptions}
+                                exchangeOptions={exchangeOptions}
+                                startPipeline={startPipeline}
+                                editPipeline={editPipeline}
+                                pipeline={pipeline}
+                                edit={true}
+                              >
+                                  <Button
+                                    onClick={(event) => {
+                                        event.preventDefault();
+                                        event.stopPropagation()
+                                    }}
+                                    style={{width: '80%'}}
+                                    icon
+                                    disabled={pipeline.active}
+                                  >
+                                    <span style={{marginRight: '10px'}}>
+                                      <Icon name={'edit'}/>
+                                    </span>
+                                      Edit Bot
+                                  </Button>
+                              </NewPipeline>
+                          </div>
+                      </StyledColumn>
+                      <StyledColumn padding={isMobile} width={5} className="flex-row">
                           <PipelineButton
                             pipeline={pipeline}
                             startPipeline={startPipeline}
@@ -276,7 +340,11 @@ const styles = {
         width: '100%',
         padding: '55px 30px 55px',
         marginBottom: '40px',
-        // border: 'none'
+    },
+    mobileSegment: {
+        width: '100%',
+        padding: '35px 20px 55px',
+        marginBottom: '40px',
     },
     header: {
         color: 'rgb(130, 130, 130)',

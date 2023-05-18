@@ -32,7 +32,7 @@ import {
     deleteBot, getPipelinesMetrics, editBot, getEquityTimeSeries, getPipelinesPnl,
 } from "../apiCalls";
 import {RESOURCES_MAPPING} from "../utils/constants";
-import Menu from "./Menu";
+import MenuWrapper from "./MenuWrapper";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
 import {parseTrade, organizePositions, organizePipeline, convertDate} from "../utils/helpers";
@@ -41,6 +41,7 @@ import {StyledSegment} from "../styledComponents";
 import Dashboard from "./Dashboard";
 import {Header, Label} from "semantic-ui-react";
 import {balanceReducer} from "../reducers/balancesReducer";
+import withWindowSizeListener from "../higherOrderComponents/withWindowSizeListener";
 
 
 const AppDiv: any = styled.div`
@@ -51,22 +52,13 @@ const AppDiv: any = styled.div`
   justify-content: flex-start;
 `
 
-const MenuColumn = styled.div`
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    top: 0;
-    width: 25vw;
-    max-width: 300px;
-`
-
 const AppColumn: any = styled.div`
     position: absolute;
-    left: min(25vw, 300px);
+    left: ${(props: any) => ['mobile', 'tablet'].includes(props.size) ? 0 : 'min(25vw, 300px)'};
     bottom: 0;
     top: 0;
     right: 0;
-    width: calc(100vw - min(25vw, 300px));
+    width: ${(props: any) => ['mobile', 'tablet'].includes(props.size) ? '100vw' : 'calc(100vw - min(25vw, 300px))'};
     height: 100vh;
     overflow-x: ${(props: any) => props.overflowX ? props.overflowX : 'hidden'};
 `
@@ -90,6 +82,7 @@ interface State {
 }
 
 interface Props {
+    size: string
     location: Location
     history: History
     removeToken: () => void
@@ -496,21 +489,20 @@ class App extends Component<Props, State> {
             pipelinesPnl
         } = this.state
 
-        const { decimals, menuProperties, location, removeToken, updateMessage } = this.props
+        const { size, decimals, menuProperties, location, removeToken, updateMessage } = this.props
 
         const menuOption = menuProperties.find(option => location.pathname.includes(option.code))
 
         return (
             <AppDiv className="flex-row">
-                <MenuColumn>
-                    <Menu
-                      menuOption={menuOption}
-                      menuProperties={menuProperties}
-                      removeToken={removeToken}
-                      updateMessage={updateMessage}
-                    />
-                </MenuColumn>
-                <AppColumn overflowX={menuOption && menuOption.code === '/positions' && "scroll"} >
+                <MenuWrapper
+                  menuOption={menuOption}
+                  menuProperties={menuProperties}
+                  removeToken={removeToken}
+                  updateMessage={updateMessage}
+                  size={size}
+                />
+                <AppColumn size={size} overflowX={menuOption && menuOption.code === '/positions' && "scroll"} >
                     <StyledSegment
                         basic
                         paddingTop="10px"
@@ -528,6 +520,7 @@ class App extends Component<Props, State> {
                         <Switch>
                             <Route path='/trades' exact={true}>
                                 <TradesPanel
+                                  size={size}
                                   trades={trades}
                                   pipelines={pipelines}
                                   currentPrices={currentPrices}
@@ -537,6 +530,7 @@ class App extends Component<Props, State> {
                             </Route>
                             <Route path="/pipelines/:pipelineId?" render={({match}) => (
                                 <PipelinePanel
+                                  size={size}
                                   match={match}
                                   symbolsOptions={symbolsOptions}
                                   strategiesOptions={strategiesOptions}
@@ -562,6 +556,7 @@ class App extends Component<Props, State> {
                             <Route path="/dashboard">
                                 <Dashboard
                                   balances={balances}
+                                  size={size}
                                   pipelines={pipelines}
                                   trades={trades}
                                   positions={positions}
@@ -573,6 +568,7 @@ class App extends Component<Props, State> {
                             </Route>
                             <Route path="/positions">
                                 <PositionsPanel
+                                  size={size}
                                   positions={positions}
                                   pipelines={pipelines}
                                   currentPrices={currentPrices}
@@ -592,4 +588,4 @@ class App extends Component<Props, State> {
 }
 
 
-export default App;
+export default withWindowSizeListener(App);

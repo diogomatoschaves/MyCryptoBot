@@ -7,6 +7,7 @@ import {debounce, throttle} from "lodash";
 
 
 interface Props {
+  size: string
   filteredTrades: string[]
   trades: TradesObject
   decimals: Decimals
@@ -40,6 +41,7 @@ const reducer = (state: any, action: any) => {
 const TradesTable = (props: Props) => {
 
   const {
+    size,
     filteredTrades,
     trades,
     decimals,
@@ -91,36 +93,48 @@ const TradesTable = (props: Props) => {
     updateTrades(page, pipelineId)
   }, 500)).current
 
+  const mobile = ['mobile'].includes(size)
+  const cellType = mobile ? 'div' : 'th'
+  const headerStyle = mobile ? styles : {}
+
+  const tradesTableHeader = [
+    <Table.HeaderCell as={cellType} style={headerStyle}>Trading Bot</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Mode</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Symbol</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Opened On</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Duration</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Side</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Units</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Leverage</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Entry Price</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>Exit Price</Table.HeaderCell>,
+    <Table.HeaderCell as={cellType} style={headerStyle}>PnL (ROI%)</Table.HeaderCell>
+  ]
+
   return (
     <Wrapper maxHeight={maxHeight} onScroll={(e: any) => handleScroll(e)}>
-      <Table basic='very' size="small" compact striped textAlign="center">
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Trading Bot</Table.HeaderCell>
-            <Table.HeaderCell>Mode</Table.HeaderCell>
-            <Table.HeaderCell>Symbol</Table.HeaderCell>
-            <Table.HeaderCell>Opened On</Table.HeaderCell>
-            <Table.HeaderCell>Duration</Table.HeaderCell>
-            <Table.HeaderCell>Side</Table.HeaderCell>
-            <Table.HeaderCell>Units</Table.HeaderCell>
-            <Table.HeaderCell>Leverage</Table.HeaderCell>
-            <Table.HeaderCell>Entry Price</Table.HeaderCell>
-            <Table.HeaderCell>Exit Price</Table.HeaderCell>
-            <Table.HeaderCell>PnL (ROI%)</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+      <Table stackable basic='very' size="small" compact striped textAlign="center">
+        {!mobile && (
+          <Table.Header>
+            <Table.Row>
+              {tradesTableHeader.map(entry => entry)}
+            </Table.Row>
+          </Table.Header>
+        )}
         <Table.Body>
           {sortedTrades.map((tradeId: string, index: number) => {
             // @ts-ignore
             const trade = trades[tradeId]
             return (
               <TradeRow
+                size={size}
                 key={index}
                 index={index}
                 trade={trade}
                 pipeline={pipelines[trade.pipelineId]}
                 currentPrices={currentPrices}
                 decimals={decimals}
+                tradesTableHeader={tradesTableHeader}
               />
             )
           })}
@@ -139,3 +153,7 @@ const TradesTable = (props: Props) => {
 }
 
 export default TradesTable
+
+const styles = {
+  fontWeight: '600'
+}

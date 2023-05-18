@@ -6,6 +6,7 @@ import TradesTable from "./TradesTable";
 
 
 interface Props {
+    size: string
     trades: TradesObject
     pipelines: PipelinesObject
     currentPrices: Object
@@ -62,7 +63,7 @@ const initialOptions = {
 
 function TradesPanel(props: Props) {
 
-    const { trades, pipelines, currentPrices, decimals, updateTrades } = props
+    const { size, trades, pipelines, currentPrices, decimals, updateTrades } = props
 
     const [{filteredTrades, options}, dispatch] = useReducer(
         reducer, {
@@ -101,6 +102,7 @@ function TradesPanel(props: Props) {
               )}
           </Button.Group>
             <TradesTable
+              size={size}
               filteredTrades={filteredTrades}
               trades={trades}
               decimals={decimals}
