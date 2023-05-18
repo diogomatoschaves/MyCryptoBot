@@ -16,13 +16,14 @@ const LoginForm = styled.div`
 
 
 interface Props {
+  size: string
   saveToken: (userToken: string) => void
   updateMessage: UpdateMessage
 }
 
 function Login(props: Props) {
 
-  const { saveToken, updateMessage } = props
+  const { size, saveToken, updateMessage } = props
 
   const [loginForm, setloginForm] = useState({
     username: "",
@@ -69,12 +70,14 @@ function Login(props: Props) {
       ...prevNote, [name]: value})
     )}
 
+  const isMobile = size === 'mobile'
+
   return (
     <LoginForm>
       <Form className="flex-column" style={{width: '100%', height: '100%'}}>
         {Object.keys(loginForm).map(name => (
           <Form.Field
-            width={3}
+            width={isMobile ? 8  : 5}
             onChange={handleChange}
             control={Input}
             label={capitalize(name)}

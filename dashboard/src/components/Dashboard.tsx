@@ -130,15 +130,15 @@ function Dashboard(props: Props) {
 
   const rowStyle = {
     width: '100%',
-    paddingBottom: isMobile && 0,
-    paddingTop: isMobile && 0
+    paddingBottom: isMobile ? 0 : '3px',
+    paddingTop: isMobile ? 0 : '3px'
   }
 
   return (
       <StyledSegment basic className="flex-column">
-        <Grid style={{width: '100%'}}>
-            <Grid.Row style={rowStyle} className="flex-row">
-              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '50%'}}>
+        <Grid style={{width: '100%'}} className="flex-column">
+              <Grid.Row style={rowStyle} className="flex-row">
+              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '44%'}}>
                 <Header size={'medium'} color="blue">
                   Equity
                   <Label basic color='blue' >
@@ -169,7 +169,7 @@ function Dashboard(props: Props) {
                 </Grid>
                 <PortfolioChart dataProp={equityTimeSeries.live}/>
               </Segment>
-              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '50%'}}>
+              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '44%'}}>
                 <Header size={'medium'} color="blue">
                   Equity
                   <Label basic color='blue' >
@@ -202,7 +202,7 @@ function Dashboard(props: Props) {
               </Segment>
             </Grid.Row>
             <Grid.Row style={rowStyle} className="flex-row">
-              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '50%'}}>
+              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '44%'}}>
                 <Link to="/pipelines">
                   <Header size={'medium'} color="teal">
                     Trading Bots
@@ -247,10 +247,10 @@ function Dashboard(props: Props) {
                   </Grid>
                 </Link>
               </Segment>
-              <TradesStats tradesMetrics={tradesMetrics} style={{...styles.tradesStatsStyle , width: isMobile ? '100%' : '50%'}}/>
+              <TradesStats tradesMetrics={tradesMetrics} style={{...styles.tradesStatsStyle , width: isMobile ? '100%' : '44%'}}/>
             </Grid.Row>
             <Grid.Row style={rowStyle} className="flex-row">
-              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '50%'}}>
+              <Segment secondary raised style={{...styles.rowSegment, minHeight: '245px', width: isMobile ? '100%' : '44%'}}>
                 <Link to='/positions'>
                   <Header size={'medium'} color="pink">
                     Positions
@@ -287,7 +287,7 @@ function Dashboard(props: Props) {
                   </Grid>
                 </Link>
               </Segment>
-              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '50%'}}>
+              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '44%'}}>
                 <Header size={'medium'} color="pink">
                   Currencies
                 </Header>

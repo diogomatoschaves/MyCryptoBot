@@ -12,6 +12,9 @@ def general_app_error(func):
         try:
             return func(*args, **kwargs)
         except Exception as e:
+
+            logging.warning('Error encountered. Restarting app.')
+
             logging.error(traceback.format_exc())
 
             return sys.exit(0)

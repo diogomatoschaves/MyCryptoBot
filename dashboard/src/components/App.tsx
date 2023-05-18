@@ -588,4 +588,4 @@ class App extends Component<Props, State> {
 }
 
 
-export default withWindowSizeListener(App);
+export default App;
