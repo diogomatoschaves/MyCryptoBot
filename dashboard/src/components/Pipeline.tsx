@@ -96,7 +96,7 @@ function PipelineItem(props: Props) {
     return (
         <Segment
             secondary
-            style={isMobile ? styles.mobileSegment : segmentStyle ? segmentStyle : styles.segment}
+            style={segmentStyle ? segmentStyle : styles.segment}
             raised
         >
             <Ribbon color={pipeline.color} ribbon>
