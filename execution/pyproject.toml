@@ -6,7 +6,7 @@ authors = ["Diogo Matos Chaves <diogo_chaves@hotmail.com>"]
 
 [tool.poetry.dependencies]
 python = "~3.8"
-python-binance = "1.0.17"
+python-binance = "~1.0.19"
 python-dotenv = "^0.17.0"
 Flask = "2.2.2"
 Django = "^3.1.7"

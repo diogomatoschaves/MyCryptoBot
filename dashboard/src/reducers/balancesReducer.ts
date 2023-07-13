@@ -1,9 +1,9 @@
-export const balanceReducer = (balance: any, coin: { asset: string; balance: string; withdrawAvailable: string; }) => {
+export const balanceReducer = (balance: any, coin: { asset: string; balance: string; availableBalance: string; }) => {
   return {
     ...balance,
     [coin.asset]: {
       totalBalance: Number(coin.balance),
-      availableBalance: Number(coin.withdrawAvailable)
+      availableBalance: Number(coin.availableBalance)
     }
   }
 }

@@ -36,7 +36,7 @@ ENV POETRY_HOME /opt/poetry
 RUN pip install -U pip \
     && apt-get update \
     && yes | apt-get install libpq-dev \
-    && apt install -y curl netcat \
+    && apt install -y curl netcat-traditional \
     && curl -sSL https://install.python-poetry.org | python - --version 1.2.0 \
     && pip install psycopg2-binary==2.8.6
 ENV PATH="$POETRY_HOME/bin:$PATH"
