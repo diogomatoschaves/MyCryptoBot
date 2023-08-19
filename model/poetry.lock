@@ -778,7 +778,7 @@ dev = ["pre-commit", "tox", "pytest-asyncio"]
 
 [[package]]
 name = "python-binance"
-version = "1.0.17"
+version = "1.0.19"
 description = "Binance REST API python implementation"
 category = "main"
 optional = false
@@ -1160,7 +1160,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.8"
-content-hash = "44efc9d916000a3681532726d781855c92e7a13184aed2e1711b7b5a5cdbcd19"
+content-hash = "54ed46f40247a62ebd98c51805a0883d67f37169989ee87c19d63bb3f79f0ba5"
 
 [metadata.files]
 aiohttp = []
