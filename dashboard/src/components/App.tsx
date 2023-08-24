@@ -400,8 +400,8 @@ class App extends Component<Props, State> {
                   return {
                       ...state,
                       balances: {
-                          live: response.live.reduce(balanceReducer, {}),
-                          test: response.testnet.reduce(balanceReducer, {})
+                          live: response.live && response.live.reduce(balanceReducer, {}),
+                          test: response.testnet && response.testnet.reduce(balanceReducer, {})
                       }
                   }
               })
