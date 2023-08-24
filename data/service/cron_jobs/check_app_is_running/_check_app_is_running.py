@@ -15,7 +15,7 @@ from data.service.blueprints.bots_api import stop_instance
 def check_app_is_running():
     """
     """
-    logging.debug('Checking app status...')
+    logging.info('Checking app status...')
 
     active_pipelines = Pipeline.objects.filter(active=True)
 
@@ -23,7 +23,9 @@ def check_app_is_running():
 
         logging.debug(f'Checking pipeline {pipeline.id}...')
 
-        if datetime.now(pytz.utc) - pipeline.last_entry > timedelta(minutes=10):
+        now = datetime.now(pytz.utc)
+
+        if pipeline.last_entry and now - pipeline.last_entry > timedelta(minutes=10):
 
             logging.info(f'Pipeline {pipeline.id} found to be stuck. Sending stop request...')
 

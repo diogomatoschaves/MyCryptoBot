@@ -154,6 +154,9 @@ def start_bot():
         pipeline.save()
 
         raise PipelineStartFail(response["message"])
+    else:
+        pipeline.last_entry = None
+        pipeline.save()
 
     start_symbol_trading(pipeline)
 
