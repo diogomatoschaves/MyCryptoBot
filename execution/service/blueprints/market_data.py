@@ -3,6 +3,7 @@ import os
 import django
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
+from requests.exceptions import ConnectionError, ReadTimeout
 
 from shared.exchanges import BinanceHandler
 from shared.utils.decorators import retry_failed_connection
@@ -21,7 +22,7 @@ def get_ticker(symbol):
     try:
         client.validate_symbol(symbol)
         return client.futures_symbol_ticker(symbol=symbol)
-    except SymbolInvalid:
+    except (SymbolInvalid, ConnectionError, ReadTimeout):
         return {}
 
 
