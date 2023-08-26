@@ -6,7 +6,6 @@ on:
   repository_dispatch:
     types: [on-demand-run]
   push:
-    branches: [master]
     paths:
       - 'data/**'
       - 'dashboard/**'
@@ -14,8 +13,8 @@ on:
       - 'database/model/migrations/**'
       - '.github/workflows/build-deploy-data.yml'
 env:
-  DIRECTORY: data/
-  HEROKU_WEB_PROCESS: web
+  DIRECTORY: data
+  HEROKU_PROCESS: web
   HEROKU_CLOCK_PROCESS: clock
   HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
   HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
@@ -44,13 +43,13 @@ jobs:
           virtualenvs-create: false
       - name: Install dependencies
         run: |
-          cd $DIRECTORY
+          cd $DIRECTORY/
           poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
       - name: Test with pytest
         env:
           TEST: true
         run: |
-          python -m pytest $DIRECTORY --ds=database.settings --verbose --cov=data --cov-report=xml
+          python -m pytest $DIRECTORY/ --ds=database.settings --verbose --cov=data --cov-report=xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -59,9 +58,18 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
+  test-build:
+    runs-on: ubuntu-latest
+    needs: testing
+    if: github.ref != 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Docker image
+        run: docker build -f $DIRECTORY/Dockerfile -t $DIRECTORY-app .
   build:
     runs-on: ubuntu-latest
     needs: testing
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
       - name: Login to heroku container registry
@@ -69,20 +77,23 @@ jobs:
           echo ${{ secrets.HEROKU_API_KEY }} | docker login --username=${{ secrets.HEROKU_EMAIL }} registry.heroku.com --password-stdin
       - name: Build and push
         run: |
-          cd $DIRECTORY
-          heroku container:push $HEROKU_WEB_PROCESS --app $HEROKU_APP_NAME --context-path=../ \
+          cd $DIRECTORY/
+          heroku container:push $HEROKU_PROCESS --app $HEROKU_APP_NAME --context-path=../ \
             --arg BINANCE_API_KEY=$BINANCE_API_KEY,BINANCE_API_SECRET=$BINANCE_API_SECRET,\
           MODEL_APP_URL=$MODEL_APP_URL,EXECUTION_APP_URL=$EXECUTION_APP_URL,APP_NAME=$HEROKU_APP_NAME,\
           BINANCE_API_KEY_TEST=$BINANCE_API_KEY_TEST,BINANCE_API_SECRET_TEST=$BINANCE_API_SECRET_TEST,\
           SECRET_KEY=$SECRET_KEY
-      - name: Release
-        run: heroku container:release $HEROKU_WEB_PROCESS --app $HEROKU_APP_NAME
-      - uses: akhileshns/heroku-deploy@v3.12.12
-        with:
-          heroku_api_key: $HEROKU_API_KEY
-          heroku_app_name: $HEROKU_APP_NAME
-          heroku_email: $HEROKU_EMAIL
-          justlogin: true
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to heroku container registry
+        run: |
+          echo ${{ secrets.HEROKU_API_KEY }} | docker login --username=${{ secrets.HEROKU_EMAIL }} registry.heroku.com --password-stdin
+      - name: Deploy
+        run: heroku container:release $HEROKU_PROCESS --app $HEROKU_APP_NAME
       - name: Run database migrations
         run: |
           heroku run python database/manage.py migrate --app $HEROKU_APP_NAME
