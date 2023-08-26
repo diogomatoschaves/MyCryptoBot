@@ -70,6 +70,6 @@ def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
             for asset in balances[account_type]:
                 if asset['asset'] == 'USDT':
 
-                    current_asset_value = float(asset["withdrawAvailable"]) + total_current_value[account_type]
+                    current_asset_value = float(asset["availableBalance"]) + total_current_value[account_type]
 
                     PortfolioTimeSeries.objects.create(time=time, value=current_asset_value, type=account_type)
