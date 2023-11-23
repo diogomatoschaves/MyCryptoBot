@@ -11,15 +11,18 @@ your own build environment. The fork button can be found in the top right corner
 ### Environment
 
 The first thing we'll need to do is to set up a virtual environment, so that we can run the rest of the commands.
-This project uses Poetry for package management, so if you don't have it installed yet you can follow the 
-instructions on this [page](https://python-poetry.org/docs/).
+This project uses Poetry for package management, so if you don't have it installed yet, you can follow the 
+instructions on this [page](https://python-poetry.org/docs/). Also, if you have a python version installed other 
+than the accepted for this project, you might need to activate a different version. [pyenv](https://github.com/pyenv/pyenv) 
+is a straightforward way of achieving that. 
 
 At the root of the project, run: 
 ```shell
 poetry install # it may take a while
 poetry shell
 ```
-Which will install the environment and activate the virtual environment.
+Which will install the environment and activate the virtual environment. A `requirements.txt` file is also included 
+if you want to use another virtual environment package. 
 
 At this stage we can also define the environment variables that the application will use.
 Create an `.env` file at the root of the project, copy the template env variables from 
@@ -30,6 +33,17 @@ touch .env
 cp .env.template .env
 ```
 
+```shell
+POSTGRES_DB # Name of the database
+POSTGRES_USER # Your local postgres username
+POSTGRES_PASSWORD # Your local postgres password
+SECRET_KEY # A secret key to hash your application
+BINANCE_API_KEY # Your personal Binance API key (check binance documentation)
+BINANCE_API_SECRET # Your personal Binance API secret (check binance documentation)
+BINANCE_API_KEY_TEST # Your personal Binance API key (binance testnet)
+BINANCE_API_SECRET_TEST # Your personal Binance API secret (binance testnet)
+```
+
 ### Database
 
 This project uses PostgreSQL as a database engine in order to keep consistency between local development and production.
@@ -38,7 +52,7 @@ Therefore, it is assumed that PostgreSQL is installed on your machine. If not, p
 
 We must first create the database by entering into `psql` and executing a command there:
 ```shell
-psql -U <pg_username> # Replace <pg_username> with your own postgres username
+psql -d postgres -U <pg_username> # Replace <pg_username> with your own postgres username
 CREATE DATABASE <database_name>; # Enter the same name as the env variable $POSTGRES_DB
 exit
 ```
@@ -53,15 +67,6 @@ instructions:
 
 ```shell
 python database/manage.py createsuperuser
-```
-
-### Dashboard
-
-Install the frontend dependencies with the following commands:
-
-```shell
-cd dashboard
-npm install
 ```
 
 ## Local Usage
@@ -188,6 +193,6 @@ curl \
 
 ## Remote Usage
 
-If the installation process went smoothly, you can now go https://<YOUR_UNIQUE_DATA_APP_NAME>.herokuapp.com, enter 
+If the installation process went smoothly, you can now go `https://<YOUR_UNIQUE_DATA_APP_NAME>.herokuapp.com`, enter 
 your superuser login details and you'll be ready to manage your app through the USER interface, just like when you were 
 running things locally. Enjoy!
