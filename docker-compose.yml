@@ -1,23 +1,13 @@
 version: "3.3"
 services:
-  postgres:
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - 5432
-    volumes:
-      - ./database/postgres:/var/lib/postgresql/data
   data-service:
     build:
       context: .
       dockerfile: data/Dockerfile
     image: data-server
+    platform: linux/amd64
     ports:
-      - "5000:5000"
+      - "5003:5000"
     env_file:
       - .env
     environment:
@@ -38,6 +28,7 @@ services:
       context: .
       dockerfile: model/Dockerfile.web
     image: model-server
+    platform: linux/amd64
     ports:
       - "5001:5000"
     env_file:
@@ -53,6 +44,7 @@ services:
       context: .
       dockerfile: model/Dockerfile.worker
     image: model-worker
+    platform: linux/amd64
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
@@ -68,6 +60,7 @@ services:
       context: .
       dockerfile: execution/Dockerfile
     image: execution-server
+    platform: linux/amd64
     ports:
       - "5002:5000"
     env_file:
@@ -93,7 +86,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_DATA_API_HOST=http://localhost:5000
+      - REACT_APP_DATA_API_HOST=http://localhost:5003
       - REACT_APP_EXECUTION_API_HOST=http://localhost:5002
     volumes:
       - ./dashboard:/app

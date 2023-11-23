@@ -1,10 +1,10 @@
-FROM node:13.12.0-alpine as build-step
+FROM --platform=linux/amd64 node:13.12.0-alpine as build-step
 ENV DIRECTORY dashboard
 
 WORKDIR /app
 
 COPY $DIRECTORY/package*.json ./
-RUN npm install
+RUN npm clean-install
 
 
 COPY ./$DIRECTORY/ ./
@@ -12,7 +12,7 @@ COPY ./$DIRECTORY/ ./
 RUN npm run build
 
 
-FROM python:3.8-slim
+FROM --platform=linux/amd64 python:3.8-slim
 
 ARG BINANCE_API_KEY
 ARG BINANCE_API_SECRET
