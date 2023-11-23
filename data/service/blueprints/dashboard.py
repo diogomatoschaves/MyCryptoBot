@@ -318,7 +318,7 @@ def get_pipeline_pnl(pipeline_ids):
 
             response = get_price(pipeline.symbol.name)
 
-            if "success" in response and not response["success"]:
+            if not response or ("success" in response and not response["success"]):
                 continue
 
             price = float(response["price"])
