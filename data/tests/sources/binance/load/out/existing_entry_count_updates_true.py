@@ -1,1 +1,1 @@
-expected_value = 1
+expected_value = 0

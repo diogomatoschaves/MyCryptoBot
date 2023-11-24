@@ -1,5 +1,3 @@
-import os
-
 from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.test_setup import get_fixtures
 from data.sources.binance.extract import extract_data
@@ -27,9 +25,12 @@ class TestBinanceExtract:
 
         params_dict = dict(
             model_class=model_class,
-            klines_generator=mock_get_historical_klines_generator,
+            get_klines_method=mock_get_historical_klines_generator,
             symbol=symbol,
             candle_size=candle_size
         )
 
         assert extract_data(**params_dict).equals(fixture["out"]["expected_value"])
+
+    # def test_get_start_date(self):
+

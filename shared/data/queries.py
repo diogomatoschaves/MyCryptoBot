@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 
 
@@ -10,6 +12,11 @@ def get_data(model_class, start_date, symbol, interval, exchange='binance'):
 
     rows = model_class.objects.filter(**query).order_by('open_time').values()
 
-    data = pd.DataFrame(rows).set_index('open_time')
+    data = pd.DataFrame(rows)
+
+    try:
+        data = data.set_index('open_time')
+    except KeyError as e:
+        logging.debug(e)
 
     return data

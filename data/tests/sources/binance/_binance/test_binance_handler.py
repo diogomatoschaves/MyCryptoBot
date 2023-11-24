@@ -41,7 +41,7 @@ class TestBinanceDataHandler:
                 {
                     "expected_number_objs_structured": 1,
                     "expected_number_objs_exchange": 15,
-                    "expected_times_called": 1
+                    "expected_times_called": 2
                 },
                 id="1hNoPipelineID",
             ),
@@ -54,7 +54,7 @@ class TestBinanceDataHandler:
                 {
                     "expected_number_objs_structured": 1,
                     "expected_number_objs_exchange": 15,
-                    "expected_times_called": 1
+                    "expected_times_called": 2
                 },
                 id="1hWithPipelineID",
             ),
@@ -66,7 +66,7 @@ class TestBinanceDataHandler:
                 {
                     "expected_number_objs_structured": 14,
                     "expected_number_objs_exchange": 15,
-                    "expected_times_called": 1
+                    "expected_times_called": 2
                 },
                 id="5mNoPipelineID",
             ),
@@ -79,7 +79,7 @@ class TestBinanceDataHandler:
                 {
                     "expected_number_objs_structured": 14,
                     "expected_number_objs_exchange": 15,
-                    "expected_times_called": 1
+                    "expected_times_called": 2
                 },
                 id="5mWithPipelineID",
             ),
@@ -99,6 +99,9 @@ class TestBinanceDataHandler:
         binance_data_handler.start_data_ingestion()
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"]
+
+        print(StructuredData.objects.all().values())
+
         assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
         assert StructuredData.objects.first().open_time.date() == processed_historical_data_5m[0]["open_time"].date()
 
@@ -209,7 +212,7 @@ class TestBinanceDataHandler:
                     "position_active": True,
                     "position_side": 1,
                 },
-                id="start_stop-FALSE|get_open_positions-True-positions!=0",
+                id="start_stop-False|get_open_positions-True-positions!=0",
             ),
         ],
     )

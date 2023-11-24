@@ -10,9 +10,8 @@ from data.tests.setup.test_data.sample_data import binance_api_historical_data
 from shared.exchanges import BinanceHandler
 
 
-def mock_get_historical_klines_generator(symbol, candle_size, start_date):
-    for kline in binance_api_historical_data:
-        yield kline
+def mock_get_historical_klines_generator(symbol, candle_size, start_date, end_date, limit):
+    return binance_api_historical_data
 
 
 def mock_client_init_session(self):
@@ -23,14 +22,15 @@ def mock_client_init_session(self):
 def mock_binance_handler_klines(mocker):
     mocker.patch.object(
         BinanceHandler,
-        "get_historical_klines_generator",
-        lambda self, symbol, candle_size, start_date: mock_get_historical_klines_generator(symbol, candle_size, start_date)
+        "get_historical_klines",
+        lambda self, symbol, candle_size, start_date, end_date, limit:
+            mock_get_historical_klines_generator(symbol, candle_size, start_date, end_date, limit)
     )
 
 
 @pytest.fixture
 def spy_binance_handler_klines(mocker):
-    return mocker.spy(BinanceHandler, "get_historical_klines_generator")
+    return mocker.spy(BinanceHandler, "get_historical_klines")
 
 
 @pytest.fixture
