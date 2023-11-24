@@ -75,6 +75,9 @@ def transform_data(
     is_removing_rows=False,
     header=''
 ):
+    if len(data) == 0:
+        return data
+
     logging.debug(f'Transforming data with {data.shape[0]} rows and {data.shape[1]} columns.')
 
     data = remove_columns(data, ['id'])

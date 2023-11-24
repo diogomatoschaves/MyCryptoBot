@@ -19,18 +19,14 @@ class TestBinanceExtract:
     )
     def test_extract_data(self, fixture, exchange_data):
 
-        model_class = fixture["in"]["model_class"]
         symbol = fixture["in"]["symbol"]
         candle_size = fixture["in"]["candle_size"]
 
         params_dict = dict(
-            model_class=model_class,
             get_klines_method=mock_get_historical_klines_generator,
             symbol=symbol,
-            candle_size=candle_size
+            candle_size=candle_size,
+            start_date=datetime.datetime(2023, 9, 1).replace(tzinfo=pytz.utc)
         )
 
         assert extract_data(**params_dict).equals(fixture["out"]["expected_value"])
-
-    # def test_get_start_date(self):
-
