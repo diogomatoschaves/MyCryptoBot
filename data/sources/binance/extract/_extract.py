@@ -47,20 +47,6 @@ def get_latest_date(model_class, symbol, candle_size, upper_date_limit=None):
     return latest_date
 
 
-def get_start_date(model_class, symbol, candle_size):
-
-    try:
-        start_date = model_class.objects \
-                         .filter(exchange='binance', symbol=symbol, interval=candle_size) \
-                         .order_by('open_time').last().open_time - timedelta(hours=2)
-    except AttributeError:
-        start_date = datetime(2023, 9, 10).astimezone(pytz.utc)
-
-    logging.debug(start_date)
-
-    return start_date
-
-
 def get_end_date(start_date, candle_size, batch_size):
     return start_date + (pd.Timedelta(const.CANDLE_SIZES_MAPPER[candle_size]) * batch_size)
 
@@ -110,7 +96,7 @@ def extract_data(
     return pd.DataFrame(data)
 
 
-def extract_data_db(exchange_data, model_class, symbol, candle_size, base_candle_size, start_date=None):
+def extract_data_db(exchange_data, model_class, symbol, candle_size, base_candle_size, start_date):
     """
     Extracts data from a database for a given financial instrument.
 
@@ -129,8 +115,6 @@ def extract_data_db(exchange_data, model_class, symbol, candle_size, base_candle
     # Returns a DataFrame with extracted data for BTC/USDT using 1-hour candles,
     # starting from the last available data point with 1-day candles.
     """
-    if start_date is None:
-        start_date = get_start_date(model_class, symbol, candle_size)
 
     data = get_data(exchange_data, start_date, symbol, base_candle_size, exchange='binance')
     return data.reset_index()

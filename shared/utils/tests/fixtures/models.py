@@ -9,7 +9,7 @@ import pytz
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from data.tests.setup.test_data.sample_data import exchange_data_1
+from data.tests.setup.test_data.sample_data import exchange_data_1, exchange_data_2, exchange_data_3
 from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData, Pipeline, Orders, Trade, \
     Position
 
@@ -264,15 +264,36 @@ def exchange_data(db, exchange_data_factory):
 @pytest.fixture
 def structured_data_factory(db, create_exchange, create_assets, create_symbol):
     def create_structured_data(**kwargs):
-        return StructuredData.objects.create(**exchange_data_1, **kwargs)
+        obj_1 = StructuredData.objects.create(**exchange_data_1, **kwargs)
+        obj_2 = StructuredData.objects.create(**exchange_data_2, **kwargs)
+        return obj_1, obj_2
+
     return create_structured_data
 
 
 @pytest.fixture
 def structured_data(db, exchange_data_factory):
-    return structured_data_factory
+    obj_1, obj_2 = structured_data_factory
+    return obj_1, obj_2
 
 
 @pytest.fixture
 def create_structured_data(**kwargs):
     return StructuredData.objects.create(**exchange_data_1, **kwargs)
+
+
+@pytest.fixture
+def populate_exchange_data(db, create_symbol, create_exchange):
+    entry_1 = ExchangeData.objects.create(**exchange_data_1)
+    entry_2 = ExchangeData.objects.create(**exchange_data_2)
+    entry_3 = ExchangeData.objects.create(**exchange_data_3)
+    return entry_1, entry_2, entry_3
+
+
+@pytest.fixture
+def populate_structured_data(db, create_symbol, create_exchange):
+    entry_1 = StructuredData.objects.create(**exchange_data_1)
+    entry_2 = StructuredData.objects.create(**exchange_data_2)
+    # entry_3 = StructuredData.objects.create(**exchange_data_3)
+    return entry_1
+

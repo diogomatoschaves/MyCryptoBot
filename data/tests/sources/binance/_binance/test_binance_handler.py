@@ -22,7 +22,8 @@ def common_fixture(
     mock_binance_websocket_start,
     mock_binance_websocket_stop,
     mock_binance_threaded_websocket,
-    exchange_data,
+    # exchange_data,
+    populate_structured_data,
     mock_redis_connection_binance,
     mock_settings_env_vars,
     mock_start_stop_symbol_trading_success_true_binance_handler
@@ -41,7 +42,7 @@ class TestBinanceDataHandler:
                     "candle_size": "1h",
                 },
                 {
-                    "expected_number_objs_structured": 1,
+                    "expected_number_objs_structured": 2,
                     "expected_number_objs_exchange": 14,
                     "expected_times_called": 2
                 },
@@ -54,7 +55,7 @@ class TestBinanceDataHandler:
                     "pipeline_id": 1
                 },
                 {
-                    "expected_number_objs_structured": 1,
+                    "expected_number_objs_structured": 2,
                     "expected_number_objs_exchange": 14,
                     "expected_times_called": 2
                 },
@@ -66,7 +67,7 @@ class TestBinanceDataHandler:
                     "candle_size": "5m",
                 },
                 {
-                    "expected_number_objs_structured": 14,
+                    "expected_number_objs_structured": 16,
                     "expected_number_objs_exchange": 14,
                     "expected_times_called": 2
                 },
@@ -79,7 +80,7 @@ class TestBinanceDataHandler:
                     "pipeline_id": 1
                 },
                 {
-                    "expected_number_objs_structured": 14,
+                    "expected_number_objs_structured": 16,
                     "expected_number_objs_exchange": 14,
                     "expected_times_called": 2
                 },
@@ -99,8 +100,14 @@ class TestBinanceDataHandler:
 
         input_params["start_date"] = datetime.datetime(2023, 9, 1).replace(tzinfo=pytz.utc)
 
+        print(ExchangeData.objects.all().values())
+        print(StructuredData.objects.all().values())
+
         binance_data_handler = BinanceDataHandler(**input_params)
         binance_data_handler.start_data_ingestion()
+
+        print(ExchangeData.objects.count())
+        print(StructuredData.objects.count())
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"]
 
@@ -118,7 +125,7 @@ class TestBinanceDataHandler:
         binance_data_handler.stop_data_ingestion()
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
-        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
+        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
 
     @pytest.mark.parametrize(
         "input_params,output",

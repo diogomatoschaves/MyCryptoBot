@@ -66,6 +66,7 @@ def mock_verify_jwt_in_request(
     refresh: bool = False,
     locations = None,
     verify_type: bool = True,
+    skip_revocation_check: bool = False,
 ):
     pass
 

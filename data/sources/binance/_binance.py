@@ -1,11 +1,15 @@
 import json
 import logging
 import os
+import math
+from datetime import datetime
 
 import pandas as pd
+import pytz
 import django
 import redis
 from binance import ThreadedWebsocketManager
+import progressbar
 
 import shared.exchanges.binance.constants as const
 from data.service.external_requests import start_stop_symbol_trading, get_open_positions
@@ -44,6 +48,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         self.candle_size = candle_size
         self.pipeline_id = pipeline_id
         self.exchange = 'binance'
+        self.header = ''
 
         self.conn_key = ''
         self.streams = []
@@ -95,35 +100,39 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         """
 
-        # Get raw data
-        end_reached = False
+        self.header = header
+
         data = pd.DataFrame()
 
-        logging.info(header + f"Extracting historical data.")
-
         self.delete_last_entry()
-        print(f"Size of Strucutred Data: {StructuredData.objects.count()}")
 
         start_date = self.get_start_date()
+        iterations = self.get_number_of_batches(start_date) + 1
 
-        # Get raw data
-        while not end_reached:
-            batch_data, new_entries = self._etl_pipeline(
-                ExchangeData,
-                self.base_candle_size,
-                update_duplicate=False,
-                start_date=start_date,
-                header=header
-            )
+        logging.info(f"Extracting historical data. Starting from {start_date}")
 
-            old_data = data
+        with progressbar.ProgressBar(max_value=iterations, redirect_stdout=True) as bar:
+            i = 0
+            end_reached = False
+            # Get raw data
+            while not end_reached:
+                batch_data, new_entries = self._etl_pipeline(
+                    ExchangeData,
+                    self.base_candle_size,
+                    update_duplicate=False,
+                    start_date=start_date,
+                    header=header
+                )
 
-            data = data.append(batch_data).drop_duplicates(["open_time"])
-            start_date = get_end_date(start_date, self.base_candle_size, self.batch_size)
+                old_data = data
 
-            logging.info(f"Start date: {start_date}")
+                data = data.append(batch_data).drop_duplicates(["open_time"])
+                start_date = get_end_date(start_date, self.base_candle_size, self.batch_size)
 
-            end_reached = old_data.equals(data)
+                end_reached = old_data.equals(data)
+
+                bar.update(i)
+                i += 1
 
         # Get structured data
         self._etl_pipeline(
@@ -189,7 +198,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         remove_rows=False,
         columns_aggregation=const.COLUMNS_AGGREGATION,
         update_duplicate=False,
-        header=''
+        header='',
     ):
 
         # Extract
@@ -221,6 +230,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
             update_duplicate=update_duplicate,
             header=header,
         )
+
+        self.print_added_entries(new_entries, model_class)
 
         return data, new_entries
 
@@ -342,7 +353,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                 remove_zeros=remove_zeros,
                 remove_rows=remove_rows,
                 columns_aggregation=const.COLUMNS_AGGREGATION,
-                update_duplicate=True
+                update_duplicate=True,
             )
 
         return data, data_length, new_entries
@@ -378,12 +389,31 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         self.start_date = start_date
 
-        logging.info(f"Start date: {start_date}")
-
         return start_date
 
     def delete_last_entry(self):
-        try:
-            ExchangeData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
-        except AttributeError:
-            pass
+
+        for model_class, candle_size in [
+            (ExchangeData, self.base_candle_size),
+            (StructuredData, self.candle_size)
+        ]:
+            try:
+                model_class.objects.filter(
+                    symbol=self.symbol,
+                    exchange_id=self.exchange,
+                    interval=candle_size
+                ).last().delete()
+                print(f"Deleted: {model_class}, {candle_size}")
+            except AttributeError:
+                pass
+
+    def get_number_of_batches(self, start_date):
+        time_diff = datetime.now().astimezone(pytz.utc) - start_date
+        time_slots = time_diff / pd.Timedelta(const.CANDLE_SIZES_MAPPER[self.base_candle_size])
+
+        return math.ceil(time_slots / self.batch_size)
+
+    def print_added_entries(self, new_entries, model_class):
+
+        logging.info(
+            self.header + f"Added {new_entries} new {'row' if new_entries == 1 else 'rows'} into {model_class}.")

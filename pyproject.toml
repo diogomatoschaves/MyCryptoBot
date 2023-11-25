@@ -27,6 +27,7 @@ psycopg2 = "^2.9.5"
 apscheduler = "^3.10.1"
 plotly = "^5.14.1"
 humanfriendly = "^10.0"
+progressbar2 = "^4.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
