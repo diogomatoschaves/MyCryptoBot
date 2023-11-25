@@ -73,11 +73,52 @@ statistics, and more. The following are brief descriptions of the various views 
 
 #### Dashboard
 
+<p align="middle">
+  <img src="shared/utils/drawings/dashboard.png" style="width: 60%" />
+</p>
+
+This serves as the main view of the application, presenting a comprehensive overview of the equity evolution, 
+trading bot data, open positions, and associated trades over time. Summary statistics are displayed to provide 
+key insights. Users can easily navigate to different sections of the app by clicking on the corresponding section 
+or utilizing the left-hand side menu.
+
 #### Trading Bots
+
+<p align="middle">
+  <img src="shared/utils/drawings/trading-bots.png" style="width: 60%" />
+</p>
+
+This page provides an overview of all existing trading bots along with their current status. 
+Users have the ability to edit, start, and stop these bots directly from this view. 
+Clicking on a specific trading bot leads to a detailed page, showcasing the equity evolution, 
+statistics, and a comprehensive list of all trades associated with that bot.
+
+<p align="middle">
+  <img src="shared/utils/drawings/trading-bot-detail.png" style="width: 60%" />
+</p>
+
+Additionally, users can create a new trading bot by selecting the `New Trading Bot` button. 
+Simply fill in all the required details, and the new bot will be created and initiated automatically.
+
+<p align="middle">
+  <img src="shared/utils/drawings/create-new-bot.png" style="width: 60%" />
+</p>
 
 #### Positions
 
+<p align="middle">
+  <img src="shared/utils/drawings/positions.png" style="width: 60%" />
+</p>
+
+This page displays the currently open positions linked to the trading bots.
+
 #### Trades
+
+<p align="middle">
+  <img src="shared/utils/drawings/trades.png" style="width: 60%" />
+</p>
+
+This page shows all the trades executed by any of the trading bots. It is possible to filter by live or testnet trades.
 
 
 ## Software Requirements
