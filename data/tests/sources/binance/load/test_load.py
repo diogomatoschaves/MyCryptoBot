@@ -23,7 +23,7 @@ class TestBinanceLoad:
         params_dict = dict(
             model_class=fixture["in"]["model_class"],
             data=fixture["in"]["data"],
-            count_updates=fixture["in"]["count_updates"],
+            update_duplicate=fixture["in"]["count_updates"],
             pipeline_id=1
         )
 

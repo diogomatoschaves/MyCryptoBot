@@ -4,8 +4,8 @@ from pandas import Timestamp
 
 expected_value = [
     {
-        "open_time": Timestamp("2021-04-21 14:00:00+0000", tz="UTC", freq="H"),
-        "close_time": Timestamp("2021-04-21 14:59:59.999000+0000", tz="UTC"),
+        "open_time": Timestamp("2023-09-01 14:00:00+0000", tz="UTC", freq="H"),
+        "close_time": Timestamp("2023-09-01 14:59:59.999000+0000", tz="UTC"),
         "open": 55306.46,
         "high": 55399.68,
         "low": 55217.22,
@@ -20,8 +20,8 @@ expected_value = [
         "interval": "1h",
     },
     {
-        "open_time": Timestamp("2021-04-21 15:00:00+0000", tz="UTC", freq="H"),
-        "close_time": Timestamp("2021-04-21 15:59:59.994000+0000", tz="UTC"),
+        "open_time": Timestamp("2023-09-01 15:00:00+0000", tz="UTC", freq="H"),
+        "close_time": Timestamp("2023-09-01 15:59:59.994000+0000", tz="UTC"),
         "open": np.nan,
         "high": np.nan,
         "low": np.nan,
@@ -36,8 +36,8 @@ expected_value = [
         "interval": "1h",
     },
     {
-        "open_time": Timestamp("2021-04-21 16:00:00+0000", tz="UTC", freq="H"),
-        "close_time": Timestamp("2021-04-21 16:59:59.994000+0000", tz="UTC"),
+        "open_time": Timestamp("2023-09-01 16:00:00+0000", tz="UTC", freq="H"),
+        "close_time": Timestamp("2023-09-01 16:59:59.994000+0000", tz="UTC"),
         "open": np.nan,
         "high": np.nan,
         "low": np.nan,
@@ -52,8 +52,8 @@ expected_value = [
         "interval": "1h",
     },
     {
-        "open_time": Timestamp("2021-04-21 17:00:00+0000", tz="UTC", freq="H"),
-        "close_time": Timestamp("2021-04-21 17:59:59.999000+0000", tz="UTC"),
+        "open_time": Timestamp("2023-09-01 17:00:00+0000", tz="UTC", freq="H"),
+        "close_time": Timestamp("2023-09-01 17:59:59.999000+0000", tz="UTC"),
         "open": 55306.46,
         "high": 55399.68,
         "low": 55217.22,

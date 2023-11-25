@@ -8,7 +8,7 @@ expected_optimization_results = (np.array([4.0, 3.0, 3.0]), 1.009722)
 
 expected_results = [
     {
-        "close_time": Timestamp("2021-04-21 14:44:59.999000+0000", tz="UTC"),
+        "close_time": Timestamp("2023-09-01 14:44:59.999000+0000", tz="UTC"),
         "open": 56260.11,
         "high": 56317.43,
         "low": 56118.31,
@@ -28,7 +28,7 @@ expected_results = [
         "accumulated_strategy_returns_tc": 1.0,
     },
     {
-        "close_time": Timestamp("2021-04-21 14:49:59.999000+0000", tz="UTC"),
+        "close_time": Timestamp("2023-09-01 14:49:59.999000+0000", tz="UTC"),
         "open": 56168.82,
         "high": 56269.99,
         "low": 56080.96,
@@ -48,7 +48,7 @@ expected_results = [
         "accumulated_strategy_returns_tc": 1.0003968393852676,
     },
     {
-        "close_time": Timestamp("2021-04-21 14:54:59.999000+0000", tz="UTC"),
+        "close_time": Timestamp("2023-09-01 14:54:59.999000+0000", tz="UTC"),
         "open": 56191.11,
         "high": 56200.0,
         "low": 56107.98,
@@ -68,7 +68,7 @@ expected_results = [
         "accumulated_strategy_returns_tc": 0.9995759213029578,
     },
     {
-        "close_time": Timestamp("2021-04-21 14:59:59.999000+0000", tz="UTC"),
+        "close_time": Timestamp("2023-09-01 14:59:59.999000+0000", tz="UTC"),
         "open": 56145.0,
         "high": 56211.7,
         "low": 56106.97,
@@ -88,7 +88,7 @@ expected_results = [
         "accumulated_strategy_returns_tc": 0.9989156708702213,
     },
     {
-        "close_time": Timestamp("2021-04-21 15:04:59.999000+0000", tz="UTC"),
+        "close_time": Timestamp("2023-09-01 15:04:59.999000+0000", tz="UTC"),
         "open": 56182.12,
         "high": 56299.78,
         "low": 56172.09,

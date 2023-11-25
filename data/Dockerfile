@@ -37,14 +37,14 @@ RUN pip install -U pip \
     && apt-get update \
     && yes | apt-get install libpq-dev \
     && apt install -y curl netcat-traditional \
-    && curl -sSL https://install.python-poetry.org | python - --version 1.2.0 \
+    && curl -sSL https://install.python-poetry.org | python - --version 1.7.1 \
     && pip install psycopg2-binary==2.8.6
 ENV PATH="$POETRY_HOME/bin:$PATH"
 
 COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /
 
 RUN poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi --no-dev
+  && poetry install --no-interaction --no-ansi --only main
 
 USER root
 

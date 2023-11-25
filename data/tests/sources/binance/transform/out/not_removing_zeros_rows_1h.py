@@ -3,8 +3,8 @@ from pandas import Timestamp
 
 data = [
     {
-        "open_time": Timestamp("2021-04-21 14:00:00+0000", tz="UTC"),
-        "close_time": Timestamp("2021-04-21 14:59:59.999000+0000", tz="UTC"),
+        "open_time": Timestamp("2023-09-01 14:00:00+0000", tz="UTC"),
+        "close_time": Timestamp("2023-09-01 14:59:59.999000+0000", tz="UTC"),
         "open": 55306.46,
         "high": 56333.0,
         "low": 55217.22,
@@ -19,8 +19,8 @@ data = [
         "interval": "1h",
     },
     {
-        "open_time": Timestamp("2021-04-21 15:00:00+0000", tz="UTC"),
-        "close_time": Timestamp("2021-04-21 15:04:59.999000+0000", tz="UTC"),
+        "open_time": Timestamp("2023-09-01 15:00:00+0000", tz="UTC"),
+        "close_time": Timestamp("2023-09-01 15:04:59.999000+0000", tz="UTC"),
         "open": 56182.12,
         "high": 56299.78,
         "low": 56172.09,

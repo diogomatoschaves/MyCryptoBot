@@ -1,3 +1,5 @@
+import datetime
+
 from data.service.helpers.exceptions import CandleSizeInvalid
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
@@ -20,7 +22,8 @@ def common_fixture(
     mock_binance_websocket_start,
     mock_binance_websocket_stop,
     mock_binance_threaded_websocket,
-    exchange_data,
+    # exchange_data,
+    populate_structured_data,
     mock_redis_connection_binance,
     mock_settings_env_vars,
     mock_start_stop_symbol_trading_success_true_binance_handler
@@ -39,9 +42,9 @@ class TestBinanceDataHandler:
                     "candle_size": "1h",
                 },
                 {
-                    "expected_number_objs_structured": 1,
-                    "expected_number_objs_exchange": 15,
-                    "expected_times_called": 1
+                    "expected_number_objs_structured": 2,
+                    "expected_number_objs_exchange": 14,
+                    "expected_times_called": 2
                 },
                 id="1hNoPipelineID",
             ),
@@ -52,9 +55,9 @@ class TestBinanceDataHandler:
                     "pipeline_id": 1
                 },
                 {
-                    "expected_number_objs_structured": 1,
-                    "expected_number_objs_exchange": 15,
-                    "expected_times_called": 1
+                    "expected_number_objs_structured": 2,
+                    "expected_number_objs_exchange": 14,
+                    "expected_times_called": 2
                 },
                 id="1hWithPipelineID",
             ),
@@ -64,9 +67,9 @@ class TestBinanceDataHandler:
                     "candle_size": "5m",
                 },
                 {
-                    "expected_number_objs_structured": 14,
-                    "expected_number_objs_exchange": 15,
-                    "expected_times_called": 1
+                    "expected_number_objs_structured": 16,
+                    "expected_number_objs_exchange": 14,
+                    "expected_times_called": 2
                 },
                 id="5mNoPipelineID",
             ),
@@ -77,9 +80,9 @@ class TestBinanceDataHandler:
                     "pipeline_id": 1
                 },
                 {
-                    "expected_number_objs_structured": 14,
-                    "expected_number_objs_exchange": 15,
-                    "expected_times_called": 1
+                    "expected_number_objs_structured": 16,
+                    "expected_number_objs_exchange": 14,
+                    "expected_times_called": 2
                 },
                 id="5mWithPipelineID",
             ),
@@ -95,10 +98,19 @@ class TestBinanceDataHandler:
         spy_binance_handler_klines
     ):
 
+        input_params["start_date"] = datetime.datetime(2023, 9, 1).replace(tzinfo=pytz.utc)
+
+        print(ExchangeData.objects.all().values())
+        print(StructuredData.objects.all().values())
+
         binance_data_handler = BinanceDataHandler(**input_params)
         binance_data_handler.start_data_ingestion()
 
+        print(ExchangeData.objects.count())
+        print(StructuredData.objects.count())
+
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"]
+
         assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
         assert StructuredData.objects.first().open_time.date() == processed_historical_data_5m[0]["open_time"].date()
 
@@ -113,7 +125,7 @@ class TestBinanceDataHandler:
         binance_data_handler.stop_data_ingestion()
 
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
-        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
+        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
 
     @pytest.mark.parametrize(
         "input_params,output",
@@ -126,7 +138,7 @@ class TestBinanceDataHandler:
                 },
                 {
                     "expected_number_objs_structured": 1,
-                    "expected_number_objs_exchange": 14,
+                    "expected_number_objs_exchange": 13,
                     "expected_value": 1
                 },
                 id="BaseCaseWithPipelineID",
@@ -143,6 +155,8 @@ class TestBinanceDataHandler:
         trigger_signal_spy,
         create_open_position
     ):
+
+        input_params["start_date"] = datetime.datetime(2023, 9, 1).replace(tzinfo=pytz.utc)
 
         binance_data_handler = BinanceDataHandler(**input_params)
         binance_data_handler.start_data_ingestion()
@@ -209,7 +223,7 @@ class TestBinanceDataHandler:
                     "position_active": True,
                     "position_side": 1,
                 },
-                id="start_stop-FALSE|get_open_positions-True-positions!=0",
+                id="start_stop-False|get_open_positions-True-positions!=0",
             ),
         ],
     )

@@ -1,16 +1,22 @@
+import json
 import logging
 import os
+import math
+from datetime import datetime
 
 import pandas as pd
+import pytz
 import django
 import redis
 from binance import ThreadedWebsocketManager
+import progressbar
 
 import shared.exchanges.binance.constants as const
 from data.service.external_requests import start_stop_symbol_trading, get_open_positions
 from data.service.helpers.exceptions import CandleSizeInvalid, DataPipelineCouldNotBeStopped
 from data.sources import trigger_signal
-from data.sources.binance.extract import extract_data, extract_data_db
+from data.sources.binance.extract import (extract_data, extract_data_db, get_earliest_date,
+                                          get_minimum_lookback_date, get_latest_date, get_end_date)
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.exchanges.binance import BinanceHandler
@@ -32,7 +38,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     only time based steps).
     """
 
-    def __init__(self, symbol, candle_size, pipeline_id=None, base_candle_size='5m'):
+    def __init__(self, symbol, candle_size, pipeline_id=None, base_candle_size='5m', start_date=None):
 
         BinanceHandler.__init__(self, base_candle_size=base_candle_size)
         ThreadedWebsocketManager.__init__(self, self.binance_api_key, self.binance_api_secret)
@@ -42,9 +48,13 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         self.candle_size = candle_size
         self.pipeline_id = pipeline_id
         self.exchange = 'binance'
+        self.header = ''
 
         self.conn_key = ''
         self.streams = []
+
+        self.start_date = start_date
+        self.batch_size = 1000
 
         self.raw_data = pd.DataFrame()
         self.data = pd.DataFrame()
@@ -90,10 +100,41 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         """
 
-        # Get missing raw data
-        data, _ = self._etl_pipeline(ExchangeData, self.base_candle_size, count_updates=False, header=header)
+        self.header = header
 
-        # Get missing structured data
+        data = pd.DataFrame()
+
+        self.delete_last_entry()
+
+        start_date = self.get_start_date()
+        iterations = self.get_number_of_batches(start_date) + 1
+
+        logging.info(f"Extracting historical data. Starting from {start_date}")
+
+        with progressbar.ProgressBar(max_value=iterations, redirect_stdout=True) as bar:
+            i = 0
+            end_reached = False
+            # Get raw data
+            while not end_reached:
+                batch_data, new_entries = self._etl_pipeline(
+                    ExchangeData,
+                    self.base_candle_size,
+                    update_duplicate=False,
+                    start_date=start_date,
+                    header=header
+                )
+
+                old_data = data
+
+                data = data.append(batch_data).drop_duplicates(["open_time"])
+                start_date = get_end_date(start_date, self.base_candle_size, self.batch_size)
+
+                end_reached = old_data.equals(data)
+
+                bar.update(i)
+                i += 1
+
+        # Get structured data
         self._etl_pipeline(
             StructuredData,
             self.candle_size,
@@ -101,7 +142,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
             use_db=self.candle_size != self.base_candle_size,
             remove_zeros=True,
             remove_rows=True,
-            count_updates=False,
+            update_duplicate=False,
+            start_date=self.start_date,
             header=header
         )
 
@@ -124,7 +166,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         self._stop_websocket()
 
-        ExchangeData.objects.filter(symbol=self.symbol, exchange_id=self.exchange).last().delete()
+        self.delete_last_entry()
 
         response = start_stop_symbol_trading({"pipeline_id": self.pipeline_id}, 'stop')
 
@@ -150,20 +192,22 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         candle_size,
         reference_candle_size='5m',
         data=None,
+        start_date=None,
         use_db=False,
         remove_zeros=False,
         remove_rows=False,
         columns_aggregation=const.COLUMNS_AGGREGATION,
-        count_updates=True,
-        header=''
+        update_duplicate=False,
+        header='',
     ):
 
         # Extract
         if data is None:
-            data = extract_data(model_class, self.get_historical_klines_generator, self.symbol,
-                                candle_size, header=header)
+            data = extract_data(self.get_historical_klines, self.symbol, candle_size,
+                                start_date=start_date, header=header, klines_batch_size=self.batch_size)
         if use_db:
-            data = extract_data_db(ExchangeData, model_class, self.symbol, candle_size, self.base_candle_size)
+            data = extract_data_db(ExchangeData, model_class, self.symbol, candle_size,
+                                   self.base_candle_size, start_date=start_date)
 
         # Transform
         transformed_data = transform_data(
@@ -183,9 +227,11 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
             model_class,
             transformed_data,
             pipeline_id=self.pipeline_id,
-            count_updates=count_updates,
+            update_duplicate=update_duplicate,
             header=header,
         )
+
+        self.print_added_entries(new_entries, model_class)
 
         return data, new_entries
 
@@ -306,7 +352,68 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                 data=rows,
                 remove_zeros=remove_zeros,
                 remove_rows=remove_rows,
-                columns_aggregation=const.COLUMNS_AGGREGATION
+                columns_aggregation=const.COLUMNS_AGGREGATION,
+                update_duplicate=True,
             )
 
         return data, data_length, new_entries
+
+    def get_pipeline_max_window(self):
+        try:
+            params = json.loads(Pipeline.objects.get(id=self.pipeline_id).params)
+            return max([value for param, value in params.items()])
+        except Pipeline.DoesNotExist:
+            return 1000
+
+    def get_start_date(self):
+
+        max_window = self.get_pipeline_max_window()
+
+        earliest_date = get_earliest_date(ExchangeData, self.symbol, self.base_candle_size)
+        minimum_lookback_date = get_minimum_lookback_date(max_window, self.candle_size)
+
+        if self.start_date is not None and self.start_date < minimum_lookback_date:
+            start_date = self.start_date
+        else:
+            if minimum_lookback_date < earliest_date:
+                start_date = minimum_lookback_date
+            else:
+                start_date = get_latest_date(
+                    ExchangeData,
+                    self.symbol,
+                    self.base_candle_size,
+                    upper_date_limit=minimum_lookback_date
+                )
+
+                start_date = minimum_lookback_date if not start_date else start_date
+
+        self.start_date = start_date
+
+        return start_date
+
+    def delete_last_entry(self):
+
+        for model_class, candle_size in [
+            (ExchangeData, self.base_candle_size),
+            (StructuredData, self.candle_size)
+        ]:
+            try:
+                model_class.objects.filter(
+                    symbol=self.symbol,
+                    exchange_id=self.exchange,
+                    interval=candle_size
+                ).last().delete()
+                print(f"Deleted: {model_class}, {candle_size}")
+            except AttributeError:
+                pass
+
+    def get_number_of_batches(self, start_date):
+        time_diff = datetime.now().astimezone(pytz.utc) - start_date
+        time_slots = time_diff / pd.Timedelta(const.CANDLE_SIZES_MAPPER[self.base_candle_size])
+
+        return math.ceil(time_slots / self.batch_size)
+
+    def print_added_entries(self, new_entries, model_class):
+
+        logging.info(
+            self.header + f"Added {new_entries} new {'row' if new_entries == 1 else 'rows'} into {model_class}.")
