@@ -137,7 +137,7 @@ class StrategyMixin:
 
         self.update_data(self.data)
 
-    def _calculate_returns(self, data) -> None:
+    def _calculate_returns(self, data) -> pd.DataFrame:
         """
         Calculates the returns of the asset and updates the data DataFrame.
         """
@@ -151,7 +151,7 @@ class StrategyMixin:
 
         return data
 
-    def update_data(self, data) -> None:
+    def update_data(self, data) -> pd.DataFrame:
         """
         Updates the input data with additional columns required for the strategy.
 

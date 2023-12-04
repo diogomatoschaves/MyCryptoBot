@@ -4,7 +4,7 @@ import logging
 from flask import jsonify
 
 from data.service.helpers.exceptions import *
-from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid
+from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid, StrategyInvalid, StrategyRequired
 
 
 def handle_app_errors(_func=None):

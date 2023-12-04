@@ -128,9 +128,11 @@ class BacktestMixin:
 
         if csv_path or data is None:
             csv_path = csv_path if csv_path else 'model/sample_data/bitcoin.csv'
-            self.set_data(pd.read_csv(csv_path, index_col='date', parse_dates=True), self.strategy)
+            loaded_data = pd.read_csv(csv_path, index_col='date', parse_dates=True)
+            loaded_data = loaded_data[~loaded_data.index.duplicated(keep='last')]  # remove duplicates
+            self.set_data(loaded_data, self.strategy)
 
-    def run(self, params=None, print_results=True, plot_results=True):
+    def run(self, print_results=True, plot_results=True):
         """Runs the trading strategy and prints and/or plots the results.
 
         Parameters:
@@ -146,7 +148,7 @@ class BacktestMixin:
         --------
         None
         """
-        perf, outperf, results = self._test_strategy(params, print_results, plot_results)
+        perf, outperf, results = self._test_strategy(print_results=print_results, plot_results=plot_results)
 
         self.perf = perf
         self.outperf = outperf
@@ -284,7 +286,10 @@ class BacktestMixin:
         trades_df = pd.DataFrame(self.trades)
 
         if plot_results:
-            plot_backtest_results(data, trades_df, show_plot_no_tc=show_plot_no_tc, title=self.__repr__())
+            nr_strategies = len([col for col in processed_data.columns if "position" in col])
+            offset = max(0, nr_strategies - 2)
+
+            plot_backtest_results(data, trades_df, offset, show_plot_no_tc=show_plot_no_tc, title=self.__repr__())
 
     @staticmethod
     def _print_results(results, print_results):
