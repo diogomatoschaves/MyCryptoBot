@@ -88,7 +88,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.nr_trades = 0
         self.current_balance = self.initial_balance  # reset initial capital
 
-    def _calculate_positions(self, data):
+    def calculate_positions(self, data):
         """
         Calculates the positions for the given data.
 

@@ -37,7 +37,7 @@ class BollingerBands(StrategyMixin):
         Return a string representation of the class instance.
     update_data(self)
         Retrieves and prepares the data.
-    _calculate_positions(self, data)
+    calculate_positions(self, data)
         Calculate the position for each row in the data.
     _get_position(self, symbol)
         Return the position for a given symbol (not implemented).
@@ -81,10 +81,10 @@ class BollingerBands(StrategyMixin):
         data["upper"] = data["sma"] + data[self.close_col].rolling(self._ma).std() * self._sd
         data["lower"] = data["sma"] - data[self.close_col].rolling(self._ma).std() * self._sd
 
-        data = self._calculate_positions(data)
+        data = self.calculate_positions(data)
         return data
 
-    def _calculate_positions(self, data):
+    def calculate_positions(self, data):
         data["distance"] = data[self.close_col] - data["sma"]
         data["position"] = np.where(data[self.close_col] > data["upper"], -1, np.nan)
         data["position"] = np.where(data[self.close_col] < data["lower"], 1, data["position"])

@@ -204,7 +204,7 @@ class MyStrategy(StrategyMixin):
         Initializes the strategy object.
     update_data(self)
         Retrieves and prepares the data.
-    _calculate_positions(self, data)
+    calculate_positions(self, data)
         Calculates positions based on strategy rules.
     get_signal(self, row=None)
         Returns signal based on current data.
@@ -252,7 +252,7 @@ class MyStrategy(StrategyMixin):
         
         return data
 
-    def _calculate_positions(self, data):
+    def calculate_positions(self, data):
         """
         Calculates positions based on strategy rules.
 
@@ -306,7 +306,7 @@ call StrategyMixin.__init__(self, data, **kwargs) to initialize the parent class
 will depend on the data source you are using. It is advised to check the provided strategies 
 to see how this would be done.
 
-`_calculate_positions()` should contain code to calculate the positions for your strategy based 
+`calculate_positions()` should contain code to calculate the positions for your strategy based 
 on the current data. This is where you input the logic of your strategy in a vectorized way. 
 Note that this may not be possible, depending on your strategy, If that's the case, this method can 
 be ignored.

@@ -28,6 +28,9 @@ class StrategyCombiner(StrategyMixin):
         self.strategies = strategies
         self.method = method
 
+        if data is not None:
+            self.set_data(data)
+
     def __repr__(self):
         return self._get_test_title()
 
@@ -82,7 +85,7 @@ class StrategyCombiner(StrategyMixin):
 
         for i, strategy in enumerate(self.strategies):
             strategy.data = strategy.update_data(data.copy())
-            strategy.data = strategy._calculate_positions(strategy.data)
+            strategy.data = strategy.calculate_positions(strategy.data)
             strategy.data = strategy.data.dropna()
 
             self.data = self.data.join(strategy.data["position"], rsuffix=f"_{i + 1}", how='inner')
@@ -90,7 +93,7 @@ class StrategyCombiner(StrategyMixin):
     def set_parameters(self, params=None):
         return
 
-    def _calculate_positions(self, data):
+    def calculate_positions(self, data):
 
         position_cols = [col for col in data.columns if "position" in col][1:]  # Excludes 'position' column
 

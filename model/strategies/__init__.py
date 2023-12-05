@@ -1,4 +1,3 @@
 from model.strategies.moving_average import MovingAverage, MovingAverageCrossover, MovingAverageConvergenceDivergence
 from model.strategies.mean_reversion import BollingerBands
 from model.strategies.trend import Momentum
-from model.strategies.moving_average import BollingerBandsMACD

@@ -16,7 +16,7 @@ class VectorizedBacktester(BacktestMixin):
             A valid strategy class as defined in model.strategies __init__ file.
         symbol : string
             Symbol for which we are performing the backtest. default is None.
-        trading_costs : int
+        trading_costs : float
             The trading cost per trade in percentage of the value being traded.
         """
 
@@ -74,7 +74,7 @@ class VectorizedBacktester(BacktestMixin):
         --------
         None
         """
-        data = self._calculate_positions(data)
+        data = self.calculate_positions(data)
         data["trades"] = data.position.diff().fillna(0).abs()
         data.loc[data.index[0], "trades"] = np.abs(data.iloc[0]["position"])
         data.loc[data.index[-1], "trades"] = np.abs(data.iloc[-2]["position"])

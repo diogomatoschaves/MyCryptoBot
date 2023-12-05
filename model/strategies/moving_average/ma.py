@@ -33,7 +33,7 @@ class MovingAverage(StrategyMixin):
     -------
     update_data()
         Retrieves and prepares the data.
-    _calculate_positions(data)
+    calculate_positions(data)
         Calculates positions based on strategy rules.
     get_signal(row)
         Returns signal based on current data.
@@ -87,7 +87,7 @@ class MovingAverage(StrategyMixin):
 
         return data
 
-    def _calculate_positions(self, data):
+    def calculate_positions(self, data):
         """
         Calculates positions based on strategy rules.
 

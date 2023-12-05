@@ -32,7 +32,7 @@ class MovingAverageCrossover(StrategyMixin):
     update_data():
         Retrieves and prepares the data for the strategy.
 
-    _calculate_positions(data):
+    calculate_positions(data):
         Calculates the position values for the given data.
 
     get_signal(row=None):
@@ -112,7 +112,7 @@ class MovingAverageCrossover(StrategyMixin):
 
         return data
 
-    def _calculate_positions(self, data):
+    def calculate_positions(self, data):
         """
         Calculates the position values for the given data.
 

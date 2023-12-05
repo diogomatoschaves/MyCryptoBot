@@ -31,7 +31,7 @@ class Momentum(StrategyMixin):
     -------
     update_data()
         Retrieves and prepares the data.
-    _calculate_positions(data)
+    calculate_positions(data)
         Calculates the positions of the strategy.
     get_signal(row=None)
         Returns the trading signal for a given row of data.
@@ -72,7 +72,7 @@ class Momentum(StrategyMixin):
 
         return data
 
-    def _calculate_positions(self, data):
+    def calculate_positions(self, data):
         """
         Calculates the positions of the strategy.
 
