@@ -34,7 +34,7 @@ class StrategyMixin:
         Returns the current DataFrame containing the historical price data for the asset.
     set_data(data: pd.DataFrame) -> None
         Sets the DataFrame containing the historical price data for the asset.
-    set_parameters(params: dict) -> None
+    set_parameters(params: dict, data: pd.DataFrame) -> None
         Updates the parameters of the strategy.
     _calculate_returns() -> None
         Calculates the returns of the asset and updates the data DataFrame.
@@ -78,6 +78,9 @@ class StrategyMixin:
         """
         return "{}".format(self.__class__.__name__)
 
+    def get_params(self, **kwargs):
+        return self.params if self.params else {}
+
     def _get_test_title(self):
         """
         Returns the title for the backtest report.
@@ -119,12 +122,13 @@ class StrategyMixin:
             else:
                 self.data = self.update_data(self.data.copy())
 
-    def set_parameters(self, params=None) -> None:
+    def set_parameters(self, params=None, data=None) -> None:
         """
         Updates the parameters of the strategy.
 
         Parameters
         ----------
+        data
         params : dict, optional
             A dictionary containing the parameters to be updated.
         """
@@ -133,9 +137,11 @@ class StrategyMixin:
             return
 
         for param, new_value in params.items():
-            setattr(self, f"_{param}", self.params[param](new_value))
+            setattr(self, f"_{param}", self.get_params()[param](new_value))
 
-        self.update_data(self.data)
+        data = data.copy() if data is not None else self.data.copy()
+
+        self.data = self.update_data(data)
 
     def _calculate_returns(self, data) -> pd.DataFrame:
         """

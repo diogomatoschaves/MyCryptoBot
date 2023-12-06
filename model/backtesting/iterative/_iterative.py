@@ -86,7 +86,9 @@ class IterativeBacktester(BacktestMixin, Trader):
         self.strategy_returns_tc = []
         self.positions_lst = [0]
         self.nr_trades = 0
-        self.current_balance = self.initial_balance  # reset initial capital
+        self.trades = []
+        self.current_balance = self.initial_balance
+        self.units = 0
 
     def calculate_positions(self, data):
         """
@@ -157,15 +159,21 @@ class IterativeBacktester(BacktestMixin, Trader):
             Dictionary containing the performance metrics of the backtest.
 
         """
-        self.set_parameters(params)
+        self._fix_original_data()
+
+        self.set_parameters(params, data=self.original_data.copy())
         self._reset_object()
 
-        # nice printout
-        print("-" * 75)
-        print(self._get_test_title())
-        print("-" * 75)
+        # title printout
+        if print_results:
+            print("-" * 70)
+            print(self._get_test_title())
+            print("-" * 70)
 
         data = self._get_data().dropna().copy()
+
+        if data.empty:
+            return 0, 0, None
 
         processed_data = self._iterative_backtest(data, print_results)
 
@@ -197,7 +205,7 @@ class IterativeBacktester(BacktestMixin, Trader):
             if bar != data.shape[0] - 1:
                 self.trade(self.symbol, signal, timestamp, row, amount="all", print_results=print_results)
             else:
-                self.close_pos(self.symbol, timestamp, row)  # close position at the last bar
+                self.close_pos(self.symbol, timestamp, row, print_results=print_results)
                 self._set_position(self.symbol, 0)
 
             new_position = self._get_position(self.symbol)
@@ -214,13 +222,12 @@ class IterativeBacktester(BacktestMixin, Trader):
         return data
 
     def _evaluate_backtest(self, processed_data):
-
         processed_data["position"] = self.positions_lst[1:]
         processed_data.loc[processed_data.index[0], "position"] = self.positions_lst[1]
+        processed_data.loc[processed_data.index[0], self.returns_col] = 0
+
         processed_data["strategy_returns"] = self.strategy_returns
         processed_data["strategy_returns_tc"] = self.strategy_returns_tc
-
-        processed_data.loc[processed_data.index[0], "returns"] = 0
 
         processed_data["accumulated_returns"] = processed_data[self.returns_col].cumsum().apply(np.exp)
         processed_data["accumulated_strategy_returns"] = processed_data["strategy_returns"].cumsum().apply(np.exp)
@@ -412,9 +419,10 @@ class IterativeBacktester(BacktestMixin, Trader):
         -------
         None
         """
-        print(75 * "-")
+        print_results = kwargs.get('print_results')
 
-        if self.units != 0:
+        if self.units != 0 and print_results:
+            print(70 * "-")
             print("{} |  +++ CLOSING FINAL POSITION +++".format(date))
 
         if self.units < 0:
@@ -424,11 +432,13 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         perf = (self.current_balance - self.initial_balance) / self.initial_balance * 100
 
-        self.print_current_balance(date)
+        if print_results:
 
-        print("{} |  net performance (%) = {}".format(date, round(perf, 2)))
-        print("{} |  number of trades executed = {}".format(date, self.nr_trades))
-        print(75 * "-")
+            self.print_current_balance(date)
+
+            print("{} |  net performance (%) = {}".format(date, round(perf, 2)))
+            print("{} |  number of trades executed = {}".format(date, self.nr_trades))
+            print(70 * "-")
 
     def _handle_trade(self, trades, open_trade, date, price, units, amount, direction):
         if open_trade:

@@ -43,8 +43,9 @@ class VectorizedBacktester(BacktestMixin):
             Whether to plot the equity curve without the trading_costs applied
 
         """
+        self._fix_original_data()
 
-        self.set_parameters(params)
+        self.set_parameters(params, data=self.original_data.copy())
 
         data = self._get_data().dropna().copy()
 

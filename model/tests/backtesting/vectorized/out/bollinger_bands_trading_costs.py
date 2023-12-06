@@ -1,10 +1,9 @@
-import numpy as np
 from pandas import Timestamp
 
 expected_performance = 1.0
 expected_outperformance = -0.016266
 
-expected_optimization_results = (np.array([2.0, 1.0]), 1.0)
+expected_optimization_results = ({'ma': 2.0, 'sd': 1.0}, 1.0)
 
 expected_results = [
     {

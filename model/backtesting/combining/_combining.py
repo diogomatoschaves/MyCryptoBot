@@ -5,8 +5,7 @@ import pandas as pd
 
 from model.strategies._mixin import StrategyMixin
 from model.strategies.properties import STRATEGIES
-from shared.utils.exceptions import StrategyInvalid, StrategyRequired
-
+from shared.utils.exceptions import StrategyInvalid, StrategyRequired, OptimizationParametersInvalid
 
 possible_methods = ["Unanimous", "Majority"]
 
@@ -50,6 +49,11 @@ class StrategyCombiner(StrategyMixin):
         if method not in possible_methods:
             raise Exception(f"'method' must be one of {possible_methods}")
 
+    def get_params(self, **kwargs):
+        strategy_index = kwargs["strategy_index"]
+
+        return self.strategies[strategy_index].get_params()
+
     def _get_test_title(self):
         """
         Returns the title for the backtest report.
@@ -87,11 +91,33 @@ class StrategyCombiner(StrategyMixin):
             strategy.data = strategy.update_data(data.copy())
             strategy.data = strategy.calculate_positions(strategy.data)
             strategy.data = strategy.data.dropna()
+            strategy.symbol = self.symbol
 
             self.data = self.data.join(strategy.data["position"], rsuffix=f"_{i + 1}", how='inner')
 
-    def set_parameters(self, params=None):
-        return
+    def set_parameters(self, params=None, data=None):
+        if params is None:
+            return
+
+        for i, strategy_params in enumerate(params):
+            strategy = self.strategies[i]
+            for param, new_value in strategy_params.items():
+                setattr(strategy, f"_{param}", strategy.get_params()[param](new_value))
+
+        self.set_data(data if data is not None else self.data)
+
+    @staticmethod
+    def get_majority_position(data, position_cols):
+        return np.sign(sum([data[position_col] for position_col in position_cols]))
+
+    @staticmethod
+    def get_unanimous_position(data, position_cols):
+        position = data[position_cols[0]]
+        condition = True
+        for position_col in position_cols[1:]:
+            condition = np.logical_and(condition, position == data[position_col])
+
+        return np.where(condition, position, 0)
 
     def calculate_positions(self, data):
 
@@ -99,15 +125,25 @@ class StrategyCombiner(StrategyMixin):
 
         if self.method == 'Majority':
 
-            data["position"] = np.sign(sum([data[position_col] for position_col in position_cols]))
+            data["position"] = self.get_majority_position(data, position_cols)
 
         elif self.method == 'Unanimous':
 
-            position = data[position_cols[0]]
-            condition = True
-            for position_col in position_cols[1:]:
-                condition = np.logical_and(condition, position == data[position_col])
-
-            data["position"] = np.where(condition, position, 0)
+            data["position"] = self.get_unanimous_position(data, position_cols)
 
         return data
+
+    def get_signal(self, row=None):
+
+        if row is None:
+            row = self.data.iloc[-1]
+
+        positions_cols = [col for col in row.index if "position" in col][1:]
+
+        signal = 0
+        if self.method == 'Unanimous':
+            signal = self.get_unanimous_position(row, positions_cols)
+        elif self.method == 'Majority':
+            signal = self.get_majority_position(row, positions_cols)
+
+        return int(signal)

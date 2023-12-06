@@ -81,8 +81,7 @@ class BollingerBands(StrategyMixin):
         data["upper"] = data["sma"] + data[self.close_col].rolling(self._ma).std() * self._sd
         data["lower"] = data["sma"] - data[self.close_col].rolling(self._ma).std() * self._sd
 
-        data = self.calculate_positions(data)
-        return data
+        return self.calculate_positions(data)
 
     def calculate_positions(self, data):
         data["distance"] = data[self.close_col] - data["sma"]
