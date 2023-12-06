@@ -18,7 +18,7 @@ import {
     RawTrade,
     PipelinesMetrics,
     RawPipeline,
-    PipelinesObject, TradesObject, EditPipeline, EquityTimeSeries
+    PipelinesObject, TradesObject, EditPipeline, EquityTimeSeries, Strategy
 } from "../types";
 import {
     getTrades,
@@ -35,13 +35,12 @@ import {RESOURCES_MAPPING} from "../utils/constants";
 import MenuWrapper from "./MenuWrapper";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
-import {parseTrade, organizePositions, organizePipeline, convertDate} from "../utils/helpers";
+import {parseTrade, organizePositions, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import {StyledSegment} from "../styledComponents";
 import Dashboard from "./Dashboard";
 import {Header, Label} from "semantic-ui-react";
 import {balanceReducer} from "../reducers/balancesReducer";
-import withWindowSizeListener from "../higherOrderComponents/withWindowSizeListener";
 
 
 const AppDiv: any = styled.div`
@@ -65,7 +64,7 @@ const AppColumn: any = styled.div`
 
 interface State {
     symbolsOptions: DropdownOptions[];
-    strategiesOptions: DropdownOptions[];
+    strategiesOptions: Strategy[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
     trades: TradesObject;
@@ -74,7 +73,6 @@ interface State {
     balances: BalanceObj
     equityTimeSeries: EquityTimeSeries
     menuOption: MenuOption,
-    strategies: any
     symbols: string[],
     currentPrices: Object
     pipelinesMetrics: PipelinesMetrics
@@ -150,8 +148,8 @@ class App extends Component<Props, State> {
     componentDidMount() {
         getResources(Object.keys(RESOURCES_MAPPING), this.props.history)
             .then(resources => {
-                const options = resources ? Object.keys(resources).reduce((accum: any, resource: any) => {
 
+                const options = resources ? Object.keys(resources).reduce((accum: any, resource: any) => {
                     const resourcesArray = resource === 'candleSizes' ? resources[resource] : Object.keys(resources[resource])
 
                     return {
@@ -159,7 +157,8 @@ class App extends Component<Props, State> {
                         [RESOURCES_MAPPING[resource]]: resourcesArray.map((name: any, index: number) => ({
                             key: index + 1,
                             text: name,
-                            value: index + 1
+                            value: index + 1,
+                            ...(resource !== 'candleSizes' && resources[resource][name])
                         }))
                     }
                 }, {}) : []
@@ -167,7 +166,6 @@ class App extends Component<Props, State> {
                 this.setState(state => {
                     return {
                         ...state,
-                        ...resources,
                         ...options
                     }
                 })
@@ -482,7 +480,6 @@ class App extends Component<Props, State> {
             trades,
             pipelines,
             positions,
-            strategies,
             currentPrices,
             pipelinesMetrics,
             equityTimeSeries,
@@ -538,7 +535,6 @@ class App extends Component<Props, State> {
                                   exchangeOptions={exchangeOptions}
                                   pipelines={pipelines}
                                   positions={positions}
-                                  strategies={strategies}
                                   balances={balances}
                                   startPipeline={this.startPipeline}
                                   stopPipeline={this.stopPipeline}

@@ -5,7 +5,7 @@ import {
     Pipeline, PipelinesObject,
     Position,
     StartPipeline,
-    StopPipeline,
+    StopPipeline, Strategy,
 } from "../types";
 import {Button, Grid, Icon, Label, Popup, Segment} from "semantic-ui-react";
 import {BLUE, DARK_YELLOW, GREEN, RED} from "../utils/constants";
@@ -43,10 +43,9 @@ interface Props {
     lastRow?: boolean
     position?: Position
     symbolsOptions: DropdownOptions[];
-    strategiesOptions: DropdownOptions[];
+    strategiesOptions: Strategy[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
-    strategies: any;
     balances: BalanceObj;
     pipelines: PipelinesObject;
     positions: Position[];
@@ -70,7 +69,6 @@ function PipelineItem(props: Props) {
         strategiesOptions,
         candleSizeOptions,
         exchangeOptions,
-        strategies,
         balances,
         positions,
         pipelines,
@@ -204,7 +202,6 @@ function PipelineItem(props: Props) {
                         <StyledColumn width={6} className="flex-row">
                             <div style={{width: '100%', alignSelf: 'center'}} className='flex-column'>
                                 <NewPipeline
-                                  strategies={strategies}
                                   balances={balances}
                                   pipelines={pipelines}
                                   positions={positions}
@@ -287,7 +284,6 @@ function PipelineItem(props: Props) {
                       <StyledColumn padding={isMobile} width={6} className="flex-row">
                           <div style={{width: '100%', alignSelf: 'center'}} className='flex-column'>
                               <NewPipeline
-                                strategies={strategies}
                                 balances={balances}
                                 pipelines={pipelines}
                                 positions={positions}

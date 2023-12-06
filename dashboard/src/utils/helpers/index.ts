@@ -5,7 +5,7 @@ import {
   RawPipeline,
   RawPosition,
   RawTrade,
-  StartPipeline,
+  StartPipeline, Strategy,
   Trade
 } from "../../types";
 import {UPDATE_MESSAGE} from "../../reducers/modalReducer";
@@ -24,7 +24,7 @@ export const validatePipelineCreation = async (
       exchanges,
       exchangeOptions,
       startPipeline,
-      dispatch,
+      updateModal,
       params,
       liveTrading,
       balance,
@@ -45,7 +45,7 @@ export const validatePipelineCreation = async (
       exchanges: Array<number>,
       exchangeOptions: DropdownOptions[],
       startPipeline: StartPipeline,
-      dispatch: any,
+      updateModal: any,
       params: Object,
       liveTrading: boolean,
       balance: number,
@@ -55,7 +55,7 @@ export const validatePipelineCreation = async (
       pipelineId?: number
     }) => {
   if (!name || !color || !equity || !symbol || !strategy || !candleSize || exchanges.length === 0) {
-    dispatch({
+    updateModal({
       type: UPDATE_MESSAGE,
       message: {text: "All parameters must be specified.", success: false}
     })
@@ -65,7 +65,7 @@ export const validatePipelineCreation = async (
   const equityFloat = Number(equity)
 
   if (!equityFloat) {
-    dispatch({
+    updateModal({
       type: UPDATE_MESSAGE,
       message: {text: "Equity must be a number.", success: false}
     })
@@ -73,7 +73,7 @@ export const validatePipelineCreation = async (
   }
 
   if (equityFloat > balance) {
-    dispatch({
+    updateModal({
       type: UPDATE_MESSAGE,
       message: {text: `Chosen equity must be smaller than ${(balance).toFixed(1)} USDT`, success: false}
     })
@@ -101,10 +101,11 @@ export const validatePipelineCreation = async (
   }
 
   return true
+
 }
 
 
-export const validateParams = (params: any, strategy: any) => {
+export const validateParams = (params: any, strategy: Strategy) => {
   const requiredParams = strategy.paramsOrder.reduce((reduced: any, param: string) => {
     if (!params.hasOwnProperty(param) || (params[param] === "")) {
       return {

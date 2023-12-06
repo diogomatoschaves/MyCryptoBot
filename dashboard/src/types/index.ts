@@ -211,6 +211,15 @@ export type EquityTimeSeries = {
     test: Data[]
 }
 
+export type Strategy = DropdownOptions & {
+    params: any
+    optionalParams: any
+    info: string
+    name: string
+    paramsOrder: string[]
+    optionalParamsOrder: string[]
+}
+
 export type StartPipeline = (pipelineParams: PipelineParams) => Promise<void>
 export type StopPipeline = (pipelineId: number) => Promise<void>
 export type EditPipeline = (pipelineParams: PipelineParams, pipelineId?: number) => Promise<void>
