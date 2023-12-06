@@ -206,8 +206,16 @@ class BacktestMixin:
 
         Parameters:
         -----------
-        params : dict
-            A dictionary containing the parameters to optimize.
+        params : dict, list
+            A dictionary or list (for strategy combintion) containing the parameters to optimize.
+            The parameters must be given as the keywords of a dictionary, and the value is an array
+            of the lower limit, upper limit and step, respectively.
+
+            Example for single strategy:
+                params = dict(window=(10, 20, 1))
+
+            Example for multiple strategies
+                params = [dict(window=(10, 20, 1)), dict(ma=(30, 50, 2)]
         **kwargs : dict
             Additional arguments to pass to the `brute` function.
 
