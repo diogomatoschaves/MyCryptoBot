@@ -1,60 +1,23 @@
 from model.service.helpers.signal_generator import send_signal, trigger_order
 from model.tests.setup.fixtures.internal_modules import *
-from model.tests.setup.test_data.sample_data import sample_structured_data
+from model.tests.setup.test_data.sample_data import sample_structured_data, data
 from model.strategies.properties import STRATEGIES
+from shared.utils.exceptions import StrategyInvalid
 from shared.utils.tests.fixtures.models import *
-
-
-def inject_fixture(strategy):
-    globals()[strategy] = mock_strategy_factory(strategy)
-
-
-for strategy in STRATEGIES:
-    inject_fixture(strategy)
 
 
 class TestSignalGeneration:
     @pytest.mark.parametrize(
-        "strategy,side_effect,expected_value",
+        "pipeline_id,side_effect,expected_value",
         [
             pytest.param(
-                "MovingAverageConvergenceDivergence",
-                sample_structured_data,
+                1,
+                data,
                 True,
-                id="MovingAverageConvergenceDivergence",
+                id="ValidInput",
             ),
             pytest.param(
-                "MovingAverage",
-                sample_structured_data,
-                True,
-                id="MovingAverage",
-            ),
-            pytest.param(
-                "MovingAverageCrossover",
-                sample_structured_data,
-                True,
-                id="MovingAverageCrossover",
-            ),
-            pytest.param(
-                "BollingerBands",
-                sample_structured_data,
-                True,
-                id="BollingerBands",
-            ),
-            pytest.param(
-                "Momentum",
-                sample_structured_data,
-                True,
-                id="Momentum",
-            ),
-            pytest.param(
-                "InvalidStrategy",
-                sample_structured_data,
-                False,
-                id="InvalidStrategy",
-            ),
-            pytest.param(
-                "EmptyDataFrame",
+                2,
                 [],
                 False,
                 id="EmptyDataFrame",
@@ -63,16 +26,14 @@ class TestSignalGeneration:
     )
     def test_send_signal(
         self,
-        strategy,
+        pipeline_id,
         side_effect,
         expected_value,
         mock_settings_env_vars,
         mock_redis_connection,
-        MovingAverageConvergenceDivergence,
-        MovingAverage,
-        MovingAverageCrossover,
-        BollingerBands,
-        Momentum,
+        create_pipeline,
+        create_pipeline_2,
+        create_pipeline_with_invalid_strategy,
         mock_get_data,
         mock_trigger_order,
     ):
@@ -86,18 +47,56 @@ class TestSignalGeneration:
         mock_get_data.return_value = side_effect
         mock_trigger_order.return_value = True
 
+        pipeline = Pipeline.objects.get(id=pipeline_id)
+
         params = {
-            "pipeline_id": 1,
-            "symbol": "BTC",
-            "strategy": strategy,
-            "candle_size": "1h",
-            "exchange": "Binance",
+            "pipeline": pipeline,
             "bearer_token": "abc"
         }
 
         res = send_signal(**params)
 
         assert res == expected_value
+
+    @pytest.mark.parametrize(
+        "pipeline_id,exception",
+        [
+            pytest.param(
+                7,
+                StrategyInvalid,
+                id="raise-StrategyInvalid"
+            )
+        ],
+    )
+    def test_send_signal_raise_exception(
+        self,
+        pipeline_id,
+        exception,
+        mock_settings_env_vars,
+        mock_redis_connection,
+        create_pipeline_with_invalid_strategy,
+        mock_get_data,
+        mock_trigger_order,
+    ):
+        """
+        GIVEN some params
+        WHEN the method get_signal is called
+        THEN the return value is equal to the expected response
+
+        """
+        mock_get_data.return_value = data
+
+        pipeline = Pipeline.objects.get(id=pipeline_id)
+
+        params = {
+            "pipeline": pipeline,
+            "bearer_token": "abc"
+        }
+
+        with pytest.raises(exception) as excinfo:
+            send_signal(**params)
+
+        assert excinfo.type == exception
 
     @pytest.mark.parametrize(
         "side_effect,expected_value",

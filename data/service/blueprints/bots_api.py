@@ -103,7 +103,6 @@ def start_bot():
     equity = data.get("equity", None)
     symbol = data.get("symbol", None)
     strategy = data.get("strategy", None)
-    params = data.get("params", {})
     candle_size = data.get("candleSize", None)
     exchange = data.get("exchanges", None)
     paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
@@ -117,7 +116,6 @@ def start_bot():
         equity=equity,
         symbol=symbol,
         strategy=strategy,
-        params=params,
         candle_size=candle_size,
         exchange=exchange,
         leverage=leverage
@@ -136,7 +134,6 @@ def start_bot():
         candle_size=candle_size,
         strategy=strategy,
         exchange=exchange,
-        params=params,
         paper_trading=paper_trading,
         leverage=leverage
     )

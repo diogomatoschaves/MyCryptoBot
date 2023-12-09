@@ -4,7 +4,9 @@ import os
 
 import django
 
+from model.backtesting.combining import StrategyCombiner
 from model.service.external_requests import execute_order
+from shared.utils.exceptions import StrategyInvalid
 from shared.utils.helpers import convert_signal_to_text
 from shared.utils.logger import configure_logger
 from shared.data.queries import get_data
@@ -20,52 +22,48 @@ from database.model.models import StructuredData
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
 
+def strategy_combiner(strategies, data, header):
+
+    strategies_objs = []
+
+    for strategy in strategies:
+
+        params = json.loads(strategy.params)
+
+        try:
+            strategy_obj = eval(strategy.name)(**params)
+        except NameError:
+            raise StrategyInvalid(strategy.name)
+
+        strategies_objs.append(strategy_obj)
+
+    combined_strategy = StrategyCombiner(strategies_objs, data=data)
+
+    return combined_strategy
+
+
 def send_signal(
-    pipeline_id,
-    symbol,
-    candle_size,
-    exchange,
-    strategy,
+    pipeline,
     bearer_token,
-    params=None,
     header=''
 ):
-
-    if params is None:
-        params = {}
-
-    data = get_data(StructuredData, None, symbol, candle_size, exchange)
+    data = get_data(StructuredData, None, pipeline.symbol, pipeline.interval, pipeline.exchange)
 
     if len(data) == 0:
         logging.debug(header + f"Empty DataFrame, aborting.")
         return False
 
-    # TODO: Compact all this with eval
-    if strategy == 'MovingAverageConvergenceDivergence':
-        signal_gen = MovingAverageConvergenceDivergence(**params, data=data)
+    strategies = pipeline.strategy.all()
 
-    elif strategy == 'MovingAverage':
-        signal_gen = MovingAverage(**params, data=data)
-
-    elif strategy == 'MovingAverageCrossover':
-        signal_gen = MovingAverageCrossover(**params, data=data)
-
-    elif strategy == 'BollingerBands':
-        signal_gen = BollingerBands(**params, data=data)
-
-    elif strategy == 'Momentum':
-        signal_gen = Momentum(**params, data=data)
-    else:
-        logging.warning(header + f"Invalid strategy: %s" % strategy)
-        return False
+    combined_strategy = strategy_combiner(strategies, data, header)
 
     logging.info(header + "Generating signal.")
 
-    signal = signal_gen.get_signal()
+    signal = combined_strategy.get_signal()
 
     logging.debug(header + f"{convert_signal_to_text(signal)} signal generated.")
 
-    return trigger_order(pipeline_id, signal, bearer_token, header=header)
+    return trigger_order(pipeline.id, signal, bearer_token, header=header)
 
 
 def trigger_order(pipeline_id, signal, bearer_token, header=''):

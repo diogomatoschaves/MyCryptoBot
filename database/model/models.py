@@ -168,13 +168,29 @@ class Orders(models.Model):
     pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
 
 
+class Strategy(models.Model):
+    name = models.TextField()
+    params = models.TextField(blank=True, default="{}")
+
+    def as_json(self):
+
+        print(self.params)
+
+        return dict(
+            name=self.name,
+            params=json.loads(self.params),
+        )
+
+    def __str__(self):
+        return self.name
+
+
 class Pipeline(models.Model):
 
     name = models.TextField(null=True, blank=True)
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     interval = models.TextField()
-    strategy = models.TextField()
-    params = models.TextField(blank=True, default="{}")
+    strategy = models.ManyToManyField(Strategy)
     equity = models.FloatField(null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
@@ -191,8 +207,7 @@ class Pipeline(models.Model):
         return dict(
             name=self.name,
             id=self.id,
-            strategy=self.strategy,
-            params=json.loads(self.params),
+            strategy=[obj.as_json() for obj in self.strategy.all()],
             equity=self.equity,
             candleSize=self.interval,
             exchange=self.exchange.name,
@@ -208,7 +223,7 @@ class Pipeline(models.Model):
         )
 
     class Meta:
-        unique_together = ("name", "symbol", "interval", "strategy", "params", "exchange", "paper_trading", "leverage")
+        unique_together = ("name", "symbol", "interval", "exchange", "paper_trading", "leverage")
 
 
 class Position(models.Model):

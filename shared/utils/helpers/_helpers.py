@@ -22,7 +22,6 @@ PIPELINE = namedtuple(
         "id",
         "symbol",
         "strategy",
-        "params",
         "candle_size",
         "exchange",
         "paper_trading",
@@ -63,8 +62,7 @@ def get_pipeline_data(pipeline_id):
     pipeline = PIPELINE(
         id=pipeline_id,
         symbol=pipeline.symbol.name,
-        strategy=pipeline.strategy,
-        params=json.loads(pipeline.params),
+        strategy=[obj.as_json() for obj in pipeline.strategy.all()],
         candle_size=pipeline.interval,
         exchange=pipeline.exchange.name,
         paper_trading=pipeline.paper_trading,

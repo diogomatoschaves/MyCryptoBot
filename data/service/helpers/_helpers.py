@@ -14,7 +14,7 @@ from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Exchange, Pipeline, Symbol, PortfolioTimeSeries
+from database.model.models import Exchange, Pipeline, Symbol, PortfolioTimeSeries, Strategy
 import shared.exchanges.binance.constants as const
 
 MODEL_APP_ENDPOINTS = {
@@ -67,33 +67,47 @@ def check_input(strategies, **kwargs):
             raise CandleSizeInvalid(candle_size)
 
     if "strategy" in kwargs:
-        strategy = kwargs["strategy"]
+        strategy_input = kwargs["strategy"]
 
-        if strategy is None:
+        if strategy_input is None:
             raise StrategyRequired
 
-        if strategy in strategies:
-            if "params" in kwargs:
-                params = kwargs["params"]
+        if not isinstance(strategy_input, (list, tuple)):
+            raise StrategyInvalid(strategy_input)
+
+        for strategy in strategy_input:
+
+            try:
+                strategy_name = strategy["name"]
+            except KeyError:
+                raise StrategyInvalid(strategy_input)
+
+            if strategy_name in strategies:
+
+                try:
+                    params = strategy["params"]
+                except KeyError:
+                    params = {}
 
                 invalid_params = []
                 for key in params:
-                    if key not in strategies[strategy]["params"] and key not in strategies[strategy]["optionalParams"]:
+                    if (key not in strategies[strategy_name]["params"]
+                            and key not in strategies[strategy_name]["optionalParams"]):
                         logging.debug(key)
                         invalid_params.append(key)
 
                 if len(invalid_params) > 0:
                     raise ParamsInvalid(', '.join(invalid_params))
 
-            required_params = []
-            for param in strategies[strategy]["params"]:
-                if param not in kwargs.get("params", {}):
-                    required_params.append(param)
+                required_params = []
+                for param in strategies[strategy_name]["params"]:
+                    if param not in params:
+                        required_params.append(param)
 
-            if len(required_params) > 0:
-                raise ParamsRequired(', '.join(required_params))
-        else:
-            raise StrategyInvalid(strategy)
+                if len(required_params) > 0:
+                    raise ParamsRequired(', '.join(required_params))
+            else:
+                raise StrategyInvalid(strategy_input)
 
     if "name" not in kwargs or kwargs["name"] is None:
         raise NameRequired
@@ -135,6 +149,15 @@ def get_existing_pipeline(fields):
     return pipeline
 
 
+def add_strategies(strategies):
+    strategies_objs = []
+    for strategy in strategies:
+        strategy_obj = Strategy.objects.create(name=strategy["name"], params=json.dumps(strategy["params"]))
+        strategies_objs.append(strategy_obj)
+
+    return strategies_objs
+
+
 def get_or_create_pipeline(
     exists,
     pipeline_id,
@@ -145,7 +168,6 @@ def get_or_create_pipeline(
     candle_size,
     strategy,
     exchange,
-    params,
     paper_trading,
     leverage
 ):
@@ -160,9 +182,7 @@ def get_or_create_pipeline(
             equity=initial_equity,
             symbol_id=symbol,
             interval=candle_size,
-            strategy=strategy,
             exchange_id=exchange,
-            params=json.dumps(params),
             paper_trading=paper_trading,
             leverage=leverage,
             balance=initial_equity * leverage
@@ -170,6 +190,8 @@ def get_or_create_pipeline(
 
         try:
             pipeline = Pipeline.objects.create(**columns)
+            strategy_objs = add_strategies(strategy)
+            pipeline.strategy.add(*strategy_objs)
             logging.info(f"Successfully created new pipeline ({pipeline.id})")
         except django.db.utils.IntegrityError:
             pipeline = get_existing_pipeline(columns)
