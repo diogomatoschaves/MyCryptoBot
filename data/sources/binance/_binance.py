@@ -364,7 +364,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
             max_value_params = 0
             for strategy in strategies:
-                print(strategies)
                 max_value = max([value for param, value in strategy["params"].items()])
 
                 if max_value > max_value_params:
@@ -412,7 +411,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                     exchange_id=self.exchange,
                     interval=candle_size
                 ).last().delete()
-                print(f"Deleted: {model_class}, {candle_size}")
             except AttributeError:
                 pass
 

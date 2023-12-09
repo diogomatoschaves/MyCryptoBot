@@ -10,7 +10,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from data.service.external_requests import get_strategies, start_stop_symbol_trading
-from data.service.helpers import check_input, get_or_create_pipeline
+from data.service.helpers import check_input, get_or_create_pipeline, extract_request_params, convert_client_request
 from shared.utils.decorators import general_app_error
 from data.service.helpers.decorators.handle_app_errors import handle_app_errors
 from data.service.helpers.exceptions import PipelineStartFail, DataPipelineDoesNotExist
@@ -95,47 +95,17 @@ def start_bot():
     else:
         STRATEGIES = globals()["STRATEGIES"]
 
-    data = request.get_json(force=True)
+    request_data = extract_request_params(request)
 
-    pipeline_id = data.get("pipelineId", None)
-    name = data.get("name", None)
-    color = data.get("color", None)
-    equity = data.get("equity", None)
-    symbol = data.get("symbol", None)
-    strategy = data.get("strategy", None)
-    candle_size = data.get("candleSize", None)
-    exchange = data.get("exchanges", None)
-    paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
-    leverage = data.get("leverage", 1)
+    exists = check_input(STRATEGIES, **request_data)
 
-    exists = check_input(
-        STRATEGIES,
-        pipeline_id=pipeline_id,
-        name=name,
-        color=color,
-        equity=equity,
-        symbol=symbol,
-        strategy=strategy,
-        candle_size=candle_size,
-        exchange=exchange,
-        leverage=leverage
-    )
-
-    exchange = exchange.lower()
-    candle_size = candle_size.lower()
+    data = convert_client_request(request_data)
 
     pipeline = get_or_create_pipeline(
         exists,
-        pipeline_id=pipeline_id,
-        name=name,
-        color=color,
-        initial_equity=equity,
-        symbol=symbol,
-        candle_size=candle_size,
-        strategy=strategy,
-        exchange=exchange,
-        paper_trading=paper_trading,
-        leverage=leverage
+        request_data["pipeline_id"],
+        request_data["strategy"],
+        data
     )
 
     payload = {

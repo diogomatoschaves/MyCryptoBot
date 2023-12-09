@@ -49,8 +49,16 @@ class TestSignalGeneration:
 
         pipeline = Pipeline.objects.get(id=pipeline_id)
 
+        pipeline_dict = dict(
+            id=pipeline.id,
+            strategies=[obj.as_json() for obj in pipeline.strategy.all()],
+            symbol=pipeline.symbol.name,
+            exchange=pipeline.exchange.name,
+            interval=pipeline.interval
+        )
+
         params = {
-            "pipeline": pipeline,
+            "pipeline": pipeline_dict,
             "bearer_token": "abc"
         }
 
@@ -88,8 +96,16 @@ class TestSignalGeneration:
 
         pipeline = Pipeline.objects.get(id=pipeline_id)
 
+        pipeline_dict = dict(
+            id=pipeline.id,
+            strategies=[obj.as_json() for obj in pipeline.strategy.all()],
+            symbol=pipeline.symbol.name,
+            exchange=pipeline.exchange.name,
+            interval=pipeline.interval
+        )
+
         params = {
-            "pipeline": pipeline,
+            "pipeline": pipeline_dict,
             "bearer_token": "abc"
         }
 

@@ -173,9 +173,6 @@ class Strategy(models.Model):
     params = models.TextField(blank=True, default="{}")
 
     def as_json(self):
-
-        print(self.params)
-
         return dict(
             name=self.name,
             params=json.loads(self.params),

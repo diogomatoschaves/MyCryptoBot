@@ -22,18 +22,15 @@ from database.model.models import StructuredData
 configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
 
 
-def strategy_combiner(strategies, data, header):
+def strategy_combiner(strategies, data):
 
     strategies_objs = []
 
     for strategy in strategies:
-
-        params = json.loads(strategy.params)
-
         try:
-            strategy_obj = eval(strategy.name)(**params)
+            strategy_obj = eval(strategy["name"])(**strategy["params"])
         except NameError:
-            raise StrategyInvalid(strategy.name)
+            raise StrategyInvalid(strategy["name"])
 
         strategies_objs.append(strategy_obj)
 
@@ -47,15 +44,13 @@ def send_signal(
     bearer_token,
     header=''
 ):
-    data = get_data(StructuredData, None, pipeline.symbol, pipeline.interval, pipeline.exchange)
+    data = get_data(StructuredData, None, pipeline["symbol"], pipeline["interval"], pipeline["exchange"])
 
     if len(data) == 0:
         logging.debug(header + f"Empty DataFrame, aborting.")
         return False
 
-    strategies = pipeline.strategy.all()
-
-    combined_strategy = strategy_combiner(strategies, data, header)
+    combined_strategy = strategy_combiner(pipeline["strategies"], data)
 
     logging.info(header + "Generating signal.")
 
@@ -63,7 +58,7 @@ def send_signal(
 
     logging.debug(header + f"{convert_signal_to_text(signal)} signal generated.")
 
-    return trigger_order(pipeline.id, signal, bearer_token, header=header)
+    return trigger_order(pipeline["id"], signal, bearer_token, header=header)
 
 
 def trigger_order(pipeline_id, signal, bearer_token, header=''):

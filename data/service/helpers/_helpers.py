@@ -161,40 +161,22 @@ def add_strategies(strategies):
 def get_or_create_pipeline(
     exists,
     pipeline_id,
-    name,
-    color,
-    initial_equity,
-    symbol,
-    candle_size,
     strategy,
-    exchange,
-    paper_trading,
-    leverage
+    data
 ):
 
     if exists:
         pipeline = get_existing_pipeline(dict(id=pipeline_id))
 
     else:
-        columns = dict(
-            name=name,
-            color=color,
-            equity=initial_equity,
-            symbol_id=symbol,
-            interval=candle_size,
-            exchange_id=exchange,
-            paper_trading=paper_trading,
-            leverage=leverage,
-            balance=initial_equity * leverage
-        )
-
         try:
-            pipeline = Pipeline.objects.create(**columns)
+            pipeline = Pipeline.objects.create(**data)
             strategy_objs = add_strategies(strategy)
             pipeline.strategy.add(*strategy_objs)
+
             logging.info(f"Successfully created new pipeline ({pipeline.id})")
         except django.db.utils.IntegrityError:
-            pipeline = get_existing_pipeline(columns)
+            pipeline = get_existing_pipeline(data)
 
     return pipeline
 
@@ -220,18 +202,43 @@ def convert_trades_to_dict(trades_metrics):
 def convert_client_request(data):
     return {
         "name": data["name"],
-        "equity": data["equity"],
         "symbol_id": data["symbol"],
-        "strategy": data["strategy"],
-        "interval": data["candleSize"],
-        "exchange_id": data["exchanges"],
-        "params": json.dumps(data["params"]),
-        "paper_trading": data["paperTrading"],
+        "interval": data["candle_size"].lower(),
+        "exchange_id": data["exchange"].lower(),
+        "paper_trading": data["paper_trading"],
         "color": data["color"],
+        "equity": data["equity"],
         "leverage": data["leverage"],
-        "balance": data["equity"],
-        "units": 0
+        "balance": data["equity"] * data["leverage"]
     }
+
+
+def extract_request_params(request):
+    data = request.get_json(force=True)
+
+    pipeline_id = data.get("pipelineId", None)
+    name = data.get("name", None)
+    color = data.get("color", None)
+    equity = data.get("equity", None)
+    symbol = data.get("symbol", None)
+    strategy = data.get("strategy", None)
+    candle_size = data.get("candleSize", None)
+    exchange = data.get("exchanges", None)
+    paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
+    leverage = data.get("leverage", 1)
+
+    return dict(
+        pipeline_id=pipeline_id,
+        name=name,
+        color=color,
+        equity=equity,
+        symbol=symbol,
+        strategy=strategy,
+        candle_size=candle_size,
+        exchange=exchange,
+        leverage=leverage,
+        paper_trading=paper_trading
+    )
 
 
 def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, time_frame_converted='1H'):

@@ -60,6 +60,7 @@ for name, cls in inspect.getmembers(importlib.import_module(STRATEGIES_LOCATION)
 
     STRATEGIES[name] = {
         "name": get_extended_name(name),
+        "className": name,
         "info": clean_docstring(cls.__doc__),
         "params": required,
         "optionalParams": optional,
