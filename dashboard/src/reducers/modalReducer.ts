@@ -1,4 +1,4 @@
-import {Pipeline} from "../types";
+import {Pipeline, RawStrategy, Strategy} from "../types";
 
 export const UPDATE_STRATEGY = 'UPDATE_STRATEGY'
 export const UPDATE_SECOND_MODAL_OPEN = 'UPDATE_SECOND_MODAL_OPEN'
@@ -12,13 +12,46 @@ export const GET_INITIAL_STATE = 'GET_INITIAL_STATE'
 
 
 export const modalReducer = (state: any, action: any) => {
+
   switch (action.type) {
+
     case UPDATE_STRATEGY:
+
+      const strategyKeys = state.dynamicStrategies.map((strategy: Strategy) => strategy.value)
+      const strategyOptionsLength = action.strategiesOptions.length
+
+      const add = action.value.length > state.strategy.length
+
+      let difference: number[] = []
+      if (!add) {
+        difference = state.strategy.filter((x: Strategy) => !action.value.includes(x));
+      }
+
       return {
         ...state,
-        secondModalOpen: action.value !== null,
+        secondModalOpen: add,
         strategy: action.value,
-        params: action.value === null ? {} : state.params
+        dynamicStrategies: state.dynamicStrategies.reduce((accum: Strategy[], strategy: Strategy) => {
+          if (action.value.includes(strategy.value) && !strategyKeys.includes(strategy.value + strategyOptionsLength)) {
+
+            const index = strategy.value === strategyOptionsLength ?
+            // @ts-ignore
+              strategy.value : strategy.value % strategyOptionsLength
+
+            return [...accum, strategy, {
+            // @ts-ignore
+              ...action.strategiesOptions[index - 1],
+              key: strategy.value + strategyOptionsLength,
+              value: strategy.value + strategyOptionsLength,
+              selectedParams: {}
+            }]
+            // @ts-ignore
+          } else if (difference.includes(strategy.value)) {
+            return accum
+          } else {
+            return [...accum, strategy]
+          }
+        }, [])
       }
     case UPDATE_SECOND_MODAL_OPEN:
       return {
@@ -26,22 +59,7 @@ export const modalReducer = (state: any, action: any) => {
         secondModalOpen: action.value,
       }
     case RESET_MODAL:
-      return {
-        ...state,
-        strategy: null,
-        color: null,
-        symbol: null,
-        candleSize: null,
-        name: "",
-        equity: "",
-        leverage: 1,
-        exchanges: [],
-        liveTrading: false,
-        secondModalOpen: false,
-        params: {},
-        message: {text: '', success: false},
-        secondaryMessage: {text: '', success: false},
-      }
+      return getInitialState(action.strategiesOptions)
     case UPDATE_PARAMS:
       return {
         ...state,
@@ -50,10 +68,22 @@ export const modalReducer = (state: any, action: any) => {
     case UPDATE_STRATEGY_PARAMS:
       return {
         ...state,
-        params: {
-          ...state.params,
-          ...action.value
-        },
+        dynamicStrategies: state.dynamicStrategies.reduce((accum: Strategy[], strategy: Strategy) => {
+          if (action.strategyIndex === strategy.value) {
+            return [
+              ...accum,
+              {
+                ...strategy,
+                selectedParams: {
+                  ...strategy.selectedParams,
+                  ...action.value
+                }
+              }
+            ]
+          } else {
+            return [...accum, strategy]
+          }
+        }, [])
       }
     case UPDATE_CHECKBOX:
       const liveTrading = action.value ? action.value : !state.liveTrading
@@ -76,8 +106,8 @@ export const modalReducer = (state: any, action: any) => {
       return {
         ...state,
         ...getInitialState(
-          action.symbols,
           action.strategies,
+          action.symbols,
           action.candleSizes,
           action.exchanges,
           action.pipeline
@@ -89,28 +119,65 @@ export const modalReducer = (state: any, action: any) => {
 }
 
 export const getInitialState = (
-  symbols: any,
   strategies: any,
-  candleSizes: any,
-  exchanges: any,
+  symbols?: any,
+  candleSizes?: any,
+  exchanges?: any,
   pipeline?: Pipeline
 ) => {
   if (pipeline) {
-    const strategy = strategies.find((strategy: any) => strategy.text === pipeline.strategy)
+
     const symbol = symbols.find((symbol: any) => symbol.text === pipeline.symbol)
     const candleSize = candleSizes.find((candleSize: any) => candleSize.text === pipeline.candleSize)
     const exchange = exchanges.find((exchange: any) => exchange.text === pipeline.exchange)
 
+    const strategiesArray = pipeline.strategy.reduce(
+      (strategiesArray: any, pipelineStrategy: RawStrategy) => {
+        const strategy = strategies.find((strategy: Strategy) => strategy.className === pipelineStrategy.name)
+
+        let strategyValue = strategy.value
+
+        while (strategiesArray.includes(strategyValue)) {
+          strategyValue = strategyValue + strategies.length
+        }
+
+        return [...strategiesArray, strategyValue]
+    }, [])
+
+    const strategyOptionsLength = strategies.length
+
+    const dynamicStrategies = strategies.reduce((accum: Strategy[], strategy: Strategy, index: number) => {
+
+      const pipelineStrategies = pipeline.strategy.filter((pipelineStrategy: RawStrategy) => pipelineStrategy.name === strategy.className)
+
+      const extraStrategies = pipelineStrategies.map((pipelineStrategy: RawStrategy, index) => {
+        return {
+          ...strategy,
+          // @ts-ignore
+          key: strategy.value + (index + 1) * strategyOptionsLength,
+          // @ts-ignore
+          value: strategy.value + (index + 1) * strategyOptionsLength,
+          selectedParams: pipelineStrategy.params
+        }
+      })
+
+      return [
+        ...accum,
+        strategy,
+        ...extraStrategies
+      ]
+    }, [])
+
     return {
-      strategy: strategy && strategy.value,
+      strategy: strategiesArray,
+      exchanges: exchange ? [exchange.value] : [],
       color: pipeline.color,
       symbol: symbol && symbol.value,
       candleSize: candleSize && candleSize.value,
       name: pipeline.name,
       equity: String(pipeline.equity),
       leverage: pipeline.leverage,
-      exchanges: exchange && [exchange.value],
-      params: pipeline.params,
+      dynamicStrategies,
       liveTrading: !pipeline.paperTrading,
       secondModalOpen: false,
       message: {text: '', success: false},
@@ -118,23 +185,24 @@ export const getInitialState = (
     }
   } else {
     return {
-      strategy: null,
+      strategy: [],
+      exchanges: [],
       color: null,
       symbol: null,
       candleSize: null,
       name: "",
       equity: "",
       leverage: 1,
-      exchanges: [],
       liveTrading: false,
       secondModalOpen: false,
-      params: {},
+      dynamicStrategies: strategies.map((strategy: Strategy) => {
+        return {
+          ...strategy,
+          selectedParams: {}
+        }
+      }),
       message: {text: '', success: false},
       secondaryMessage: {text: '', success: false}
     }
   }
-}
-
-export const initialState = {
-
 }

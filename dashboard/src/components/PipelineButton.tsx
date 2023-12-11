@@ -1,5 +1,5 @@
-import {Fragment, useState} from 'react'
-import {Button, Icon, Loader} from "semantic-ui-react";
+import {useState} from 'react'
+import {Button, Icon} from "semantic-ui-react";
 import {Pipeline, StartPipeline, StopPipeline} from "../types";
 
 
@@ -55,7 +55,6 @@ function PipelineButton(props: Props) {
                     strategy: pipeline.strategy,
                     candleSize: pipeline.candleSize,
                     exchanges: pipeline.exchange,
-                    params: pipeline.params,
                     paperTrading: pipeline.paperTrading,
                     color: pipeline.color,
                     leverage: pipeline.leverage,

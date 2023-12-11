@@ -1,5 +1,5 @@
 import {Button, Dropdown, Grid, Header, Icon, Input, Modal, Popup} from "semantic-ui-react";
-import React, {Fragment, ReactNode} from "react";
+import React, {Fragment} from "react";
 import {
   UPDATE_SECOND_MODAL_OPEN,
   UPDATE_SECONDARY_MESSAGE,
@@ -12,40 +12,40 @@ import {Message, Strategy,} from "../types";
 
 
 interface Props {
-  strategy: any
-  strategiesOptions: Strategy[];
+  strategies: number[];
   secondModalOpen: boolean
   selectedStrategy: Strategy
   updateModal: any
-  params: any
   secondaryMessage: Message
+  strategiesOptions: Strategy[]
 }
 
 
 const StrategySelectionModal = (props: Props) => {
 
   const {
-    strategy,
-    strategiesOptions,
+    strategies,
     secondModalOpen,
     selectedStrategy,
     updateModal,
-    params,
     secondaryMessage,
+    strategiesOptions
   } = props
-  
+
+  const strategyIndex = selectedStrategy && selectedStrategy.value
+
   return (
     <Modal
       onClose={() => {
         // updateModal({type: CLOSE_MODAL})
       }}
-      open={strategy && secondModalOpen}
+      open={secondModalOpen}
       size="small"
     >
       <Modal.Header>
-        {strategy && (
+        {selectedStrategy && (
           <Fragment>
-            {strategiesOptions[strategy - 1].text}
+            {selectedStrategy.text}
             <Popup
               content={selectedStrategy.info}
               header={`${selectedStrategy.name} Strategy`}
@@ -56,24 +56,25 @@ const StrategySelectionModal = (props: Props) => {
         )}
       </Modal.Header>
       <Modal.Content scrolling>
-        {strategy && (
+        {selectedStrategy && (
           <Grid columns={2}>
             <Grid.Column>
               <Header as='h5'>Required:</Header>
-              {strategy &&  selectedStrategy.paramsOrder.map((param: string) => (
+              {selectedStrategy.paramsOrder.map((param: string) => (
                 <Grid.Row key={param} style={{paddingBottom: '10px'}}>
                   <Grid.Column>
                     {selectedStrategy.params[param].options ?
                       (
                         <Dropdown
                           placeholder={param}
-                          value={params[param]}
+                          value={selectedStrategy && selectedStrategy.selectedParams[param]}
                           onChange={(e: any, {value}: {value?: any}) =>
                               updateModal({
                                 type: UPDATE_STRATEGY_PARAMS,
                                 value: {
                                   [param]: value
                                 },
+                                strategyIndex
                               })}
                           search
                           selection
@@ -89,7 +90,8 @@ const StrategySelectionModal = (props: Props) => {
                               type: UPDATE_STRATEGY_PARAMS,
                               value: {
                                 [param]: value
-                              }
+                              },
+                              strategyIndex
                             })
                           }}
                           placeholder={param}
@@ -100,45 +102,51 @@ const StrategySelectionModal = (props: Props) => {
               ))}
             </Grid.Column>
             <Grid.Column>
-              <Header as='h5'>Optional:</Header>
-              {/*@ts-ignore*/}
-              {selectedStrategy.optionalParamsOrder.map(param => (
-                <Grid.Row key={param} style={{paddingBottom: '10px'}}>
-                  <Grid.Column>
-                    {selectedStrategy.optionalParams[param].options ?
-                      (
-                        <Dropdown
-                          placeholder={param}
-                          value={params[param]}
-                          onChange={(e: any, {value}: {value?: any}) =>
-                              updateModal({
-                                type: UPDATE_STRATEGY_PARAMS,
-                                value: {
-                                  [param]: value
-                                },
-                              })}
-                          search
-                          selection
-                          selectOnBlur={false}
-                          options={selectedStrategy.optionalParams[param].options.map(
-                              (p:  any, index: number) => ({key: index, text: p, value: index})
-                          )}
-                        />
-                      ) : (
-                        <Input
-                          onChange={(e, {value}) => {
-                            updateModal({
-                              type: UPDATE_STRATEGY_PARAMS,
-                              value: {
-                                [param]: value
-                              }
-                            })
-                          }}
-                          placeholder={param}/>
-                        )}
-                  </Grid.Column>
-                </Grid.Row>
-              ))}
+              {selectedStrategy.optionalParamsOrder.length > 0 && (
+                <Fragment>
+                  <Header as='h5'>Optional:</Header>
+                  {/*@ts-ignore*/}
+                  {selectedStrategy.optionalParamsOrder.map(param => (
+                    <Grid.Row key={param} style={{paddingBottom: '10px'}}>
+                      <Grid.Column>
+                        {selectedStrategy.optionalParams[param].options ?
+                          (
+                            <Dropdown
+                              placeholder={param}
+                              value={selectedStrategy && selectedStrategy.selectedParams[param]}
+                              onChange={(e: any, {value}: {value?: any}) =>
+                                  updateModal({
+                                    type: UPDATE_STRATEGY_PARAMS,
+                                    value: {
+                                      [param]: value
+                                    },
+                                    strategyIndex
+                                  })}
+                              search
+                              selection
+                              selectOnBlur={false}
+                              options={selectedStrategy.optionalParams[param].options.map(
+                                  (p:  any, index: number) => ({key: index, text: p, value: index})
+                              )}
+                            />
+                          ) : (
+                            <Input
+                              onChange={(e, {value}) => {
+                                updateModal({
+                                  type: UPDATE_STRATEGY_PARAMS,
+                                  value: {
+                                    [param]: value
+                                  },
+                                  strategyIndex
+                                })
+                              }}
+                              placeholder={param}/>
+                            )}
+                      </Grid.Column>
+                    </Grid.Row>
+                  ))}
+                </Fragment>
+              )}
             </Grid.Column>
           </Grid>
         )}
@@ -158,7 +166,8 @@ const StrategySelectionModal = (props: Props) => {
             <Button color='black' onClick={() => {
               updateModal({
                 type: UPDATE_STRATEGY,
-                value: null
+                value: strategies.slice(0,-1),
+                strategiesOptions
               })
             }}>
               Cancel
@@ -169,7 +178,6 @@ const StrategySelectionModal = (props: Props) => {
               content='Validate'
               onClick={() => {
                 const {success, updatedParams} = validateParams (
-                  params,
                   selectedStrategy
                 )
 
@@ -180,7 +188,8 @@ const StrategySelectionModal = (props: Props) => {
                   })
                   updateModal({
                     type: UPDATE_STRATEGY_PARAMS,
-                    value: updatedParams
+                    value: updatedParams,
+                    strategyIndex
                   })
                   updateModal({
                     type: UPDATE_SECONDARY_MESSAGE,

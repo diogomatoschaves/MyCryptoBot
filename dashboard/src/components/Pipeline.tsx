@@ -3,7 +3,7 @@ import {
     DeletePipeline,
     DropdownOptions, EditPipeline,
     Pipeline, PipelinesObject,
-    Position,
+    Position, RawPipeline, RawStrategy,
     StartPipeline,
     StopPipeline, Strategy,
 } from "../types";
@@ -132,15 +132,33 @@ function PipelineItem(props: Props) {
                     <Popup
                       floated='right'
                       textAlign='right'
+                      position={'top center'}
                       pinned
                       size={'large'}
                       content={
                           <div>
-                              {Object.keys(pipeline.params).map((param) => {
-                                  // @ts-ignore
-                                  return <div><span style={{fontWeight: 'bold'}}>{param}:</span> {pipeline.params[param]}</div>
+                              {pipeline.strategy.map((strategy, index) => {
+
+                                  const params = Object.keys(strategy.params)
+
+                                  return (
+                                      <div>
+                                          <div><span style={{fontWeight: 'bold'}}>Strategy {index + 1}:</span> {strategy.name}</div>
+                                          {params.map((param, paramsIndex) => {
+                                              // @ts-ignore
+                                              return (
+                                                  <div>
+                                                      <span style={{fontWeight: 'bold'}}>{param}:</span> {strategy.params[param]}
+                                                      {paramsIndex + 1 !== params.length && <span> — </span>}
+                                                  </div>
+                                              )
+                                          })}
+                                          {index + 1 !== pipeline.strategy.length && <br/>}
+                                      </div>
+                                  )
+
                               })}
-                          </div>
+                            </div>
                       }
                       trigger={
                           <Grid.Column width={isMobile ? 6 : 4}>
@@ -148,7 +166,11 @@ function PipelineItem(props: Props) {
                                   Strategy
                               </Grid.Column>
                               <Grid.Column floated='right' style={styles.rightColumn}>
-                                  {pipeline.strategy}
+                                  {pipeline.strategy.length > 1 ? (
+                                    <div style={{fontStyle: 'italic'}}>Combined Strategy</div>
+                                  ) : pipeline.strategy.length > 0 && (
+                                    <div>{pipeline.strategy[0]}</div>
+                                  )}
                               </Grid.Column>
                           </Grid.Column>
                       }

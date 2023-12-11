@@ -47,10 +47,27 @@ export type RawTrade = {
 }
 
 
+export type Strategy = DropdownOptions & {
+    selectedParams: any
+    params: any
+    optionalParams: any
+    info: string
+    name: string
+    className: string
+    paramsOrder: string[]
+    optionalParamsOrder: string[]
+    [key: string]: any
+}
+
+export type RawStrategy = {
+    name: string | undefined
+    params: any
+}
+
+
 export type Pipeline = {
     id: number
-    strategy: string
-    params: Object
+    strategy: RawStrategy[]
     candleSize: string
     name: string,
     equity: number,
@@ -68,8 +85,7 @@ export type Pipeline = {
 
 export type RawPipeline = {
     id: number
-    strategy: string
-    params: Object
+    strategy: RawStrategy[]
     candleSize: string
     name: string,
     equity: number,
@@ -90,10 +106,9 @@ export type PipelineParams = {
     equity: number,
     leverage: number,
     symbol: string
-    strategy: string
+    strategy: RawStrategy[]
     candleSize: string
     exchanges: string
-    params: Object,
     paperTrading: boolean,
     color: string
 }
@@ -211,18 +226,9 @@ export type EquityTimeSeries = {
     test: Data[]
 }
 
-export type Strategy = DropdownOptions & {
-    params: any
-    optionalParams: any
-    info: string
-    name: string
-    paramsOrder: string[]
-    optionalParamsOrder: string[]
-}
-
 export type StartPipeline = (pipelineParams: PipelineParams) => Promise<void>
-export type StopPipeline = (pipelineId: number) => Promise<void>
 export type EditPipeline = (pipelineParams: PipelineParams, pipelineId?: number) => Promise<void>
+export type StopPipeline = (pipelineId: number) => Promise<void>
 export type DeletePipeline = (pipelineId: number) => Promise<void>
 export type ChangeMenu = (option: MenuOption) => void
 export type GetCurrentPrices = () => void

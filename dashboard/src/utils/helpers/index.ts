@@ -17,15 +17,14 @@ export const validatePipelineCreation = async (
       symbol,
       color,
       symbolsOptions,
-      strategy,
-      strategiesOptions,
+      strategies,
+      dynamicStrategies,
       candleSize,
       candleSizeOptions,
       exchanges,
       exchangeOptions,
       startPipeline,
       updateModal,
-      params,
       liveTrading,
       balance,
       leverage,
@@ -38,15 +37,14 @@ export const validatePipelineCreation = async (
       symbol: number | undefined,
       color: string | undefined,
       symbolsOptions: DropdownOptions[],
-      strategy: number | undefined,
-      strategiesOptions: DropdownOptions[],
+      strategies: number[],
+      dynamicStrategies: Strategy[],
       candleSize: number | undefined,
       candleSizeOptions: DropdownOptions[],
       exchanges: Array<number>,
       exchangeOptions: DropdownOptions[],
       startPipeline: StartPipeline,
       updateModal: any,
-      params: Object,
       liveTrading: boolean,
       balance: number,
       leverage: number,
@@ -54,7 +52,7 @@ export const validatePipelineCreation = async (
       editPipeline: EditPipeline,
       pipelineId?: number
     }) => {
-  if (!name || !color || !equity || !symbol || !strategy || !candleSize || exchanges.length === 0) {
+  if (!name || !color || !equity || !symbol || strategies.length == 0 || !candleSize || exchanges.length === 0) {
     updateModal({
       type: UPDATE_MESSAGE,
       message: {text: "All parameters must be specified.", success: false}
@@ -80,19 +78,29 @@ export const validatePipelineCreation = async (
     return false
   }
 
+  const strategiesPayload = strategies.map((index: number) => {
+
+    const strategy = dynamicStrategies.find(strategy => strategy.value === index)
+
+    return {
+      name: strategy?.className,
+      params: strategy?.selectedParams
+    }
+  })
+
   const payload = {
     symbol: symbol ? symbolsOptions[symbol - 1].text : "",
-    strategy: strategy ? strategiesOptions[strategy - 1].text : "",
+    strategy: strategiesPayload,
     candleSize: candleSize ? candleSizeOptions[candleSize - 1].text : "",
     // TODO: Generalize this for any number of exchanges
     exchanges: exchanges.length > 0 ? exchangeOptions[exchanges[0] - 1].text : "",
-    params,
     name,
     equity: equityFloat,
     leverage,
     paperTrading: !liveTrading,
     color
   }
+
 
   if (edit) {
     await editPipeline(payload, pipelineId)
@@ -105,12 +113,15 @@ export const validatePipelineCreation = async (
 }
 
 
-export const validateParams = (params: any, strategy: Strategy) => {
+export const validateParams = (strategy: any) => {
+
+  const params = strategy.selectedParams
+
   const requiredParams = strategy.paramsOrder.reduce((reduced: any, param: string) => {
     if (!params.hasOwnProperty(param) || (params[param] === "")) {
       return {
         success: false,
-        params: reduced.params
+        strategiesParameters: reduced.params
       }
     }
 
@@ -159,7 +170,7 @@ export const validateParams = (params: any, strategy: Strategy) => {
 
     return {
       success: reduced.success,
-      params: {
+      strategiesParameters: {
         ...reduced.params,
         [param]: typedParam ? typedParam : paramValue
       }
@@ -172,16 +183,12 @@ export const validateParams = (params: any, strategy: Strategy) => {
   }
 }
 
-export const organizePipeline = (pipeline: RawPipeline): Pipeline => {
+export const organizePipeline = (pipeline: RawPipeline, strategiesOptions: Strategy[]): Pipeline => {
+
   return {
     ...pipeline,
     openTime: pipeline.openTime ? new Date(Date.parse(pipeline.openTime)) : null,
   }
-}
-
-
-export const organizePipelines = (pipelines: RawPipeline[]): Pipeline[] => {
-  return pipelines.map(organizePipeline)
 }
 
 
@@ -256,4 +263,9 @@ let options = {
 export const convertDate = (timeStamp: number) => {
   // @ts-ignore
   return new Date(timeStamp).toLocaleDateString('en-GB', options);
+}
+
+export const addLineBreaks = (text: string) => {
+  const regex = /\s{2}/g;
+  return text.replace(regex, '<br/>')
 }

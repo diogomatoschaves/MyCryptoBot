@@ -1,5 +1,5 @@
-import React, {useReducer, useState, useEffect, useRef, ReactNode} from 'react';
-import {Button, Grid, Input, Modal, Form} from "semantic-ui-react";
+import React, {ReactNode, useEffect, useReducer, useRef, useState} from 'react';
+import {Button, Form, Grid, Input, Modal} from "semantic-ui-react";
 import {
   BalanceObj,
   DropdownOptions,
@@ -14,14 +14,16 @@ import {validatePipelineCreation} from "../utils/helpers";
 import MessageComponent from "./Message";
 import {COLORS_NAMES} from "../utils/constants";
 import {
+  GET_INITIAL_STATE,
+  getInitialState,
   modalReducer,
-  UPDATE_STRATEGY,
-  UPDATE_CHECKBOX,
   RESET_MODAL,
+  UPDATE_CHECKBOX,
   UPDATE_PARAMS,
-  getInitialState, GET_INITIAL_STATE
+  UPDATE_STRATEGY
 } from "../reducers/modalReducer";
 import StrategySelectionModal from "./StrategySelectionModal";
+import {availableBalanceReducer, UPDATE_BALANCE} from "../reducers/availableBalanceReducer";
 
 
 interface Props {
@@ -57,38 +59,6 @@ const leverageOptions = Array.from({length: 20}, (x, i) => ({
 }))
 
 
-const UPDATE_BALANCE = "UPDATE_BALANCE"
-
-const availableBalanceReducer = (state: any, action: any) => {
-  switch (action.type) {
-    case UPDATE_BALANCE:
-      return {
-        ...state,
-        ...action.positions.reduce((accum: any, position: Position) => {
-          if (position.position === 0) {
-            const pipeline = action.pipelines[position.pipelineId]
-
-            if (!pipeline) return accum
-
-            const pipelineType = pipeline.paperTrading ? "test" : "live"
-            return {
-              ...accum,
-              [pipelineType]: accum[pipelineType] - (pipeline.equity)
-            }
-          } else {
-            return accum
-          }
-        }, {
-              live: action.balances.live.USDT.availableBalance,
-              test: action.balances.test.USDT.availableBalance
-            }),
-      }
-    default:
-      throw new Error();
-  }
-}
-
-
 const NewPipeline = (props: Props) => {
 
   const {
@@ -109,7 +79,8 @@ const NewPipeline = (props: Props) => {
   const [open, setOpen] = useState(false)
 
   const [{
-    strategy,
+    strategy: strategies,
+    dynamicStrategies,
     color,
     symbol,
     candleSize,
@@ -118,13 +89,12 @@ const NewPipeline = (props: Props) => {
     leverage,
     exchanges,
     secondModalOpen,
-    params,
     liveTrading,
     message,
     secondaryMessage
   }, updateModal] = useReducer(modalReducer, getInitialState(
-    symbolsOptions,
     strategiesOptions,
+    symbolsOptions,
     candleSizeOptions,
     exchangeOptions,
     pipeline
@@ -153,6 +123,7 @@ const NewPipeline = (props: Props) => {
         positions,
         pipelines,
         balances
+
       })
     }
     return () => {
@@ -163,9 +134,8 @@ const NewPipeline = (props: Props) => {
 
   const balance = availableBalance[liveTrading ? "live" : "test"]
 
-  console.log(strategy)
-
-  const selectedStrategy = strategiesOptions[strategy - 1]
+  const selectedStrategy = strategies &&
+    dynamicStrategies.find((strategy: Strategy) => strategy.value === strategies.slice(-1)[0])
 
   return (
       <Modal
@@ -177,7 +147,7 @@ const NewPipeline = (props: Props) => {
           onClose={(event) => {
             event.preventDefault();
             event.stopPropagation()
-            !edit && updateModal({type: RESET_MODAL})
+            !edit && updateModal({type: RESET_MODAL, strategiesOptions})
             setOpen(false)
           }}
           onOpen={() => {
@@ -280,15 +250,16 @@ const NewPipeline = (props: Props) => {
               />
               <Form.Select
                 label={'Strategy'}
-                value={strategy}
+                value={strategies}
                 onChange={(e: any, {value}: {value?: any}) => updateModal({
                   type: UPDATE_STRATEGY,
                   value,
+                  strategiesOptions
                 })}
-                // multiple
+                multiple
                 search
                 selection
-                options={strategiesOptions}
+                options={dynamicStrategies}
                 selectOnBlur={false}
                 style={{width: '80%'}}
               />
@@ -335,13 +306,12 @@ const NewPipeline = (props: Props) => {
             </Form.Group>
           </Form>
           <StrategySelectionModal
-            strategy={strategy}
-            strategiesOptions={strategiesOptions}
+            strategies={strategies}
             secondModalOpen={secondModalOpen}
             selectedStrategy={selectedStrategy}
             updateModal={updateModal}
-            params={params}
             secondaryMessage={secondaryMessage}
+            strategiesOptions={strategiesOptions}
           />
         </Modal.Content>
         <Modal.Actions>
@@ -359,7 +329,7 @@ const NewPipeline = (props: Props) => {
               <Button color='black' onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation()
-                !edit && updateModal({type: RESET_MODAL})
+                !edit && updateModal({type: RESET_MODAL, strategiesOptions})
                 setOpen(false)
               }}>
                 Cancel
@@ -377,17 +347,16 @@ const NewPipeline = (props: Props) => {
                       equity,
                       color,
                       symbol,
-                      strategy,
+                      strategies,
                       candleSize,
                       exchanges,
                       symbolsOptions,
-                      strategiesOptions,
+                      dynamicStrategies,
                       candleSizeOptions,
                       exchangeOptions,
                       startPipeline,
                       editPipeline,
                       updateModal,
-                      params,
                       liveTrading,
                       leverage,
                       edit,

@@ -119,7 +119,6 @@ class App extends Component<Props, State> {
         trades: {},
         pipelines: {},
         positions: [],
-        strategies: {},
         balances: {
             test: {USDT: {availableBalance: 0, totalBalance: 0}},
             live: {USDT: {availableBalance: 0, totalBalance: 0}}
@@ -151,12 +150,11 @@ class App extends Component<Props, State> {
 
                 const options = resources ? Object.keys(resources).reduce((accum: any, resource: any) => {
                     const resourcesArray = resource === 'candleSizes' ? resources[resource] : Object.keys(resources[resource])
-
                     return {
                         ...accum,
                         [RESOURCES_MAPPING[resource]]: resourcesArray.map((name: any, index: number) => ({
                             key: index + 1,
-                            text: name,
+                            text: resource !== 'candleSizes' ? resources[resource][name].name : name,
                             value: index + 1,
                             ...(resource !== 'candleSizes' && resources[resource][name])
                         }))
@@ -256,6 +254,7 @@ class App extends Component<Props, State> {
             .then(response => {
 
                 const { updateMessage } = this.props
+                const { strategiesOptions} = this.state
 
                 updateMessage({
                     text: response.message,
@@ -267,7 +266,7 @@ class App extends Component<Props, State> {
                     return {
                         pipelines: response.success ? {
                             ...pipelines,
-                            [response.pipeline.id]: organizePipeline(response.pipeline)
+                            [response.pipeline.id]: organizePipeline(response.pipeline, strategiesOptions)
                         } : state.pipelines
                     }
                 })
@@ -279,6 +278,7 @@ class App extends Component<Props, State> {
         return stopBot({pipelineId})
             .then(response => {
                 const { updateMessage } = this.props
+                const { strategiesOptions} = this.state
 
                 updateMessage({
                     text: response.message,
@@ -289,7 +289,7 @@ class App extends Component<Props, State> {
                     return {
                         pipelines: response.success ? {
                             ...state.pipelines,
-                            [pipelineId]: organizePipeline(response.pipeline)
+                            [pipelineId]: organizePipeline(response.pipeline, strategiesOptions)
                         } : state.pipelines
                     }
                 })
@@ -304,6 +304,7 @@ class App extends Component<Props, State> {
           .then(response => {
 
               const { updateMessage } = this.props
+              const { strategiesOptions} = this.state
 
               updateMessage({
                   text: response.message,
@@ -315,7 +316,7 @@ class App extends Component<Props, State> {
                   return {
                       pipelines: response.success ? {
                           ...pipelines,
-                          [response.pipeline.id]: organizePipeline(response.pipeline)
+                          [response.pipeline.id]: organizePipeline(response.pipeline, strategiesOptions)
                       } : state.pipelines
                   }
               })
@@ -444,7 +445,7 @@ class App extends Component<Props, State> {
                       pipelines: {...state.pipelines, ...response.pipelines.reduce((pipelines: PipelinesObject, pipeline: RawPipeline) => {
                           return {
                               ...pipelines,
-                              [pipeline.id]: organizePipeline(pipeline)
+                              [pipeline.id]: organizePipeline(pipeline, state.strategiesOptions)
                           }
                       }, {})},
                   }
