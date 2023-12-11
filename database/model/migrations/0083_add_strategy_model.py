@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='pipeline',
-            unique_together={('name', 'symbol', 'interval', 'exchange', 'paper_trading', 'leverage')},
+            unique_together=set(),
         ),
         migrations.RenameField(
             model_name='pipeline',

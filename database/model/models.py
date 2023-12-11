@@ -219,9 +219,6 @@ class Pipeline(models.Model):
             units=self.units
         )
 
-    class Meta:
-        unique_together = ("name", "symbol", "interval", "exchange", "paper_trading", "leverage")
-
 
 class Position(models.Model):
 
