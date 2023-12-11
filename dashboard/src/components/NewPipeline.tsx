@@ -101,8 +101,8 @@ const NewPipeline = (props: Props) => {
   ));
 
   const [availableBalance, updateBalance] = useReducer(availableBalanceReducer, {
-    live: balances.live.USDT.availableBalance,
-    test: balances.test.USDT.availableBalance
+    live: balances ? balances.live.USDT.availableBalance : 0,
+    test: balances ? balances.test.USDT.availableBalance : 0
   })
 
   const previous = useRef({positions, balances}).current;
