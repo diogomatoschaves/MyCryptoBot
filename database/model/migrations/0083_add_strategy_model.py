@@ -18,9 +18,18 @@ class Migration(migrations.Migration):
                 ('params', models.TextField(blank=True, default=json.dumps('{}'))),
             ],
         ),
+        migrations.AlterUniqueTogether(
+            name='pipeline',
+            unique_together={('name', 'symbol', 'interval', 'exchange', 'paper_trading', 'leverage')},
+        ),
+        migrations.RenameField(
+            model_name='pipeline',
+            old_name='strategy',
+            new_name='strategies',
+        ),
         migrations.AddField(
             model_name='pipeline',
-            name='strategies',
+            name='strategy',
             field=models.ManyToManyField(to='model.Strategy'),
         ),
     ]

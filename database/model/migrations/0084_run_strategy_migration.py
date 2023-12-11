@@ -6,12 +6,12 @@ def convert_strategies(apps, schema_editor):
     Strategy = apps.get_model('model', 'Strategy')
 
     for pipeline in Pipeline.objects.all():
-        strategy_name = pipeline.strategy
+        strategy_name = pipeline.strategies
         strategy_params = pipeline.params
 
         strategy_obj = Strategy.objects.create(name=strategy_name, params=strategy_params)
 
-        pipeline.strategies.add(strategy_obj)
+        pipeline.strategy.add(strategy_obj)
         pipeline.save()
 
 

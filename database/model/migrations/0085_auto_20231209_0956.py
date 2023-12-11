@@ -10,21 +10,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterUniqueTogether(
-            name='pipeline',
-            unique_together={('name', 'symbol', 'interval', 'exchange', 'paper_trading', 'leverage')},
-        ),
         migrations.RemoveField(
             model_name='pipeline',
             name='params',
         ),
         migrations.RemoveField(
             model_name='pipeline',
-            name='strategy',
-        ),
-        migrations.RenameField(
-            model_name='pipeline',
-            old_name='strategies',
-            new_name='strategy',
+            name='strategies',
         ),
     ]
