@@ -2,8 +2,10 @@ import humanfriendly
 from scipy.optimize import brute
 import plotly.io as pio
 
+from model.backtesting.combining import StrategyCombiner
 from model.backtesting.helpers.metrics import *
 from model.backtesting.plotting import plot_backtest_results
+from shared.utils.exceptions import StrategyRequired, OptimizationParametersInvalid
 
 legend_mapping = {
     "accumulated_returns": "Buy & Hold",
@@ -97,6 +99,7 @@ class BacktestMixin:
         self.symbol = symbol
         self.tc = trading_costs / 100
         self.strategy = None
+        self.original_data = None
 
         self.perf = 0
         self.outperf = 0
@@ -123,14 +126,16 @@ class BacktestMixin:
             return getattr(self, attr)
 
     def load_data(self, data=None, csv_path=None):
-        if data is not None:
-            self.set_data(data, self.strategy)
-
-        if csv_path or data is None:
+        if data is None or csv_path:
             csv_path = csv_path if csv_path else 'model/sample_data/bitcoin.csv'
-            self.set_data(pd.read_csv(csv_path, index_col='date', parse_dates=True), self.strategy)
+            data = pd.read_csv(csv_path, index_col='date', parse_dates=True)
+            data = data[~data.index.duplicated(keep='last')]  # remove duplicates
 
-    def run(self, params=None, print_results=True, plot_results=True):
+        self.original_data = data
+
+        self.set_data(data.copy(), self.strategy)
+
+    def run(self, print_results=True, plot_results=True):
         """Runs the trading strategy and prints and/or plots the results.
 
         Parameters:
@@ -146,19 +151,71 @@ class BacktestMixin:
         --------
         None
         """
-        perf, outperf, results = self._test_strategy(params, print_results, plot_results)
+
+        perf, outperf, results = self._test_strategy(print_results=print_results, plot_results=plot_results)
 
         self.perf = perf
         self.outperf = outperf
         self.results = results
+
+    @staticmethod
+    def _get_optimization_input(optimization_params, strategy):
+        opt_params = []
+        for param in strategy.params:
+            if param in optimization_params:
+                opt_params.append(optimization_params[param])
+            else:
+                param_value = getattr(strategy, f"_{param}")
+                if isinstance(param_value, (float, int)):
+                    opt_params.append((param_value, param_value + 1, 1))
+
+        return opt_params
+
+    def _adapt_optimization_input(self, params):
+
+        if not self.strategy:
+            raise StrategyRequired
+
+        if isinstance(self.strategy, StrategyCombiner):
+            if not isinstance(params, (list, tuple, type(np.array([])))):
+                raise OptimizationParametersInvalid('Optimization parameters must be provided as a list'
+                                                    ' of dictionaries with the parameters for each individual strategy')
+
+            if len(params) != len(self.strategy.strategies):
+                raise OptimizationParametersInvalid(f'Wrong number of parameters. '
+                                                    f'Number of strategies is {len(self.strategy.strategies)}')
+
+            opt_params = []
+            strategy_params_mapping = []
+            for i, strategy in enumerate(self.strategy.strategies):
+                strategy_params = self._get_optimization_input(params[i], strategy)
+                opt_params.extend(strategy_params)
+                strategy_params_mapping.append(len(strategy_params))
+
+            return opt_params, strategy_params_mapping
+
+        else:
+            if not isinstance(params, dict):
+                raise OptimizationParametersInvalid('Optimization parameters must be provided as a '
+                                                    'dictionary with the parameters the strategy')
+
+            return self._get_optimization_input(params, self.strategy), None
 
     def optimize(self, params, **kwargs):
         """Optimizes the trading strategy using brute force.
 
         Parameters:
         -----------
-        params : dict
-            A dictionary containing the parameters to optimize.
+        params : dict, list
+            A dictionary or list (for strategy combintion) containing the parameters to optimize.
+            The parameters must be given as the keywords of a dictionary, and the value is an array
+            of the lower limit, upper limit and step, respectively.
+
+            Example for single strategy:
+                params = dict(window=(10, 20, 1))
+
+            Example for multiple strategies
+                params = [dict(window=(10, 20, 1)), dict(ma=(30, 50, 2)]
         **kwargs : dict
             Additional arguments to pass to the `brute` function.
 
@@ -169,21 +226,21 @@ class BacktestMixin:
         -self._update_and_run(opt, plot_results=True) : float
             The negative performance of the strategy using the optimal parameter values.
         """
-        opt_params = []
-        for param in self.params:
-            if param in params:
-                opt_params.append(params[param])
-            else:
-                param_value = getattr(self, f"_{param}")
-                if isinstance(param_value, (float, int)):
-                    opt_params.append((param_value, param_value + 1, 1))
 
-        opt = brute(self._update_and_run, opt_params, finish=None)
+        opt_params, strategy_params_mapping = self._adapt_optimization_input(params)
+
+        opt = brute(
+            self._update_and_run, opt_params,
+            (False, False, strategy_params_mapping),
+            finish=None,
+            **kwargs
+        )
 
         if not isinstance(opt, (list, tuple, type(np.array([])))):
             opt = np.array([opt])
 
-        return opt, -self._update_and_run(opt, plot_results=True)
+        return (self._get_params_mapping(opt, strategy_params_mapping),
+                -self._update_and_run(opt, True, True, strategy_params_mapping))
 
     def _test_strategy(self, params=None, print_results=True, plot_results=True):
         """Tests the trading strategy on historical data.
@@ -284,7 +341,10 @@ class BacktestMixin:
         trades_df = pd.DataFrame(self.trades)
 
         if plot_results:
-            plot_backtest_results(data, trades_df, show_plot_no_tc=show_plot_no_tc, title=self.__repr__())
+            nr_strategies = len([col for col in processed_data.columns if "position" in col])
+            offset = max(0, nr_strategies - 2)
+
+            plot_backtest_results(data, trades_df, offset, show_plot_no_tc=show_plot_no_tc, title=self.__repr__())
 
     @staticmethod
     def _print_results(results, print_results):
@@ -299,7 +359,25 @@ class BacktestMixin:
                     print(f'\t{results_mapping[col]}: {round(value, 2)}')
             print('---------------------------------------')
 
-    def _update_and_run(self, args, plot_results=False):
+    def _get_params_mapping(self, parameters, strategy_params_mapping):
+        if not isinstance(self.strategy, StrategyCombiner):
+            strategy_params = list(self.strategy.get_params().keys())
+            new_params = {strategy_params[i]: parameter for i, parameter in enumerate(parameters)}
+        else:
+            new_params = []
+
+            j = -1
+            for i, mapping in enumerate(strategy_params_mapping):
+                params = {}
+                strategy_params = list(self.strategy.get_params(strategy_index=i).keys())
+                for k, j in enumerate(range(j + 1, j + 1 + mapping)):
+                    params.update({strategy_params[k]: parameters[j]})
+
+                new_params.append(params)
+
+        return new_params
+
+    def _update_and_run(self, parameters, *args):
         """
         Update the hyperparameters of the strategy with the given `args`,
         and then run the strategy with the updated parameters.
@@ -308,7 +386,7 @@ class BacktestMixin:
 
         Parameters
         ----------
-        args : array-like
+        parameters : array-like
             A list of hyperparameters to be updated in the strategy.
             The order of the elements in the list should match the order
             of the strategy's hyperparameters, as returned by `self.params`.
@@ -326,7 +404,7 @@ class BacktestMixin:
         Raises
         ------
         IndexError
-            If the number of elements in `args` does not match the number
+            If the number of elements in `parameters` does not match the number
             of hyperparameters in the strategy.
 
         Notes
@@ -334,15 +412,24 @@ class BacktestMixin:
         This method is intended to be used as the objective function to
         optimize the hyperparameters of the strategy using an optimization
         algorithm. It updates the hyperparameters of the strategy with the
-        given `args`, then runs the strategy with the updated parameters,
+        given `parameters`, then runs the strategy with the updated parameters,
         and returns the negative of the score obtained by the strategy.
         The negative is returned to convert the maximization problem of the
         strategy's score into a minimization problem, as required by many
         optimization algorithms.
         """
+        print_results, plot_results, strategy_params_mapping = args
 
-        params = {}
-        for i, arg in enumerate(args):
-            params[list(self.params.items())[i][0]] = arg
+        test_params = self._get_params_mapping(parameters, strategy_params_mapping)
 
-        return -self._test_strategy(params, print_results=False, plot_results=plot_results)[0]
+        result = self._test_strategy(test_params, print_results=print_results, plot_results=plot_results)
+
+        return -result[0]
+
+    def _fix_original_data(self):
+        if self.original_data is None:
+            self.original_data = self.strategy.data.copy()
+
+            position_columns = [col for col in self.original_data if "position" in col]
+
+            self.original_data = self.original_data.drop(columns=position_columns)

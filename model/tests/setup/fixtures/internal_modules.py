@@ -47,21 +47,16 @@ def mock_strategy(*args, **kwargs):
 
 
 def mock_strategy_factory(strategy):
-    def mock_strategy(*args, **kwargs):
-        class MockStrategy:
-            def __init__(self, *args1, **kwargs1):
-                pass
-
-            def get_signal(self):
-                return 1
-
-        return MockStrategy()
-
     @pytest.fixture()
     def mocked_strategy(mocker):
         mocker.patch.object(model.service.helpers.signal_generator, strategy, mock_strategy)
 
     return mocked_strategy
+
+
+@pytest.fixture()
+def mocked_strategy_combiner(mocker):
+    mocker.patch.object(model.service.helpers.signal_generator, 'StrategyCombiner', mock_strategy)
 
 
 def mock_redis():

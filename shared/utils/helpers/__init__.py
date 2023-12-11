@@ -5,5 +5,6 @@ from shared.utils.helpers._helpers import (
     get_pipeline_data,
     get_extended_name,
     get_symbol_or_raise_exception,
-    clean_docstring
+    clean_docstring,
+    get_input_dimensions
 )

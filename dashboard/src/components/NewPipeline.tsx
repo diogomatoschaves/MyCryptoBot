@@ -1,33 +1,41 @@
-import React, {useReducer, useState, Fragment, useEffect, useRef, ReactNode} from 'react';
-import {Button, Dropdown, Grid, Header, Icon, Input, Modal, Popup, Form} from "semantic-ui-react";
-import {BalanceObj, DropdownOptions, EditPipeline, Pipeline, PipelinesObject, Position, StartPipeline} from "../types";
-import {validateParams, validatePipelineCreation} from "../utils/helpers";
+import React, {ReactNode, useEffect, useReducer, useRef, useState} from 'react';
+import {Button, Form, Grid, Input, Modal} from "semantic-ui-react";
+import {
+  BalanceObj,
+  DropdownOptions,
+  EditPipeline,
+  Pipeline,
+  PipelinesObject,
+  Position,
+  StartPipeline,
+  Strategy
+} from "../types";
+import {validatePipelineCreation} from "../utils/helpers";
 import MessageComponent from "./Message";
 import {COLORS_NAMES} from "../utils/constants";
 import {
+  GET_INITIAL_STATE,
+  getInitialState,
   modalReducer,
-  UPDATE_STRATEGY,
-  UPDATE_CHECKBOX,
-  UPDATE_SECONDARY_MESSAGE,
-  UPDATE_STRATEGY_PARAMS,
   RESET_MODAL,
-  UPDATE_SECOND_MODAL_OPEN,
+  UPDATE_CHECKBOX,
   UPDATE_PARAMS,
-  getInitialState, GET_INITIAL_STATE
+  UPDATE_STRATEGY
 } from "../reducers/modalReducer";
+import StrategySelectionModal from "./StrategySelectionModal";
+import {availableBalanceReducer, UPDATE_BALANCE} from "../reducers/availableBalanceReducer";
 
 
 interface Props {
   symbolsOptions: DropdownOptions[];
-  strategiesOptions: DropdownOptions[];
+  strategiesOptions: Strategy[];
   candleSizeOptions: DropdownOptions[];
   exchangeOptions: DropdownOptions[];
   startPipeline: StartPipeline;
   editPipeline: EditPipeline;
-  strategies: any;
   balances: BalanceObj;
   pipelines: PipelinesObject;
-  positions: Position[];
+  positions: Position[]
   children: ReactNode,
   pipeline?: Pipeline,
   edit?: boolean
@@ -51,38 +59,6 @@ const leverageOptions = Array.from({length: 20}, (x, i) => ({
 }))
 
 
-const UPDATE_BALANCE = "UPDATE_BALANCE"
-
-const availableBalanceReducer = (state: any, action: any) => {
-  switch (action.type) {
-    case UPDATE_BALANCE:
-      return {
-        ...state,
-        ...action.positions.reduce((accum: any, position: Position) => {
-          if (position.position === 0) {
-            const pipeline = action.pipelines[position.pipelineId]
-
-            if (!pipeline) return accum
-
-            const pipelineType = pipeline.paperTrading ? "test" : "live"
-            return {
-              ...accum,
-              [pipelineType]: accum[pipelineType] - (pipeline.equity)
-            }
-          } else {
-            return accum
-          }
-        }, {
-              live: action.balances.live.USDT.availableBalance,
-              test: action.balances.test.USDT.availableBalance
-            }),
-      }
-    default:
-      throw new Error();
-  }
-}
-
-
 const NewPipeline = (props: Props) => {
 
   const {
@@ -92,7 +68,6 @@ const NewPipeline = (props: Props) => {
     exchangeOptions,
     startPipeline,
     editPipeline,
-    strategies,
     balances,
     positions,
     pipelines,
@@ -104,7 +79,8 @@ const NewPipeline = (props: Props) => {
   const [open, setOpen] = useState(false)
 
   const [{
-    strategy,
+    strategy: strategies,
+    dynamicStrategies,
     color,
     symbol,
     candleSize,
@@ -113,13 +89,12 @@ const NewPipeline = (props: Props) => {
     leverage,
     exchanges,
     secondModalOpen,
-    params,
     liveTrading,
     message,
     secondaryMessage
-  }, dispatch] = useReducer(modalReducer, getInitialState(
-    symbolsOptions,
+  }, updateModal] = useReducer(modalReducer, getInitialState(
     strategiesOptions,
+    symbolsOptions,
     candleSizeOptions,
     exchangeOptions,
     pipeline
@@ -148,6 +123,7 @@ const NewPipeline = (props: Props) => {
         positions,
         pipelines,
         balances
+
       })
     }
     return () => {
@@ -158,7 +134,8 @@ const NewPipeline = (props: Props) => {
 
   const balance = availableBalance[liveTrading ? "live" : "test"]
 
-  const chosenStrategy = strategy && strategies[strategiesOptions[strategy - 1].text]
+  const selectedStrategy = strategies &&
+    dynamicStrategies.find((strategy: Strategy) => strategy.value === strategies.slice(-1)[0])
 
   return (
       <Modal
@@ -170,11 +147,11 @@ const NewPipeline = (props: Props) => {
           onClose={(event) => {
             event.preventDefault();
             event.stopPropagation()
-            !edit && dispatch({type: RESET_MODAL})
+            !edit && updateModal({type: RESET_MODAL, strategiesOptions})
             setOpen(false)
           }}
           onOpen={() => {
-            dispatch({
+            updateModal({
               type: GET_INITIAL_STATE,
               symbols: symbolsOptions,
               strategies: strategiesOptions,
@@ -197,7 +174,7 @@ const NewPipeline = (props: Props) => {
                 // placeholder='Name'
                 value={name}
                 onChange={(e: any, {value}: {value?: any}) => {
-                  dispatch({
+                  updateModal({
                     type: UPDATE_PARAMS,
                     value: {name: value}
                   })
@@ -209,7 +186,7 @@ const NewPipeline = (props: Props) => {
                 className={`light-${color}`}
                 value={color}
                 onChange={(e: any, {value}: {value?: any}) => {
-                  dispatch({
+                  updateModal({
                     type: UPDATE_PARAMS,
                     value: {color: value}
                   })
@@ -226,7 +203,7 @@ const NewPipeline = (props: Props) => {
                 // placeholder='Symbol'
                 value={symbol}
                 onChange={(e: any, {value}: {value?: any}) => {
-                  dispatch({
+                  updateModal({
                     type: UPDATE_PARAMS,
                     value: {symbol: value}
                   })
@@ -242,7 +219,7 @@ const NewPipeline = (props: Props) => {
                 // placeholder='Candle size'
                 value={candleSize}
                 onChange={(e: any, {value}: {value?: any}) => {
-                  dispatch({
+                  updateModal({
                     type: UPDATE_PARAMS,
                     value: {candleSize: value}
                   })
@@ -259,7 +236,7 @@ const NewPipeline = (props: Props) => {
                 label={'Exchange'}
                 value={exchanges}
                 onChange={(e: any, {value}: {value?: any}) => {
-                  dispatch({
+                  updateModal({
                     type: UPDATE_PARAMS,
                     value: {exchanges: value}
                   })
@@ -273,14 +250,16 @@ const NewPipeline = (props: Props) => {
               />
               <Form.Select
                 label={'Strategy'}
-                value={strategy}
-                onChange={(e: any, {value}: {value?: any}) => dispatch({
+                value={strategies}
+                onChange={(e: any, {value}: {value?: any}) => updateModal({
                   type: UPDATE_STRATEGY,
                   value,
+                  strategiesOptions
                 })}
+                multiple
                 search
                 selection
-                options={strategiesOptions}
+                options={dynamicStrategies}
                 selectOnBlur={false}
                 style={{width: '80%'}}
               />
@@ -290,7 +269,7 @@ const NewPipeline = (props: Props) => {
                 label={'Leverage'}
                 value={leverage}
                 onChange={(e: any, {value}: {value?: any}) => {
-                  dispatch({
+                  updateModal({
                     type: UPDATE_PARAMS,
                     value: {leverage: value}
                   })
@@ -304,7 +283,7 @@ const NewPipeline = (props: Props) => {
                 <label>Equity</label>
                 <Input
                   onChange={(e: any, {value}: {value?: any}) => {
-                    dispatch({
+                    updateModal({
                       type: UPDATE_PARAMS,
                       value: {equity: value}
                     })
@@ -320,175 +299,20 @@ const NewPipeline = (props: Props) => {
             <Form.Group widths={'equal'}>
               <Form.Checkbox
                 label={'📡 Live trading'}
-                onChange={() => dispatch({type: UPDATE_CHECKBOX})}
+                onChange={() => updateModal({type: UPDATE_CHECKBOX})}
                 checked={liveTrading}
                 style={{alignSelf: 'center'}}
               />
             </Form.Group>
           </Form>
-            <Modal
-              onClose={() => {
-                // dispatch({type: CLOSE_MODAL})
-              }}
-              open={strategy && secondModalOpen}
-              size="small"
-            >
-              <Modal.Header>
-                {strategy && (
-                  <Fragment>
-                    {strategiesOptions[strategy - 1].text}
-                    <Popup
-                      content={chosenStrategy.info}
-                      header={`${chosenStrategy.name} Strategy`}
-                      position='bottom left'
-                      trigger={<Icon name='info circle' style={{marginLeft: '10px'}}/>}
-                    />
-                  </Fragment>
-                )}
-              </Modal.Header>
-              <Modal.Content scrolling>
-                {strategy && (
-                  <Grid columns={2}>
-                    <Grid.Column>
-                      <Header as='h5'>Required:</Header>
-                      {strategy &&  chosenStrategy.paramsOrder.map((param: string) => (
-                        <Grid.Row key={param} style={{paddingBottom: '10px'}}>
-                          <Grid.Column>
-                            {chosenStrategy.params[param].options ?
-                              (
-                                <Dropdown
-                                  placeholder={param}
-                                  value={params[param]}
-                                  onChange={(e: any, {value}: {value?: any}) =>
-                                      dispatch({
-                                        type: UPDATE_STRATEGY_PARAMS,
-                                        value: {
-                                          [param]: value
-                                        },
-                                      })}
-                                  search
-                                  selection
-                                  selectOnBlur={false}
-                                  options={chosenStrategy.params[param].options.map(
-                                      (p: any, index: number) => ({key: index, text: p, value: index})
-                                  )}
-                                />
-                              ) : (
-                                <Input
-                                  onChange={(e, {value}) => {
-                                    dispatch({
-                                      type: UPDATE_STRATEGY_PARAMS,
-                                      value: {
-                                        [param]: value
-                                      }
-                                    })
-                                  }}
-                                  placeholder={param}
-                                />
-                              )}
-                          </Grid.Column>
-                        </Grid.Row>
-                      ))}
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Header as='h5'>Optional:</Header>
-                      {/*@ts-ignore*/}
-                      {chosenStrategy.optionalParamsOrder.map(param => (
-                        <Grid.Row key={param} style={{paddingBottom: '10px'}}>
-                          <Grid.Column>
-                            {chosenStrategy.optionalParams[param].options ?
-                              (
-                                <Dropdown
-                                  placeholder={param}
-                                  value={params[param]}
-                                  onChange={(e: any, {value}: {value?: any}) =>
-                                      dispatch({
-                                        type: UPDATE_STRATEGY_PARAMS,
-                                        value: {
-                                          [param]: value
-                                        },
-                                      })}
-                                  search
-                                  selection
-                                  selectOnBlur={false}
-                                  options={chosenStrategy.optionalParams[param].options.map(
-                                      (p:  any, index: number) => ({key: index, text: p, value: index})
-                                  )}
-                                />
-                              ) : (
-                                <Input
-                                  onChange={(e, {value}) => {
-                                    dispatch({
-                                      type: UPDATE_STRATEGY_PARAMS,
-                                      value: {
-                                        [param]: value
-                                      }
-                                    })
-                                  }}
-                                  placeholder={param}/>
-                                )}
-                          </Grid.Column>
-                        </Grid.Row>
-                      ))}
-                    </Grid.Column>
-                  </Grid>
-                )}
-              </Modal.Content>
-              <Modal.Actions>
-                <div className="flex-row" style={{justifyContent: secondaryMessage.text ? 'space-between' : 'flex-end'}}>
-                  {secondaryMessage.text && (
-                    <div>
-                      <Grid.Row>
-                        <Grid.Column>
-                          <MessageComponent success={secondaryMessage.success} message={secondaryMessage.text}/>
-                        </Grid.Column>
-                      </Grid.Row>
-                    </div>
-                  )}
-                  <div>
-                    <Button color='black' onClick={() => {
-                      dispatch({
-                        type: UPDATE_STRATEGY,
-                        value: null
-                      })
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button
-                      positive
-                      icon='check'
-                      content='Validate'
-                      onClick={() => {
-                        const {success, updatedParams} = validateParams (
-                          params,
-                          strategies[strategiesOptions[strategy - 1].text]
-                        )
-
-                        if (success) {
-                          dispatch({
-                            type: UPDATE_SECOND_MODAL_OPEN,
-                            value: false
-                          })
-                          dispatch({
-                            type: UPDATE_STRATEGY_PARAMS,
-                            value: updatedParams
-                          })
-                          dispatch({
-                            type: UPDATE_SECONDARY_MESSAGE,
-                            message: {text: '', success: true}
-                          })
-                        } else {
-                          dispatch({
-                            type: UPDATE_SECONDARY_MESSAGE,
-                            message: {text: 'Some of the specified values are not valid.', success: false}
-                          })
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              </Modal.Actions>
-            </Modal>
+          <StrategySelectionModal
+            strategies={strategies}
+            secondModalOpen={secondModalOpen}
+            selectedStrategy={selectedStrategy}
+            updateModal={updateModal}
+            secondaryMessage={secondaryMessage}
+            strategiesOptions={strategiesOptions}
+          />
         </Modal.Content>
         <Modal.Actions>
           <div className="flex-row" style={{justifyContent: message.text ? 'space-between' : 'flex-end'}}>
@@ -505,7 +329,7 @@ const NewPipeline = (props: Props) => {
               <Button color='black' onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation()
-                !edit && dispatch({type: RESET_MODAL})
+                !edit && updateModal({type: RESET_MODAL, strategiesOptions})
                 setOpen(false)
               }}>
                 Cancel
@@ -523,17 +347,16 @@ const NewPipeline = (props: Props) => {
                       equity,
                       color,
                       symbol,
-                      strategy,
+                      strategies,
                       candleSize,
                       exchanges,
                       symbolsOptions,
-                      strategiesOptions,
+                      dynamicStrategies,
                       candleSizeOptions,
                       exchangeOptions,
                       startPipeline,
                       editPipeline,
-                      dispatch,
-                      params,
+                      updateModal,
                       liveTrading,
                       leverage,
                       edit,

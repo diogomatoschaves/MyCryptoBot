@@ -66,15 +66,18 @@ def create_app():
 
         header = json.loads(get_item_from_cache(cache, pipeline_id))
 
+        pipeline_dict = dict(
+            id=pipeline.id,
+            strategies=pipeline.strategy,
+            symbol=pipeline.symbol,
+            exchange=pipeline.exchange,
+            interval=pipeline.candle_size
+        )
+
         job = q.enqueue_call(
             send_signal, (
-                pipeline_id,
-                pipeline.symbol,
-                pipeline.candle_size,
-                pipeline.exchange,
-                pipeline.strategy,
+                pipeline_dict,
                 bearer_token,
-                pipeline.params,
                 header
             )
         )

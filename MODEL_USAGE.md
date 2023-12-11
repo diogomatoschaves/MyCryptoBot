@@ -171,6 +171,62 @@ This will output the best parameters and show the corresponding results.
 
 ## Strategies
 
+### Combined Strategies
+
+It is possible to combine 2 or more strategies into one, by means of the `StrategyCombiner` class. The options
+for combining the strategies are `Unanimous` or `Majority`. The `Unaninmous` option signals a buy or a sell
+if the individual strategy signals all agree (unanimous), whereas the `Majority` method provides a buy a 
+or sell signal if the majority of the individual strategy signals points in one direction. 
+
+Here's an example of how that could be achieved:
+
+```python
+from model.backtesting import VectorizedBacktester
+from model.strategies import MovingAverageCrossover, Momentum, BollingerBands
+from model.backtesting.combining import StrategyCombiner
+
+symbol = "BTCUSDT"
+trading_costs = 0.1
+
+mov_avg = MovingAverageCrossover(30, 200)
+momentum = Momentum(70)
+boll_bands = BollingerBands(20, 2)
+
+# The strategies are passed on to StrategyCombiner as list.
+combined = StrategyCombiner([mov_avg, momentum, boll_bands], method='Unanimous')
+
+vect = VectorizedBacktester(combined, symbol, amount=1000, trading_costs=trading_costs)
+vect.load_data() # Load the default sample data. You can pass your own DataFrame to 'load_data'
+
+vect.run()
+```
+
+This strategy combiner class can also be optimized using the same API, with the difference that the 
+optimization parameters have to be passed in an array. See the next example:
+
+```python
+from model.backtesting import VectorizedBacktester
+from model.strategies import MovingAverageCrossover, Momentum
+from model.backtesting.combining import StrategyCombiner
+
+symbol = "BTCUSDT"
+trading_costs = 0.1
+
+mov_avg = MovingAverageCrossover(30, 200)
+momentum = Momentum(70)
+
+# The strategies are passed on to StrategyCombiner as list.
+combined = StrategyCombiner([mov_avg, momentum], method='Majority')
+
+vect = VectorizedBacktester(combined, symbol, amount=1000, trading_costs=trading_costs)
+vect.load_data() # Load the default sample data. You can pass your own DataFrame to 'load_data'
+
+# The optimization parameters are passed as an array of dictionaries containing the parameter intervals and step
+# for each individual strategy.
+vect.optimize([dict(sma_s=(20, 40, 2)), dict(window=(60, 80, 1))])
+```
+
+
 ### Develop a new strategy
 
 This module comes with some default strategies ready to be used, but chances are you will want
@@ -204,7 +260,7 @@ class MyStrategy(StrategyMixin):
         Initializes the strategy object.
     update_data(self)
         Retrieves and prepares the data.
-    _calculate_positions(self, data)
+    calculate_positions(self, data)
         Calculates positions based on strategy rules.
     get_signal(self, row=None)
         Returns signal based on current data.
@@ -252,7 +308,7 @@ class MyStrategy(StrategyMixin):
         
         return data
 
-    def _calculate_positions(self, data):
+    def calculate_positions(self, data):
         """
         Calculates positions based on strategy rules.
 
@@ -306,7 +362,7 @@ call StrategyMixin.__init__(self, data, **kwargs) to initialize the parent class
 will depend on the data source you are using. It is advised to check the provided strategies 
 to see how this would be done.
 
-`_calculate_positions()` should contain code to calculate the positions for your strategy based 
+`calculate_positions()` should contain code to calculate the positions for your strategy based 
 on the current data. This is where you input the logic of your strategy in a vectorized way. 
 Note that this may not be possible, depending on your strategy, If that's the case, this method can 
 be ignored.

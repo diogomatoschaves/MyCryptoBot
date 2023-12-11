@@ -106,7 +106,7 @@ class MovingAverageConvergenceDivergence(MACD, StrategyMixin):
 
         return data
 
-    def _calculate_positions(self, data: pd.DataFrame) -> pd.DataFrame:
+    def calculate_positions(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Calculates positions based on MACD difference.
 

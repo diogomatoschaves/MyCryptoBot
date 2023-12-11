@@ -8,7 +8,7 @@ from model.backtesting.helpers.metrics import get_drawdowns, get_dd_durations_li
 pio.renderers.default = "browser"
 
 
-def plot_backtest_results(data, trades, show_plot_no_tc=False, title=''):
+def plot_backtest_results(data, trades, offset=0, show_plot_no_tc=False, title=''):
     """
     Plots backtesting results for a trading strategy.
 
@@ -25,6 +25,8 @@ def plot_backtest_results(data, trades, show_plot_no_tc=False, title=''):
         - 'direction': direction of the trade (-1 for short, 1 for long)
         - 'profit': profit of the trade
         - 'units': size of the position
+    offset : int
+        Offset for vertical margin of the plot.
     show_plot_no_tc : bool, optional
         Whether or not to plot equity without trading costs (default is False)
     title : str, optional
@@ -36,19 +38,29 @@ def plot_backtest_results(data, trades, show_plot_no_tc=False, title=''):
 
     """
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1)
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.12)
 
     plot_equity_curves(fig, data, show_plot_no_tc)
 
     plot_trades(fig, trades)
 
-    fig.update_layout(title=f'Backtesting Results: {title}',
-                      xaxis_title='Date',
-                      height=800,
-                      showlegend=True)
+    variable_offset = 25 * offset
+
+    fig.update_layout(title=title, height=1000 + variable_offset, showlegend=True, margin=dict(t=80 + variable_offset))
+
+    fig.update_layout(
+        title={
+            "yref": "container",
+            "y": 0.97,
+            "yanchor": "top"
+        }
+    )
 
     fig.update_yaxes(title_text='Value (USD)', row=1, col=1)
     fig.update_yaxes(title_text='Trade PnL (%)', row=2, col=1)
+
+    fig.update_xaxes(row=1, col=1, title_text='Date', showticklabels=True, overwrite=True)
+    fig.update_xaxes(row=2, col=1, title_text='Date', showticklabels=True, overwrite=True)
 
     fig.show()
 

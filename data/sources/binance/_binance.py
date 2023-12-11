@@ -360,8 +360,16 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
     def get_pipeline_max_window(self):
         try:
-            params = json.loads(Pipeline.objects.get(id=self.pipeline_id).params)
-            return max([value for param, value in params.items()])
+            strategies = Pipeline.objects.get(id=self.pipeline_id).as_json()["strategy"]
+
+            max_value_params = 0
+            for strategy in strategies:
+                max_value = max([value for param, value in strategy["params"].items()])
+
+                if max_value > max_value_params:
+                    max_value_params = max_value
+
+            return max_value_params
         except Pipeline.DoesNotExist:
             return 1000
 
@@ -403,7 +411,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                     exchange_id=self.exchange,
                     interval=candle_size
                 ).last().delete()
-                print(f"Deleted: {model_class}, {candle_size}")
             except AttributeError:
                 pass
 

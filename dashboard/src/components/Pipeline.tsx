@@ -3,9 +3,9 @@ import {
     DeletePipeline,
     DropdownOptions, EditPipeline,
     Pipeline, PipelinesObject,
-    Position,
+    Position, RawPipeline, RawStrategy,
     StartPipeline,
-    StopPipeline,
+    StopPipeline, Strategy,
 } from "../types";
 import {Button, Grid, Icon, Label, Popup, Segment} from "semantic-ui-react";
 import {BLUE, DARK_YELLOW, GREEN, RED} from "../utils/constants";
@@ -43,10 +43,9 @@ interface Props {
     lastRow?: boolean
     position?: Position
     symbolsOptions: DropdownOptions[];
-    strategiesOptions: DropdownOptions[];
+    strategiesOptions: Strategy[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
-    strategies: any;
     balances: BalanceObj;
     pipelines: PipelinesObject;
     positions: Position[];
@@ -70,7 +69,6 @@ function PipelineItem(props: Props) {
         strategiesOptions,
         candleSizeOptions,
         exchangeOptions,
-        strategies,
         balances,
         positions,
         pipelines,
@@ -134,15 +132,33 @@ function PipelineItem(props: Props) {
                     <Popup
                       floated='right'
                       textAlign='right'
+                      position={'top center'}
                       pinned
                       size={'large'}
                       content={
                           <div>
-                              {Object.keys(pipeline.params).map((param) => {
-                                  // @ts-ignore
-                                  return <div><span style={{fontWeight: 'bold'}}>{param}:</span> {pipeline.params[param]}</div>
+                              {pipeline.strategy.map((strategy, index) => {
+
+                                  const params = Object.keys(strategy.params)
+
+                                  return (
+                                      <div>
+                                          <div><span style={{fontWeight: 'bold'}}>Strategy {index + 1}:</span> {strategy.name}</div>
+                                          {params.map((param, paramsIndex) => {
+                                              // @ts-ignore
+                                              return (
+                                                  <div>
+                                                      <span style={{fontWeight: 'bold'}}>{param}:</span> {strategy.params[param]}
+                                                      {paramsIndex + 1 !== params.length && <span> — </span>}
+                                                  </div>
+                                              )
+                                          })}
+                                          {index + 1 !== pipeline.strategy.length && <br/>}
+                                      </div>
+                                  )
+
                               })}
-                          </div>
+                            </div>
                       }
                       trigger={
                           <Grid.Column width={isMobile ? 6 : 4}>
@@ -150,7 +166,11 @@ function PipelineItem(props: Props) {
                                   Strategy
                               </Grid.Column>
                               <Grid.Column floated='right' style={styles.rightColumn}>
-                                  {pipeline.strategy}
+                                  {pipeline.strategy.length > 1 ? (
+                                    <div style={{fontStyle: 'italic'}}>Combined Strategy</div>
+                                  ) : pipeline.strategy.length > 0 && (
+                                    <div>{pipeline.strategy[0]}</div>
+                                  )}
                               </Grid.Column>
                           </Grid.Column>
                       }
@@ -204,7 +224,6 @@ function PipelineItem(props: Props) {
                         <StyledColumn width={6} className="flex-row">
                             <div style={{width: '100%', alignSelf: 'center'}} className='flex-column'>
                                 <NewPipeline
-                                  strategies={strategies}
                                   balances={balances}
                                   pipelines={pipelines}
                                   positions={positions}
@@ -287,7 +306,6 @@ function PipelineItem(props: Props) {
                       <StyledColumn padding={isMobile} width={6} className="flex-row">
                           <div style={{width: '100%', alignSelf: 'center'}} className='flex-column'>
                               <NewPipeline
-                                strategies={strategies}
                                 balances={balances}
                                 pipelines={pipelines}
                                 positions={positions}

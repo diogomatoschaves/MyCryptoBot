@@ -4,7 +4,7 @@ import {
   DeletePipeline, DropdownOptions, EditPipeline,
   PipelinesObject, Position,
   StartPipeline,
-  StopPipeline,
+  StopPipeline, Strategy,
   TradesMetrics, TradesObject, UpdateTrades
 } from "../types";
 import {Grid} from "semantic-ui-react";
@@ -52,10 +52,9 @@ interface Props {
   currentPrices: Object
   updateTrades: UpdateTrades
   symbolsOptions: DropdownOptions[];
-  strategiesOptions: DropdownOptions[];
+  strategiesOptions: Strategy[];
   candleSizeOptions: DropdownOptions[];
   exchangeOptions: DropdownOptions[];
-  strategies: any;
   balances: BalanceObj;
   pipelinesPnl: Object
 }
@@ -81,7 +80,6 @@ function PipelineDetail(props: Props) {
     strategiesOptions,
     candleSizeOptions,
     exchangeOptions,
-    strategies,
     balances,
     pipelinesPnl
   } = props
@@ -97,7 +95,6 @@ function PipelineDetail(props: Props) {
           <Grid.Column width={10}>
             <PipelineItem
               size={size}
-              strategies={strategies}
               balances={balances}
               pipelines={pipelines}
               positions={positions}

@@ -9,8 +9,8 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from data.service.external_requests import get_strategies, get_price
-from data.service.helpers._helpers import convert_queryset_to_dict, convert_trades_to_dict, convert_client_request, \
-    get_pipeline_equity_timeseries
+from data.service.helpers import convert_queryset_to_dict, convert_trades_to_dict, convert_client_request, \
+    get_pipeline_equity_timeseries, check_input, extract_request_params, add_strategies
 from shared.utils.decorators import general_app_error
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
@@ -93,6 +93,12 @@ def get_trades(page):
 @jwt_required()
 def handle_pipelines(page):
 
+    if "STRATEGIES" not in globals():
+        STRATEGIES = get_strategies()
+        globals()["STRATEGIES"] = STRATEGIES
+    else:
+        STRATEGIES = globals()["STRATEGIES"]
+
     response = {"message": "This method is not allowed", "success": False}
 
     pipeline_id = request.args.get("pipelineId", None)
@@ -100,7 +106,8 @@ def handle_pipelines(page):
     if request.method == 'GET':
 
         if Pipeline.objects.filter(id=pipeline_id).exists():
-            response["pipelines"] = [pipeline.as_json() for pipeline in Pipeline.objects.filter(id=pipeline_id)]
+            pipeline = Pipeline.objects.get(id=pipeline_id)
+            response["pipelines"] = [pipeline.as_json()]
 
         else:
             pipelines = Pipeline.objects.filter(deleted=False).order_by('-last_entry')
@@ -128,12 +135,18 @@ def handle_pipelines(page):
 
     elif request.method == 'PUT':
         if Pipeline.objects.filter(id=pipeline_id).exists():
-            data = request.get_json(force=True)
+            request_data = extract_request_params(request)
 
-            data = convert_client_request(data)
+            check_input(STRATEGIES, **request_data)
+
+            data = convert_client_request(request_data)
 
             Pipeline.objects.filter(id=pipeline_id).update(**data)
             pipeline = Pipeline.objects.get(id=pipeline_id)
+
+            strategy_objs = add_strategies(request_data["strategy"])
+            pipeline.strategy.set(strategy_objs)
+
             response.update({
                 "message": "The trading bot was updated successfully.",
                 "success": True,

@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 from random import randint
 
@@ -11,7 +12,7 @@ django.setup()
 
 from data.tests.setup.test_data.sample_data import exchange_data_1, exchange_data_2, exchange_data_3
 from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData, Pipeline, Orders, Trade, \
-    Position
+    Position, Strategy
 
 TEST_APP_NAME = 'test_app'
 
@@ -37,6 +38,16 @@ def create_symbol(db, create_assets):
     return obj1, obj2
 
 
+def create_strategies(db):
+    strategy_1 = Strategy.objects.create(name='MovingAverage', params='{"ma": 4}')
+    strategy_2 = Strategy.objects.create(name='Momentum', params='{"window": 6}')
+
+    return strategy_1, strategy_2
+
+
+def create_invalid_strategy(db):
+    return Strategy.objects.create(name='InvalidStrategy', params='{"ma": 4}')
+
 @pytest.fixture
 def create_job(db):
     return Jobs.objects.create(job_id='BTCUSDT', app=TEST_APP_NAME, exchange_id='binance')
@@ -44,13 +55,11 @@ def create_job(db):
 
 @pytest.fixture
 def create_pipeline(db, create_exchange, create_symbol):
-    return Pipeline.objects.create(
+    pipeline = Pipeline.objects.create(
         id=1,
         color="purple",
         name='Hello World',
         symbol_id='BTCUSDT',
-        strategy='MovingAverage',
-        params='{"ma": 30}',
         exchange_id='binance',
         interval="1h",
         active=True,
@@ -60,16 +69,19 @@ def create_pipeline(db, create_exchange, create_symbol):
         units=0
     )
 
+    strategy_1, strategy_2 = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1, strategy_2)
+
+    return pipeline
 
 @pytest.fixture
 def create_pipeline_2(db, create_exchange, create_symbol):
-    return Pipeline.objects.create(
+    pipeline = Pipeline.objects.create(
         id=2,
         color="purple",
         name='Hello World',
         symbol_id='BTCUSDT',
-        strategy='MovingAverage',
-        params='{"ma": 30}',
         exchange_id='binance',
         interval="1h",
         active=True,
@@ -79,14 +91,18 @@ def create_pipeline_2(db, create_exchange, create_symbol):
         units=0
     )
 
+    strategy_1, strategy_2 = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1, strategy_2)
+
+    return pipeline
+
 
 @pytest.fixture
 def create_inactive_pipeline(db, create_exchange, create_symbol):
-    return Pipeline.objects.create(
+    pipeline = Pipeline.objects.create(
         id=3,
         symbol_id='BTCUSDT',
-        strategy='Momentum',
-        params="{}",
         exchange_id='binance',
         interval="1h",
         active=False,
@@ -94,16 +110,20 @@ def create_inactive_pipeline(db, create_exchange, create_symbol):
         units=0
     )
 
+    strategy_1, strategy_2 = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1, strategy_2)
+
+    return pipeline
+
 
 @pytest.fixture
 def create_pipeline_with_balance(db, create_exchange, create_symbol):
-    return Pipeline.objects.create(
+    pipeline = Pipeline.objects.create(
         id=4,
         color="purple",
         name='pipeline with balance',
         symbol_id='BTCUSDT',
-        strategy='MovingAverage',
-        params='{"ma": 30}',
         exchange_id='binance',
         interval="1h",
         active=True,
@@ -113,16 +133,20 @@ def create_pipeline_with_balance(db, create_exchange, create_symbol):
         units=-2
     )
 
+    strategy_1, strategy_2 = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1, strategy_2)
+
+    return pipeline
+
 
 @pytest.fixture
 def create_pipeline_with_balance_2(db, create_exchange, create_symbol):
-    return Pipeline.objects.create(
+    pipeline = Pipeline.objects.create(
         id=5,
         color="purple",
         name='pipeline with balance 2',
         symbol_id='BTCUSDT',
-        strategy='MovingAverage',
-        params='{"ma": 30}',
         exchange_id='binance',
         interval="1h",
         active=True,
@@ -132,16 +156,20 @@ def create_pipeline_with_balance_2(db, create_exchange, create_symbol):
         units=0
     )
 
+    strategy_1, _ = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1)
+
+    return pipeline
+
 
 @pytest.fixture
 def create_pipeline_with_balance_3(db, create_exchange, create_symbol):
-    return Pipeline.objects.create(
+    pipeline = Pipeline.objects.create(
         id=6,
         color="purple",
         name='pipeline with balance 3',
         symbol_id='BTCUSDT',
-        strategy='MovingAverage',
-        params='{"ma": 30}',
         exchange_id='binance',
         interval="1h",
         active=True,
@@ -150,6 +178,35 @@ def create_pipeline_with_balance_3(db, create_exchange, create_symbol):
         balance=100,
         units=0
     )
+
+    strategy_1, _ = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1)
+
+    return pipeline
+
+
+@pytest.fixture
+def create_pipeline_with_invalid_strategy(db, create_exchange, create_symbol):
+    pipeline = Pipeline.objects.create(
+        id=7,
+        color="purple",
+        name='pipeline with invalid strategy',
+        symbol_id='BTCUSDT',
+        exchange_id='binance',
+        interval="1h",
+        active=True,
+        equity=100,
+        leverage=1,
+        balance=100,
+        units=0
+    )
+
+    strategy = create_invalid_strategy(db)
+
+    pipeline.strategy.add(strategy)
+
+    return pipeline
 
 
 @pytest.fixture

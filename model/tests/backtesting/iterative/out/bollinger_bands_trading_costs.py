@@ -3,6 +3,8 @@ from pandas import Timestamp
 expected_performance = 0.985337
 expected_outperformance = -0.030928
 
+expected_optimization_results = ({'ma': 2.0, 'sd': 1.0}, 1.0)
+
 expected_results = [
     {
         "close_time": Timestamp("2023-09-01 14:09:59.999000+0000", tz="UTC"),

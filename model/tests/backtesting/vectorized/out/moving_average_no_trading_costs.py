@@ -4,7 +4,7 @@ from pandas import Timestamp
 expected_performance = 0.985296
 expected_outperformance = -0.030969
 
-expected_optimization_results = (np.array([1.0]), 0.999557)
+expected_optimization_results = ({'ma': 1.0}, 0.999557)
 
 expected_results = [
     {

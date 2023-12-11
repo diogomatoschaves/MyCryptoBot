@@ -10,7 +10,7 @@ with pytest.MonkeyPatch().context() as ctx:
     from data.tests.setup.fixtures.external_modules import *
     from data.service.helpers.responses import Responses
 
-from database.model.models import Pipeline
+from database.model.models import Pipeline, Strategy
 from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required, spy_sys_exit, mock_sys_exit
 
@@ -72,8 +72,7 @@ class TestDataService:
             pytest.param(
                 {
                     "name": "Hello World",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -85,8 +84,7 @@ class TestDataService:
                 {
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                 },
                 "EXCHANGE_REQUIRED",
@@ -97,7 +95,7 @@ class TestDataService:
                 {
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "params": {"ma": 30},
                     "exchanges": "Binance"
                 },
@@ -121,7 +119,7 @@ class TestDataService:
                 {
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverageCrossover",
+                    "strategy": [{"name": "MovingAverageCrossover"}],
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -132,8 +130,7 @@ class TestDataService:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -145,8 +142,7 @@ class TestDataService:
                 {
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -173,8 +169,7 @@ class TestDataService:
             pytest.param(
                 {
                     "symbol": "BTC",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -185,8 +180,7 @@ class TestDataService:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Coinbase"
                 },
@@ -197,8 +191,7 @@ class TestDataService:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "efrefg",
                     "exchanges": "Binance"
                 },
@@ -209,8 +202,7 @@ class TestDataService:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "strategy": "Average",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "Average", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -222,7 +214,17 @@ class TestDataService:
                 {
                     "symbol": "BTCUSDT",
                     "strategy": "MovingAverage",
-                    "params": {"sma": 30, "ma": 30},
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
+                },
+                "STRATEGY_INVALID",
+                lambda input_params: f'{input_params["strategy"]} is not a valid strategy.',
+                id="STRATEGY_INVALID-2",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
+                    "strategy": [{"name": "MovingAverage", "params": {"sma": 30, "ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -234,8 +236,7 @@ class TestDataService:
                 {
                     "name": False,
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance"
                 },
@@ -247,8 +248,7 @@ class TestDataService:
                 {
                     "name": "TEST",
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": "20"
@@ -261,8 +261,7 @@ class TestDataService:
                 {
                     "name": "TEST",
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": 20,
@@ -325,8 +324,7 @@ class TestDataService:
                     "color": "purple",
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": 3,
@@ -353,14 +351,16 @@ class TestDataService:
         res = client.put(f'{API_PREFIX}/start_bot', json=params)
 
         pipeline = Pipeline.objects.last()
+        strategies = Strategy.objects.filter(pipeline__id=pipeline.id)
 
         assert res.json == getattr(Responses, response)(pipeline)
         assert len(binance_handler_instances_spy_start_bot) == 1
 
         assert pipeline.symbol.name == params["symbol"]
         assert pipeline.exchange.name == params["exchanges"].lower()
-        assert pipeline.strategy == params["strategy"]
-        assert pipeline.params == json.dumps(params["params"])
+        assert pipeline.as_json()["strategy"] == params["strategy"]
+        assert len(pipeline.strategy.all()) == len(strategies)
+
         assert pipeline.interval == params["candleSize"]
 
     @pytest.mark.parametrize(
@@ -371,8 +371,7 @@ class TestDataService:
                     "color": "purple",
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": "MovingAverage",
-                    "params": {"ma": 30},
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "equity": 1000

@@ -14,7 +14,7 @@ import {
     TradesObject,
     UpdateTrades,
     Position,
-    EditPipeline
+    EditPipeline, Strategy
 } from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
@@ -27,7 +27,7 @@ import {Wrapper} from "../styledComponents";
 interface Props {
     size: string
     symbolsOptions: DropdownOptions[];
-    strategiesOptions: DropdownOptions[];
+    strategiesOptions: Strategy[];
     candleSizeOptions: DropdownOptions[];
     exchangeOptions: DropdownOptions[];
     pipelines: PipelinesObject;
@@ -38,7 +38,6 @@ interface Props {
     editPipeline: EditPipeline;
     deletePipeline: DeletePipeline;
     updateMessage: UpdateMessage;
-    strategies: any
     match: any
     pipelinesMetrics: PipelinesMetrics
     decimals: Decimals
@@ -110,7 +109,6 @@ function PipelinePanel(props: Props) {
         pipelines,
         positions,
         balances,
-        strategies,
         candleSizeOptions,
         exchangeOptions,
         startPipeline,
@@ -175,7 +173,6 @@ function PipelinePanel(props: Props) {
                 currentPrices={currentPrices}
                 updateTrades={updateTrades}
                 positions={positions}
-                strategies={strategies}
                 balances={balances}
                 symbolsOptions={symbolsOptions}
                 strategiesOptions={strategiesOptions}
@@ -213,7 +210,6 @@ function PipelinePanel(props: Props) {
                         </Grid.Column>
                         <NewPipelineWrapper width={isMobile && 16} isMobile={isMobile}>
                             <NewPipeline
-                                strategies={strategies}
                                 balances={balances}
                                 pipelines={pipelines}
                                 positions={positions}
@@ -239,7 +235,6 @@ function PipelinePanel(props: Props) {
                   <Link to={`/pipelines/${pipelineId}`} className="flex-row" style={{width: isMobile ? 'calc(100% - 30px)' : 'calc(80% - 50px)'}}>
                     <PipelineItem
                         size={size}
-                        strategies={strategies}
                         balances={balances}
                         pipelines={pipelines}
                         positions={positions}

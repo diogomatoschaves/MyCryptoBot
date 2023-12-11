@@ -92,6 +92,7 @@ class Trader:
     def trade(self, symbol, signal, date=None, row=None, amount=None, units=None, header='', **kwargs):
 
         position = self._get_position(symbol)
+        print_results = kwargs.get('print_results')
 
         if signal == 1:  # signal to go long
             if position in [0, -1]:
@@ -115,11 +116,13 @@ class Trader:
             self._set_position(symbol, 0, previous_position=position, **kwargs)
 
         if position == signal:
-            verbose_position = "LONG" if position == 1 else "SHORT" if position == -1 else "NEUTRAL"
+            if print_results:
 
-            logging.info(header + f"Maintaining {verbose_position} position.")
+                verbose_position = "LONG" if position == 1 else "SHORT" if position == -1 else "NEUTRAL"
 
-            self.print_current_balance(date, header, symbol=symbol)
+                logging.info(header + f"Maintaining {verbose_position} position.")
+
+                self.print_current_balance(date, header, symbol=symbol)
 
     def print_current_position_value(self, date, price, header='', **kwargs):
 
