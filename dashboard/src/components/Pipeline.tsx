@@ -148,6 +148,7 @@ function PipelineItem(props: Props) {
                                               // @ts-ignore
                                               return (
                                                   <div>
+                                                      {/*@ts-ignore*/}
                                                       <span style={{fontWeight: 'bold'}}>{param}:</span> {strategy.params[param]}
                                                       {paramsIndex + 1 !== params.length && <span> — </span>}
                                                   </div>
@@ -156,7 +157,6 @@ function PipelineItem(props: Props) {
                                           {index + 1 !== pipeline.strategy.length && <br/>}
                                       </div>
                                   )
-
                               })}
                             </div>
                       }
@@ -169,7 +169,7 @@ function PipelineItem(props: Props) {
                                   {pipeline.strategy.length > 1 ? (
                                     <div style={{fontStyle: 'italic'}}>Combined Strategy</div>
                                   ) : pipeline.strategy.length > 0 && (
-                                    <div>{pipeline.strategy[0]}</div>
+                                    <div>{pipeline.strategy[0].name}</div>
                                   )}
                               </Grid.Column>
                           </Grid.Column>

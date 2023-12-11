@@ -9,7 +9,7 @@ ENV DIRECTORY dashboard
 
 # install app dependencies
 COPY $DIRECTORY/package.json $DIRECTORY/package-lock.json ./
-#RUN npm install -g npm
+#RUN npm install
 RUN npm clean-install
 #RUN npm install react-scripts -g
 
