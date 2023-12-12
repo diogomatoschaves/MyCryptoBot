@@ -35,17 +35,14 @@ export const modalReducer = (state: any, action: any) => {
           if (action.value.includes(strategy.value) && !strategyKeys.includes(strategy.value + strategyOptionsLength)) {
 
             const index = strategy.value === strategyOptionsLength ?
-            // @ts-ignore
               strategy.value : strategy.value % strategyOptionsLength
 
             return [...accum, strategy, {
-            // @ts-ignore
               ...action.strategiesOptions[index - 1],
               key: strategy.value + strategyOptionsLength,
               value: strategy.value + strategyOptionsLength,
               selectedParams: {}
             }]
-            // @ts-ignore
           } else if (difference.includes(strategy.value)) {
             return accum
           } else {
@@ -146,24 +143,28 @@ export const getInitialState = (
 
     const strategyOptionsLength = strategies.length
 
-    const dynamicStrategies = strategies.reduce((accum: Strategy[], strategy: Strategy, index: number) => {
+    const dynamicStrategies = strategies.reduce((accum: Strategy[], strategy: Strategy) => {
 
       const pipelineStrategies = pipeline.strategy.filter((pipelineStrategy: RawStrategy) => pipelineStrategy.name === strategy.className)
 
-      const extraStrategies = pipelineStrategies.map((pipelineStrategy: RawStrategy, index) => {
+      const extraStrategies = [
+        strategy, ...pipelineStrategies.map((_, index) => {
+          return {
+            ...strategy,
+            key: strategy.value + (index + 1) * strategyOptionsLength,
+            value: strategy.value + (index + 1) * strategyOptionsLength,
+          }
+        })
+
+      ].map((extraStrategy: Strategy, index: number) => {
         return {
-          ...strategy,
-          // @ts-ignore
-          key: strategy.value + (index + 1) * strategyOptionsLength,
-          // @ts-ignore
-          value: strategy.value + (index + 1) * strategyOptionsLength,
-          selectedParams: pipelineStrategy.params
+          ...extraStrategy,
+          selectedParams: index < pipelineStrategies.length ? pipelineStrategies[index].params : {}
         }
       })
 
       return [
         ...accum,
-        strategy,
         ...extraStrategies
       ]
     }, [])

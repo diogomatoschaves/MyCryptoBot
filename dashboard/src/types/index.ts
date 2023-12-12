@@ -47,7 +47,10 @@ export type RawTrade = {
 }
 
 
-export type Strategy = DropdownOptions & {
+export type Strategy = {
+    value: number
+    key: number,
+    text: string
     selectedParams: any
     params: any
     optionalParams: any
