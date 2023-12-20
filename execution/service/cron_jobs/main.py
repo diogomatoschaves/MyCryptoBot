@@ -8,11 +8,11 @@ from shared.utils.decorators import handle_db_connection_error
 
 
 @handle_db_connection_error
-def start_background_scheduler(binance_trader_objects):
+def start_background_scheduler(binance_trader_objects, config_vars):
 
     logging.info('Starting scheduler.')
 
-    interval_between_snapshots = os.getenv('SNAPSHOTS_INTERVAL', 600)
+    interval_between_snapshots = os.getenv('SNAPSHOTS_INTERVAL', config_vars.app_snapshot_interval_seconds)
 
     # Create an instance of scheduler and add function.
     scheduler = BackgroundScheduler()

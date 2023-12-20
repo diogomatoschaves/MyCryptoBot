@@ -10,13 +10,16 @@ import pytz
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import unset_jwt_cookies, create_access_token, get_jwt, get_jwt_identity, jwt_required
 
+from shared.utils.config_parser import get_config
 from shared.utils.decorators import general_app_error
 from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
+config_vars = get_config()
+
+cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
 User = get_user_model()
 

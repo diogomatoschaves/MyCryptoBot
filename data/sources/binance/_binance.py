@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import math
@@ -20,6 +19,7 @@ from data.sources.binance.extract import (extract_data, extract_data_db, get_ear
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.exchanges.binance import BinanceHandler
+from shared.utils.config_parser import get_config
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -28,7 +28,9 @@ from database.model.models import ExchangeData, StructuredData, Pipeline, Positi
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
-cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
+config_vars = get_config()
+
+cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
 
 class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):

@@ -9,11 +9,11 @@ from shared.utils.decorators import general_app_error, handle_db_connection_erro
 
 @general_app_error
 @handle_db_connection_error
-def start_background_scheduler():
+def start_background_scheduler(config_vars):
 
     logging.info('Starting scheduler.')
 
-    interval_between_checks = os.getenv('CHECKS_INTERVAL', 3600)
+    interval_between_checks = os.getenv('CHECKS_INTERVAL', config_vars.app_check_interval_seconds)
 
     # Create an instance of scheduler and add function.
     scheduler = BackgroundScheduler()

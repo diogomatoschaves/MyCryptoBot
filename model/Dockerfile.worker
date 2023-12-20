@@ -28,6 +28,8 @@ RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi --only main
 
 WORKDIR /usr/src/app
+
+COPY ./proj.conf ./
 COPY ./database/ ./database/
 COPY ./$DIRECTORY/ ./$DIRECTORY/
 COPY ./shared/ ./shared/
