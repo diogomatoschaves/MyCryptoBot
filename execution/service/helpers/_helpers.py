@@ -8,11 +8,15 @@ import pytz
 import redis
 
 from execution.service.helpers.exceptions import SignalRequired, SignalInvalid
+from shared.utils.config_parser import get_config
 from shared.utils.helpers import get_pipeline_data, get_item_from_cache
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
+config_vars = get_config('execution')
+
+cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
 fields = [
     "header",
@@ -26,9 +30,6 @@ Parameters = namedtuple(
     fields,
     defaults=(None,) * len(fields)
 )
-
-
-cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
 
 def validate_signal(**kwargs):

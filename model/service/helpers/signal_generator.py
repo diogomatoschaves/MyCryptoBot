@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 
@@ -6,6 +5,7 @@ import django
 
 from model.backtesting.combining import StrategyCombiner
 from model.service.external_requests import execute_order
+from shared.utils.config_parser import get_config
 from shared.utils.exceptions import StrategyInvalid
 from shared.utils.helpers import convert_signal_to_text
 from shared.utils.logger import configure_logger
@@ -19,7 +19,9 @@ django.setup()
 
 from database.model.models import StructuredData
 
-configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
+config_vars = get_config('model')
+
+configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
 
 
 def strategy_combiner(strategies, data):

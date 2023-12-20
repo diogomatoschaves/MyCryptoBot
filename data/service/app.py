@@ -10,6 +10,7 @@ import redis
 from flask_jwt_extended import JWTManager, create_access_token
 
 from data.service.cron_jobs.main import start_background_scheduler
+from shared.utils.config_parser import get_config
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -28,14 +29,16 @@ django.setup()
 from database.model.models import Position
 from shared.utils.logger import configure_logger
 
-configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
+config_vars = get_config('data')
 
-cache = redis.from_url(os.getenv('REDIS_URL', 'redis://localhost:6379'))
+configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
+
+cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
 
 def startup_task(app):
 
-    start_background_scheduler()
+    start_background_scheduler(config_vars)
 
     open_positions = Position.objects.filter(pipeline__active=True)
 
@@ -51,6 +54,7 @@ def startup_task(app):
 
 
 def create_app():
+
     app = Flask(__name__, static_folder="../build/static", template_folder="../build")
     app.debug = False
 
@@ -60,7 +64,7 @@ def create_app():
     app.register_blueprint(proxy, url_prefix='/api')
 
     app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=3)
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=config_vars.token_expires_days)
 
     jwt = JWTManager(app)
 

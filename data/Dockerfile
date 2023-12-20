@@ -48,6 +48,7 @@ RUN poetry config virtualenvs.create false \
 
 USER root
 
+COPY ./proj.conf ./app/
 COPY ./database/ ./app/database/
 COPY ./$DIRECTORY/ ./app/$DIRECTORY/
 COPY ./shared/ ./app/shared/

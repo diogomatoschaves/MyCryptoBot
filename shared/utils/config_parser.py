@@ -1,49 +1,51 @@
-import argparse
-from configparser import ConfigParser
+import os
+import sys
+from collections import namedtuple
+from configparser import RawConfigParser
 
 
-def _add_sub_parser(parser, defaults):
-
-    parser.set_defaults(**defaults)
-
-    # parser.add_argument("-i", "--osm-file", help="Path to the osm file")
-
-
-def _get_config_file_parser():
-    conf_parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        add_help=False,
-    )
-    conf_parser.add_argument(
-        "-c",
-        "--conf-file",
-        help="Specify config file",
-        metavar="FILE",
-        default="proj.conf",
-    )
-    args, remaining_argv = conf_parser.parse_known_args()
-
-    default_config = {}
-
-    if remaining_argv or args.conf_file:
-        for command in ['default', 'user-defined']:
-
-            config = ConfigParser()
-            config.read(args.conf_file)
-
-            if command in config.sections():
-                default_config.update(dict(config.items(command)))
-
-    return conf_parser, default_config, remaining_argv
+try:
+    directory_path = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(directory_path)
+except NameError:
+    pass
 
 
-def get_config():
-    conf_parser, default_config, remaining_argv = _get_config_file_parser()
+def get_config(app='', filename='proj.conf'):
 
-    parser = argparse.ArgumentParser(parents=[conf_parser])
+    config_vars = {}
 
-    _add_sub_parser(parser, default_config)
+    for section in ['general', app]:
 
-    config, unknown = parser.parse_known_args(remaining_argv)
-    return config
+        i = 0
+        while True:
+
+            filepath = os.path.join(os.path.abspath(os.curdir), filename)
+
+            if os.path.exists(filepath) or i > 5:
+                break
+
+            os.chdir("..")
+
+            i += 1
+
+        fp = open(filepath)
+        config = RawConfigParser()
+        config.read_file(fp)
+
+        if section in config.sections():
+
+            section_vars = dict(config.items(section))
+
+            for section_var, value in section_vars.items():
+
+                try:
+                    value = float(value)
+                except ValueError:
+                    pass
+
+                config_vars[section_var] = value
+
+    config_vars = namedtuple('CONFIG_VARS', config_vars.keys())(*config_vars.values())
+
+    return config_vars

@@ -1,56 +1,14 @@
-import humanfriendly
 from scipy.optimize import brute
 import plotly.io as pio
 
 from model.backtesting.combining import StrategyCombiner
 from model.backtesting.helpers.metrics import *
+from model.backtesting.helpers.results_constants import results_mapping, results_aesthetics
 from model.backtesting.plotting import plot_backtest_results
+from shared.utils.config_parser import get_config
 from shared.utils.exceptions import StrategyRequired, OptimizationParametersInvalid
 
-legend_mapping = {
-    "accumulated_returns": "Buy & Hold",
-    "accumulated_strategy_returns": "Strategy returns (no trading costs)",
-    "accumulated_strategy_returns_tc": "Strategy returns (with trading costs)"
-}
-
-
-results_mapping = {
-    'buy_and_hold_return': "Buy & Hold Return [%]",
-    'exposure_time': "Exposure Time [%]",
-    'equity_final': "Equity Final [USDT]",
-    'equity_peak': "Equity Peak [USDT]",
-    'return_pct': "Total Return [%]",
-    'return_pct_annualized': "Annualized Return [%]",
-    'volatility_pct_annualized': "Annualized Volatility [%]",
-    'sharpe_ratio': "Sharpe Ratio",
-    'sortino_ratio': "Sortino Ratio",
-    'calmar_ratio': "Calmar Ratio",
-    'max_drawdown': "Max Drawdown [%]",
-    'avg_drawdown': "Avg Drawdown [%]",
-    'max_drawdown_duration': "Max Drawdown Duration",
-    'avg_drawdown_duration': "Avg Drawdown Duration",
-    'nr_trades': "Total Trades",
-    'win_rate': "Win Rate [%]",
-    'best_trade': "Best Trade [%]",
-    'worst_trade': "Worst Trade [%]",
-    'avg_trade': "Avg Trade [%]",
-    'max_trade_duration': "Max Trade Duration",
-    'avg_trade_duration': "Avg Trade Duration",
-    'profit_factor': "Profit Factor",
-    'expectancy': "Expectancy [%]",
-    'sqn': "System Quality Number"
-}
-
-results_aesthetics = {
-    'total_duration': lambda delta: f"\tTotal Duration: {humanfriendly.format_timespan(delta)}",
-    'start_date': lambda delta: f"\tStart Date: {delta}",
-    'end_date': lambda delta: f"\tEnd Date: {delta}",
-    'max_drawdown_duration': lambda delta: f"\tMax Drawdown Duration: {humanfriendly.format_timespan(delta)}",
-    'avg_drawdown_duration': lambda sec: f"\tAvg Drawdown Duration: {humanfriendly.format_timespan(timedelta(seconds=sec))}",
-    'max_trade_duration': lambda delta: f"\tMax Trade Duration: {humanfriendly.format_timespan(delta)}",
-    'avg_trade_duration': lambda sec: f"\tAvg Trade Duration: {humanfriendly.format_timespan(timedelta(seconds=sec))}",
-}
-
+config_vars = get_config('model')
 
 pio.renderers.default = "browser"
 
@@ -127,7 +85,7 @@ class BacktestMixin:
 
     def load_data(self, data=None, csv_path=None):
         if data is None or csv_path:
-            csv_path = csv_path if csv_path else 'model/sample_data/bitcoin.csv'
+            csv_path = csv_path if csv_path else config_vars.ohlc_data_file
             data = pd.read_csv(csv_path, index_col='date', parse_dates=True)
             data = data[~data.index.duplicated(keep='last')]  # remove duplicates
 

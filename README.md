@@ -21,6 +21,9 @@ start trading with real money. This platform is designed to assist existing algo
 in having complete control of their trading strategies and automation. Therefore, it is recommended that 
 you only risk money that you are willing to lose.*
 
+*This Repo is still under active development and under testing*
+
+
 ## Installation & Usage
 
 The detailed steps for installing and using this application locally and remotely on Heroku are provided in the
@@ -39,6 +42,7 @@ monthly costs.
 The app's architecture consists of the following:
 
 ![MyCryptoBot Architecture](shared/utils/drawings/MyCryptoBot%20architecture.png)
+
 
 ### Data Service
 

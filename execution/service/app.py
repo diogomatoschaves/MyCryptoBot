@@ -16,6 +16,7 @@ from execution.service.helpers.exceptions import PipelineNotActive
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.exchanges.binance.futures import BinanceFuturesTrader
+from shared.utils.config_parser import get_config
 from shared.utils.decorators import handle_db_connection_error
 from shared.utils.exceptions import EquityRequired
 from shared.utils.helpers import get_pipeline_data
@@ -30,7 +31,9 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-configure_logger(os.getenv("LOGGER_LEVEL", "INFO"))
+config_vars = get_config('execution')
+
+configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
 
 
 global binance_futures_mock_trader, binance_futures_trader, binance_margin_mock_trader, binance_margin_trader
@@ -55,7 +58,7 @@ def get_binance_trader_instance(binance_account_type, paper_trading):
 
 def startup_task():
 
-    start_background_scheduler([binance_futures_mock_trader, binance_futures_trader])
+    start_background_scheduler([binance_futures_mock_trader, binance_futures_trader], config_vars)
 
     open_positions = Position.objects.filter(pipeline__active=True)
 
