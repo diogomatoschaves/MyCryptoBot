@@ -39,6 +39,28 @@ def mock_trigger_signal_fail(mocker):
     )
 
 
+def get_price(symbol):
+
+    prices = {
+        "BTCUSDT": 25000,
+        "ETHBTC": 0.245
+    }
+
+    if symbol in prices:
+        return {"success": True, "price": prices[symbol]}
+    else:
+        return {"success": False}
+
+
+@pytest.fixture
+def mock_get_price(mocker):
+    mocker.patch.object(
+        data.service.blueprints.dashboard,
+        'get_price',
+        get_price,
+    )
+
+
 @pytest.fixture
 def trigger_signal_spy(mocker):
     return mocker.spy(data.sources.binance._binance, 'trigger_signal')
@@ -294,6 +316,11 @@ class SideEffect:
 @pytest.fixture
 def mock_get_strategies(mocker):
     mocker.patch.object(data.service.blueprints.bots_api, "get_strategies", fake_get_strategies_no_error)
+
+
+@pytest.fixture
+def mock_get_strategies_dashboard(mocker):
+    mocker.patch.object(data.service.blueprints.dashboard, "get_strategies", fake_get_strategies_no_error)
 
 
 get_strategies_side_effect_3_errors = SideEffect(

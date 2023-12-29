@@ -3,6 +3,7 @@ from datetime import datetime
 import pytz
 from pandas import Timestamp
 
+from shared.exchanges.binance.constants import CANDLE_SIZES_ORDERED
 
 binance_api_historical_data = [
     [
@@ -797,3 +798,74 @@ STRATEGIES = {
         "optionalParams": ["moving_av"],
     },
 }
+
+
+resources_response = {
+    "strategies": STRATEGIES,
+    "symbols": {
+        'BTCUSDT': {
+            'name': 'BTCUSDT',
+            'base_id': 'BTC',
+            'quote_id': 'USDT',
+            'price_precision': 2,
+            'quantity_precision': 3
+        },
+        'BNBBTC': {
+            'name': 'BNBBTC',
+            'base_id': 'BNB',
+            'quote_id': 'BTC',
+            'price_precision': 2,
+            'quantity_precision': 3
+        }
+    },
+    "exchanges": {'binance': {'name': 'binance'}},
+    "candleSizes": CANDLE_SIZES_ORDERED
+}
+
+
+trades_response = [
+    {
+        'id': 3,
+        'symbol_id': 'BTCUSDT',
+        'open_time': datetime(2023, 12, 21, 16, 5, 28, 265653, tzinfo=pytz.utc),
+        'closeTime': None,
+        'open_price': 4006.1,
+        'close_price': None,
+        'amount': 9.0,
+        'profit_loss': None,
+        'side': -1,
+        'exchange_id': 'binance',
+        'mock': True,
+        'pipeline_id': 1,
+        'leverage': None
+    },
+    {
+        'id': 2,
+        'symbol_id': 'BTCUSDT',
+        'open_time': datetime(2023, 12, 21, 16, 5, 28, 265322, tzinfo=pytz.utc),
+        'close_time': datetime(2023, 10, 1, 21, 10, tzinfo=pytz.utc),
+        'open_price': 4005.2,
+        'close_price': None,
+        'amount': 11.0,
+        'profit_loss': None,
+        'side': 1,
+        'exchange_id': 'binance',
+        'mock': True,
+        'pipeline_id': 1,
+        'leverage': None
+    },
+    {
+        'id': 1,
+        'symbol_id': 'BTCUSDT',
+        'open_time': datetime(2023, 12, 21, 16, 5, 28, 249088, tzinfo=pytz.utc),
+        'close_time': datetime(2023, 10, 1, 21, 5, tzinfo=pytz.utc),
+        'open_price': 3998.3,
+        'close_price': None,
+        'amount': 10.0,
+        'profit_loss': None,
+        'side': -1, 'exchange_id': 'binance',
+        'mock': True,
+        'pipeline_id': 1,
+        'leverage': None
+    },
+]
