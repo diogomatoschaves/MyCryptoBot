@@ -225,6 +225,20 @@ def mock_stop_instance_raise_exception(mocker):
 
 
 @pytest.fixture
+def mock_stop_instance(mocker):
+    return mocker.patch.object(
+        data.service.cron_jobs.check_app_is_running._check_app_is_running,
+        'stop_instance',
+        lambda pipeline_id, header: None,
+    )
+
+
+@pytest.fixture
+def spy_stop_instance(mocker):
+    return mocker.spy(data.service.cron_jobs.check_app_is_running._check_app_is_running, 'stop_instance')
+
+
+@pytest.fixture
 def mock_check_job_status_response(mocker):
     return mocker.patch(
         'data.sources._signal_triggerer.check_job_status',

@@ -73,7 +73,8 @@ def create_pipeline(db, create_exchange, create_symbol):
         equity=5000,
         leverage=1,
         balance=0,
-        units=0.3
+        units=0.3,
+        last_entry=datetime.datetime.now(pytz.utc) - datetime.timedelta(minutes=30)
     )
 
     pipeline.open_time = datetime.datetime(2023, 10, 1, 16, 0)
@@ -147,7 +148,8 @@ def create_pipeline_with_balance(db, create_exchange, create_symbol):
         equity=100,
         leverage=1,
         balance=2000,
-        units=-2
+        units=-2,
+        last_entry=datetime.datetime.now(pytz.utc) - datetime.timedelta(minutes=30)
     )
 
     strategy_1, strategy_2 = create_strategies(db)
