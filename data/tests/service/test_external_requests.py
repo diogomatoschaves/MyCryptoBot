@@ -1,4 +1,7 @@
-from data.service.external_requests import generate_signal, start_stop_symbol_trading, check_job_status, get_strategies
+from data.service.external_requests import (
+    generate_signal, start_stop_symbol_trading, check_job_status, get_price, get_strategies, get_balance,
+    get_open_positions
+)
 from data.service.helpers import MODEL_APP_ENDPOINTS, EXECUTION_APP_ENDPOINTS
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
@@ -128,5 +131,75 @@ class TestDataExternalRequests:
         assert res == response
         requests_get_spy.assert_called_with(
             MODEL_APP_ENDPOINTS["GET_STRATEGIES"](os.getenv("MODEL_APP_URL")),
+            headers={"Authorization": "mock bearer_token"}
+        )
+
+    def test_get_price(
+        self,
+        mock_settings_env_vars,
+        mock_requests_get,
+        requests_get_spy,
+        mock_redis_connection_external_requests
+    ):
+        """
+        GIVEN some params
+        WHEN the method generate_signal is called
+        THEN the return value is equal to the expected response
+
+        """
+
+        symbol = "BTCUSDT"
+
+        res = get_price(symbol)
+
+        assert res == response
+        requests_get_spy.assert_called_with(
+            EXECUTION_APP_ENDPOINTS["GET_PRICE"](os.getenv("EXECUTION_APP_URL"), symbol),
+            headers={"Authorization": "mock bearer_token"}
+        )
+
+    def test_get_balance(
+        self,
+        mock_settings_env_vars,
+        mock_requests_get,
+        requests_get_spy,
+        mock_redis_connection_external_requests
+    ):
+        """
+        GIVEN some params
+        WHEN the method generate_signal is called
+        THEN the return value is equal to the expected response
+
+        """
+
+        res = get_balance()
+
+        assert res == response
+        requests_get_spy.assert_called_with(
+            EXECUTION_APP_ENDPOINTS["GET_BALANCE"](os.getenv("EXECUTION_APP_URL")),
+            headers={"Authorization": "mock bearer_token"}
+        )
+
+    def test_get_open_positions(
+        self,
+        mock_settings_env_vars,
+        mock_requests_get,
+        requests_get_spy,
+        mock_redis_connection_external_requests
+    ):
+        """
+        GIVEN some params
+        WHEN the method generate_signal is called
+        THEN the return value is equal to the expected response
+
+        """
+
+        symbol = 'BTCUSDT'
+
+        res = get_open_positions(symbol)
+
+        assert res == response
+        requests_get_spy.assert_called_with(
+            EXECUTION_APP_ENDPOINTS["GET_OPEN_POSITIONS"](os.getenv("EXECUTION_APP_URL")) + f"?symbol={symbol}",
             headers={"Authorization": "mock bearer_token"}
         )

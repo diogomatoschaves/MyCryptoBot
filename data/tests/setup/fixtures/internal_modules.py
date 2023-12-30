@@ -39,7 +39,7 @@ def mock_trigger_signal_fail(mocker):
     )
 
 
-def get_price(symbol):
+def fake_get_price(symbol):
 
     prices = {
         "BTCUSDT": 25000,
@@ -57,7 +57,7 @@ def mock_get_price(mocker):
     mocker.patch.object(
         data.service.blueprints.dashboard,
         'get_price',
-        get_price,
+        fake_get_price,
     )
 
 
