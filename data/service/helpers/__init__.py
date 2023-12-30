@@ -8,5 +8,6 @@ from data.service.helpers._helpers import (
     convert_queryset_to_dict,
     convert_trades_to_dict,
     get_pipeline_equity_timeseries,
-    add_strategies
+    add_strategies,
+    query_trades_metrics
 )

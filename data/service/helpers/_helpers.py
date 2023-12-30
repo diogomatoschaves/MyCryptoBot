@@ -6,6 +6,7 @@ import os
 import django
 import pandas as pd
 import pytz
+from django.db.models import F, Count, Max, Avg, Min, Sum, Q
 
 from data.service.helpers.exceptions import *
 from data.service.helpers.exceptions.data_pipeline_ongoing import DataPipelineOngoing
@@ -14,7 +15,7 @@ from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Exchange, Pipeline, Symbol, PortfolioTimeSeries, Strategy
+from database.model.models import Exchange, Pipeline, Symbol, PortfolioTimeSeries, Strategy, Trade
 import shared.exchanges.binance.constants as const
 
 MODEL_APP_ENDPOINTS = {
@@ -245,6 +246,8 @@ def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, time_fra
 
     if pipeline_id is not None:
         timeseries = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).values('time', 'value')
+
+        print(PortfolioTimeSeries.objects.all())
     else:
         timeseries = PortfolioTimeSeries.objects.filter(type=account_type).values('time', 'value')
 
@@ -255,3 +258,25 @@ def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, time_fra
     df = df.resample(time_frame_converted).first().ffill().reset_index()
 
     return json.loads(df.to_json(orient='records'))
+
+
+def query_trades_metrics(pipeline=None):
+
+    if pipeline:
+        qs = pipeline.trade_set.exclude(close_time=None)
+    else:
+        qs = Trade.objects.exclude(close_time=None)
+
+    return qs.annotate(
+        duration=F('close_time') - F('open_time'),
+        winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
+        losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
+    ).aggregate(
+        Max('duration'),
+        Avg('duration'),
+        Count('id'),
+        Max('profit_loss'),
+        Min('profit_loss'),
+        Sum('winning_trade'),
+        Sum('losing_trade'),
+    )

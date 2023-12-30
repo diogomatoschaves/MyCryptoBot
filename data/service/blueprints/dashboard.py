@@ -4,13 +4,13 @@ from functools import reduce
 
 import django
 from django.core.paginator import Paginator
-from django.db.models import Count, Max, Avg, F, Min, Q, Sum
+from django.db.models import Count, Q
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from data.service.external_requests import get_strategies, get_price
 from data.service.helpers import convert_queryset_to_dict, convert_trades_to_dict, convert_client_request, \
-    get_pipeline_equity_timeseries, check_input, extract_request_params, add_strategies
+    get_pipeline_equity_timeseries, check_input, extract_request_params, add_strategies, query_trades_metrics
 from shared.utils.decorators import general_app_error
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
@@ -23,13 +23,14 @@ from database.model.models import Symbol, Exchange, Pipeline, Position, Trade
 dashboard = Blueprint('dashboard', __name__)
 
 
-@dashboard.route('/resources/<resources>')
+@dashboard.get('/resources', defaults={'resources': None})
+@dashboard.get('resources/<resources>')
 @general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_resources(resources):
 
-    resources = resources.split(',')
+    resources = ["symbols", "exchanges", "strategies", "candleSizes"] if resources is None else resources.split(',')
 
     response = {}
 
@@ -52,8 +53,8 @@ def get_resources(resources):
     return jsonify(response)
 
 
-@dashboard.route('/trades', defaults={'page': None}, methods=["GET"])
-@dashboard.route('/trades/<page>')
+@dashboard.get('/trades', defaults={'page': None})
+@dashboard.get('/trades/<page>')
 @general_app_error
 @jwt_required()
 @handle_db_connection_error
@@ -64,6 +65,7 @@ def get_trades(page):
     response = {}
 
     trades = Trade.objects.filter(close_time__isnull=False).order_by('-open_time')
+
     if "pipelineId" in args:
         trades = trades.filter(pipeline__id=args["pipelineId"])
 
@@ -77,9 +79,10 @@ def get_trades(page):
         try:
             page_number = int(page)
             page_obj = paginator.get_page(page_number)
+
             response["trades"] = list(page_obj)
         except ValueError:
-            return jsonify(response)
+            response["trades"] = []
 
     response["trades"] = [trade.as_json() for trade in response["trades"]]
 
@@ -87,7 +90,7 @@ def get_trades(page):
 
 
 @dashboard.route('/pipelines', defaults={'page': None}, methods=["GET", "PUT", "DELETE"])
-@dashboard.route('/pipelines/<page>')
+@dashboard.route('/pipelines/<page>', methods=["GET", "PUT", "DELETE"])
 @general_app_error
 @handle_db_connection_error
 @jwt_required()
@@ -105,6 +108,8 @@ def handle_pipelines(page):
 
     if request.method == 'GET':
 
+        response["pipelines"] = []
+
         if Pipeline.objects.filter(id=pipeline_id).exists():
             pipeline = Pipeline.objects.get(id=pipeline_id)
             response["pipelines"] = [pipeline.as_json()]
@@ -118,9 +123,14 @@ def handle_pipelines(page):
                 page_obj = paginator.get_page(1)
                 response["pipelines"] = list(page_obj)
 
-            elif isinstance(page, int):
-                page_obj = paginator.get_page(page)
-                response["pipelines"] = list(page_obj)
+            else:
+                try:
+                    page_number = int(page)
+                    page_obj = paginator.get_page(page_number)
+
+                    response["pipelines"] = list(page_obj)
+                except ValueError:
+                    pass
 
             response["pipelines"] = [pipeline.as_json() for pipeline in response["pipelines"]]
 
@@ -131,7 +141,7 @@ def handle_pipelines(page):
             Pipeline.objects.filter(id=pipeline_id).update(deleted=True)
             response.update({"message": "The trading bot was deleted", "success": True})
         else:
-            response.update({"message": "The requested trading bot was not found", "success": True})
+            response.update({"message": "The requested trading bot was not found", "success": False})
 
     elif request.method == 'PUT':
         if Pipeline.objects.filter(id=pipeline_id).exists():
@@ -158,14 +168,14 @@ def handle_pipelines(page):
     return jsonify(response)
 
 
-@dashboard.route('/positions', defaults={'page': None})
-@dashboard.route('/positions/<page>')
+@dashboard.get('/positions', defaults={'page': None})
+@dashboard.get('/positions/<page>')
 @general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_positions(page):
 
-    response = {}
+    response = {"positions": []}
 
     positions = Position.objects.filter(pipeline__active=True).order_by('id')
 
@@ -175,36 +185,27 @@ def get_positions(page):
         page_obj = paginator.get_page(1)
         response["positions"] = list(page_obj)
 
-    elif isinstance(page, int):
-        page_obj = paginator.get_page(page)
-        response["positions"] = list(page_obj)
+    else:
+        try:
+            page_number = int(page)
+            page_obj = paginator.get_page(page_number)
+
+            response["positions"] = list(page_obj)
+        except ValueError:
+            pass
 
     response["positions"] = [position.as_json() for position in response["positions"]]
 
     return jsonify(response)
 
 
-@dashboard.route('/trades-metrics', methods=["GET"])
+@dashboard.get('/trades-metrics')
 @general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_trades_metrics():
 
-    aggregate_values = Trade.objects.exclude(close_time=None).annotate(
-        duration=F('close_time') - F('open_time'),
-        winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
-        losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
-    ).aggregate(
-        Max('duration'),
-        Avg('duration'),
-        Count('id'),
-        Max('profit_loss'),
-        Min('profit_loss'),
-        Sum('winning_trade'),
-        Sum('losing_trade'),
-    )
-
-    aggregate_values = convert_trades_to_dict(aggregate_values)
+    aggregate_values = convert_trades_to_dict(query_trades_metrics())
 
     symbols_objs = Symbol.objects.annotate(trade_count=Count('trade', filter=~Q(trade__close_time=None)))
     symbols = []
@@ -220,7 +221,7 @@ def get_trades_metrics():
     return jsonify(aggregate_values)
 
 
-@dashboard.route('/pipelines-metrics', methods=["GET"])
+@dashboard.get('/pipelines-metrics')
 @general_app_error
 @jwt_required()
 @handle_db_connection_error
@@ -229,19 +230,7 @@ def get_pipelines_metrics():
     def reduce_pipelines(accum, pipeline):
 
         try:
-            trades_metrics = convert_trades_to_dict(pipeline.trade_set.exclude(close_time=None).annotate(
-                duration=F('close_time') - F('open_time'),
-                winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
-                losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
-            ).aggregate(
-                Max('duration'),
-                Avg('duration'),
-                Count('id'),
-                Max('profit_loss'),
-                Min('profit_loss'),
-                Sum('winning_trade'),
-                Sum('losing_trade'),
-            ))
+            trades_metrics = convert_trades_to_dict(query_trades_metrics(pipeline))
 
             try:
                 win_rate = trades_metrics["winningTrades"] / trades_metrics["numberTrades"]
@@ -277,8 +266,8 @@ def get_pipelines_metrics():
     return jsonify(pipelines_metrics)
 
 
-@dashboard.route('/pipeline-equity', methods=["GET"], defaults={'pipeline_id': None})
-@dashboard.route('/pipeline-equity/<pipeline_id>')
+@dashboard.get('/pipeline-equity', defaults={'pipeline_id': None})
+@dashboard.get('/pipeline-equity/<pipeline_id>')
 @general_app_error
 @jwt_required()
 @handle_db_connection_error
@@ -313,14 +302,17 @@ def get_pipeline_equity(pipeline_id):
         return jsonify({"success": True, "data": data})
 
 
-@dashboard.route('/pipelines-pnl', methods=["GET"], defaults={'pipeline_ids': ''})
-@dashboard.route('/pipelines-pnl/<pipeline_ids>')
+@dashboard.get('/pipelines-pnl', defaults={'pipeline_ids': ''})
+@dashboard.get('/pipelines-pnl/<pipeline_ids>')
 @general_app_error
 @jwt_required()
 @handle_db_connection_error
 def get_pipeline_pnl(pipeline_ids):
 
-    pipeline_ids = [int(pipeline_id) for pipeline_id in pipeline_ids.split(',')]
+    try:
+        pipeline_ids = [int(pipeline_id) for pipeline_id in pipeline_ids.split(',')]
+    except ValueError:
+        return jsonify({"success": False, "pipelinesPnl": {}})
 
     pipelines = Pipeline.objects.filter(id__in=pipeline_ids)
 
@@ -356,7 +348,8 @@ def get_pipeline_pnl(pipeline_ids):
             pipelines_pnl[pipeline.id]["profit"] = round(profit, 2)
             pipelines_pnl[pipeline.id]["pnl"] = round(pnl * 100, 2)
 
-        except TypeError:
+        except TypeError as e:
+            print(e)
             continue
 
     return jsonify({"success": True, "pipelinesPnl": pipelines_pnl})

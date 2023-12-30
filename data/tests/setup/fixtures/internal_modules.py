@@ -1,6 +1,8 @@
 import os
+from datetime import datetime, timedelta
 
 import pytest
+import pytz
 from django.db import InterfaceError
 
 import data
@@ -36,6 +38,28 @@ def mock_trigger_signal_fail(mocker):
         data.sources.binance._binance,
         'trigger_signal',
         lambda pipeline_id, header='': (False, ""),
+    )
+
+
+def fake_get_price(symbol):
+
+    prices = {
+        "BTCUSDT": 25000,
+        "ETHBTC": 0.245
+    }
+
+    if symbol in prices:
+        return {"success": True, "price": prices[symbol]}
+    else:
+        return {"success": False}
+
+
+@pytest.fixture
+def mock_get_price(mocker):
+    mocker.patch.object(
+        data.service.blueprints.dashboard,
+        'get_price',
+        fake_get_price,
     )
 
 
@@ -201,6 +225,20 @@ def mock_stop_instance_raise_exception(mocker):
 
 
 @pytest.fixture
+def mock_stop_instance(mocker):
+    return mocker.patch.object(
+        data.service.cron_jobs.check_app_is_running._check_app_is_running,
+        'stop_instance',
+        lambda pipeline_id, header: None,
+    )
+
+
+@pytest.fixture
+def spy_stop_instance(mocker):
+    return mocker.spy(data.service.cron_jobs.check_app_is_running._check_app_is_running, 'stop_instance')
+
+
+@pytest.fixture
 def mock_check_job_status_response(mocker):
     return mocker.patch(
         'data.sources._signal_triggerer.check_job_status',
@@ -260,6 +298,20 @@ def mock_redis_connection_binance(mocker):
 
 
 @pytest.fixture
+def mock_redis_connection_user_mgmt(mocker):
+    return mocker.patch("data.service.blueprints.user_management.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_get_jwt(mocker):
+    return mocker.patch.object(
+        data.service.blueprints.user_management,
+        'get_jwt',
+        lambda: {"exp": datetime.timestamp(datetime.now(pytz.utc) + timedelta(minutes=10))}
+    )
+
+
+@pytest.fixture
 def mock_get_strategies_raise_exception(mocker):
     return mocker.patch('data.service.blueprints.dashboard.get_strategies')
 
@@ -294,6 +346,11 @@ class SideEffect:
 @pytest.fixture
 def mock_get_strategies(mocker):
     mocker.patch.object(data.service.blueprints.bots_api, "get_strategies", fake_get_strategies_no_error)
+
+
+@pytest.fixture
+def mock_get_strategies_dashboard(mocker):
+    mocker.patch.object(data.service.blueprints.dashboard, "get_strategies", fake_get_strategies_no_error)
 
 
 get_strategies_side_effect_3_errors = SideEffect(
