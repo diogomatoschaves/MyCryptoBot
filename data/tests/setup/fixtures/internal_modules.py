@@ -1,6 +1,8 @@
 import os
+from datetime import datetime, timedelta
 
 import pytest
+import pytz
 from django.db import InterfaceError
 
 import data
@@ -279,6 +281,20 @@ def mock_redis_connection_bots_api(mocker):
 @pytest.fixture
 def mock_redis_connection_binance(mocker):
     return mocker.patch("data.sources.binance._binance.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_redis_connection_user_mgmt(mocker):
+    return mocker.patch("data.service.blueprints.user_management.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_get_jwt(mocker):
+    return mocker.patch.object(
+        data.service.blueprints.user_management,
+        'get_jwt',
+        lambda: {"exp": datetime.timestamp(datetime.now(pytz.utc) + timedelta(minutes=10))}
+    )
 
 
 @pytest.fixture

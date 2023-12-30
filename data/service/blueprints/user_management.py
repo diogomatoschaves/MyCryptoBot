@@ -1,5 +1,6 @@
 import json
 import os
+import traceback
 from datetime import datetime, timedelta
 
 import django
@@ -7,8 +8,8 @@ import redis
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import get_user_model
 import pytz
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import unset_jwt_cookies, create_access_token, get_jwt, get_jwt_identity, jwt_required
+from flask import Blueprint, request
+from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, verify_jwt_in_request, jwt_required
 
 from shared.utils.config_parser import get_config
 from shared.utils.decorators import general_app_error
@@ -26,11 +27,15 @@ User = get_user_model()
 user_management = Blueprint('user_management', __name__)
 
 
-@user_management.after_request
+@user_management.after_app_request
 @handle_db_connection_error
+@jwt_required()
 def refresh_expiring_jwts(response):
     try:
+        verify_jwt_in_request(optional=True)
+
         exp_timestamp = get_jwt()["exp"]
+
         now = datetime.now(pytz.utc)
         target_timestamp = datetime.timestamp(now + timedelta(minutes=30))
         if target_timestamp > exp_timestamp:
@@ -41,7 +46,7 @@ def refresh_expiring_jwts(response):
                 cache.set("bearer_token", f"Bearer {access_token}")
                 response.data = json.dumps(data)
         return response
-    except (RuntimeError, KeyError):
+    except (RuntimeError, KeyError) as e:
         # Case where there is not a valid JWT. Just return the original response
         return response
 
@@ -67,13 +72,4 @@ def create_token():
 
     response = {"access_token": access_token}
 
-    return response
-
-
-@user_management.post("/logout")
-@general_app_error
-@handle_db_connection_error
-def logout():
-    response = jsonify({"msg": "logout successful"})
-    unset_jwt_cookies(response)
     return response

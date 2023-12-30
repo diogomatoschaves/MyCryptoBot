@@ -12,9 +12,16 @@ django.setup()
 
 from data.tests.setup.test_data.sample_data import exchange_data_1, exchange_data_2, exchange_data_3
 from database.model.models import Exchange, Symbol, ExchangeData, Asset, Jobs, StructuredData, Pipeline, Orders, Trade, \
-    Position, Strategy, PortfolioTimeSeries
+    Position, Strategy, PortfolioTimeSeries, User
 
 TEST_APP_NAME = 'test_app'
+
+
+@pytest.fixture
+def create_user(db):
+    user = User.objects.create(username='username')
+    user.set_password('password')
+    user.save()
 
 
 @pytest.fixture

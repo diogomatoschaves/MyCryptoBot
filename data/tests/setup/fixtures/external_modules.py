@@ -5,6 +5,7 @@ from binance import ThreadedWebsocketManager
 from binance.client import Client
 from django import db
 
+import data
 from data.tests.setup.test_data.binance_api_responses import exchange_info
 from data.tests.setup.test_data.sample_data import binance_api_historical_data
 from shared.exchanges import BinanceHandler
@@ -60,6 +61,15 @@ def create_access_token(x=None, **kwargs):
 @pytest.fixture
 def mock_create_access_token(mocker):
     return mocker.patch("data.service.app.create_access_token", create_access_token)
+
+
+@pytest.fixture
+def mock_create_access_token_user_mgmt(mocker):
+    return mocker.patch.object(
+        data.service.blueprints.user_management,
+        'create_access_token',
+        lambda identity: 'access_token' if identity is not None else 'renewed_access_token'
+    )
 
 
 @pytest.fixture
