@@ -3,7 +3,7 @@ class PipelineStartFail(Exception):
         if not args:
             self.message = f"Pipeline start failed."
         else:
-            self.message = args[0]
+            self.message = f"Pipeline {args[0]} failed to start"
 
     def __str__(self):
         return f"{self.message}"
