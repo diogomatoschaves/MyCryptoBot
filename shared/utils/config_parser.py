@@ -3,6 +3,7 @@ import sys
 from collections import namedtuple
 from configparser import RawConfigParser
 
+from shared.utils.exceptions.no_config_file import NoConfigFile
 
 try:
     directory_path = os.path.dirname(os.path.realpath(__file__))
@@ -11,23 +12,37 @@ except NameError:
     pass
 
 
+def search_for_file(dirname, filename):
+
+    filepath = os.path.join(dirname, filename)
+    if os.path.exists(filepath):
+        return filepath
+    else:
+        filepath = False
+        try:
+            for name in os.listdir(dirname):
+                path = os.path.join(dirname, name)
+                if os.path.isdir(path):
+
+                    result = search_for_file(path, filename)
+
+                    filepath = result if result else filepath
+        except PermissionError:
+            pass
+
+    return filepath
+
+
 def get_config(app='', filename='proj.conf'):
 
     config_vars = {}
 
     for section in ['general', app]:
 
-        i = 0
-        while True:
+        filepath = search_for_file(os.path.abspath(''), filename)
 
-            filepath = os.path.join(os.path.abspath(os.curdir), filename)
-
-            if os.path.exists(filepath) or i > 5:
-                break
-
-            os.chdir("..")
-
-            i += 1
+        if not filepath:
+            raise NoConfigFile
 
         fp = open(filepath)
         config = RawConfigParser()

@@ -32,13 +32,15 @@ RUN poetry config virtualenvs.create false \
 
 WORKDIR /usr/src/app
 
-COPY ./proj.conf ./
+COPY ./proj.conf ./$DIRECTORY/service/
 COPY ./database/ ./database/
 COPY ./$DIRECTORY/ ./$DIRECTORY/
 COPY ./shared/ ./shared/
 
 RUN useradd -m myuser
 USER myuser
+
+ENV PYTHONPATH="${PYTHONPATH}:/usr/src/app/"
 
 ENV BINANCE_API_KEY=$BINANCE_API_KEY
 ENV BINANCE_API_SECRET=$BINANCE_API_SECRET

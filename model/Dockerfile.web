@@ -29,7 +29,7 @@ RUN poetry config virtualenvs.create false \
 
 WORKDIR /usr/src/app
 
-COPY ./proj.conf ./
+COPY ./proj.conf ./$DIRECTORY/service/
 COPY ./database/ ./database/
 COPY ./$DIRECTORY/ ./$DIRECTORY/
 COPY ./shared/ ./shared/

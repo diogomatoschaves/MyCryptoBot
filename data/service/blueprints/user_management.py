@@ -10,6 +10,7 @@ import pytz
 from flask import Blueprint, request
 from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, verify_jwt_in_request, jwt_required
 from flask_jwt_extended.exceptions import NoAuthorizationError
+from jwt import DecodeError, ExpiredSignatureError
 
 from shared.utils.config_parser import get_config
 from shared.utils.decorators import general_app_error
@@ -45,7 +46,7 @@ def refresh_expiring_jwts(response):
                 cache.set("bearer_token", f"Bearer {access_token}")
                 response.data = json.dumps(data)
         return response
-    except (RuntimeError, KeyError, NoAuthorizationError):
+    except (RuntimeError, KeyError, NoAuthorizationError, DecodeError, ExpiredSignatureError):
         # Case where there is not a valid JWT. Just return the original response
         return response
 
