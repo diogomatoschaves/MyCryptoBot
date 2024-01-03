@@ -228,7 +228,6 @@ def get_trades_metrics():
 def get_pipelines_metrics():
 
     def reduce_pipelines(accum, pipeline):
-
         try:
             trades_metrics = convert_trades_to_dict(query_trades_metrics(pipeline))
 
@@ -348,8 +347,7 @@ def get_pipeline_pnl(pipeline_ids):
             pipelines_pnl[pipeline.id]["profit"] = round(profit, 2)
             pipelines_pnl[pipeline.id]["pnl"] = round(pnl * 100, 2)
 
-        except TypeError as e:
-            print(e)
+        except TypeError:
             continue
 
     return jsonify({"success": True, "pipelinesPnl": pipelines_pnl})
