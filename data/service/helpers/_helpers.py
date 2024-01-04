@@ -246,8 +246,6 @@ def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, time_fra
 
     if pipeline_id is not None:
         timeseries = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).values('time', 'value')
-
-        print(PortfolioTimeSeries.objects.all())
     else:
         timeseries = PortfolioTimeSeries.objects.filter(type=account_type).values('time', 'value')
 

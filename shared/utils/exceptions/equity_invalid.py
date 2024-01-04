@@ -2,8 +2,8 @@ class EquityInvalid(Exception):
     def __init__(self, *args):
         if not args:
             self.message = f"Equity is not valid."
-
-        self.message = f"{args[0]} is not a valid equity."
+        else:
+            self.message = f"{args[0]} is not a valid equity."
 
     def __str__(self):
         return f"{self.message}"

@@ -448,9 +448,10 @@ class TestDashboardService:
         assert res.json == jsonify(response).json
 
     @pytest.mark.parametrize(
-        "response",
+        "extra_url,response",
         [
             pytest.param(
+                '',
                 {
                     'avgTradeDuration': 300000.0,
                     'bestTrade': 0.00212,
@@ -461,17 +462,60 @@ class TestDashboardService:
                     'winningTrades': 3,
                     'worstTrade': 0.00072
                 },
-                id="trades_metrics",
+                id="trades_metrics-base_case",
+            ),
+            pytest.param(
+                '?pipelineId=1',
+                {
+                    "avgTradeDuration": 300000.0,
+                    "bestTrade": 0.00173,
+                    "losingTrades": 0,
+                    "maxTradeDuration": 300000.0,
+                    "numberTrades": 1,
+                    "winningTrades": 1,
+                    "worstTrade": 0.00173,
+                },
+                id="trades_metrics-existing_pipeline_1",
+            ),
+            pytest.param(
+                '?pipelineId=2',
+                {
+                    "avgTradeDuration": 300000.0,
+                    "bestTrade": 0.00212,
+                    "losingTrades": 0,
+                    "maxTradeDuration": 300000.0,
+                    "numberTrades": 2,
+                    "winningTrades": 2,
+                    "worstTrade": 0.00072,
+                },
+                id="trades_metrics-existing_pipeline_2",
+            ),
+            pytest.param(
+                '?pipelineId=10',
+                {
+                    'avgTradeDuration': 300000.0,
+                    'bestTrade': 0.00212,
+                    'losingTrades': 0,
+                    'maxTradeDuration': 300000.0,
+                    'numberTrades': 3,
+                    'tradesCount': [{'name': 'BTCUSDT', 'value': 3}],
+                    'winningTrades': 3,
+                    'worstTrade': 0.00072
+                },
+                id="trades_metrics-non_existent_pipeline",
             ),
         ],
     )
     def test_trades_metrics(
         self,
+        extra_url,
         response,
         client,
         create_trades
     ):
-        res = client.get(f'{API_PREFIX}/trades-metrics')
+        res = client.get(f'{API_PREFIX}/trades-metrics{extra_url}')
+
+        print(res.json)
 
         assert res.json == jsonify(response).json
 
@@ -480,24 +524,6 @@ class TestDashboardService:
         [
             pytest.param(
                 {
-                    "1": {
-                        "avgTradeDuration": 300000.0,
-                        "bestTrade": 0.00173,
-                        "losingTrades": 0,
-                        "maxTradeDuration": 300000.0,
-                        "numberTrades": 1,
-                        "winningTrades": 1,
-                        "worstTrade": 0.00173,
-                    },
-                    "2": {
-                        "avgTradeDuration": 300000.0,
-                        "bestTrade": 0.00212,
-                        "losingTrades": 0,
-                        "maxTradeDuration": 300000.0,
-                        "numberTrades": 2,
-                        "winningTrades": 2,
-                        "worstTrade": 0.00072,
-                    },
                     "activePipelines": 2,
                     "bestWinRate": {
                         "active": True,

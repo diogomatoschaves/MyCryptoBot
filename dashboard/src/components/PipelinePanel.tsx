@@ -39,7 +39,6 @@ interface Props {
     deletePipeline: DeletePipeline;
     updateMessage: UpdateMessage;
     match: any
-    pipelinesMetrics: PipelinesMetrics
     decimals: Decimals
     trades: TradesObject
     currentPrices: Object
@@ -115,7 +114,6 @@ function PipelinePanel(props: Props) {
         stopPipeline,
         editPipeline,
         deletePipeline,
-        pipelinesMetrics,
         trades,
         decimals,
         currentPrices,
@@ -163,7 +161,6 @@ function PipelinePanel(props: Props) {
                 size={size}
                 pipelines={pipelines}
                 pipelineId={pipelineMatch}
-                pipelineMetrics={pipelinesMetrics[pipelineId]}
                 startPipeline={startPipeline}
                 stopPipeline={stopPipeline}
                 editPipeline={editPipeline}

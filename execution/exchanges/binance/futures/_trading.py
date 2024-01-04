@@ -59,7 +59,8 @@ class BinanceFuturesTrader(BinanceTrader):
             return_value = handle_order_execution_errors(
                 symbol=symbol,
                 trader_instance=self,
-                header=header
+                header=header,
+                pipeline_id=pipeline_id
             )(
                 lambda: self.futures_change_leverage(symbol=symbol, leverage=leverage)
             )()

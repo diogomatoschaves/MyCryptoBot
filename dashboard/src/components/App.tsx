@@ -532,6 +532,7 @@ class App extends Component<Props, State> {
                                   match={match}
                                   symbolsOptions={symbolsOptions}
                                   strategiesOptions={strategiesOptions}
+
                                   candleSizeOptions={candleSizeOptions}
                                   exchangeOptions={exchangeOptions}
                                   pipelines={pipelines}
@@ -542,7 +543,6 @@ class App extends Component<Props, State> {
                                   editPipeline={this.editPipeline}
                                   deletePipeline={this.deletePipeline}
                                   updateMessage={updateMessage}
-                                  pipelinesMetrics={pipelinesMetrics}
                                   decimals={decimals}
                                   trades={trades}
                                   currentPrices={currentPrices}

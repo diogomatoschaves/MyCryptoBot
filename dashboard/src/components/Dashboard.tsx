@@ -75,6 +75,7 @@ function Dashboard(props: Props) {
 
   useEffect(() =>{
     fetchTradesData()
+    .catch(() => {})
     updatePipelinesMetrics()
   }, [])
 

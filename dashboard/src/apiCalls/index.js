@@ -204,8 +204,8 @@ export const deleteBot = async (pipelineId) => {
   return await response.json()
 }
 
-export const getTradesMetrics = async () => {
-  const url = `${urlPrefix}/trades-metrics`
+export const getTradesMetrics = async (pipelineId) => {
+  const url = `${urlPrefix}/trades-metrics${pipelineId ? `?pipelineId=${pipelineId}` : ''}`
 
   const response = await fetch(url, {
     method: 'GET',

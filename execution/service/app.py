@@ -177,7 +177,8 @@ def create_app():
             return_value = handle_order_execution_errors(
                 symbol=pipeline.symbol,
                 trader_instance=bt,
-                header=parameters.header
+                header=parameters.header,
+                pipeline_id=pipeline.id
             )(
                 lambda: bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
             )()

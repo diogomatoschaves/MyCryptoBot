@@ -14,6 +14,7 @@ from data.service.helpers import convert_queryset_to_dict, convert_trades_to_dic
 from shared.utils.decorators import general_app_error
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
+from shared.utils.exceptions import NoSuchPipeline
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -204,19 +205,32 @@ def get_positions(page):
 @jwt_required()
 @handle_db_connection_error
 def get_trades_metrics():
+    args = request.args
 
-    aggregate_values = convert_trades_to_dict(query_trades_metrics())
+    try:
+        if "pipelineId" in args:
+            pipeline_id = args["pipelineId"]
+            if Pipeline.objects.filter(id=pipeline_id).exists():
+                pipeline = Pipeline.objects.get(id=pipeline_id)
 
-    symbols_objs = Symbol.objects.annotate(trade_count=Count('trade', filter=~Q(trade__close_time=None)))
-    symbols = []
+                aggregate_values = convert_trades_to_dict(query_trades_metrics(pipeline))
+            else:
+                raise NoSuchPipeline
+        else:
+            raise NoSuchPipeline
+    except NoSuchPipeline:
+        aggregate_values = convert_trades_to_dict(query_trades_metrics())
 
-    for symbol in symbols_objs:
-        if symbol.trade_count > 0:
-            symbol_dict = {"name": symbol.name, "value": symbol.trade_count}
+        symbols_objs = Symbol.objects.annotate(trade_count=Count('trade', filter=~Q(trade__close_time=None)))
+        symbols = []
 
-            symbols.append(symbol_dict)
+        for symbol in symbols_objs:
+            if symbol.trade_count > 0:
+                symbol_dict = {"name": symbol.name, "value": symbol.trade_count}
 
-    aggregate_values["tradesCount"] = symbols
+                symbols.append(symbol_dict)
+
+        aggregate_values["tradesCount"] = symbols
 
     return jsonify(aggregate_values)
 
@@ -228,7 +242,6 @@ def get_trades_metrics():
 def get_pipelines_metrics():
 
     def reduce_pipelines(accum, pipeline):
-
         try:
             trades_metrics = convert_trades_to_dict(query_trades_metrics(pipeline))
 
@@ -239,7 +252,6 @@ def get_pipelines_metrics():
 
             return {
                 **accum,
-                str(pipeline.id): trades_metrics,
                 "totalPipelines": accum["totalPipelines"] + 1,
                 "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
                 "bestWinRate": {**pipeline.as_json(), "winRate": win_rate}
@@ -348,8 +360,7 @@ def get_pipeline_pnl(pipeline_ids):
             pipelines_pnl[pipeline.id]["profit"] = round(profit, 2)
             pipelines_pnl[pipeline.id]["pnl"] = round(pnl * 100, 2)
 
-        except TypeError as e:
-            print(e)
+        except TypeError:
             continue
 
     return jsonify({"success": True, "pipelinesPnl": pipelines_pnl})
