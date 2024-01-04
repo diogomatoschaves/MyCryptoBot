@@ -13,6 +13,8 @@ import TradesStats from "./TradesStats";
 import TradesTable from "./TradesTable";
 import PipelineItem from "./Pipeline";
 import PortfolioChart from "./PortfolioChart";
+import {useEffect, useState} from "react";
+import {getTradesMetrics} from "../apiCalls";
 
 
 const Container = styled.div`
@@ -42,7 +44,6 @@ interface Props {
   pipelines: PipelinesObject
   positions: Position[]
   pipelineId: string
-  pipelineMetrics: TradesMetrics
   startPipeline: StartPipeline
   stopPipeline: StopPipeline
   editPipeline: EditPipeline
@@ -71,7 +72,6 @@ function PipelineDetail(props: Props) {
     stopPipeline,
     editPipeline,
     deletePipeline,
-    pipelineMetrics,
     decimals,
     trades,
     currentPrices,
@@ -83,6 +83,27 @@ function PipelineDetail(props: Props) {
     balances,
     pipelinesPnl
   } = props
+
+  const fetchTradesData = async (pipelineId: string) => {
+    const tradesMetrics = await getTradesMetrics(pipelineId)
+    setTradesMetrics(tradesMetrics)
+  }
+
+  const [tradesMetrics, setTradesMetrics] = useState({
+    numberTrades: 0,
+    maxTradeDuration: 0,
+    avgTradeDuration: 0,
+    winningTrades: 0,
+    losingTrades: 0,
+    bestTrade: 0,
+    worstTrade: 0,
+    tradesCount: []
+  })
+
+  useEffect(() =>{
+    fetchTradesData(pipelineId)
+    .catch(() => {})
+  }, [])
 
   const pipeline = pipelines[pipelineId]
 
@@ -114,7 +135,7 @@ function PipelineDetail(props: Props) {
             />
           </Grid.Column>
           <Grid.Column width={6}>
-            <TradesStats tradesMetrics={pipelineMetrics} style={{height: '100%'}}/>
+            <TradesStats tradesMetrics={tradesMetrics} style={{height: '100%'}}/>
           </Grid.Column>
         </StatsContainer>
         <PortfolioChart pipelineId={pipelineId} width={'90%'}/>
