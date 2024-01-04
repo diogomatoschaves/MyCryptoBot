@@ -1,6 +1,5 @@
 import pytest
 
-from data.service.cron_jobs.check_app_is_running import check_app_is_running
 from data.service.helpers.exceptions import CandleSizeInvalid, CandleSizeRequired, ColorRequired, \
     DataPipelineCouldNotBeStopped, DataPipelineDoesNotExist, DataPipelineOngoing, ExchangeInvalid, ExchangeRequired, \
     LeverageInvalid, NameInvalid, NameRequired, ParamsInvalid, ParamsRequired, PipelineStartFail, SymbolRequired

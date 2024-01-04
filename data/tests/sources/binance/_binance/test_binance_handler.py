@@ -179,12 +179,13 @@ class TestBinanceDataHandler:
         assert position.position == 0
 
     @pytest.mark.parametrize(
-        "exception,start_stop_symbol_return_value,get_open_positions_return_value,expected_values",
+        "pipeline_id,exception,start_stop_symbol_return_value,get_open_positions_return_value,expected_values",
         [
             pytest.param(
+                2,
                 False,
                 {"success": True, "message": ''},
-                {"success": True, "positions": {"test": 1, "live": 0}},
+                {"success": True, "positions": {"testnet": 1, "live": 0}},
                 {
                     "pipeline_active": False,
                     "position_active": False,
@@ -193,9 +194,10 @@ class TestBinanceDataHandler:
                 id="start_stop-True",
             ),
             pytest.param(
+                2,
                 False,
                 {"success": False, "message": ''},
-                {"success": True, "positions": {"test": 0, "live": 0}},
+                {"success": True, "positions": {"testnet": 0, "live": 0}},
                 {
                     "pipeline_active": False,
                     "position_active": False,
@@ -204,9 +206,34 @@ class TestBinanceDataHandler:
                 id="start_stop-False|get_open_positions-True-positions==0",
             ),
             pytest.param(
+                11,
+                False,
+                {"success": True, "message": ''},
+                {"success": True, "positions": {"testnet": 1, "live": 0}},
+                {
+                    "pipeline_active": False,
+                    "position_active": False,
+                    "position_side": 0,
+                },
+                id="start_stop-True|paper_trading",
+            ),
+            pytest.param(
+                11,
                 False,
                 {"success": False, "message": ''},
-                {"success": False, "positions": {"test": 0, "live": 0}},
+                {"success": True, "positions": {"testnet": 0, "live": 0}},
+                {
+                    "pipeline_active": False,
+                    "position_active": False,
+                    "position_side": 0,
+                },
+                id="start_stop-False|get_open_positions-True-positions==0|paper_trading",
+            ),
+            pytest.param(
+                2,
+                False,
+                {"success": False, "message": ''},
+                {"success": False, "positions": {"testnet": 0, "live": 0}},
                 {
                     "pipeline_active": False,
                     "position_active": False,
@@ -215,9 +242,10 @@ class TestBinanceDataHandler:
                 id="start_stop-False|get_open_positions-False",
             ),
             pytest.param(
+                2,
                 True,
                 {"success": False, "message": 'API ERROR'},
-                {"success": True, "positions": {"test": 1, "live": 1}},
+                {"success": True, "positions": {"testnet": 1, "live": 1}},
                 {
                     "pipeline_active": False,
                     "position_active": True,
@@ -229,20 +257,20 @@ class TestBinanceDataHandler:
     )
     def test_binance_data_handler_stop_pipeline_fail(
         self,
+        pipeline_id,
         exception,
         start_stop_symbol_return_value,
         get_open_positions_return_value,
         expected_values,
         common_fixture,
         create_open_position,
+        create_open_position_paper_trading_pipeline,
         mock_trigger_signal_successfully,
         mock_start_stop_symbol_trading,
         mock_get_open_positions,
         mock_redis_connection_external_requests,
+        create_paper_trading_pipeline
     ):
-
-        pipeline_id = 2
-
         input_params = {
             "symbol": "BTCUSDT",
             "candle_size": "1h",

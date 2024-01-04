@@ -182,7 +182,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
             pipeline = Pipeline.objects.get(id=self.pipeline_id)
 
             if positions["success"]:
-                if (pipeline.paper_trading and positions["positions"]["test"] != 0) \
+                if (pipeline.paper_trading and positions["positions"]["testnet"] != 0) \
                         or (not pipeline.paper_trading and positions["positions"]["live"] != 0):
                     raise DataPipelineCouldNotBeStopped(response["message"])
 
