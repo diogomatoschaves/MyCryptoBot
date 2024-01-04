@@ -29,7 +29,6 @@ class BinanceFuturesTrader(BinanceTrader):
         BinanceHandler.__init__(self, paper_trading)
         Trader.__init__(self, 0)
 
-        self.paper_trading = paper_trading
         self.symbols = {}
         self.positions = {}
         self.initial_balance = {}
@@ -91,7 +90,6 @@ class BinanceFuturesTrader(BinanceTrader):
             self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
         except NoUnits:
             logging.info(header + "There's no position to be closed.")
-            pass
 
         self.symbols.pop(symbol)
 
@@ -237,7 +235,6 @@ class BinanceFuturesTrader(BinanceTrader):
 
     @staticmethod
     def close_pipeline(pipeline_id):
-
         Pipeline.objects.filter(id=pipeline_id).update(active=False, open_time=None)
 
     def check_negative_equity(self, symbol, reducing):

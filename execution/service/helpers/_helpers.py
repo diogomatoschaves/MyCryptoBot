@@ -32,16 +32,12 @@ Parameters = namedtuple(
 )
 
 
-def validate_signal(**kwargs):
+def validate_signal(signal):
+    if signal is None:
+        raise SignalRequired
 
-    if "signal" in kwargs:
-        signal = kwargs["signal"]
-
-        if signal is None:
-            raise SignalRequired
-
-        if signal not in [-1, 0, 1]:
-            raise SignalInvalid(signal)
+    if signal not in [-1, 0, 1]:
+        raise SignalInvalid(signal)
 
 
 def get_header(pipeline_id):

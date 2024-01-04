@@ -2,8 +2,8 @@ class SignalInvalid(Exception):
     def __init__(self, *args):
         if not args:
             self.message = f"Signal is not valid."
-
-        self.message = f"{args[0]} is not a valid signal."
+        else:
+            self.message = f"{args[0]} is not a valid signal."
 
     def __str__(self):
         return f"{self.message}"

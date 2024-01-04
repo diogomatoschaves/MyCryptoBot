@@ -2,8 +2,8 @@ class NegativeEquity(Exception):
     def __init__(self, *args):
         if not args:
             self.message = "Pipeline has reached negative equity."
-
-        self.message = f"Pipeline {args[0]} has reached negative equity."
+        else:
+            self.message = f"Pipeline {args[0]} has reached negative equity."
 
     def __str__(self):
         return f"{self.message}"

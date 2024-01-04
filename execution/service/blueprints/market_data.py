@@ -26,15 +26,18 @@ def get_ticker(symbol):
         return {}
 
 
-def get_balances():
+def filter_balances(balances, coins):
+    return [balance for balance in balances if balance['asset'] in coins]
 
-    testnet_balance = testnet_client.futures_account_balance()
-    live_balance = client.futures_account_balance()
+
+def get_balances():
+    testnet_balance = filter_balances(testnet_client.futures_account_balance(), ["USDT"])
+    live_balance = filter_balances(client.futures_account_balance(), ["USDT"])
 
     return {"testnet": testnet_balance, "live": live_balance}
 
 
-@market_data.route('/prices', methods=['GET'])
+@market_data.get('/prices')
 def get_current_price():
 
     symbol = request.args.get("symbol", None)
@@ -42,7 +45,7 @@ def get_current_price():
     return get_ticker(symbol)
 
 
-@market_data.route('/futures_account_balance', methods=['GET'])
+@market_data.get('/futures_account_balance')
 @retry_failed_connection(num_times=2)
 @jwt_required()
 def get_futures_account_balance():
@@ -52,7 +55,7 @@ def get_futures_account_balance():
     return jsonify(balances)
 
 
-@market_data.route('/open-positions', methods=['GET'])
+@market_data.get('/open-positions')
 @retry_failed_connection(num_times=2)
 @jwt_required()
 def get_open_positions():
@@ -74,7 +77,7 @@ def get_open_positions():
             live_position = float(symbol_info["positionAmt"])
 
     open_positions = {
-        "test": test_position,
+        "testnet": test_position,
         "live": live_position
     }
 
