@@ -8,10 +8,14 @@ legend_mapping = {
     "accumulated_strategy_returns_tc": "Strategy returns (with trading costs)"
 }
 results_mapping = {
+    'initial_equity': lambda unit: f"Initial Capital [{unit}]",
+    'exposed_capital': lambda unit: f"Exposed Capital [{unit}]",
+    'equity_final': lambda unit: f"Equity Final [{unit}]",
+    'equity_peak': lambda unit: f"Equity Peak [{unit}]",
+    'trading_costs': "Trading Costs [%]",
+    'leverage': "Leverage [x]",
     'buy_and_hold_return': "Buy & Hold Return [%]",
     'exposure_time': "Exposure Time [%]",
-    'equity_final': "Equity Final [USDT]",
-    'equity_peak': "Equity Peak [USDT]",
     'return_pct': "Total Return [%]",
     'return_pct_annualized': "Annualized Return [%]",
     'volatility_pct_annualized': "Annualized Volatility [%]",
@@ -31,7 +35,7 @@ results_mapping = {
     'avg_trade_duration': "Avg Trade Duration",
     'profit_factor': "Profit Factor",
     'expectancy': "Expectancy [%]",
-    'sqn': "System Quality Number"
+    'sqn': "System Quality Number",
 }
 results_aesthetics = {
     'total_duration': lambda delta: f"\tTotal Duration: {humanfriendly.format_timespan(delta)}",

@@ -9,7 +9,7 @@ class Momentum(StrategyMixin):
     this Momentum strategy calculates the rolling average return over a specified window of time,
     and generates trading signals based on the sign of this rolling average. When the rolling average
     return is positive, the strategy generates a long signal (i.e., buy), and when it is negative,
-    it generates a short signal (i.e., sell). The strategy takes a neutral position when the rolling average is zero.
+    it generates a short signal (i.e., sell). The strategy takes a neutral side when the rolling average is zero.
 
     Parameters
     ----------
@@ -86,7 +86,7 @@ class Momentum(StrategyMixin):
         pd.DataFrame
             Dataframe with the positions of the strategy.
         """
-        data["position"] = np.sign(data["rolling_returns"])
+        data["side"] = np.sign(data["rolling_returns"])
 
         return data
 

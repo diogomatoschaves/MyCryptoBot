@@ -43,7 +43,16 @@ class StrategyMixin:
 
     """
 
-    def __init__(self, data=None, trade_on_close=True, close_col='close', open_col='open', returns_col='returns'):
+    def __init__(
+        self,
+        data=None,
+        trade_on_close=True,
+        close_col='close',
+        open_col='open',
+        high_col='high',
+        low_col='low',
+        returns_col='returns'
+    ):
         """
         Initializes a new instance of the StrategyMixin class.
 
@@ -52,13 +61,21 @@ class StrategyMixin:
         data : pd.DataFrame, optional
             The DataFrame containing the historical price data for the asset.
         close_col : str, optional
-            The name of the column in the data that contains the price data.
+            The name of the column in the data that contains the close price data.
+        open_col : str, optional
+            The name of the column in the data that contains the open price data.
+        high_col : str, optional
+            The name of the column in the data that contains the high price data.
+        low_col : str, optional
+            The name of the column in the data that contains the low price data.
         returns_col : str, optional
-            The name of the column in the data that will contain the returns data.
+            The name of the column in the data that will contain the returns' data.
         """
 
         self.close_col = close_col
         self.open_col = open_col
+        self.high_col = high_col
+        self.low_col = low_col
         self.trade_on_close = trade_on_close
         self.price_col = close_col if trade_on_close else open_col
         self.returns_col = returns_col

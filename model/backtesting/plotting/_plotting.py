@@ -8,7 +8,7 @@ from model.backtesting.helpers.metrics import get_drawdowns, get_dd_durations_li
 pio.renderers.default = "browser"
 
 
-def plot_backtest_results(data, trades, offset=0, show_plot_no_tc=False, title=''):
+def plot_backtest_results(data, trades, offset=0, plot_margin_ratio=False, show_plot_no_tc=False, title=''):
     """
     Plots backtesting results for a trading strategy.
 
@@ -22,11 +22,13 @@ def plot_backtest_results(data, trades, offset=0, show_plot_no_tc=False, title='
     trades : pandas.DataFrame
         DataFrame containing trade information, including the following columns:
         - 'entry_date': entry date of the trade
-        - 'direction': direction of the trade (-1 for short, 1 for long)
+        - 'side': side of the trade (-1 for short, 1 for long)
         - 'profit': profit of the trade
-        - 'units': size of the position
+        - 'units': size of the side
     offset : int
         Offset for vertical margin of the plot.
+    plot_margin_ratio: bool, optional
+        Whether to plot the margin ratio curve
     show_plot_no_tc : bool, optional
         Whether or not to plot equity without trading costs (default is False)
     title : str, optional
@@ -38,15 +40,24 @@ def plot_backtest_results(data, trades, offset=0, show_plot_no_tc=False, title='
 
     """
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.12)
+    number_rows = 3 if plot_margin_ratio else 2
+
+    fig = make_subplots(rows=number_rows, cols=1, shared_xaxes=True)
 
     plot_equity_curves(fig, data, show_plot_no_tc)
 
     plot_trades(fig, trades)
 
+    height = 1000
+
+    if plot_margin_ratio:
+        plot_margin_ratios(fig, data)
+
+        height = height + 350
+
     variable_offset = 25 * offset
 
-    fig.update_layout(title=title, height=1000 + variable_offset, showlegend=True, margin=dict(t=80 + variable_offset))
+    fig.update_layout(title=title, height=height + variable_offset, showlegend=True, margin=dict(t=105 + variable_offset))
 
     fig.update_layout(
         title={
@@ -58,11 +69,42 @@ def plot_backtest_results(data, trades, offset=0, show_plot_no_tc=False, title='
 
     fig.update_yaxes(title_text='Value (USD)', row=1, col=1)
     fig.update_yaxes(title_text='Trade PnL (%)', row=2, col=1)
+    fig.update_yaxes(title_text='Margin Ratio (%)', row=3, col=1)
 
     fig.update_xaxes(row=1, col=1, title_text='Date', showticklabels=True, overwrite=True)
     fig.update_xaxes(row=2, col=1, title_text='Date', showticklabels=True, overwrite=True)
+    fig.update_xaxes(row=3, col=1, title_text='Date', showticklabels=True, overwrite=True)
 
     fig.show()
+
+
+def plot_margin_ratios(fig, data):
+
+    fig.add_trace(go.Scatter(
+        x=data["margin_ratios"].index,
+        y=data["margin_ratios"],
+        name='Margin Ratio',
+        line=dict(
+            width=1.5,
+            color='darkcyan'
+        )
+    ), row=3, col=1)
+
+    threshold = 80
+    start = data["margin_ratios"].index[0]
+    end = data["margin_ratios"].index[-1]
+
+    fig.add_trace(go.Scatter(
+        x=[start, end],
+        y=[threshold, threshold],
+        name=f'Margin Ratio Threshold',
+        mode='lines',
+        line=dict(
+            color='red',
+            width=1,
+            dash='dot'
+        )
+    ), row=3, col=1)
 
 
 def plot_equity_curves(fig, data, show_plot_no_tc):
@@ -73,7 +115,7 @@ def plot_equity_curves(fig, data, show_plot_no_tc):
         name='Equity',
         line=dict(
             width=1.5,
-            color='SteelBlue'
+            color='steelblue'
         )
     ), row=1, col=1)
 
@@ -199,9 +241,9 @@ def plot_trades(fig, trades):
         trades["pnl_pct"] = np.round(trades["pnl"] * 100, 2)
 
         # define a boolean column indicating if each trade is long or short
-        trades['is_long'] = trades['direction'].apply(lambda x: x > 0)
+        trades['is_long'] = trades['side'].apply(lambda x: x > 0)
 
-        # define marker size as a percentage of position size
+        # define marker size as a percentage of side size
         position_size = trades['units'] * trades["entry_price"]
 
         marker_size = abs(position_size) / position_size.max() * 30

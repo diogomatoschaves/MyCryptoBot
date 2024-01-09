@@ -21,7 +21,7 @@ expected_data = pd.DataFrame(
             "upper": nan,
             "lower": nan,
             "distance": nan,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:05:00+0000", tz="UTC"),
@@ -40,7 +40,7 @@ expected_data = pd.DataFrame(
             "upper": nan,
             "lower": nan,
             "distance": nan,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:10:00+0000", tz="UTC"),
@@ -59,7 +59,7 @@ expected_data = pd.DataFrame(
             "upper": nan,
             "lower": nan,
             "distance": nan,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:15:00+0000", tz="UTC"),
@@ -78,7 +78,7 @@ expected_data = pd.DataFrame(
             "upper": nan,
             "lower": nan,
             "distance": nan,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:20:00+0000", tz="UTC"),
@@ -97,7 +97,7 @@ expected_data = pd.DataFrame(
             "upper": nan,
             "lower": nan,
             "distance": nan,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:25:00+0000", tz="UTC"),
@@ -116,7 +116,7 @@ expected_data = pd.DataFrame(
             "upper": nan,
             "lower": nan,
             "distance": nan,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:30:00+0000", tz="UTC"),
@@ -135,7 +135,7 @@ expected_data = pd.DataFrame(
             "upper": 55898.796312069564,
             "lower": 55081.11225935901,
             "distance": 442.525714,
-            "position": -1.0,
+            "side": -1.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:35:00+0000", tz="UTC"),
@@ -154,7 +154,7 @@ expected_data = pd.DataFrame(
             "upper": 56313.42304711646,
             "lower": 54916.76266716924,
             "distance": 649.837143,
-            "position": -1.0,
+            "side": -1.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:40:00+0000", tz="UTC"),
@@ -173,7 +173,7 @@ expected_data = pd.DataFrame(
             "upper": 56501.13776151988,
             "lower": 54951.865095622976,
             "distance": 442.318571,
-            "position": -1.0,
+            "side": -1.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:45:00+0000", tz="UTC"),
@@ -192,7 +192,7 @@ expected_data = pd.DataFrame(
             "upper": 56620.02450114715,
             "lower": 55062.16407028141,
             "distance": 350.015714,
-            "position": -1.0,
+            "side": -1.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:50:00+0000", tz="UTC"),
@@ -211,7 +211,7 @@ expected_data = pd.DataFrame(
             "upper": 56640.1740680998,
             "lower": 55258.025931900185,
             "distance": 195.900000,
-            "position": -1.0,
+            "side": -1.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:55:00+0000", tz="UTC"),
@@ -230,7 +230,7 @@ expected_data = pd.DataFrame(
             "upper": 56557.0735836991,
             "lower": 55567.740702015195,
             "distance": 119.702857,
-            "position": -1.0,
+            "side": -1.0,
         },
         {
             "open_time": Timestamp("2023-09-01 15:00:00+0000", tz="UTC"),
@@ -249,7 +249,7 @@ expected_data = pd.DataFrame(
             "upper": 56400.11992481078,
             "lower": 55935.40578947492,
             "distance": 122.127143,
-            "position": -1.0,
+            "side": -1.0,
         },
     ]
 )
@@ -273,7 +273,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": nan,
             "lower": nan,
             "distance": nan,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:05:00+0000", tz="UTC"),
@@ -292,7 +292,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": nan,
             "lower": nan,
             "distance": nan,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:10:00+0000", tz="UTC"),
@@ -311,7 +311,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 55388.96,
             "lower": 55388.96,
             "distance": 0,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:15:00+0000", tz="UTC"),
@@ -330,7 +330,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 55388.96,
             "lower": 55388.96,
             "distance": 0,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:20:00+0000", tz="UTC"),
@@ -349,7 +349,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 55388.96,
             "lower": 55388.96,
             "distance": 0,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:25:00+0000", tz="UTC"),
@@ -368,7 +368,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 55726.52638398906,
             "lower": 55160.35361601094,
             "distance": 108.960000,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:30:00+0000", tz="UTC"),
@@ -387,7 +387,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 56461.20232776249,
             "lower": 54788.02433890418,
             "distance": 307.866667,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:35:00+0000", tz="UTC"),
@@ -406,7 +406,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 56986.1940095735,
             "lower": 54847.01265709317,
             "distance": 348.326667,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:40:00+0000", tz="UTC"),
@@ -425,7 +425,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 56635.32621152748,
             "lower": 55608.82712180586,
             "distance": 46.743333,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:45:00+0000", tz="UTC"),
@@ -444,7 +444,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 56359.20072465933,
             "lower": 56057.37260867399,
             "distance": -17.176667,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:50:00+0000", tz="UTC"),
@@ -463,7 +463,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 56237.48769076675,
             "lower": 56099.132309233246,
             "distance": -23.310000,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 14:55:00+0000", tz="UTC"),
@@ -482,7 +482,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 56246.06411813189,
             "lower": 56099.4158818681,
             "distance": 9.370000,
-            "position": 0.0,
+            "side": 0.0,
         },
         {
             "open_time": Timestamp("2023-09-01 15:00:00+0000", tz="UTC"),
@@ -501,7 +501,7 @@ expected_data_set_parameters = pd.DataFrame(
             "upper": 56431.45459570587,
             "lower": 55979.878737627456,
             "distance": 84.223333,
-            "position": 0.0,
+            "side": 0.0,
         },
     ]
 )

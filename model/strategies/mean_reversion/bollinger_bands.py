@@ -38,11 +38,11 @@ class BollingerBands(StrategyMixin):
     update_data(self)
         Retrieves and prepares the data.
     calculate_positions(self, data)
-        Calculate the position for each row in the data.
+        Calculate the side for each row in the data.
     _get_position(self, symbol)
-        Return the position for a given symbol (not implemented).
+        Return the side for a given symbol (not implemented).
     get_signal(self, row=None)
-        Return the position signal for a given row.
+        Return the side signal for a given row.
 
     """
 
@@ -85,10 +85,10 @@ class BollingerBands(StrategyMixin):
 
     def calculate_positions(self, data):
         data["distance"] = data[self.close_col] - data["sma"]
-        data["position"] = np.where(data[self.close_col] > data["upper"], -1, np.nan)
-        data["position"] = np.where(data[self.close_col] < data["lower"], 1, data["position"])
-        data["position"] = np.where(data["distance"] * data["distance"].shift(1) < 0, 0, data["position"])
-        data["position"] = data["position"].ffill().fillna(0)
+        data["side"] = np.where(data[self.close_col] > data["upper"], -1, np.nan)
+        data["side"] = np.where(data[self.close_col] < data["lower"], 1, data["side"])
+        data["side"] = np.where(data["distance"] * data["distance"].shift(1) < 0, 0, data["side"])
+        data["side"] = data["side"].ffill().fillna(0)
 
         return data
 
@@ -100,4 +100,4 @@ class BollingerBands(StrategyMixin):
         if row is None:
             row = self.data.iloc[-1]
 
-        return int(row["position"])
+        return int(row["side"])

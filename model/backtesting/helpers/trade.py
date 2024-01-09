@@ -20,8 +20,8 @@ class Trade:
         Price at which the trade was exited.
     units : float, None
         Number of shares or contracts traded.
-    direction : int
-        Trade direction, either 1 for long or -1 for short.
+    side : int
+        Trade side, either 1 for long or -1 for short.
     profit : float
         Trade net profit
     """
@@ -31,18 +31,19 @@ class Trade:
     entry_price: float
     exit_price: float
     units: float
-    direction: int
+    side: int
     amount: float = None
     profit: float = None
     pnl: float = None
+    liquidation_price: float = None
 
     def calculate_profit(self):
-        self.profit = (np.exp(np.log(self.exit_price / self.entry_price) * self.direction) - 1) \
+        self.profit = (np.exp(np.log(self.exit_price / self.entry_price) * self.side) - 1) \
                       * self.units * self.entry_price
 
-    def calculate_pnl_pct(self, prev_amount):
+    def calculate_pnl_pct(self, prev_amount, leverage):
 
         if self.amount is None:
             return
 
-        self.pnl = (self.amount - prev_amount) / prev_amount
+        self.pnl = (self.amount - prev_amount) / prev_amount * leverage

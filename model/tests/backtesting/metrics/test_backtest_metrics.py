@@ -11,15 +11,15 @@ def trades():
     # Generate some sample trades
     return [
         Trade(entry_date=datetime(2022, 1, 1, 0, 0), exit_date=datetime(2022, 1, 3, 0, 0),
-              entry_price=10, exit_price=4, units=100, direction=1, profit=-600),
+              entry_price=10, exit_price=4, units=100, side=1, profit=-600),
         Trade(entry_date=datetime(2022, 1, 2, 0, 0), exit_date=datetime(2022, 1, 4, 0, 0),
-              entry_price=12, exit_price=10, units=100, direction=-1, profit=200),
+              entry_price=12, exit_price=10, units=100, side=-1, profit=200),
         Trade(entry_date=datetime(2022, 1, 3, 0, 0), exit_date=datetime(2022, 1, 5, 0, 0),
-              entry_price=11, exit_price=12, units=100, direction=1, profit=100),
+              entry_price=11, exit_price=12, units=100, side=1, profit=100),
         Trade(entry_date=datetime(2022, 1, 4, 0, 0), exit_date=datetime(2022, 1, 8, 0, 0),
-              entry_price=13, exit_price=14, units=100, direction=-1, profit=-100),
+              entry_price=13, exit_price=14, units=100, side=-1, profit=-100),
         Trade(entry_date=datetime(2022, 1, 5, 0, 0), exit_date=datetime(2022, 1, 10, 0, 0),
-              entry_price=12, exit_price=16, units=100, direction=1, profit=400)
+              entry_price=12, exit_price=16, units=100, side=1, profit=400)
     ]
 
 

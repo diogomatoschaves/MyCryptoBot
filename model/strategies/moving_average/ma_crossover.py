@@ -10,7 +10,7 @@ from model.strategies._mixin import StrategyMixin
 class MovingAverageCrossover(StrategyMixin):
     """
     A strategy that uses two simple or exponential moving averages as a trigger for going long or short, with no neutral
-    position. When the shorter moving average goes above the longer moving average it goes long, and goes short when the
+    side. When the shorter moving average goes above the longer moving average it goes long, and goes short when the
     reverse holds true.
 
     Parameters:
@@ -33,7 +33,7 @@ class MovingAverageCrossover(StrategyMixin):
         Retrieves and prepares the data for the strategy.
 
     calculate_positions(data):
-        Calculates the position values for the given data.
+        Calculates the side values for the given data.
 
     get_signal(row=None):
         Gets the trading signal for a given row of data. If row is not specified, uses the last row of data.
@@ -114,7 +114,7 @@ class MovingAverageCrossover(StrategyMixin):
 
     def calculate_positions(self, data):
         """
-        Calculates the position values for the given data.
+        Calculates the side values for the given data.
 
         Parameters:
         -----------
@@ -124,9 +124,9 @@ class MovingAverageCrossover(StrategyMixin):
         Returns:
         --------
         pandas.DataFrame:
-            The input DataFrame with an additional 'position' column containing the calculated position values.
+            The input DataFrame with an additional 'side' column containing the calculated side values.
         """
-        data["position"] = np.where(data["SMA_S"] > data["SMA_L"], 1, -1)
+        data["side"] = np.where(data["SMA_S"] > data["SMA_L"], 1, -1)
 
         return data
 

@@ -52,32 +52,32 @@ def return_buy_and_hold_pct(returns: pd.Series) -> float:
     return (returns[-1] - 1) * 100
 
 
-def return_pct_annualized(cum_returns: pd.Series) -> float:
+def return_pct_annualized(cum_returns: pd.Series, leverage=1) -> float:
     """Calculate the annualized return percentage."""
 
     years_df = cum_returns.resample('1Y').count()
 
-    return ((cum_returns[-1] / cum_returns[0])**(1 / len(years_df))-1) * 100
+    return ((cum_returns[-1] / cum_returns[0] * leverage)**(1 / len(years_df))-1) * 100
 
 
-def volatility_pct_annualized(returns: pd.Series) -> float:
+def volatility_pct_annualized(returns: pd.Series, trading_days: int = 365) -> float:
     """Calculate the annualized volatility percentage."""
 
     days_df = returns.resample('1D').sum()
 
-    return np.std(days_df) * np.sqrt(365) * 100
+    return np.std(days_df) * np.sqrt(trading_days) * 100
 
 
-def sharpe_ratio(returns: pd.Series, risk_free_rate: float = 0) -> float:
+def sharpe_ratio(returns: pd.Series, risk_free_rate: float = 0, trading_days: int = 365) -> float:
     """Calculate the Sharpe ratio."""
     excess_returns = returns - risk_free_rate
     excess_returns_dev = np.std(excess_returns)
-    return np.mean(excess_returns) / excess_returns_dev * np.sqrt(365) if excess_returns_dev != 0 else np.nan
+
+    return np.mean(excess_returns) / excess_returns_dev * np.sqrt(trading_days) if excess_returns_dev != 0 else np.nan
 
 
 def sortino_ratio(returns: pd.Series, target_return: float = 0, risk_free_rate: float = 0) -> float:
     """Calculate the Sortino ratio."""
-
     downside_returns = returns.copy()
     downside_returns[downside_returns > target_return] = 0
     downside_deviation = volatility_pct_annualized(downside_returns)
@@ -208,7 +208,7 @@ def avg_drawdown_duration(cum_returns: pd.Series) -> float:
 def win_rate_pct(trades: List[Trade]) -> float:
     """Calculate the percentage of winning trades."""
     winning_trades = reduce(
-        lambda accum, trade: accum + 1 if (trade.exit_price - trade.entry_price) * trade.direction > 0 else accum,
+        lambda accum, trade: accum + 1 if (trade.exit_price - trade.entry_price) * trade.side > 0 else accum,
         trades,
         0
     )
@@ -218,35 +218,35 @@ def win_rate_pct(trades: List[Trade]) -> float:
     return winning_trades / nr_trades * 100 if nr_trades > 0 else 0
 
 
-def best_trade_pct(trades: List[Trade]) -> float:
+def best_trade_pct(trades: List[Trade], leverage=1) -> float:
     """Calculate the percentage of the best trade."""
 
     best_trade = reduce(
-        lambda accum, trade: (trade.exit_price - trade.entry_price) / trade.entry_price * trade.direction
-        if (trade.exit_price - trade.entry_price) / trade.entry_price * trade.direction > accum
+        lambda accum, trade: (trade.exit_price - trade.entry_price) / trade.entry_price * trade.side
+        if (trade.exit_price - trade.entry_price) / trade.entry_price * trade.side > accum
         else accum,
         trades,
         0
     )
-    return best_trade * 100
+    return best_trade * leverage * 100
 
 
-def worst_trade_pct(trades: List[Trade]) -> float:
+def worst_trade_pct(trades: List[Trade], leverage=1) -> float:
     """Calculate the percentage of the worst trade."""
     worst_trade = reduce(
-        lambda accum, trade: (trade.exit_price - trade.entry_price) / trade.entry_price * trade.direction
-        if (trade.exit_price - trade.entry_price) / trade.entry_price * trade.direction < accum
+        lambda accum, trade: (trade.exit_price - trade.entry_price) / trade.entry_price * trade.side
+        if (trade.exit_price - trade.entry_price) / trade.entry_price * trade.side < accum
         else accum,
         trades,
         0
     )
-    return worst_trade * 100
+    return worst_trade * leverage * 100
 
 
-def avg_trade_pct(trades: List[Trade]) -> float:
+def avg_trade_pct(trades: List[Trade], leverage=1) -> float:
     """Calculate the average trade percentage."""
     trades_pct = map(
-        lambda trade: (trade.exit_price - trade.entry_price) / trade.entry_price * trade.direction,
+        lambda trade: (trade.exit_price - trade.entry_price) * leverage / trade.entry_price * trade.side,
         trades
     )
     return geometric_mean(pd.Series(list(trades_pct))) * 100
@@ -277,7 +277,7 @@ def avg_trade_duration(trades: List[Trade]) -> int:
 def winning_trades(trades: List[Trade]) -> List[Trade]:
     return reduce(
         lambda accum, trade: [*accum, trade]
-        if (trade.exit_price - trade.entry_price) * trade.direction > 0
+        if (trade.exit_price - trade.entry_price) * trade.side > 0
         else accum,
         trades,
         []
@@ -287,7 +287,7 @@ def winning_trades(trades: List[Trade]) -> List[Trade]:
 def losing_trades(trades: List[Trade]) -> List[Trade]:
     return reduce(
         lambda accum, trade: [*accum, trade]
-        if (trade.exit_price - trade.entry_price) * trade.direction < 0
+        if (trade.exit_price - trade.entry_price) * trade.side < 0
         else accum,
         trades,
         []
@@ -296,7 +296,7 @@ def losing_trades(trades: List[Trade]) -> List[Trade]:
 
 def trades_net_profit_sum(trades: List[Trade]) -> float:
     return reduce(
-        lambda accum, trade: accum + trade.units * (trade.exit_price - trade.entry_price) * trade.direction,
+        lambda accum, trade: accum + trade.units * (trade.exit_price - trade.entry_price) * trade.side,
         trades,
         0
     )
@@ -304,7 +304,7 @@ def trades_net_profit_sum(trades: List[Trade]) -> float:
 
 def trades_net_profit(trades: List[Trade]) -> List[float]:
     return list(map(
-        lambda trade: trade.units * (trade.exit_price - trade.entry_price) * trade.direction,
+        lambda trade: trade.units * (trade.exit_price - trade.entry_price) * trade.side,
         trades,
     ))
 

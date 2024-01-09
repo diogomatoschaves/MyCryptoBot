@@ -103,7 +103,7 @@ class TestStrategyCombiner:
 
         print(combiner.data.to_dict(orient="records"))
 
-        assert combiner.data["position"].to_list() == expected_results
+        assert combiner.data["side"].to_list() == expected_results
 
     @pytest.mark.parametrize(
         "fixture",
@@ -133,7 +133,7 @@ class TestStrategyCombiner:
         print(backtester.processed_data.to_dict(orient="records"))
 
         position_cols = [
-            col for col in backtester.processed_data.columns if "position" in col
+            col for col in backtester.processed_data.columns if "side" in col
         ]
 
         assert len(strategies) == len(position_cols) - 1
