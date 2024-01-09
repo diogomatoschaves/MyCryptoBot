@@ -1,3 +1,6 @@
+import numpy as np
+
+exception_message = 'The provided exchange is not supported.'
 
 
 def get_maintenance_margin(symbol_brackets, notional_value, exchange='binance'):
@@ -11,6 +14,8 @@ def get_maintenance_margin(symbol_brackets, notional_value, exchange='binance'):
 
     if exchange == 'binance':
         return get_maintenance_margin_binance()
+    else:
+        raise Exception(exception_message)
 
 
 def calculate_margin_ratio(
@@ -33,10 +38,15 @@ def calculate_margin_ratio(
 
         maintenance_margin = current_value * maintenance_rate - maintenance_amount
 
-        return maintenance_margin / margin_balance
+        try:
+            return maintenance_margin / margin_balance
+        except ZeroDivisionError:
+            return np.Inf
 
     if exchange == 'binance':
         return calculate_margin_ratio_binance()
+    else:
+        raise Exception(exception_message)
 
 
 def calculate_liquidation_price(
@@ -53,10 +63,15 @@ def calculate_liquidation_price(
         notional_value = units * entry_price
         wallet_balance = notional_value / leverage
 
-        liquidation_price = ((wallet_balance + maintenance_amount - side * units * entry_price) /
-                             (units * maintenance_rate - side * units))
+        try:
+            liquidation_price = ((wallet_balance + maintenance_amount - side * units * entry_price) /
+                                 (units * maintenance_rate - side * units))
+        except ZeroDivisionError:
+            liquidation_price = 0
 
         return liquidation_price
 
     if exchange == 'binance':
         return calculate_liquidation_ratio_binance()
+    else:
+        raise Exception(exception_message)

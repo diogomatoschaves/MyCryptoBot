@@ -2,7 +2,7 @@ import pytest
 
 from data.service.helpers.exceptions import CandleSizeInvalid, CandleSizeRequired, ColorRequired, \
     DataPipelineCouldNotBeStopped, DataPipelineDoesNotExist, DataPipelineOngoing, ExchangeInvalid, ExchangeRequired, \
-    LeverageInvalid, NameInvalid, NameRequired, ParamsInvalid, ParamsRequired, PipelineStartFail, SymbolRequired
+    NameInvalid, NameRequired, ParamsInvalid, ParamsRequired, PipelineStartFail, SymbolRequired
 from data.tests.setup.fixtures.internal_modules import mock_stop_instance, spy_stop_instance
 from shared.utils.tests.fixtures.models import *
 
@@ -56,11 +56,6 @@ class TestExceptions:
                 ExchangeRequired(),
                 "An exchange must be included in the request.",
                 id="ExchangeRequired",
-            ),
-            pytest.param(
-                LeverageInvalid(),
-                f"Leverage Invalid.",
-                id="LeverageInvalid",
             ),
             pytest.param(
                 NameInvalid(),
@@ -142,11 +137,6 @@ class TestExceptions:
                 ExchangeRequired(arg),
                 "An exchange must be included in the request.",
                 id="ExchangeRequired",
-            ),
-            pytest.param(
-                LeverageInvalid(arg),
-                f"{arg} is not a valid leverage.",
-                id="LeverageInvalid",
             ),
             pytest.param(
                 NameInvalid(arg),

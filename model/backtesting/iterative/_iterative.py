@@ -225,10 +225,6 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         """
         for bar, (timestamp, row) in enumerate(data.iterrows()):
-
-            if bar == 28975:
-                a = 1
-
             signal = self.get_signal(row)
 
             previous_position = self._get_position(self.symbol)
@@ -257,7 +253,11 @@ class IterativeBacktester(BacktestMixin, Trader):
 
     def _calculate_margin_ratio(self, row):
 
-        current_trade = self.trades[-1]
+        try:
+            current_trade = self.trades[-1]
+        except IndexError:
+            self.margin_ratios.append(0)
+            return
 
         mark_price = self._get_high_low_price(current_trade.side, row)
 
