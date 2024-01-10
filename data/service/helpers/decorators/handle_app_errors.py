@@ -6,6 +6,7 @@ from flask import jsonify
 
 from data.service.helpers.exceptions import *
 from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid, StrategyInvalid, StrategyRequired
+from shared.utils.exceptions.leverage_invalid import LeverageInvalid
 
 
 def handle_app_errors(_func=None):

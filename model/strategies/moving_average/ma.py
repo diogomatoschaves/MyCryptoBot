@@ -10,7 +10,7 @@ from model.strategies._mixin import StrategyMixin
 class MovingAverage(StrategyMixin):
     """
     Strategy that uses a simple or exponential moving average as a trigger for
-    going long or short, with no neutral position. When the price crosses over
+    going long or short, with no neutral side. When the price crosses over
     above the moving average it goes long, and vice versa when the price crosses below.
 
     Parameters
@@ -99,10 +99,10 @@ class MovingAverage(StrategyMixin):
         Returns
         -------
         pd.DataFrame
-            OHLCV data with additional 'position' column containing -1 for short, 1 for long.
+            OHLCV data with additional 'side' column containing -1 for short, 1 for long.
         """
-        data["position"] = np.where(data["SMA"] > data[self.close_col], 1, 0)
-        data["position"] = np.where(data["SMA"] < data[self.close_col], -1, data["position"])
+        data["side"] = np.where(data["SMA"] > data[self.close_col], 1, 0)
+        data["side"] = np.where(data["SMA"] < data[self.close_col], -1, data["side"])
         return data
 
     def get_signal(self, row=None):

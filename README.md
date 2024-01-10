@@ -59,7 +59,8 @@ selected strategy. Whenever a request is received to generate a new signal, the 
 and a signal is produced, which is then sent to the **Order Execution** service with an order to be executed. 
 
 This module also contains a comprehensive set of development and research tools for backtesting, analyzing, and 
-exploring new strategies. It also has a strategy optimization API.
+exploring new strategies. It also has a strategy optimization API, and has functionality to include margin calls
+according to a selected leverage.
 
 <p align="middle">
   <img src="shared/utils/drawings/backtesting_results.png" style="width: 80%" />

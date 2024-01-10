@@ -19,9 +19,9 @@ def execute_order(pipeline_id, signal, bearer_token, header=''):
         "signal": signal,
     }
 
-    position = "GO LONG" if signal == 1 else "GO SHORT" if signal == -1 else "GO NEUTRAL"
+    side = "GO LONG" if signal == 1 else "GO SHORT" if signal == -1 else "GO NEUTRAL"
 
-    logging.info(header + f"Sending {position} order with signal {signal}.")
+    logging.info(header + f"Sending {side} order with signal {signal}.")
 
     r = requests.post(url, json=payload, headers={"Authorization": bearer_token})
     logging.debug(r.text)

@@ -1,3 +1,6 @@
+import json
+
+import pandas as pd
 from scipy.optimize import brute
 import plotly.io as pio
 
@@ -6,7 +9,8 @@ from model.backtesting.helpers.metrics import *
 from model.backtesting.helpers.results_constants import results_mapping, results_aesthetics
 from model.backtesting.plotting import plot_backtest_results
 from shared.utils.config_parser import get_config
-from shared.utils.exceptions import StrategyRequired, OptimizationParametersInvalid
+from shared.utils.exceptions import StrategyRequired, OptimizationParametersInvalid, SymbolInvalid
+from shared.utils.exceptions.leverage_invalid import LeverageInvalid
 
 config_vars = get_config('model')
 
@@ -42,7 +46,15 @@ class BacktestMixin:
     plot_func(ax, group):
         A function used for plotting positions.
     """
-    def __init__(self, symbol, amount, trading_costs):
+    def __init__(
+        self,
+        symbol,
+        amount,
+        trading_costs,
+        include_margin=False,
+        leverage=1,
+        exchange='binance'
+    ):
         """
         Initialize the BacktestMixin object.
 
@@ -53,6 +65,11 @@ class BacktestMixin:
         trading_costs : float
             The transaction costs (e.g. spread, commissions) as a percentage.
         """
+        self.include_margin = include_margin
+        self.exchange = exchange
+
+        self.set_leverage(leverage)
+
         self.amount = amount
         self.symbol = symbol
         self.tc = trading_costs / 100
@@ -62,6 +79,14 @@ class BacktestMixin:
         self.perf = 0
         self.outperf = 0
         self.results = None
+
+        if self.include_margin:
+            brackets = self._load_leverage_brackets()
+
+            try:
+                self.symbol_bracket = pd.DataFrame(brackets[symbol])
+            except KeyError:
+                raise SymbolInvalid(symbol)
 
     def __getattr__(self, attr):
         """
@@ -83,6 +108,18 @@ class BacktestMixin:
         except AttributeError:
             return getattr(self, attr)
 
+    def __repr__(self):
+        extra_title = (f"<b>Initial Amount</b> = {self.amount} | "
+                       f"<b>Trading Costs</b> = {self.tc * 100}% | "
+                       f"<b>Leverage</b> = {self.leverage}")
+        return extra_title + '<br>' + self.strategy.__repr__()
+
+    def set_leverage(self, leverage):
+        if isinstance(leverage, int) and 1 <= leverage <= 125:
+            self.leverage = leverage
+        else:
+            raise LeverageInvalid(leverage)
+
     def load_data(self, data=None, csv_path=None):
         if data is None or csv_path:
             csv_path = csv_path if csv_path else config_vars.ohlc_data_file
@@ -93,7 +130,7 @@ class BacktestMixin:
 
         self.set_data(data.copy(), self.strategy)
 
-    def run(self, print_results=True, plot_results=True):
+    def run(self, print_results=True, plot_results=True, leverage=None):
         """Runs the trading strategy and prints and/or plots the results.
 
         Parameters:
@@ -109,6 +146,8 @@ class BacktestMixin:
         --------
         None
         """
+        if leverage is not None:
+            self.set_leverage(leverage)
 
         perf, outperf, results = self._test_strategy(print_results=print_results, plot_results=plot_results)
 
@@ -216,14 +255,23 @@ class BacktestMixin:
         start_date = get_start_date(processed_data.index)
         end_date = get_end_date(processed_data.index)
 
-        exposure = exposure_time(processed_data["position"])
+        leverage = self.leverage
+        trading_costs = self.tc * 100
+        initial_equity = self.amount
+        exposed_capital = initial_equity / leverage
+
+        exposure = exposure_time(processed_data["side"])
         final_equity = equity_final(processed_data["accumulated_strategy_returns_tc"] * self.amount)
         peak_equity = equity_peak(processed_data["accumulated_strategy_returns_tc"] * self.amount)
-        buy_and_hold_return = return_buy_and_hold_pct(processed_data["accumulated_returns"])
-        pct_return = return_pct(processed_data["accumulated_strategy_returns_tc"])
-        annualized_pct_return = return_pct_annualized(processed_data["accumulated_strategy_returns_tc"])
-        annualized_pct_volatility = volatility_pct_annualized(processed_data["strategy_returns_tc"])
-        sharpe = sharpe_ratio(processed_data["strategy_returns_tc"])
+        buy_and_hold_return = return_buy_and_hold_pct(processed_data["accumulated_returns"]) * leverage
+        pct_return = return_pct(processed_data["accumulated_strategy_returns_tc"]) * leverage
+        annualized_pct_return = return_pct_annualized(processed_data["accumulated_strategy_returns_tc"], leverage)
+        annualized_pct_volatility = volatility_pct_annualized(
+            processed_data["strategy_returns_tc"],
+            config_vars.trading_days
+        )
+
+        sharpe = sharpe_ratio(processed_data["strategy_returns_tc"], trading_days=config_vars.trading_days)
         sortino = sortino_ratio(processed_data["strategy_returns_tc"])
         calmar = calmar_ratio(processed_data["accumulated_strategy_returns_tc"])
         max_drawdown = max_drawdown_pct(processed_data["accumulated_strategy_returns_tc"])
@@ -233,9 +281,9 @@ class BacktestMixin:
 
         nr_trades = int(len(trades))
         win_rate = win_rate_pct(trades)
-        best_trade = best_trade_pct(trades)
-        worst_trade = worst_trade_pct(trades)
-        avg_trade = avg_trade_pct(trades)
+        best_trade = best_trade_pct(trades, leverage)
+        worst_trade = worst_trade_pct(trades, leverage)
+        avg_trade = avg_trade_pct(trades, leverage)
         max_trade_dur = max_trade_duration(trades)
         avg_trade_dur = avg_trade_duration(trades)
         profit_fctor = profit_factor(trades)
@@ -245,9 +293,13 @@ class BacktestMixin:
         results = pd.Series(
             dict(
                 total_duration=total_duration,
+                nr_trades=nr_trades,
                 start_date=start_date,
                 end_date=end_date,
-                nr_trades=nr_trades,
+                trading_costs=trading_costs,
+                leverage=leverage,
+                initial_equity=initial_equity,
+                exposed_capital=exposed_capital,
                 exposure_time=exposure,
                 buy_and_hold_return=buy_and_hold_return,
                 return_pct=pct_return,
@@ -290,19 +342,33 @@ class BacktestMixin:
             Whether to show the plot of the equity curve with no trading costs
         """
 
-        data = processed_data.copy()[[
+        columns = [
             "accumulated_returns",
             "accumulated_strategy_returns",
-            "accumulated_strategy_returns_tc"
-        ]] * self.amount
+            "accumulated_strategy_returns_tc",
+        ]
+
+        data = processed_data.copy()[columns] * self.amount
+
+        if self.include_margin:
+            data["margin_ratios"] = processed_data["margin_ratios"].copy() * 100
 
         trades_df = pd.DataFrame(self.trades)
 
         if plot_results:
-            nr_strategies = len([col for col in processed_data.columns if "position" in col])
+            nr_strategies = len([col for col in processed_data.columns if "side" in col])
             offset = max(0, nr_strategies - 2)
 
-            plot_backtest_results(data, trades_df, offset, show_plot_no_tc=show_plot_no_tc, title=self.__repr__())
+            title = self.__repr__()
+
+            plot_backtest_results(
+                data,
+                trades_df,
+                offset,
+                plot_margin_ratio=self.include_margin,
+                show_plot_no_tc=show_plot_no_tc,
+                title=title
+            )
 
     @staticmethod
     def _print_results(results, print_results):
@@ -314,7 +380,13 @@ class BacktestMixin:
                 try:
                     print(results_aesthetics[col](value))
                 except KeyError:
-                    print(f'\t{results_mapping[col]}: {round(value, 2)}')
+                    if callable(results_mapping[col]):
+                        printed_title = results_mapping[col]('USDT')
+                    else:
+                        printed_title = results_mapping[col]
+
+                    print(f'\t{printed_title}: {round(value, 2)}')
+
             print('---------------------------------------')
 
     def _get_params_mapping(self, parameters, strategy_params_mapping):
@@ -388,6 +460,17 @@ class BacktestMixin:
         if self.original_data is None:
             self.original_data = self.strategy.data.copy()
 
-            position_columns = [col for col in self.original_data if "position" in col]
+            position_columns = [col for col in self.original_data if "side" in col]
 
             self.original_data = self.original_data.drop(columns=position_columns)
+
+    @staticmethod
+    def _load_leverage_brackets():
+
+        filepath = config_vars.leverage_brackets_file
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+
+        brackets = {symbol["symbol"]: symbol["brackets"] for symbol in data}
+
+        return brackets

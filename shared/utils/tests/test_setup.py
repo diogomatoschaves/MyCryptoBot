@@ -6,11 +6,11 @@ from IPython.utils.py3compat import execfile
 
 def get_fixtures(current_path, fixtures=None, keys=None):
 
-    if not fixtures:
-        fixtures = defaultdict(lambda: {"in": {}, "out": {}})
-
     if not keys:
         keys = ["in", "out"]
+
+    if not fixtures:
+        fixtures = defaultdict(lambda: {key: {} for key in keys})
 
     for key in keys:
 

@@ -118,9 +118,9 @@ class MovingAverageConvergenceDivergence(MACD, StrategyMixin):
         Returns
         -------
         pd.DataFrame
-            Dataframe containing position column.
+            Dataframe containing side column.
         """
-        data["position"] = np.where(data["macd_diff"] > 0, 1, -1)
+        data["side"] = np.where(data["macd_diff"] > 0, 1, -1)
 
         return data
 

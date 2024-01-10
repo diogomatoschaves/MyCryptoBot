@@ -12,14 +12,14 @@ possible_methods = ["Unanimous", "Majority"]
 
 class StrategyCombiner(StrategyMixin):
     """
-    Combines multiple strategies and determines the combined position based on a specified method.
+    Combines multiple strategies and determines the combined side based on a specified method.
 
     Parameters:
     -----------
     strategies : iterable
         List of strategy objects to be combined.
     method : Literal["Unanimous", "Majority"], optional
-        The method used to determine the combined position (default is 'Majority').
+        The method used to determine the combined side (default is 'Majority').
     data : pd.DataFrame, optional
         Historical price data for the asset (default is None).
     **kwargs : additional keyword arguments
@@ -30,7 +30,7 @@ class StrategyCombiner(StrategyMixin):
     strategies : iterable
         List of strategy objects being combined.
     method : Literal["Unanimous", "Majority"]
-        The method used to determine the combined position.
+        The method used to determine the combined side.
     data : pd.DataFrame
         Current DataFrame containing historical price data for the asset.
 
@@ -77,7 +77,7 @@ class StrategyCombiner(StrategyMixin):
         strategies : iterable
             List of strategy objects to be combined.
         method : Literal["Unanimous", "Majority"], optional
-            The method used to determine the combined position (default is 'Majority').
+            The method used to determine the combined side (default is 'Majority').
         data : pd.DataFrame, optional
             Historical price data for the asset (default is None).
         **kwargs : additional keyword arguments
@@ -110,7 +110,7 @@ class StrategyCombiner(StrategyMixin):
         strategies : iterable
             List of strategy objects to be combined.
         method : Literal["Unanimous", "Majority"]
-            The method used to determine the combined position.
+            The method used to determine the combined side.
 
         Raises:
         -------
@@ -200,7 +200,7 @@ class StrategyCombiner(StrategyMixin):
 
         self.data = data.copy()
         self.data = self._calculate_returns(self.data)
-        self.data["position"] = 0
+        self.data["side"] = 0
 
         for i, strategy in enumerate(self.strategies):
             strategy.data = strategy.update_data(data.copy())
@@ -208,7 +208,7 @@ class StrategyCombiner(StrategyMixin):
             strategy.data = strategy.data.dropna()
             strategy.symbol = self.symbol
 
-            self.data = self.data.join(strategy.data["position"], rsuffix=f"_{i + 1}", how='inner')
+            self.data = self.data.join(strategy.data["side"], rsuffix=f"_{i + 1}", how='inner')
 
     def set_parameters(self, params=None, data=None):
         """
@@ -234,7 +234,7 @@ class StrategyCombiner(StrategyMixin):
     @staticmethod
     def get_majority_position(data, position_cols):
         """
-        Calculates the combined position using the 'Majority' method.
+        Calculates the combined side using the 'Majority' method.
 
         Parameters:
         -----------
@@ -246,14 +246,14 @@ class StrategyCombiner(StrategyMixin):
         Returns:
         --------
         int, np.ndarray
-            Combined position based on the 'Majority' method.
+            Combined side based on the 'Majority' method.
         """
         return np.sign(sum([data[position_col] for position_col in position_cols]))
 
     @staticmethod
     def get_unanimous_position(data, position_cols):
         """
-        Calculates the combined position using the 'Unanimous' method.
+        Calculates the combined side using the 'Unanimous' method.
 
         Parameters:
         -----------
@@ -265,14 +265,14 @@ class StrategyCombiner(StrategyMixin):
         Returns:
         --------
         int, np.ndarray
-            Combined position based on the 'Unanimous' method.
+            Combined side based on the 'Unanimous' method.
         """
-        position = data[position_cols[0]]
+        side = data[position_cols[0]]
         condition = True
         for position_col in position_cols[1:]:
-            condition = np.logical_and(condition, position == data[position_col])
+            condition = np.logical_and(condition, side == data[position_col])
 
-        return np.where(condition, position, 0)
+        return np.where(condition, side, 0)
 
     def calculate_positions(self, data):
         """
@@ -289,15 +289,15 @@ class StrategyCombiner(StrategyMixin):
             DataFrame with the calculated combined positions.
         """
 
-        position_cols = [col for col in data.columns if "position" in col][1:]  # Excludes 'position' column
+        position_cols = [col for col in data.columns if "side" in col][1:]  # Excludes 'side' column
 
         if self.method == 'Majority':
 
-            data["position"] = self.get_majority_position(data, position_cols)
+            data["side"] = self.get_majority_position(data, position_cols)
 
         elif self.method == 'Unanimous':
 
-            data["position"] = self.get_unanimous_position(data, position_cols)
+            data["side"] = self.get_unanimous_position(data, position_cols)
 
         return data
 
@@ -320,7 +320,7 @@ class StrategyCombiner(StrategyMixin):
         if row is None:
             row = self.data.iloc[-1]
 
-        positions_cols = [col for col in row.index if "position" in col][1:]
+        positions_cols = [col for col in row.index if "side" in col][1:]
 
         signal = 0
         if self.method == 'Unanimous':

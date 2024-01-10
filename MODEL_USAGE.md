@@ -136,6 +136,80 @@ System Quality Number: 0.17
   <img src="shared/utils/drawings/iterative_results.png" style="width: 100%" />
 </p>
 
+### Backtesting with Leverage and Margin
+
+Both the Vectorized and Iterative backtesting classes provide users with the ability to incorporate leverage into a 
+backtest and visualize the margin ratio as a curve on the results plot. This feature enables users to identify 
+instances where a margin call would occur, leading to a potential loss of all funds. The calculations follow the 
+rules outlined by Binance, as detailed [here](https://www.binance.com/en/support/faq/how-to-calculate-liquidation-price-of-usd%E2%93%A2-m-futures-contracts-b3c689c1f50a44cabb3a84e663b81d93)
+and [here](https://www.binance.com/en/support/faq/leverage-and-margin-of-usd%E2%93%A2-m-futures-360033162192). 
+It's important to note that these calculations assume the selected margin is _Isolated_, and the position mode
+is _One Way_. To utilize this functionality, follow these steps:
+
+```python
+from model.backtesting import VectorizedBacktester
+from model.strategies import MovingAverageCrossover
+
+symbol = "BTCUSDT"
+trading_costs = 0.1 # This should be in percentage, i.e. 0.1% 
+
+mov_avg = MovingAverageCrossover(20, 150)
+
+vect = VectorizedBacktester(
+    mov_avg,
+    symbol,
+    amount=10000,
+    trading_costs=trading_costs,
+    include_margin=True,  # This tells the backtester to include the margin calculations 
+    leverage=10  # Here one can choose the desired leverage
+)
+
+vect.load_data()
+vect.run()
+```
+
+This will output the following results and plot:
+
+```
+Total Duration: 4 years, 38 weeks and 6 days
+Total Trades: 406
+Start Date: 2018-05-21 11:00:00
+End Date: 2023-02-13 00:00:00
+Trading Costs [%]: 0.1
+Leverage [x]: 10
+Initial Capital [USDT]: 10000
+Exposed Capital [USDT]: 1000.0
+Exposure Time [%]: 100.0
+Buy & Hold Return [%]: 1575.25
+Total Return [%]: 11823.16
+Equity Final [USDT]: 128103.44
+Equity Peak [USDT]: 258579.01
+Annualized Return [%]: 124.56
+Annualized Volatility [%]: 71.89
+Sharpe Ratio: 0.15
+Sortino Ratio: 0.7
+Calmar Ratio: 0.73
+Max Drawdown [%]: -72.82
+Avg Drawdown [%]: -6.23
+Max Drawdown Duration: 1 year, 38 weeks and 8 hours
+Avg Drawdown Duration: 1 week, 2 days and 23 hours
+Win Rate [%]: 28.08
+Best Trade [%]: 492.58
+Worst Trade [%]: -117.4
+Avg Trade [%]: 0
+Max Trade Duration: 3 weeks, 4 days and 2 hours
+Avg Trade Duration: 4 days, 6 hours and 10 minutes
+Profit Factor: 1.04
+Expectancy [%]: 4.48
+System Quality Number: 0.19
+```
+<p align="left">
+  <img src="shared/utils/drawings/backtesting_with_margin.png" style="width: 100%" />
+</p>
+
+As evident from the results, employing a leverage of `10` led to at least 6 margin calls during the backtest, 
+making the overall strategy impractical in a real-world scenario.
+
 ### Optimization
 
 You can use the optimization API of either the iterative or vectorized backtester in order to find the best combination 

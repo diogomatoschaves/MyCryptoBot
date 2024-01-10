@@ -11,6 +11,7 @@ from django.db.models import F, Count, Max, Avg, Min, Sum, Q
 from data.service.helpers.exceptions import *
 from data.service.helpers.exceptions.data_pipeline_ongoing import DataPipelineOngoing
 from shared.utils.exceptions import SymbolInvalid, EquityRequired, EquityInvalid, StrategyInvalid, StrategyRequired
+from shared.utils.exceptions.leverage_invalid import LeverageInvalid
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()

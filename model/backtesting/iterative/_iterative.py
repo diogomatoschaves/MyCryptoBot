@@ -2,6 +2,7 @@ import numpy as np
 
 from model.backtesting._mixin import BacktestMixin
 from model.backtesting.helpers import Trade
+from model.backtesting.helpers.margin import calculate_margin_ratio, get_maintenance_margin, calculate_liquidation_price
 from shared.trading import Trader
 
 
@@ -10,7 +11,15 @@ class IterativeBacktester(BacktestMixin, Trader):
     A class for backtesting trading strategies iteratively using historical data.
     """
 
-    def __init__(self, strategy, symbol=None, amount=1000, trading_costs=0):
+    def __init__(
+        self,
+        strategy,
+        symbol=None,
+        amount=1000,
+        trading_costs=0.0,
+        include_margin=False,
+        leverage=1
+    ):
         """
         Initializes the IterativeBacktester object.
 
@@ -26,14 +35,17 @@ class IterativeBacktester(BacktestMixin, Trader):
             The percentage of trading costs. Default is 0.
         """
 
-        BacktestMixin.__init__(self, symbol, amount, trading_costs)
+        BacktestMixin.__init__(self, symbol, amount, trading_costs, include_margin, leverage)
         Trader.__init__(self, amount)
 
         self.strategy = strategy
-        self.strategy.symbol = symbol
+
+        if symbol is not None:
+            self.strategy.symbol = symbol
 
         self.positions_lst = []
         self._equity = [self.amount]
+        self.margin_ratios = []
         self.returns = []
         self.strategy_returns = []
         self.strategy_returns_tc = []
@@ -41,28 +53,22 @@ class IterativeBacktester(BacktestMixin, Trader):
             symbol: 0
         }
 
-    def __repr__(self):
-        """
-        Returns a string representation of the trading strategy.
-        """
-        return self.strategy.__repr__()
-
     def _set_position(self, symbol, value, **kwargs):
         """
-        Sets the position for the given symbol.
+        Sets the side for the given symbol.
 
         Parameters
         ----------
         symbol : str
             The trading symbol.
         value : int
-            The position value.
+            The side value.
         """
         self.positions[symbol] = value
 
     def _get_position(self, symbol):
         """
-        Gets the position for the given symbol.
+        Gets the side for the given symbol.
 
         Parameters
         ----------
@@ -72,7 +78,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         Returns
         -------
         float
-            The position value.
+            The side value.
         """
         return self.positions[symbol]
 
@@ -80,8 +86,9 @@ class IterativeBacktester(BacktestMixin, Trader):
         """
         Resets the object attributes to their initial values.
         """
-        self._set_position(self.symbol, 0)  # initial neutral position
+        self._set_position(self.symbol, 0)  # initial neutral side
         self._equity = [self.amount]
+        self.margin_ratios = []
         self.strategy_returns = []
         self.strategy_returns_tc = []
         self.positions_lst = [0]
@@ -104,7 +111,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         pandas.DataFrame
             The data with the calculated positions.
         """
-        data["position"] = self.positions_lst
+        data["side"] = self.positions_lst
         return data
 
     def _get_trades(self, _):
@@ -135,6 +142,26 @@ class IterativeBacktester(BacktestMixin, Trader):
             The price.
         """
         price = row[self.close_col]
+
+        return price
+
+    def _get_high_low_price(self, side, row):
+        """
+        Gets the price for the given row.
+
+        Parameters
+        ----------
+        side : int
+            side of trade.
+        row : pandas.Series
+            The data row.
+
+        Returns
+        -------
+        float
+            The price.
+        """
+        price = row[self.high_col] if side == -1 else row[self.low_col]
 
         return price
 
@@ -208,6 +235,9 @@ class IterativeBacktester(BacktestMixin, Trader):
                 self.close_pos(self.symbol, timestamp, row, print_results=print_results)
                 self._set_position(self.symbol, 0)
 
+            if self.include_margin:
+                self._calculate_margin_ratio(row)
+
             new_position = self._get_position(self.symbol)
 
             self.positions_lst.append(new_position)
@@ -221,9 +251,32 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         return data
 
+    def _calculate_margin_ratio(self, row):
+
+        try:
+            current_trade = self.trades[-1]
+        except IndexError:
+            self.margin_ratios.append(0)
+            return
+
+        mark_price = self._get_high_low_price(current_trade.side, row)
+
+        margin_ratio = calculate_margin_ratio(
+            self.leverage,
+            current_trade.units,
+            current_trade.side,
+            current_trade.entry_price,
+            mark_price,
+            self.maintenance_rate,
+            self.maintenance_amount,
+            exchange=self.exchange
+        )
+
+        self.margin_ratios.append(margin_ratio)
+
     def _evaluate_backtest(self, processed_data):
-        processed_data["position"] = self.positions_lst[1:]
-        processed_data.loc[processed_data.index[0], "position"] = self.positions_lst[1]
+        processed_data["side"] = self.positions_lst[1:]
+        processed_data.loc[processed_data.index[0], "side"] = self.positions_lst[1]
         processed_data.loc[processed_data.index[0], self.returns_col] = 0
 
         processed_data["strategy_returns"] = self.strategy_returns
@@ -233,11 +286,17 @@ class IterativeBacktester(BacktestMixin, Trader):
         processed_data["accumulated_strategy_returns"] = processed_data["strategy_returns"].cumsum().apply(np.exp)
         processed_data["accumulated_strategy_returns_tc"] = processed_data["strategy_returns_tc"].cumsum().apply(np.exp)
 
+        if self.include_margin:
+            processed_data["margin_ratios"] = self.margin_ratios
+
+            processed_data["margin_ratios"] = np.where(processed_data["margin_ratios"] > 1, 1, processed_data["margin_ratios"])
+            processed_data["margin_ratios"] = np.where(processed_data["margin_ratios"] < 0, 1, processed_data["margin_ratios"])
+
         processed_data.dropna(inplace=True)
 
         self.processed_data = processed_data
 
-        returns = [np.log(trade.exit_price / trade.entry_price) * trade.direction for trade in self.trades]
+        returns = [np.log(trade.exit_price / trade.entry_price) * trade.side for trade in self.trades]
         perf = np.exp(np.sum(returns))  # Performance with trading_costs
 
         perf_bh = processed_data["accumulated_returns"].iloc[-1]
@@ -395,19 +454,19 @@ class IterativeBacktester(BacktestMixin, Trader):
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
         """
-        Closes the position of the specified instrument at the given date or row. If the number of units is less than or equal to
-        zero, it buys the instrument to close the position, otherwise it sells it. It then calculates the performance of the
+        Closes the side of the specified instrument at the given date or row. If the number of units is less than or equal to
+        zero, it buys the instrument to close the side, otherwise it sells it. It then calculates the performance of the
         trading account, updates the `current_balance`, `trades` and `units` attributes accordingly, and prints a message
         showing the current balance, net performance and number of trades executed.
 
         Parameters
         ----------
         symbol : str
-            The symbol of the instrument to close the position for.
+            The symbol of the instrument to close the side for.
         date : str or None, optional
-            The date to close the position at, formatted as 'YYYY-MM-DD'. If None, row must be specified instead.
+            The date to close the side at, formatted as 'YYYY-MM-DD'. If None, row must be specified instead.
         row : int or None, optional
-            The row index to close the position at. If None, date must be specified instead.
+            The row index to close the side at. If None, date must be specified instead.
         header : str, optional
             A header to print before the results.
         **kwargs : dict, optional
@@ -440,35 +499,38 @@ class IterativeBacktester(BacktestMixin, Trader):
             print("{} |  number of trades executed = {}".format(date, self.nr_trades))
             print(70 * "-")
 
-    def _handle_trade(self, trades, open_trade, date, price, units, amount, direction):
+    def _handle_trade(self, trades, open_trade, date, price, units, amount, side):
         if open_trade:
-            trades.append(Trade(date, None, price, None, units, direction))
+            liquidation_price = None
+
+            if self.include_margin:
+
+                notional_value = units * price
+
+                maintenance_rate, maintenance_amount = get_maintenance_margin(
+                    self.symbol_bracket, [notional_value], exchange=self.exchange
+                )
+
+                self.maintenance_rate = maintenance_rate[0]
+                self.maintenance_amount = maintenance_amount[0]
+
+                liquidation_price = calculate_liquidation_price(
+                    units,
+                    price,
+                    side,
+                    self.leverage,
+                    maintenance_rate,
+                    maintenance_amount,
+                    exchange=self.exchange
+                )[0]
+
+            trades.append(Trade(date, None, price, None, units, side, None, None, None, liquidation_price))
         else:
             trades[-1].exit_date = date
             trades[-1].exit_price = price
             trades[-1].amount = amount
 
             trades[-1].calculate_profit()
-            trades[-1].calculate_pnl_pct(trades[-2].amount if len(trades) >= 2 else self.amount)
+            trades[-1].calculate_pnl_pct(trades[-2].amount if len(trades) >= 2 else self.amount, self.leverage)
 
             self.nr_trades += 1
-
-    def plot_data(self, cols=None):
-        """
-        Plots the data of the specified columns in the `data` attribute. If `cols` is not provided, it defaults to "close".
-
-        Plot data for the specified columns.
-
-        Parameters
-        ----------
-        cols : str or list of str,
-            The column(s) to plot. If not provided, it defaults to "close".
-
-        Returns
-        -------
-        None
-        """
-
-        if cols is None:
-            cols = "close"
-        self.data[cols].plot(figsize=(12, 8), title='BTC/USD')
