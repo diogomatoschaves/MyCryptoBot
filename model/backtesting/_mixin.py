@@ -1,5 +1,6 @@
 import json
 
+import pandas as pd
 from scipy.optimize import brute
 import plotly.io as pio
 
@@ -83,7 +84,7 @@ class BacktestMixin:
             brackets = self._load_leverage_brackets()
 
             try:
-                self.symbol_bracket = brackets[symbol]
+                self.symbol_bracket = pd.DataFrame(brackets[symbol])
             except KeyError:
                 raise SymbolInvalid(symbol)
 

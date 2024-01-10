@@ -1,6 +1,7 @@
 import numpy as np
 from model.backtesting._mixin import BacktestMixin
 from model.backtesting.helpers import Trade
+from model.backtesting.helpers.margin import get_maintenance_margin, calculate_liquidation_price, calculate_margin_ratio
 
 
 class VectorizedBacktester(BacktestMixin):
@@ -142,7 +143,7 @@ class VectorizedBacktester(BacktestMixin):
 
         col = list(set(trades.columns).difference(set(cols)))[0]
 
-        trades = trades.rename(columns={self.price_col: "entry_price", col: "entry_date", "side": "side"})
+        trades = trades.rename(columns={self.price_col: "entry_price", col: "entry_date"})
         trades["exit_price"] = trades["entry_price"].shift(-1) * (1 - trading_costs * trades["side"])
         trades["entry_price"] = trades["entry_price"] * (1 + trading_costs * trades["side"])
         trades["exit_date"] = trades["entry_date"].shift(-1)
@@ -168,18 +169,89 @@ class VectorizedBacktester(BacktestMixin):
             trades["units"] = (trades["amount"].shift(1) / trades["entry_price"]).fillna(self.amount / trades["entry_price"][0])
             trades["profit"] = (trades["amount"] - trades["amount"].shift(1)).fillna(trades["amount"][0] - self.amount)
             trades["pnl"] = ((trades["amount"] - trades["amount"].shift(1)) / trades["amount"].shift(1))\
-                .fillna((trades["amount"][0] - self.amount) / self.amount)
+                .fillna((trades["amount"][0] - self.amount) / self.amount) * self.leverage
+
+        columns_to_delete = [
+                'simple_return',
+                'simple_cum',
+                'log_return',
+                'log_cum',
+                'accumulated_strategy_returns',
+            ]
+
+        if self.include_margin and len(trades) > 0:
+            trades['maintenance_rate'], trades['maintenance_amount'] = get_maintenance_margin(
+                self.symbol_bracket,
+                trades['units'] * trades['entry_price'],
+                self.exchange
+            )
+
+            trades['liquidation_price'] = calculate_liquidation_price(
+                trades['units'],
+                trades['entry_price'],
+                trades['side'],
+                self.leverage,
+                trades['maintenance_rate'],
+                trades['maintenance_amount'],
+                exchange=self.exchange
+            )
+
+            columns_to_delete.extend(['maintenance_rate', 'maintenance_amount'])
 
         self._trades_df = trades.copy()
 
-        trades.drop(
-            ['simple_return', 'simple_cum', 'log_return', 'log_cum', 'accumulated_strategy_returns'],
-            axis=1, inplace=True
-        )
+        trades.drop(columns_to_delete, axis=1, inplace=True)
 
         trades_list = [Trade(**row) for _, row in trades.iterrows()]
 
         return trades_list
+
+    def _calculate_margin_ratio(self, trades_df, processed_data):
+
+        df = processed_data.copy()
+
+        if len(trades_df) == 0:
+            df["margin_ratios"] = 0
+            return df
+
+        df['entry_price'] = None
+        df['units'] = None
+        df['maintenance_rate'] = None
+        df['maintenance_amount'] = None
+        df['mark_price'] = np.where(df['side'] == 1, df[self.low_col], df[self.high_col])
+
+        df.loc[df[df.trades != 0].index[:-1], 'entry_price'] = df[df.trades != 0][self.price_col]
+        df.loc[df[df.trades != 0].index[:-1], 'units'] = trades_df['units'].values
+        df.loc[df[df.trades != 0].index[:-1], 'maintenance_rate'] = trades_df['maintenance_rate'].values
+        df.loc[df[df.trades != 0].index[:-1], 'maintenance_amount'] = trades_df['maintenance_amount'].values
+
+        df['entry_price'].ffill(inplace=True)
+        df['units'].ffill(inplace=True)
+        df['maintenance_rate'].ffill(inplace=True)
+        df['maintenance_amount'].ffill(inplace=True)
+
+        df['margin_ratios'] = calculate_margin_ratio(
+            self.leverage,
+            df['units'],
+            df['side'],
+            df['entry_price'],
+            df['mark_price'],
+            df['maintenance_rate'],
+            df['maintenance_amount'],
+            exchange=self.exchange
+        )
+
+        df.drop(
+            ['entry_price', 'units', 'mark_price', 'maintenance_rate', 'maintenance_amount'],
+            axis=1, inplace=True
+        )
+
+        df["margin_ratios"] = np.where(df["margin_ratios"] > 1, 1, df["margin_ratios"])
+        df["margin_ratios"] = np.where(df["margin_ratios"] < 0, 1, df["margin_ratios"])
+
+        df["margin_ratios"] = df["margin_ratios"].fillna(0)
+
+        return df
 
     def _evaluate_backtest(self, processed_data):
         """
@@ -203,6 +275,9 @@ class VectorizedBacktester(BacktestMixin):
         nr_trades = self._get_nr_trades(processed_data)
 
         self.trades = self._retrieve_trades(processed_data, self.tc)
+
+        if self.include_margin:
+            self.processed_data = self._calculate_margin_ratio(self._trades_df, self.processed_data)
 
         # absolute performance of the strategy
         perf = processed_data["accumulated_strategy_returns_tc"].iloc[-1]

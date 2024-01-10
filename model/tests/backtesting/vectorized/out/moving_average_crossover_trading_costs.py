@@ -3,7 +3,7 @@ from pandas import Timestamp
 expected_performance = 1.00639
 expected_outperformance = 0.0
 
-expected_optimization_results = ({'sma_s': 1.0, 'sma_l': 6.0}, 1.013276)
+expected_optimization_results = ({"sma_s": 1.0, "sma_l": 6.0}, 1.013276)
 
 expected_results = [
     {

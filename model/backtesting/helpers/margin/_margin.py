@@ -1,14 +1,49 @@
 import numpy as np
+import pandas as pd
 
 exception_message = 'The provided exchange is not supported.'
 
 
 def get_maintenance_margin(symbol_brackets, notional_value, exchange='binance'):
-    def get_maintenance_margin_binance():
-        bracket = [bracket for bracket in symbol_brackets if notional_value < bracket["notionalCap"]][0]
+    """
+    Calculate the maintenance margin rate and amount based on symbol brackets and notional value.
 
-        maintenance_rate = bracket["maintMarginRatio"]
-        maintenance_amount = bracket["cum"]
+    Parameters
+    ----------
+    symbol_brackets: pd.DataFrame
+        DataFrame containing symbol brackets with columns ['notionalFloor', 'maintMarginRatio', 'cum'].
+    notional_value: pd.Series
+        Series containing notional values for calculation.
+    exchange: str, optional
+        Exchange name. Default is 'binance'.
+
+    Returns:
+    --------
+    Tuple of maintenance rate and maintenance amount.
+    """
+    def get_maintenance_margin_binance():
+        """
+        Internal function for calculating maintenance margin for Binance exchange.
+        """
+
+        # values = pd.concat([pd.DataFrame(notional_value).T] * len(notional_value)).T
+        #
+        # triangular_matrix = pd.DataFrame(np.tril(values))
+
+        values = pd.Series(notional_value)
+
+        comparison = pd.DataFrame()
+        for i, notional_floor in enumerate(symbol_brackets['notionalFloor']):
+            comparison[i] = values >= notional_floor
+
+        # greater_than = triangular_matrix.gt(symbol_brackets["notionalFloor"], axis=1)
+
+        indexes = comparison.idxmin(axis=1) - 1
+
+        brackets = symbol_brackets.iloc[indexes, :]
+
+        maintenance_rate = brackets["maintMarginRatio"].values
+        maintenance_amount = brackets["cum"].values
 
         return maintenance_rate, maintenance_amount
 
@@ -28,8 +63,36 @@ def calculate_margin_ratio(
     maintenance_amount,
     exchange
 ):
-    def calculate_margin_ratio_binance():
+    """
+    Calculate the margin ratio based on provided parameters.
 
+    Parameters
+    ----------
+    leverage: float
+        Leverage used for the position.
+    units: float
+        Number of units in the position.
+    side: int
+        Trading side (-1 for short, 1 for long).
+    entry_price: float
+        Entry price of the position.
+    mark_price: float
+        Mark price of the position.
+    maintenance_rate: float
+        Maintenance margin rate.
+    maintenance_amount: float
+        Maintenance margin amount.
+    exchange: str
+        Exchange name.
+
+    Returns:
+    --------
+    Float representing the margin ratio.
+    """
+    def calculate_margin_ratio_binance():
+        """
+        Internal function for calculating margin ratio for Binance exchange.
+        """
         initial_value = units * entry_price
         current_value = units * mark_price
         initial_margin = initial_value / leverage
@@ -58,8 +121,34 @@ def calculate_liquidation_price(
     maintenance_amount,
     exchange
 ):
-    def calculate_liquidation_ratio_binance():
+    """
+    Calculate the liquidation price based on provided parameters.
 
+    Parameters
+    ----------
+    units: float
+        Number of units in the position.
+    entry_price: float
+        Entry price of the position.
+    side: int
+        Trading side (-1 for short, 1 for long).
+    leverage: float
+        Leverage used for the position.
+    maintenance_rate: float
+        Maintenance margin rate.
+    maintenance_amount: float
+        Maintenance margin amount.
+    exchange: str
+        Exchange name.
+
+    Returns:
+    --------
+    Float representing the liquidation price.
+    """
+    def calculate_liquidation_ratio_binance():
+        """
+        Internal function for calculating liquidation price ratio for Binance exchange.
+        """
         notional_value = units * entry_price
         wallet_balance = notional_value / leverage
 

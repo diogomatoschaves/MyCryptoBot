@@ -17,7 +17,6 @@ fixtures = get_fixtures(current_path, keys=["in_margin", "out_margin"])
 
 class TestIterativeBacktesterMargin:
 
-    @pytest.mark.slow
     @pytest.mark.parametrize(
         "leverage",
         [
@@ -74,7 +73,6 @@ class TestIterativeBacktesterMargin:
                     fixture["out_margin"]["expected_results"][leverage][i][key], 0.2
                 )
 
-    @pytest.mark.slow
     @pytest.mark.parametrize(
         "leverage,symbol,second_leverage,exception",
         [

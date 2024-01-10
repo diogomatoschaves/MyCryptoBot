@@ -508,11 +508,11 @@ class IterativeBacktester(BacktestMixin, Trader):
                 notional_value = units * price
 
                 maintenance_rate, maintenance_amount = get_maintenance_margin(
-                    self.symbol_bracket, notional_value, exchange=self.exchange
+                    self.symbol_bracket, [notional_value], exchange=self.exchange
                 )
 
-                self.maintenance_rate = maintenance_rate
-                self.maintenance_amount = maintenance_amount
+                self.maintenance_rate = maintenance_rate[0]
+                self.maintenance_amount = maintenance_amount[0]
 
                 liquidation_price = calculate_liquidation_price(
                     units,
@@ -522,7 +522,7 @@ class IterativeBacktester(BacktestMixin, Trader):
                     maintenance_rate,
                     maintenance_amount,
                     exchange=self.exchange
-                )
+                )[0]
 
             trades.append(Trade(date, None, price, None, units, side, None, None, None, liquidation_price))
         else:

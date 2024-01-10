@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 from model.backtesting.helpers.margin import get_maintenance_margin, calculate_margin_ratio, calculate_liquidation_price
@@ -9,32 +10,46 @@ from model.tests.setup.test_data.sample_data import binance_margin_brackets
     "notional_value,result",
     [
         pytest.param(
-            10000,
-            (0.004, 0),
+            [10000],
+            ([0.004], [0]),
             id='bracket_1'
         ),
         pytest.param(
-            100000,
-            (0.005, 50.0),
+            [100000],
+            ([0.005], [50.0]),
             id='bracket_2'
         ),
         pytest.param(
-            1000000,
-            (0.01, 1300.0),
+            [1000000],
+            ([0.01], [1300.0]),
             id='bracket_3'
         ),
         pytest.param(
-            10000000,
-            (0.025, 46300.0),
+            [10000000],
+            ([0.025], [46300.0]),
             id='bracket_4'
+        ),
+        pytest.param(
+            [10000000, 30, 200000, 100000000],
+            ([0.025, 0.004, 0.005, 0.125], [46300., 0., 50., 5.0463e+06]),
+            id='bracket_multiple'
+        ),
+        pytest.param(
+            pd.Series([10000000, 30, 200000, 100000000]),
+            ([0.025, 0.004, 0.005, 0.125], [46300., 0., 50., 5.0463e+06]),
+            id='bracket_multiple_input_series'
         )
     ],
 )
 def test_get_maintenance_margin(notional_value, result):
 
-    maintenance_margin = get_maintenance_margin(binance_margin_brackets, notional_value, 'binance')
+    maintenance_margin = get_maintenance_margin(pd.DataFrame(binance_margin_brackets), notional_value, 'binance')
 
-    assert maintenance_margin == result
+    print(maintenance_margin)
+
+    for i, result_series in enumerate(maintenance_margin):
+        for j, entry in enumerate(result_series):
+            assert result[i][j] == entry
 
 
 @pytest.mark.parametrize(
@@ -151,7 +166,7 @@ def test_calculate_liquidation_price(leverage, side, result):
     "params,method",
     [
         pytest.param(
-            [binance_margin_brackets, 1000, 'non_existent_exchange'],
+            [binance_margin_brackets, [1000], 'non_existent_exchange'],
             get_maintenance_margin,
             id='get_maintenance_margin'
         ),
