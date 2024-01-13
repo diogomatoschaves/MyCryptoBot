@@ -216,6 +216,7 @@ function PipelinePanel(props: Props) {
                                 exchangeOptions={exchangeOptions}
                                 startPipeline={startPipeline}
                                 editPipeline={editPipeline}
+                                isMobile={isMobile}
                             >
                                 <Button inverted secondary>
                                   <span style={{marginRight: '10px'}}>

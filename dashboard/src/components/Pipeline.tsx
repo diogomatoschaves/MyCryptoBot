@@ -235,6 +235,7 @@ function PipelineItem(props: Props) {
                                   editPipeline={editPipeline}
                                   pipeline={pipeline}
                                   edit={true}
+                                  isMobile={isMobile}
                                 >
                                     <Button
                                       onClick={(event) => {
@@ -317,6 +318,7 @@ function PipelineItem(props: Props) {
                                 editPipeline={editPipeline}
                                 pipeline={pipeline}
                                 edit={true}
+                                isMobile={isMobile}
                               >
                                   <Button
                                     onClick={(event) => {
