@@ -138,7 +138,21 @@ class TestDataService:
                     "symbol": "BTCUSDT",
                     "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
-                    "exchanges": "Binance"
+                    "exchanges": "Binance",
+                    "equity": 1000
+                },
+                "COLOR_REQUIRED",
+                'Parameter \'color\' is required.',
+                id="COLOR_REQUIRED",
+            ),
+            pytest.param(
+                {
+                    "name": "Hello World",
+                    "symbol": "BTCUSDT",
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
+                    "candleSize": "1h",
+                    "exchanges": "Binance",
+                    "color": "purple"
                 },
                 "EQUITY_REQUIRED",
                 'Parameter \'equity\' is required.',
@@ -245,7 +259,8 @@ class TestDataService:
                     "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance",
-                    "leverage": "20"
+                    "leverage": "20",
+                    "color": "purple"
                 },
                 "LEVERAGE_INVALID",
                 lambda input_params: f'{input_params["leverage"]} is not a valid leverage.',
@@ -259,7 +274,8 @@ class TestDataService:
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": 20,
-                    "equity": "refr"
+                    "equity": "refr",
+                    "color": 'purple'
                 },
                 "EQUITY_INVALID",
                 lambda input_params: f'{input_params["equity"]} is not a valid equity.',

@@ -34,104 +34,91 @@ EXECUTION_APP_ENDPOINTS = {
 }
 
 
-def check_input(strategies, **kwargs):
+def check_input(strategies, edit_pipeline=False, **kwargs):
 
-    if "pipeline_id" in kwargs and kwargs["pipeline_id"] and Pipeline.objects.filter(id=kwargs["pipeline_id"]).exists():
+    pipeline_id = kwargs.get('pipeline_id')
+    if not edit_pipeline and Pipeline.objects.filter(id=pipeline_id).exists():
         return True
 
-    if "symbol" in kwargs:
-        symbol = kwargs["symbol"]
+    symbol = kwargs.get('symbol')
+    if symbol is None:
+        raise SymbolRequired
+    if not Symbol.objects.filter(name=symbol).exists():
+        raise SymbolInvalid(symbol)
 
-        if symbol is None:
-            raise SymbolRequired
+    exchange = kwargs.get('exchange')
+    if exchange is None:
+        raise ExchangeRequired
+    try:
+        Exchange.objects.get(name=exchange.lower())
+    except (Exchange.DoesNotExist, AttributeError) as e:
+        raise ExchangeInvalid(exchange)
 
-        if not Symbol.objects.filter(name=symbol).exists():
-            raise SymbolInvalid(symbol)
+    candle_size = kwargs.get('candle_size')
+    if candle_size is None:
+        raise CandleSizeRequired
+    if candle_size not in const.CANDLE_SIZES_MAPPER:
+        raise CandleSizeInvalid(candle_size)
 
-    if "exchange" in kwargs:
-        exchange = kwargs["exchange"]
+    strategy_input = kwargs.get('strategy')
+    if strategy_input is None:
+        raise StrategyRequired
+    if not isinstance(strategy_input, (list, tuple)):
+        raise StrategyInvalid(strategy_input)
 
-        if exchange is None:
-            raise ExchangeRequired
+    for strategy in strategy_input:
 
         try:
-            Exchange.objects.get(name=exchange.lower())
-        except (Exchange.DoesNotExist, AttributeError) as e:
-            raise ExchangeInvalid(exchange)
-
-    if "candle_size" in kwargs:
-        candle_size = kwargs["candle_size"]
-
-        if candle_size is None:
-            raise CandleSizeRequired
-
-        if candle_size not in const.CANDLE_SIZES_MAPPER:
-            raise CandleSizeInvalid(candle_size)
-
-    if "strategy" in kwargs:
-        strategy_input = kwargs["strategy"]
-
-        if strategy_input is None:
-            raise StrategyRequired
-
-        if not isinstance(strategy_input, (list, tuple)):
+            strategy_name = strategy["name"]
+        except KeyError:
             raise StrategyInvalid(strategy_input)
 
-        for strategy in strategy_input:
+        if strategy_name in strategies:
 
             try:
-                strategy_name = strategy["name"]
+                params = strategy["params"]
             except KeyError:
-                raise StrategyInvalid(strategy_input)
+                params = {}
 
-            if strategy_name in strategies:
+            invalid_params = []
+            for key in params:
+                if (key not in strategies[strategy_name]["params"]
+                        and key not in strategies[strategy_name]["optionalParams"]):
+                    logging.debug(key)
+                    invalid_params.append(key)
 
-                try:
-                    params = strategy["params"]
-                except KeyError:
-                    params = {}
+            if len(invalid_params) > 0:
+                raise ParamsInvalid(', '.join(invalid_params))
 
-                invalid_params = []
-                for key in params:
-                    if (key not in strategies[strategy_name]["params"]
-                            and key not in strategies[strategy_name]["optionalParams"]):
-                        logging.debug(key)
-                        invalid_params.append(key)
+            required_params = []
+            for param in strategies[strategy_name]["params"]:
+                if param not in params:
+                    required_params.append(param)
 
-                if len(invalid_params) > 0:
-                    raise ParamsInvalid(', '.join(invalid_params))
+            if len(required_params) > 0:
+                raise ParamsRequired(', '.join(required_params))
+        else:
+            raise StrategyInvalid(strategy_input)
 
-                required_params = []
-                for param in strategies[strategy_name]["params"]:
-                    if param not in params:
-                        required_params.append(param)
-
-                if len(required_params) > 0:
-                    raise ParamsRequired(', '.join(required_params))
-            else:
-                raise StrategyInvalid(strategy_input)
-
-    if "name" not in kwargs or kwargs["name"] is None:
+    name = kwargs.get('name')
+    if name is None:
         raise NameRequired
-    else:
-        name = kwargs["name"]
-        if not isinstance(name, str) or Pipeline.objects.filter(name=name).exists():
-            raise NameInvalid(name)
+    if not isinstance(name, str) or Pipeline.objects.exclude(id=pipeline_id).filter(name=name).exists():
+        raise NameInvalid(name)
 
-    if "color" not in kwargs or kwargs["name"] is None:
+    color = kwargs.get('color')
+    if color is None or name is None:
         raise ColorRequired
 
-    if "leverage" in kwargs:
-        if not isinstance(kwargs["leverage"], int):
-            raise LeverageInvalid(kwargs["leverage"])
+    leverage = kwargs.get('leverage')
+    if "leverage" in kwargs and not isinstance(leverage, int):
+        raise LeverageInvalid(leverage)
 
-    if "equity" not in kwargs or kwargs["equity"] is None:
+    equity = kwargs.get('equity')
+    if equity is None:
         raise EquityRequired
-    else:
-        equity = kwargs["equity"]
-
-        if not isinstance(equity, (int, float)):
-            raise EquityInvalid(equity)
+    if not isinstance(equity, (int, float)):
+        raise EquityInvalid(equity)
 
     return False
 

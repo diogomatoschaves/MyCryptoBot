@@ -148,7 +148,9 @@ def handle_pipelines(page):
         if Pipeline.objects.filter(id=pipeline_id).exists():
             request_data = extract_request_params(request)
 
-            check_input(STRATEGIES, **request_data)
+            request_data["pipeline_id"] = pipeline_id
+
+            check_input(STRATEGIES, edit_pipeline=True, **request_data)
 
             data = convert_client_request(request_data)
 

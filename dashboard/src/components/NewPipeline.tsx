@@ -1,5 +1,7 @@
 import React, {ReactNode, useEffect, useReducer, useRef, useState} from 'react';
-import {Button, Form, Grid, Input, Modal} from "semantic-ui-react";
+import {Button, Form, Grid, Input, Modal} from 'semantic-ui-react';
+import Slider, {createSliderWithTooltip} from 'rc-slider';
+import 'rc-slider/assets/index.css'
 import {
   BalanceObj,
   DropdownOptions,
@@ -26,6 +28,9 @@ import StrategySelectionModal from "./StrategySelectionModal";
 import {availableBalanceReducer, UPDATE_BALANCE} from "../reducers/availableBalanceReducer";
 
 
+const TooltipSlider = createSliderWithTooltip(Slider)
+
+
 interface Props {
   symbolsOptions: DropdownOptions[];
   strategiesOptions: Strategy[];
@@ -39,6 +44,7 @@ interface Props {
   children: ReactNode,
   pipeline?: Pipeline,
   edit?: boolean
+  isMobile: boolean
 }
 
 
@@ -51,13 +57,6 @@ const colorOptions = COLORS_NAMES.map((colorName) => {
     label: { className: `light-${name}`, empty: true, circular: true}
   }
 })
-
-const leverageOptions = Array.from({length: 20}, (x, i) => ({
-  key: i,
-  text: i + 1,
-  value: i + 1
-}))
-
 
 const NewPipeline = (props: Props) => {
 
@@ -73,7 +72,8 @@ const NewPipeline = (props: Props) => {
     pipelines,
     children,
     pipeline,
-    edit
+    edit,
+    isMobile
   } = props
 
   const [open, setOpen] = useState(false)
@@ -265,21 +265,38 @@ const NewPipeline = (props: Props) => {
               />
             </Form.Group>
             <Form.Group widths={'equal'}>
-              <Form.Select
-                label={'Leverage'}
-                value={leverage}
-                onChange={(e: any, {value}: {value?: any}) => {
-                  updateModal({
-                    type: UPDATE_PARAMS,
-                    value: {leverage: value}
-                  })
-                }}
-                selection
-                options={leverageOptions}
-                selectOnBlur={false}
-                style={{width: '80%'}}
-              />
-              <Form.Field>
+              <div style={{width: isMobile ? '100%' : '50%', paddingBottom: isMobile ? '15px' : 0}}>
+                <div className={'flex-column'} style={{
+                  height: '80%',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  paddingLeft: '7px'
+                }}>
+                  <div style={{
+                    marginBottom: '15px',
+                    fontSize: '0.93em',
+                    fontWeight: 'bold',
+                    color: 'rgba(0, 0, 0, 0.65)'
+                  }}>
+                    Leverage
+                  </div>
+                  <TooltipSlider
+                    style={{width: isMobile ? '76%' : '76%'}}
+                    min={1}
+                    max={125}
+                    step={1}
+                    dots
+                    value={leverage}
+                    onChange={(value: number | number[]) => {
+                      updateModal({
+                        type: UPDATE_PARAMS,
+                        value: {leverage: value}
+                      })
+                    }}
+                  />
+                </div>
+              </div>
+              <Form.Field style={{width: '50%'}}>
                 <label>Equity</label>
                 <Input
                   onChange={(e: any, {value}: {value?: any}) => {
