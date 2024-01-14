@@ -1,6 +1,5 @@
 import json
 
-import pandas as pd
 from scipy.optimize import brute
 import plotly.io as pio
 
@@ -159,12 +158,20 @@ class BacktestMixin:
     def _get_optimization_input(optimization_params, strategy):
         opt_params = []
         for param in strategy.params:
-            if param in optimization_params:
-                opt_params.append(optimization_params[param])
-            else:
-                param_value = getattr(strategy, f"_{param}")
-                if isinstance(param_value, (float, int)):
-                    opt_params.append((param_value, param_value + 1, 1))
+            param_value = getattr(strategy, f"_{param}")
+            is_int = isinstance(param_value, int)
+            is_float = isinstance(param_value, float)
+
+            step = 1 if is_int else None
+
+            limits = optimization_params[param] \
+                if param in optimization_params \
+                else (param_value, param_value + 1) if is_int or is_float \
+                else None
+
+            if limits is not None:
+                params = (*limits, step) if step is not None else limits
+                opt_params.append(params)
 
         return opt_params
 
