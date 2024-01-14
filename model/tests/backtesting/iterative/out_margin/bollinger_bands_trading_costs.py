@@ -197,7 +197,7 @@ expected_results = {
             "accumulated_returns": 1.0144821278464156,
             "accumulated_strategy_returns": 0.9886332553316708,
             "accumulated_strategy_returns_tc": 0.9866579647699992,
-            "margin_ratios": 0.004113024861481784,
+            "margin_ratios": 0,
         },
         {
             "close_time": Timestamp("2023-09-01 14:54:59.999000+0000", tz="UTC"),
@@ -245,7 +245,7 @@ expected_results = {
             "accumulated_returns": 1.014319640592638,
             "accumulated_strategy_returns": 0.9892867094256302,
             "accumulated_strategy_returns_tc": 0.9853374663397555,
-            "margin_ratios": 0.004,
+            "margin_ratios": 0,
         },
         {
             "close_time": Timestamp("2023-09-01 15:04:59.999000+0000", tz="UTC"),
@@ -269,7 +269,7 @@ expected_results = {
             "accumulated_returns": 1.016265515727322,
             "accumulated_strategy_returns": 0.9892867094256302,
             "accumulated_strategy_returns_tc": 0.9853374663397555,
-            "margin_ratios": 0.004,
+            "margin_ratios": 0,
         },
     ],
     10: [
@@ -463,7 +463,7 @@ expected_results = {
             "accumulated_returns": 1.0144821278464156,
             "accumulated_strategy_returns": 0.9886332553316708,
             "accumulated_strategy_returns_tc": 0.9866579647699992,
-            "margin_ratios": 0.047121943664705575,
+            "margin_ratios": 0,
         },
         {
             "close_time": Timestamp("2023-09-01 14:54:59.999000+0000", tz="UTC"),
@@ -511,7 +511,7 @@ expected_results = {
             "accumulated_returns": 1.014319640592638,
             "accumulated_strategy_returns": 0.9892867094256302,
             "accumulated_strategy_returns_tc": 0.9853374663397555,
-            "margin_ratios": 0.04061352463232718,
+            "margin_ratios": 0,
         },
         {
             "close_time": Timestamp("2023-09-01 15:04:59.999000+0000", tz="UTC"),
@@ -535,7 +535,7 @@ expected_results = {
             "accumulated_returns": 1.016265515727322,
             "accumulated_strategy_returns": 0.9892867094256302,
             "accumulated_strategy_returns_tc": 0.9853374663397555,
-            "margin_ratios": 0.04018708082072815,
+            "margin_ratios": 0,
         },
     ],
 }

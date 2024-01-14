@@ -220,10 +220,12 @@ class VectorizedBacktester(BacktestMixin):
         df['maintenance_amount'] = None
         df['mark_price'] = np.where(df['side'] == 1, df[self.low_col], df[self.high_col])
 
-        df.loc[df[df.trades != 0].index[:-1], 'entry_price'] = df[df.trades != 0][self.price_col]
-        df.loc[df[df.trades != 0].index[:-1], 'units'] = trades_df['units'].values
-        df.loc[df[df.trades != 0].index[:-1], 'maintenance_rate'] = trades_df['maintenance_rate'].values
-        df.loc[df[df.trades != 0].index[:-1], 'maintenance_amount'] = trades_df['maintenance_amount'].values
+        df_filter = (df.trades != 0) & (df.side != 0)
+
+        df.loc[df[df_filter].index, 'entry_price'] = trades_df['entry_price'].values
+        df.loc[df[df_filter].index, 'units'] = trades_df['units'].values
+        df.loc[df[df_filter].index, 'maintenance_rate'] = trades_df['maintenance_rate'].values
+        df.loc[df[df_filter].index, 'maintenance_amount'] = trades_df['maintenance_amount'].values
 
         df['entry_price'].ffill(inplace=True)
         df['units'].ffill(inplace=True)
@@ -248,6 +250,7 @@ class VectorizedBacktester(BacktestMixin):
 
         df["margin_ratios"] = np.where(df["margin_ratios"] > 1, 1, df["margin_ratios"])
         df["margin_ratios"] = np.where(df["margin_ratios"] < 0, 1, df["margin_ratios"])
+        df["margin_ratios"] = np.where(df["side"] == 0, 0, df["margin_ratios"])
 
         df["margin_ratios"] = df["margin_ratios"].fillna(0)
 

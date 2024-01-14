@@ -297,7 +297,7 @@ vect.load_data() # Load the default sample data. You can pass your own DataFrame
 
 # The optimization parameters are passed as an array of dictionaries containing the parameter intervals and step
 # for each individual strategy.
-vect.optimize([dict(sma_s=(20, 40, 2)), dict(window=(60, 80, 1))])
+vect.optimize([dict(sma_s=(20, 40)), dict(window=(60, 80))])
 ```
 
 

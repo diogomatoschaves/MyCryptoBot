@@ -257,7 +257,7 @@ expected_results = {
             "accumulated_returns": 1.016265515727322,
             "accumulated_strategy_returns": 1.0093989885173678,
             "accumulated_strategy_returns_tc": 1.0093989885173678,
-            "margin_ratios": 0.004016790678726122,
+            "margin_ratios": 0,
         },
     ],
     10: [
@@ -511,7 +511,7 @@ expected_results = {
             "accumulated_returns": 1.016265515727322,
             "accumulated_strategy_returns": 1.0093989885173678,
             "accumulated_strategy_returns_tc": 1.0093989885173678,
-            "margin_ratios": 0.040941267413514386,
+            "margin_ratios": 0,
         },
     ],
 }
