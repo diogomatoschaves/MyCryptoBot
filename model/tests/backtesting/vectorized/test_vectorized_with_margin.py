@@ -18,6 +18,7 @@ fixtures = get_fixtures(current_path, keys=["in_margin", "out_margin"])
 
 cum_returns = "accumulated_strategy_returns"
 cum_returns_tc = "accumulated_strategy_returns_tc"
+margin_ratio = "margin_ratios"
 
 
 class TestVectorizedBacktesterMargin:
@@ -106,7 +107,9 @@ class TestVectorizedBacktesterMargin:
             for fixture_name, fixture in fixtures.items()
         ],
     )
-    def test_results_equal_to_iterative(self, leverage, fixture, mocked_plotly_figure_show):
+    def test_results_equal_to_iterative(
+        self, leverage, fixture, mocked_plotly_figure_show
+    ):
         strategy = fixture["in_margin"]["strategy"]
         params = fixture["in_margin"]["params"]
         trading_costs = fixture["in_margin"]["trading_costs"]
@@ -117,18 +120,18 @@ class TestVectorizedBacktesterMargin:
 
         vect = VectorizedBacktester(
             strategy_instance,
-            symbol='BTCUSDT',
+            symbol="BTCUSDT",
             trading_costs=trading_costs,
             include_margin=True,
-            leverage=leverage
+            leverage=leverage,
         )
 
         ite = IterativeBacktester(
             strategy_instance,
-            symbol='BTCUSDT',
+            symbol="BTCUSDT",
             trading_costs=trading_costs,
             include_margin=True,
-            leverage=leverage
+            leverage=leverage,
         )
 
         vect.run()
@@ -143,5 +146,8 @@ class TestVectorizedBacktesterMargin:
         )
         pd.testing.assert_series_equal(
             vect.processed_data[cum_returns_tc], ite.processed_data[cum_returns_tc]
+        )
+        pd.testing.assert_series_equal(
+            vect.processed_data[margin_ratio], ite.processed_data[margin_ratio]
         )
         pd.testing.assert_frame_equal(trades_vect, trades_ite)
