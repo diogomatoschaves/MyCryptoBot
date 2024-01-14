@@ -1,5 +1,6 @@
 import json
 
+import progressbar
 from scipy.optimize import brute
 import plotly.io as pio
 
@@ -157,6 +158,7 @@ class BacktestMixin:
     @staticmethod
     def _get_optimization_input(optimization_params, strategy):
         opt_params = []
+        optimizations_steps = 1
         for param in strategy.params:
             param_value = getattr(strategy, f"_{param}")
             is_int = isinstance(param_value, int)
@@ -173,7 +175,9 @@ class BacktestMixin:
                 params = (*limits, step) if step is not None else limits
                 opt_params.append(params)
 
-        return opt_params
+                optimizations_steps *= (limits[1] - limits[0])
+
+        return opt_params, optimizations_steps
 
     def _adapt_optimization_input(self, params):
 
@@ -191,19 +195,24 @@ class BacktestMixin:
 
             opt_params = []
             strategy_params_mapping = []
+            optimization_steps = 1
             for i, strategy in enumerate(self.strategy.strategies):
-                strategy_params = self._get_optimization_input(params[i], strategy)
+                strategy_params, opt_steps = self._get_optimization_input(params[i], strategy)
                 opt_params.extend(strategy_params)
                 strategy_params_mapping.append(len(strategy_params))
 
-            return opt_params, strategy_params_mapping
+                optimization_steps *= opt_steps
+
+            return opt_params, strategy_params_mapping, optimization_steps
 
         else:
             if not isinstance(params, dict):
                 raise OptimizationParametersInvalid('Optimization parameters must be provided as a '
                                                     'dictionary with the parameters the strategy')
 
-            return self._get_optimization_input(params, self.strategy), None
+            strategy_params, optimization_steps = self._get_optimization_input(params, self.strategy)
+
+            return strategy_params, None, optimization_steps
 
     def optimize(self, params, **kwargs):
         """Optimizes the trading strategy using brute force.
@@ -231,7 +240,10 @@ class BacktestMixin:
             The negative performance of the strategy using the optimal parameter values.
         """
 
-        opt_params, strategy_params_mapping = self._adapt_optimization_input(params)
+        opt_params, strategy_params_mapping, optimization_steps = self._adapt_optimization_input(params)
+
+        self.bar = progressbar.ProgressBar(max_value=optimization_steps, redirect_stdout=True)
+        self.optimization_steps = 0
 
         opt = brute(
             self._update_and_run, opt_params,
@@ -460,6 +472,13 @@ class BacktestMixin:
         test_params = self._get_params_mapping(parameters, strategy_params_mapping)
 
         result = self._test_strategy(test_params, print_results=print_results, plot_results=plot_results)
+
+        self.optimization_steps += 1
+
+        try:
+            self.bar.update(self.optimization_steps)
+        except ValueError:
+            pass
 
         return -result[0]
 
