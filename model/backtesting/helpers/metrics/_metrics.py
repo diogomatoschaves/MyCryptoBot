@@ -249,7 +249,10 @@ def avg_trade_pct(trades: List[Trade], leverage=1) -> float:
         lambda trade: (trade.exit_price - trade.entry_price) * leverage / trade.entry_price * trade.side,
         trades
     )
-    return geometric_mean(pd.Series(list(trades_pct))) * 100
+
+    intermediate = pd.Series(list(trades_pct))
+
+    return geometric_mean(intermediate) * 100
 
 
 def max_trade_duration(trades: List[Trade]) -> int:

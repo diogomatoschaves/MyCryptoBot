@@ -188,7 +188,7 @@ class IterativeBacktester(BacktestMixin, Trader):
         """
         self._fix_original_data()
 
-        self.set_parameters(params, data=self.original_data.copy())
+        self.set_parameters(params, data=self._original_data.copy())
         self._reset_object()
 
         # title printout
@@ -512,7 +512,7 @@ class IterativeBacktester(BacktestMixin, Trader):
                 notional_value = units * price
 
                 maintenance_rate, maintenance_amount = get_maintenance_margin(
-                    self.symbol_bracket, [notional_value], exchange=self.exchange
+                    self._symbol_bracket, [notional_value], exchange=self.exchange
                 )
 
                 self.maintenance_rate = maintenance_rate[0]

@@ -54,7 +54,7 @@ class VectorizedBacktester(BacktestMixin):
         """
         self._fix_original_data()
 
-        self.set_parameters(params, data=self.original_data.copy())
+        self.set_parameters(params, data=self._original_data.copy())
 
         data = self._get_data().dropna().copy()
 
@@ -181,7 +181,7 @@ class VectorizedBacktester(BacktestMixin):
 
         if self.include_margin and len(trades) > 0:
             trades['maintenance_rate'], trades['maintenance_amount'] = get_maintenance_margin(
-                self.symbol_bracket,
+                self._symbol_bracket,
                 trades['units'] * trades['entry_price'],
                 self.exchange
             )

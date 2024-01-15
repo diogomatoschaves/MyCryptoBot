@@ -6,8 +6,8 @@ import plotly.io as pio
 
 from model.backtesting.combining import StrategyCombiner
 from model.backtesting.helpers.metrics import *
-from model.backtesting.helpers.results_constants import results_mapping, results_aesthetics
-from model.backtesting.plotting import plot_backtest_results
+from model.backtesting.helpers.results_constants import results_mapping, results_aesthetics, results_sections
+from model.backtesting.helpers.plotting import plot_backtest_results
 from shared.utils.config_parser import get_config
 from shared.utils.exceptions import StrategyRequired, OptimizationParametersInvalid, SymbolInvalid
 from shared.utils.exceptions.leverage_invalid import LeverageInvalid
@@ -74,7 +74,7 @@ class BacktestMixin:
         self.symbol = symbol
         self.tc = trading_costs / 100
         self.strategy = None
-        self.original_data = None
+        self._original_data = None
 
         self.perf = 0
         self.outperf = 0
@@ -84,7 +84,7 @@ class BacktestMixin:
             brackets = self._load_leverage_brackets()
 
             try:
-                self.symbol_bracket = pd.DataFrame(brackets[symbol])
+                self._symbol_bracket = pd.DataFrame(brackets[symbol])
             except KeyError:
                 raise SymbolInvalid(symbol)
 
@@ -126,7 +126,7 @@ class BacktestMixin:
             data = pd.read_csv(csv_path, index_col='date', parse_dates=True)
             data = data[~data.index.duplicated(keep='last')]  # remove duplicates
 
-        self.original_data = data
+        self._original_data = data
 
         self.set_data(data.copy(), self.strategy)
 
@@ -154,6 +154,60 @@ class BacktestMixin:
         self.perf = perf
         self.outperf = outperf
         self.results = results
+
+    def optimize(self, params, **kwargs):
+        """Optimizes the trading strategy using brute force.
+
+        Parameters:
+        -----------
+        params : dict, list
+            A dictionary or list (for strategy combintion) containing the parameters to optimize.
+            The parameters must be given as the keywords of a dictionary, and the value is an array
+            of the lower limit, upper limit and step, respectively.
+
+            Example for single strategy:
+                params = dict(window=(10, 20, 1))
+
+            Example for multiple strategies
+                params = [dict(window=(10, 20, 1)), dict(ma=(30, 50, 2)]
+        **kwargs : dict
+            Additional arguments to pass to the `brute` function.
+
+        Returns:
+        --------
+        opt : numpy.ndarray
+            The optimal parameter values.
+        -self._update_and_run(opt, plot_results=True) : float
+            The negative performance of the strategy using the optimal parameter values.
+        """
+
+        opt_params, strategy_params_mapping, optimization_steps = self._adapt_optimization_input(params)
+
+        self.bar = progressbar.ProgressBar(max_value=optimization_steps, redirect_stdout=True)
+        self.optimization_steps = 0
+
+        opt = brute(
+            self._update_and_run, opt_params,
+            (False, False, strategy_params_mapping),
+            finish=None,
+            **kwargs
+        )
+
+        if not isinstance(opt, (list, tuple, type(np.array([])))):
+            opt = np.array([opt])
+
+        return (self._get_params_mapping(opt, strategy_params_mapping),
+                -self._update_and_run(opt, True, True, strategy_params_mapping))
+
+    def _test_strategy(self, params=None, print_results=True, plot_results=True):
+        """Tests the trading strategy on historical data.
+
+        Parameters:
+        -----------
+        params : dict or None
+            The parameters to use for the trading strategy
+        """
+        raise NotImplementedError
 
     @staticmethod
     def _get_optimization_input(optimization_params, strategy):
@@ -213,60 +267,6 @@ class BacktestMixin:
             strategy_params, optimization_steps = self._get_optimization_input(params, self.strategy)
 
             return strategy_params, None, optimization_steps
-
-    def optimize(self, params, **kwargs):
-        """Optimizes the trading strategy using brute force.
-
-        Parameters:
-        -----------
-        params : dict, list
-            A dictionary or list (for strategy combintion) containing the parameters to optimize.
-            The parameters must be given as the keywords of a dictionary, and the value is an array
-            of the lower limit, upper limit and step, respectively.
-
-            Example for single strategy:
-                params = dict(window=(10, 20, 1))
-
-            Example for multiple strategies
-                params = [dict(window=(10, 20, 1)), dict(ma=(30, 50, 2)]
-        **kwargs : dict
-            Additional arguments to pass to the `brute` function.
-
-        Returns:
-        --------
-        opt : numpy.ndarray
-            The optimal parameter values.
-        -self._update_and_run(opt, plot_results=True) : float
-            The negative performance of the strategy using the optimal parameter values.
-        """
-
-        opt_params, strategy_params_mapping, optimization_steps = self._adapt_optimization_input(params)
-
-        self.bar = progressbar.ProgressBar(max_value=optimization_steps, redirect_stdout=True)
-        self.optimization_steps = 0
-
-        opt = brute(
-            self._update_and_run, opt_params,
-            (False, False, strategy_params_mapping),
-            finish=None,
-            **kwargs
-        )
-
-        if not isinstance(opt, (list, tuple, type(np.array([])))):
-            opt = np.array([opt])
-
-        return (self._get_params_mapping(opt, strategy_params_mapping),
-                -self._update_and_run(opt, True, True, strategy_params_mapping))
-
-    def _test_strategy(self, params=None, print_results=True, plot_results=True):
-        """Tests the trading strategy on historical data.
-
-        Parameters:
-        -----------
-        params : dict or None
-            The parameters to use for the trading strategy
-        """
-        raise NotImplementedError
 
     def _get_results(self, trades, processed_data):
 
@@ -391,22 +391,45 @@ class BacktestMixin:
 
     @staticmethod
     def _print_results(results, print_results):
-        if print_results:
-            print('---------------------------------------')
-            print('\tResults')
-            print('')
-            for col, value in results.items():
-                try:
-                    print(results_aesthetics[col](value))
-                except KeyError:
-                    if callable(results_mapping[col]):
-                        printed_title = results_mapping[col]('USDT')
-                    else:
-                        printed_title = results_mapping[col]
+        if not print_results:
+            return
 
-                    print(f'\t{printed_title}: {round(value, 2)}')
+        length = 50
 
-            print('---------------------------------------')
+        print()
+
+        print('*' * length)
+        print('BACKTESTING RESULTS'.center(length))
+        print('*' * length)
+        print('')
+
+        for section, columns in results_sections.items():
+
+            # print('-' * length)
+            print(section.center(length))
+            print('-' * length)
+
+            for col in columns:
+
+                value = results[col]
+
+                if callable(results_mapping[col]):
+                    printed_title = results_mapping[col]('USDT')
+                else:
+                    printed_title = results_mapping[col]
+
+                if col in results_aesthetics:
+                    value = results_aesthetics[col](value)
+                else:
+                    try:
+                        value = str(round(value, 2))
+                    except TypeError:
+                        value = str(value)
+
+                print(f'{printed_title:<25}{value.rjust(25)}')
+            print('-' * length)
+            print()
+        print('*' * length)
 
     def _get_params_mapping(self, parameters, strategy_params_mapping):
         if not isinstance(self.strategy, StrategyCombiner):
@@ -483,12 +506,12 @@ class BacktestMixin:
         return -result[0]
 
     def _fix_original_data(self):
-        if self.original_data is None:
-            self.original_data = self.strategy.data.copy()
+        if self._original_data is None:
+            self._original_data = self.strategy.data.copy()
 
-            position_columns = [col for col in self.original_data if "side" in col]
+            position_columns = [col for col in self._original_data if "side" in col]
 
-            self.original_data = self.original_data.drop(columns=position_columns)
+            self._original_data = self._original_data.drop(columns=position_columns)
 
     @staticmethod
     def _load_leverage_brackets():
