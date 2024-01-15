@@ -49,33 +49,56 @@ vect.run() # Runs the backtest and shows the results
 This will output the results in textual and graphical form.
 
 ```
-Total Duration: 4 years, 38 weeks and 4 days
-Start Date: 2018-05-23 13:00:00
-End Date: 2023-02-13 00:00:00
-Total Trades: 267
-Exposure Time [%]: 100.0
-Buy & Hold Return [%]: 175.98
-Total Return [%]: 221.6
-Equity Final [USDT]: 3212.75
-Equity Peak [USDT]: 5351.51
-Annualized Return [%]: 21.49
-Annualized Volatility [%]: 73.95
-Sharpe Ratio: 0.07
-Sortino Ratio: 0.28
-Calmar Ratio: 0.35
-Max Drawdown [%]: -61.18
-Avg Drawdown [%]: -8.2
-Max Drawdown Duration: 1 year, 38 weeks and 8 hours
-Avg Drawdown Duration: 3 weeks, 2 days and 13 hours
-Win Rate [%]: 32.21
-Best Trade [%]: 87.77
-Worst Trade [%]: -26.76
-Avg Trade [%]: 0.09
-Max Trade Duration: 5 weeks, 3 days and 14 hours
-Avg Trade Duration: 6 days, 11 hours and 11 minutes
-Profit Factor: 1.0
-Expectancy [%]: 5.75
-System Quality Number: -0.02
+**************************************************
+               BACKTESTING RESULTS                
+**************************************************
+                     Overview                     
+--------------------------------------------------
+Total Duration                4 years and 38 weeks
+Start Date                     2018-05-23 13:00:00
+End Date                       2023-02-13 00:00:00
+Trading Costs [%]                              0.1
+Leverage [x]                                     1
+Initial Equity [USDT]                         1000
+Exposed Capital [USDT]                      1000.0
+Exposure Time [%]                            100.0
+--------------------------------------------------
+                     Returns                      
+--------------------------------------------------
+Total Return [%]                             221.6
+Equity Final [USDT]                        3212.75
+Equity Peak [USDT]                         5351.51
+Annualized Return [%]                        21.49
+Annualized Volatility [%]                    73.95
+Buy & Hold Return [%]                       175.98
+--------------------------------------------------
+                    Drawdowns                     
+--------------------------------------------------
+Max Drawdown [%]                            -61.18
+Avg Drawdown [%]                              -8.2
+Max Drawdown Duration          1 year and 38 weeks
+Avg Drawdown Duration           3 weeks and 2 days
+--------------------------------------------------
+                      Trades                      
+--------------------------------------------------
+Total Trades                                   267
+Win Rate [%]                                 32.21
+Best Trade [%]                               87.77
+Worst Trade [%]                             -21.11
+Avg Trade [%]                                 0.44
+Max Trade Duration              5 weeks and 3 days
+Avg Trade Duration             6 days and 11 hours
+--------------------------------------------------
+                      Ratios                      
+--------------------------------------------------
+Sharpe Ratio                                  0.07
+Sortino Ratio                                 0.28
+Calmar Ratio                                  0.35
+Profit Factor                                  1.0
+Expectancy [%]                                 5.9
+System Quality Number                        -0.02
+--------------------------------------------------
+**************************************************
 ```
 
 <p align="left">
@@ -104,33 +127,56 @@ ite.run() # Runs the backtest and shows the results
 This will output the results in textual and graphical form.
 
 ```
-Total Duration: 4 years, 39 weeks and 4 days
-Start Date: 2018-05-16 15:00:00
-End Date: 2023-02-13 00:00:00
-Total Trades: 3140
-Exposure Time [%]: 100.0
-Buy & Hold Return [%]: 163.16
-Total Return [%]: 1642.05
-Equity Final [USDT]: 17420.49
-Equity Peak [USDT]: 29566.42
-Annualized Return [%]: 61.01
-Annualized Volatility [%]: 70.98
-Sharpe Ratio: 0.17
-Sortino Ratio: 0.8
-Calmar Ratio: 1.09
-Max Drawdown [%]: -56.09
-Avg Drawdown [%]: -5.46
-Max Drawdown Duration: 1 year, 22 weeks and 4 days
-Avg Drawdown Duration: 1 week, 1 day and 20 hours
-Win Rate [%]: 34.84
-Best Trade [%]: 31.32
-Worst Trade [%]: -14.73
-Avg Trade [%]: 0.05
-Max Trade Duration: 2 days and 14 hours
-Avg Trade Duration: 13 hours, 14 minutes and 55.41 seconds
-Profit Factor: 1.01
-Expectancy [%]: 1.7
-System Quality Number: 0.17
+**************************************************
+               BACKTESTING RESULTS                
+**************************************************
+                     Overview                     
+--------------------------------------------------
+Total Duration                4 years and 39 weeks
+Start Date                     2018-05-16 15:00:00
+End Date                       2023-02-13 00:00:00
+Trading Costs [%]                              0.0
+Leverage [x]                                     1
+Initial Equity [USDT]                         1000
+Exposed Capital [USDT]                      1000.0
+Exposure Time [%]                            100.0
+--------------------------------------------------
+                     Returns                      
+--------------------------------------------------
+Total Return [%]                           1614.57
+Equity Final [USDT]                       17145.68
+Equity Peak [USDT]                        29566.42
+Annualized Return [%]                        60.58
+Annualized Volatility [%]                    70.99
+Buy & Hold Return [%]                       163.16
+--------------------------------------------------
+                    Drawdowns                     
+--------------------------------------------------
+Max Drawdown [%]                            -56.09
+Avg Drawdown [%]                             -5.46
+Max Drawdown Duration          1 year and 22 weeks
+Avg Drawdown Duration             1 week and 1 day
+--------------------------------------------------
+                      Trades                      
+--------------------------------------------------
+Total Trades                                  3136
+Win Rate [%]                                 34.92
+Best Trade [%]                               45.61
+Worst Trade [%]                             -12.84
+Avg Trade [%]                                 0.09
+Max Trade Duration             2 days and 14 hours
+Avg Trade Duration         13 hours and 15 minutes
+--------------------------------------------------
+                      Ratios                      
+--------------------------------------------------
+Sharpe Ratio                                  0.17
+Sortino Ratio                                  0.8
+Calmar Ratio                                  1.08
+Profit Factor                                 1.01
+Expectancy [%]                                1.72
+System Quality Number                         0.16
+--------------------------------------------------
+**************************************************
 ```
 <p align="left">
   <img src="shared/utils/drawings/iterative_results.png" style="width: 100%" />
@@ -151,7 +197,7 @@ from model.backtesting import VectorizedBacktester
 from model.strategies import MovingAverageCrossover
 
 symbol = "BTCUSDT"
-trading_costs = 0.1 # This should be in percentage, i.e. 0.1% 
+trading_costs = 0.05
 
 mov_avg = MovingAverageCrossover(20, 150)
 
@@ -161,7 +207,7 @@ vect = VectorizedBacktester(
     amount=10000,
     trading_costs=trading_costs,
     include_margin=True,  # This tells the backtester to include the margin calculations 
-    leverage=10  # Here one can choose the desired leverage
+    leverage=8  # Here one can choose the desired leverage
 )
 
 vect.load_data()
@@ -171,44 +217,64 @@ vect.run()
 This will output the following results and plot:
 
 ```
-Total Duration: 4 years, 38 weeks and 6 days
-Total Trades: 406
-Start Date: 2018-05-21 11:00:00
-End Date: 2023-02-13 00:00:00
-Trading Costs [%]: 0.1
-Leverage [x]: 10
-Initial Capital [USDT]: 10000
-Exposed Capital [USDT]: 1000.0
-Exposure Time [%]: 100.0
-Buy & Hold Return [%]: 1575.25
-Total Return [%]: 11823.16
-Equity Final [USDT]: 128103.44
-Equity Peak [USDT]: 258579.01
-Annualized Return [%]: 124.56
-Annualized Volatility [%]: 71.89
-Sharpe Ratio: 0.15
-Sortino Ratio: 0.7
-Calmar Ratio: 0.73
-Max Drawdown [%]: -72.82
-Avg Drawdown [%]: -6.23
-Max Drawdown Duration: 1 year, 38 weeks and 8 hours
-Avg Drawdown Duration: 1 week, 2 days and 23 hours
-Win Rate [%]: 28.08
-Best Trade [%]: 492.58
-Worst Trade [%]: -117.4
-Avg Trade [%]: 0
-Max Trade Duration: 3 weeks, 4 days and 2 hours
-Avg Trade Duration: 4 days, 6 hours and 10 minutes
-Profit Factor: 1.04
-Expectancy [%]: 4.48
-System Quality Number: 0.19
+**************************************************
+               BACKTESTING RESULTS                
+**************************************************
+                     Overview                     
+--------------------------------------------------
+Total Duration                4 years and 38 weeks
+Start Date                     2018-05-21 11:00:00
+End Date                       2023-02-13 00:00:00
+Trading Costs [%]                             0.05
+Leverage [x]                                     8
+Initial Equity [USDT]                        10000
+Exposed Capital [USDT]                      1250.0
+Exposure Time [%]                            100.0
+--------------------------------------------------
+                     Returns                      
+--------------------------------------------------
+Total Return [%]                          14588.33
+Equity Final [USDT]                      192257.96
+Equity Peak [USDT]                       330531.27
+Annualized Return [%]                       131.49
+Annualized Volatility [%]                    71.64
+Buy & Hold Return [%]                       1260.2
+--------------------------------------------------
+                    Drawdowns                     
+--------------------------------------------------
+Max Drawdown [%]                            -69.84
+Avg Drawdown [%]                             -5.98
+Max Drawdown Duration          1 year and 38 weeks
+Avg Drawdown Duration            1 week and 2 days
+--------------------------------------------------
+                      Trades                      
+--------------------------------------------------
+Total Trades                                   406
+Win Rate [%]                                 29.31
+Best Trade [%]                              519.44
+Worst Trade [%]                             -83.34
+Avg Trade [%]                                -4.63
+Max Trade Duration              3 weeks and 4 days
+Avg Trade Duration              4 days and 6 hours
+--------------------------------------------------
+                      Ratios                      
+--------------------------------------------------
+Sharpe Ratio                                  0.17
+Sortino Ratio                                 0.84
+Calmar Ratio                                  0.91
+Profit Factor                                 1.07
+Expectancy [%]                                4.61
+System Quality Number                         0.33
+--------------------------------------------------
+**************************************************
 ```
 <p align="left">
   <img src="shared/utils/drawings/backtesting_with_margin.png" style="width: 100%" />
 </p>
 
-As evident from the results, employing a leverage of `10` led to at least 6 margin calls during the backtest, 
-making the overall strategy impractical in a real-world scenario.
+As evident from the results, employing a leverage of `8` led to 3 margin calls during the backtest, 
+showing that this particular strategy would have implied a total loss of the funds, unless more margin was
+added to the positions. 
 
 ### Optimization
 

@@ -8,7 +8,7 @@ legend_mapping = {
     "accumulated_strategy_returns_tc": "Strategy returns (with trading costs)"
 }
 results_mapping = {
-    'initial_equity': lambda unit: f"Initial Capital [{unit}]",
+    'initial_equity': lambda unit: f"Initial Equity [{unit}]",
     'exposed_capital': lambda unit: f"Exposed Capital [{unit}]",
     'equity_final': lambda unit: f"Equity Final [{unit}]",
     'equity_peak': lambda unit: f"Equity Peak [{unit}]",
@@ -36,13 +36,25 @@ results_mapping = {
     'profit_factor': "Profit Factor",
     'expectancy': "Expectancy [%]",
     'sqn': "System Quality Number",
+    'total_duration': "Total Duration",
+    'start_date': "Start Date",
+    'end_date': "End Date",
 }
 results_aesthetics = {
-    'total_duration': lambda delta: f"\tTotal Duration: {humanfriendly.format_timespan(delta)}",
-    'start_date': lambda delta: f"\tStart Date: {delta}",
-    'end_date': lambda delta: f"\tEnd Date: {delta}",
-    'max_drawdown_duration': lambda delta: f"\tMax Drawdown Duration: {humanfriendly.format_timespan(delta)}",
-    'avg_drawdown_duration': lambda sec: f"\tAvg Drawdown Duration: {humanfriendly.format_timespan(timedelta(seconds=sec))}",
-    'max_trade_duration': lambda delta: f"\tMax Trade Duration: {humanfriendly.format_timespan(delta)}",
-    'avg_trade_duration': lambda sec: f"\tAvg Trade Duration: {humanfriendly.format_timespan(timedelta(seconds=sec))}",
+    'total_duration': lambda delta: humanfriendly.format_timespan(delta, max_units=2),
+    'max_drawdown_duration': lambda delta: humanfriendly.format_timespan(delta, max_units=2),
+    'avg_drawdown_duration': lambda sec: humanfriendly.format_timespan(sec, max_units=2),
+    'max_trade_duration': lambda delta: humanfriendly.format_timespan(delta, max_units=2),
+    'avg_trade_duration': lambda sec: humanfriendly.format_timespan(sec, max_units=2),
+}
+
+results_sections = {
+    'Overview': ['total_duration', 'start_date', 'end_date', 'trading_costs',
+                 'leverage', 'initial_equity', 'exposed_capital', 'exposure_time'],
+    'Returns': ['return_pct', 'equity_final', 'equity_peak', 'return_pct_annualized',
+                'volatility_pct_annualized', 'buy_and_hold_return', ],
+    'Drawdowns': ['max_drawdown', 'avg_drawdown', 'max_drawdown_duration', 'avg_drawdown_duration'],
+    'Trades': ['nr_trades', 'win_rate', 'best_trade', 'worst_trade', 'avg_trade',
+               'max_trade_duration', 'avg_trade_duration'],
+    'Ratios': ['sharpe_ratio', 'sortino_ratio', 'calmar_ratio', 'profit_factor', 'expectancy', 'sqn']
 }
