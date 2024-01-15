@@ -10,8 +10,10 @@ from model.backtesting.helpers import Trade
 
 def geometric_mean(returns: pd.Series) -> float:
     returns = returns.fillna(0) + 1
+
     if np.any(returns <= 0):
-        return 0
+        return np.nan
+
     return np.exp(np.log(returns).sum() / (len(returns) or np.nan)) - 1
 
 
@@ -218,13 +220,19 @@ def win_rate_pct(trades: List[Trade]) -> float:
     return winning_trades / nr_trades * 100 if nr_trades > 0 else 0
 
 
+def calculate_pnl(trade):
+    return np.exp(np.log(trade.exit_price / trade.entry_price) * trade.side) - 1
+
+
 def best_trade_pct(trades: List[Trade], leverage=1) -> float:
     """Calculate the percentage of the best trade."""
 
+    def reducer(accum, trade):
+        pnl = calculate_pnl(trade)
+        return pnl if pnl > accum else accum
+
     best_trade = reduce(
-        lambda accum, trade: (trade.exit_price - trade.entry_price) / trade.entry_price * trade.side
-        if (trade.exit_price - trade.entry_price) / trade.entry_price * trade.side > accum
-        else accum,
+        reducer,
         trades,
         0
     )
@@ -233,20 +241,25 @@ def best_trade_pct(trades: List[Trade], leverage=1) -> float:
 
 def worst_trade_pct(trades: List[Trade], leverage=1) -> float:
     """Calculate the percentage of the worst trade."""
+
+    def reducer(accum, trade):
+        pnl = calculate_pnl(trade)
+        return pnl if pnl < accum else accum
+
     worst_trade = reduce(
-        lambda accum, trade: (trade.exit_price - trade.entry_price) / trade.entry_price * trade.side
-        if (trade.exit_price - trade.entry_price) / trade.entry_price * trade.side < accum
-        else accum,
+        reducer,
         trades,
         0
     )
+
     return worst_trade * leverage * 100
 
 
 def avg_trade_pct(trades: List[Trade], leverage=1) -> float:
     """Calculate the average trade percentage."""
     trades_pct = map(
-        lambda trade: (trade.exit_price - trade.entry_price) * leverage / trade.entry_price * trade.side,
+        # lambda trade: (trade.exit_price - trade.entry_price) * leverage / trade.entry_price * trade.side,
+        lambda trade: calculate_pnl(trade) * leverage,
         trades
     )
 
