@@ -16,7 +16,8 @@ from shared.utils.exceptions.leverage_invalid import LeverageInvalid
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Exchange, Pipeline, Symbol, PortfolioTimeSeries, Strategy, Trade
+from database.model.models import Exchange, Pipeline, Symbol, PortfolioTimeSeries, Strategy, Trade, \
+    strategy_combination_methods
 import shared.exchanges.binance.constants as const
 
 MODEL_APP_ENDPOINTS = {
@@ -99,6 +100,12 @@ def check_input(strategies, edit_pipeline=False, **kwargs):
                 raise ParamsRequired(', '.join(required_params))
         else:
             raise StrategyInvalid(strategy_input)
+
+    strategy_combination_method = kwargs.get('strategy_combination_method')
+    if strategy_combination_method is not None and \
+        (not isinstance(strategy_combination_method, str) or
+         strategy_combination_method not in strategy_combination_methods):
+        raise StrategyCombinationInvalid(strategy_combination_method)
 
     name = kwargs.get('name')
     if name is None:
@@ -198,7 +205,8 @@ def convert_client_request(data):
         "color": data["color"],
         "equity": data["equity"],
         "leverage": data["leverage"],
-        "balance": data["equity"] * data["leverage"]
+        "balance": data["equity"] * data["leverage"],
+        "strategy_combination": data["strategy_combination_method"]
     }
 
 
@@ -211,6 +219,7 @@ def extract_request_params(request):
     equity = data.get("equity", None)
     symbol = data.get("symbol", None)
     strategy = data.get("strategy", None)
+    strategy_combination_method = data.get("strategyCombination", 'Majority')
     candle_size = data.get("candleSize", None)
     exchange = data.get("exchanges", None)
     paper_trading = data.get("paperTrading") if type(data.get("paperTrading")) == bool else False
@@ -223,6 +232,7 @@ def extract_request_params(request):
         equity=equity,
         symbol=symbol,
         strategy=strategy,
+        strategy_combination_method=strategy_combination_method,
         candle_size=candle_size,
         exchange=exchange,
         leverage=leverage,

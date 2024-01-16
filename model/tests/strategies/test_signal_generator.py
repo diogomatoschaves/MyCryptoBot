@@ -52,6 +52,7 @@ class TestSignalGeneration:
         pipeline_dict = dict(
             id=pipeline.id,
             strategies=[obj.as_json() for obj in pipeline.strategy.all()],
+            strategy_combination=pipeline.strategy_combination,
             symbol=pipeline.symbol.name,
             exchange=pipeline.exchange.name,
             interval=pipeline.interval
@@ -99,6 +100,7 @@ class TestSignalGeneration:
         pipeline_dict = dict(
             id=pipeline.id,
             strategies=[obj.as_json() for obj in pipeline.strategy.all()],
+            strategy_combination=pipeline.strategy_combination,
             symbol=pipeline.symbol.name,
             exchange=pipeline.exchange.name,
             interval=pipeline.interval

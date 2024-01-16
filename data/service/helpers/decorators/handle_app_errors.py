@@ -43,6 +43,9 @@ def handle_app_errors(_func=None):
             except StrategyRequired as e:
                 logging.info(e.message)
                 return jsonify(Responses.STRATEGY_REQUIRED(e.message))
+            except StrategyCombinationInvalid as e:
+                logging.info(e.message)
+                return jsonify(Responses.STRATEGY_COMBINATION_INVALID(e.message))
             except ParamsInvalid as e:
                 logging.info(e.message)
                 return jsonify(Responses.PARAMS_INVALID(e.message))

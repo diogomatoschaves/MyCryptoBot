@@ -71,6 +71,7 @@ export type RawStrategy = {
 export type Pipeline = {
     id: number
     strategy: RawStrategy[]
+    strategyCombination: string,
     candleSize: string
     name: string,
     equity: number,
@@ -89,6 +90,7 @@ export type Pipeline = {
 export type RawPipeline = {
     id: number
     strategy: RawStrategy[]
+    strategyCombination: string,
     candleSize: string
     name: string,
     equity: number,

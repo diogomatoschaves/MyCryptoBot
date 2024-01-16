@@ -1,15 +1,18 @@
 import json
 import sys
-from functools import reduce
 import math
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+
 
 try:
     from django.db import models
 except Exception:
     print("Exception: Django Not Found, please install it with \"pip install django\".")
     sys.exit()
+
+
+strategy_combination_methods = ["Unanimous", "Majority"]
 
 
 class UserManager(BaseUserManager):
@@ -188,6 +191,10 @@ class Pipeline(models.Model):
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     interval = models.TextField()
     strategy = models.ManyToManyField(Strategy)
+    strategy_combination = models.TextField(
+        choices=((method, method) for method in strategy_combination_methods),
+        default='Majority'
+    )
     equity = models.FloatField(null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
@@ -205,6 +212,7 @@ class Pipeline(models.Model):
             name=self.name,
             id=self.id,
             strategy=[obj.as_json() for obj in self.strategy.all()],
+            strategyCombination=self.strategy_combination,
             equity=self.equity,
             candleSize=self.interval,
             exchange=self.exchange.name,

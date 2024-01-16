@@ -232,6 +232,18 @@ class TestDataService:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
+                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
+                    "strategyCombination": "Invalid Method",
+                    "candleSize": "1h",
+                    "exchanges": "Binance"
+                },
+                "STRATEGY_COMBINATION_INVALID",
+                lambda input_params: f'{input_params["strategyCombination"]} is not a valid strategy combination method.',
+                id="STRATEGY_COMBINATION_INVALID",
+            ),
+            pytest.param(
+                {
+                    "symbol": "BTCUSDT",
                     "strategy": [{"name": "MovingAverage", "params": {"sma": 30, "ma": 30}}],
                     "candleSize": "1h",
                     "exchanges": "Binance"
