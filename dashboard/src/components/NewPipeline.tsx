@@ -22,7 +22,7 @@ import {
   RESET_MODAL,
   UPDATE_CHECKBOX,
   UPDATE_PARAMS,
-  UPDATE_STRATEGY
+  UPDATE_STRATEGY, UPDATE_STRATEGY_COMBINATION
 } from "../reducers/modalReducer";
 import StrategySelectionModal from "./StrategySelectionModal";
 import {availableBalanceReducer, UPDATE_BALANCE} from "../reducers/availableBalanceReducer";
@@ -58,6 +58,14 @@ const colorOptions = COLORS_NAMES.map((colorName) => {
   }
 })
 
+const strategyAssociationOptions = ['Unanimous', 'Majority'].map((method, index) => {
+  return {
+    key: method,
+    text: method,
+    value: index,
+  }
+})
+
 const NewPipeline = (props: Props) => {
 
   const {
@@ -80,6 +88,7 @@ const NewPipeline = (props: Props) => {
 
   const [{
     strategy: strategies,
+    strategyCombination,
     dynamicStrategies,
     color,
     symbol,
@@ -248,32 +257,32 @@ const NewPipeline = (props: Props) => {
                 selectOnBlur={false}
                 style={{width: '80%'}}
               />
-              <Form.Select
-                label={'Strategy'}
-                value={strategies}
-                onChange={(e: any, {value}: {value?: any}) => updateModal({
-                  type: UPDATE_STRATEGY,
-                  value,
-                  strategiesOptions
-                })}
-                multiple
-                search
-                selection
-                options={dynamicStrategies}
-                selectOnBlur={false}
-                style={{width: '80%'}}
-              />
+              <Form.Field >
+                <label>Equity</label>
+                <Input
+                  onChange={(e: any, {value}: {value?: any}) => {
+                    updateModal({
+                      type: UPDATE_PARAMS,
+                      value: {equity: value}
+                    })
+                  }}
+                  style={{width: '80%'}}
+                  value={equity}
+                  placeholder={
+                    `Avbl: ${balance.toFixed(1)} USDT
+                  `}
+                />
+              </Form.Field>
             </Form.Group>
             <Form.Group widths={'equal'}>
               <div style={{width: isMobile ? '100%' : '50%', paddingBottom: isMobile ? '15px' : 0}}>
                 <div className={'flex-column'} style={{
                   height: '80%',
-                  justifyContent: 'space-between',
+                  justifyContent: 'space-around',
                   alignItems: 'flex-start',
                   paddingLeft: '7px'
                 }}>
                   <div style={{
-                    marginBottom: '15px',
                     fontSize: '0.93em',
                     fontWeight: 'bold',
                     color: 'rgba(0, 0, 0, 0.65)'
@@ -297,29 +306,55 @@ const NewPipeline = (props: Props) => {
                 </div>
               </div>
               <Form.Field style={{width: '50%'}}>
-                <label>Equity</label>
-                <Input
-                  onChange={(e: any, {value}: {value?: any}) => {
-                    updateModal({
-                      type: UPDATE_PARAMS,
-                      value: {equity: value}
-                    })
-                  }}
+                <Form.Select
+                  label={'Strategy'}
+                  value={strategies}
+                  onChange={(e: any, {value}: {value?: any}) => updateModal({
+                    type: UPDATE_STRATEGY,
+                    value,
+                    strategiesOptions
+                  })}
+                  multiple
+                  search
+                  selection
+                  options={dynamicStrategies}
+                  selectOnBlur={false}
                   style={{width: '80%'}}
-                  value={equity}
-                  placeholder={
-                    `Avbl: ${balance.toFixed(1)} USDT
-                  `}
                 />
               </Form.Field>
             </Form.Group>
             <Form.Group widths={'equal'}>
               <Form.Checkbox
+                toggle
                 label={'📡 Live trading'}
                 onChange={() => updateModal({type: UPDATE_CHECKBOX})}
                 checked={liveTrading}
                 style={{alignSelf: 'center'}}
               />
+              <Form.Field>
+                <Form.Checkbox
+                  radio
+                  label={'Majority'}
+                  value={'Majority'}
+                  onChange={(e, data) => updateModal({
+                    type: UPDATE_STRATEGY_COMBINATION,
+                    value: data.value
+                  })}
+                  disabled={strategies.length <= 1}
+                  checked={strategyCombination === 'Majority' && strategies.length > 1}
+                />
+                <Form.Checkbox
+                  radio
+                  label={'Unanimous'}
+                  value={'Unanimous'}
+                  onChange={(e, data) => updateModal({
+                    type: UPDATE_STRATEGY_COMBINATION,
+                    value: data.value
+                  })}
+                  disabled={strategies.length <= 1}
+                  checked={strategyCombination === 'Unanimous' && strategies.length > 1}
+                />
+              </Form.Field>
             </Form.Group>
           </Form>
           <StrategySelectionModal
@@ -365,6 +400,7 @@ const NewPipeline = (props: Props) => {
                       color,
                       symbol,
                       strategies,
+                      strategyCombination,
                       candleSize,
                       exchanges,
                       symbolsOptions,

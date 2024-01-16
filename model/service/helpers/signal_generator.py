@@ -24,7 +24,7 @@ config_vars = get_config('model')
 configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
 
 
-def strategy_combiner(strategies, data):
+def strategy_combiner(strategies, combination_method, data):
 
     strategies_objs = []
 
@@ -36,7 +36,7 @@ def strategy_combiner(strategies, data):
 
         strategies_objs.append(strategy_obj)
 
-    combined_strategy = StrategyCombiner(strategies_objs, data=data)
+    combined_strategy = StrategyCombiner(strategies_objs, method=combination_method, data=data)
 
     return combined_strategy
 
@@ -52,7 +52,7 @@ def send_signal(
         logging.debug(header + f"Empty DataFrame, aborting.")
         return False
 
-    combined_strategy = strategy_combiner(pipeline["strategies"], data)
+    combined_strategy = strategy_combiner(pipeline["strategies"], pipeline["strategy_combination"], data)
 
     logging.info(header + "Generating signal.")
 

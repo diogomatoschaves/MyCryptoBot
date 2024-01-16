@@ -18,6 +18,7 @@ export const validatePipelineCreation = async (
       color,
       symbolsOptions,
       strategies,
+      strategyCombination,
       dynamicStrategies,
       candleSize,
       candleSizeOptions,
@@ -38,6 +39,7 @@ export const validatePipelineCreation = async (
       color: string | undefined,
       symbolsOptions: DropdownOptions[],
       strategies: number[],
+      strategyCombination: string,
       dynamicStrategies: Strategy[],
       candleSize: number | undefined,
       candleSizeOptions: DropdownOptions[],
@@ -91,6 +93,7 @@ export const validatePipelineCreation = async (
   const payload = {
     symbol: symbol ? symbolsOptions[symbol - 1].text : "",
     strategy: strategiesPayload,
+    strategyCombination,
     candleSize: candleSize ? candleSizeOptions[candleSize - 1].text : "",
     // TODO: Generalize this for any number of exchanges
     exchanges: exchanges.length > 0 ? exchangeOptions[exchanges[0] - 1].text : "",

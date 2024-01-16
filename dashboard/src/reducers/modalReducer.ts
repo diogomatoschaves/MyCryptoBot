@@ -9,6 +9,7 @@ export const UPDATE_CHECKBOX = 'UPDATE_CHECKBOX'
 export const UPDATE_MESSAGE = 'UPDATE_MESSAGE'
 export const UPDATE_SECONDARY_MESSAGE = 'UPDATE_SECONDARY_MESSAGE'
 export const GET_INITIAL_STATE = 'GET_INITIAL_STATE'
+export const UPDATE_STRATEGY_COMBINATION = 'UPDATE_STRATEGY_COMBINATION'
 
 
 export const modalReducer = (state: any, action: any) => {
@@ -88,6 +89,11 @@ export const modalReducer = (state: any, action: any) => {
         ...state,
         liveTrading,
         equity: ""
+      }
+    case UPDATE_STRATEGY_COMBINATION:
+      return {
+        ...state,
+        strategyCombination: action.value,
       }
     case UPDATE_MESSAGE:
       return {
@@ -180,6 +186,7 @@ export const getInitialState = (
       leverage: pipeline.leverage,
       dynamicStrategies,
       liveTrading: !pipeline.paperTrading,
+      strategyCombination: pipeline.strategyCombination,
       secondModalOpen: false,
       message: {text: '', success: false},
       secondaryMessage: {text: '', success: false}
@@ -195,6 +202,7 @@ export const getInitialState = (
       equity: "",
       leverage: 1,
       liveTrading: false,
+      strategyCombination: 'Majority',
       secondModalOpen: false,
       dynamicStrategies: strategies.map((strategy: Strategy) => {
         return {

@@ -1,13 +1,17 @@
+import os
 from typing import Literal
 
+import django
 import numpy as np
 import pandas as pd
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
+django.setup()
+
+from database.model.models import strategy_combination_methods
 from model.strategies._mixin import StrategyMixin
 from model.strategies.properties import STRATEGIES
 from shared.utils.exceptions import StrategyInvalid, StrategyRequired
-
-possible_methods = ["Unanimous", "Majority"]
 
 
 class StrategyCombiner(StrategyMixin):
@@ -132,8 +136,8 @@ class StrategyCombiner(StrategyMixin):
             if strategy.__class__.__name__ not in STRATEGIES:
                 raise StrategyInvalid(strategy.__class__.__name__)
 
-        if method not in possible_methods:
-            raise Exception(f"'method' must be one of {possible_methods}")
+        if method not in strategy_combination_methods:
+            raise Exception(f"'method' must be one of {strategy_combination_methods}")
 
     def get_params(self, **kwargs):
         """

@@ -72,6 +72,7 @@ def create_app():
         pipeline_dict = dict(
             id=pipeline.id,
             strategies=pipeline.strategy,
+            strategy_combination=pipeline.strategy_combination,
             symbol=pipeline.symbol,
             exchange=pipeline.exchange,
             interval=pipeline.candle_size

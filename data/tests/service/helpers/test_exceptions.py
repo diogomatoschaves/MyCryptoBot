@@ -2,7 +2,8 @@ import pytest
 
 from data.service.helpers.exceptions import CandleSizeInvalid, CandleSizeRequired, ColorRequired, \
     DataPipelineCouldNotBeStopped, DataPipelineDoesNotExist, DataPipelineOngoing, ExchangeInvalid, ExchangeRequired, \
-    NameInvalid, NameRequired, ParamsInvalid, ParamsRequired, PipelineStartFail, SymbolRequired
+    NameInvalid, NameRequired, ParamsInvalid, ParamsRequired, PipelineStartFail, SymbolRequired, \
+    StrategyCombinationInvalid
 from data.tests.setup.fixtures.internal_modules import mock_stop_instance, spy_stop_instance
 from shared.utils.tests.fixtures.models import *
 
@@ -76,6 +77,11 @@ class TestExceptions:
                 ParamsRequired(),
                 "The strategy parameters must be included in the request.",
                 id="ParamsRequired",
+            ),
+            pytest.param(
+                StrategyCombinationInvalid(),
+                f"The strategy combination method supplied is not supported.",
+                id="StrategyCombinationInvalid",
             ),
             pytest.param(
                 PipelineStartFail(),
@@ -157,6 +163,11 @@ class TestExceptions:
                 ParamsRequired(arg),
                 f"{arg} are required parameters of the selected strategy.",
                 id="ParamsRequired",
+            ),
+            pytest.param(
+                StrategyCombinationInvalid(arg),
+                f"{arg} is not a valid strategy combination method.",
+                id="StrategyCombinationInvalid",
             ),
             pytest.param(
                 PipelineStartFail(arg),
