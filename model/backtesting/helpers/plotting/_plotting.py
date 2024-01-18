@@ -8,7 +8,15 @@ from model.backtesting.helpers.metrics import get_drawdowns, get_dd_durations_li
 pio.renderers.default = "browser"
 
 
-def plot_backtest_results(data, trades, offset=0, plot_margin_ratio=False, show_plot_no_tc=False, title=''):
+def plot_backtest_results(
+    data,
+    trades,
+    margin_threshold,
+    offset=0,
+    plot_margin_ratio=False,
+    show_plot_no_tc=False,
+    title=''
+):
     """
     Plots backtesting results for a trading strategy.
 
@@ -25,6 +33,8 @@ def plot_backtest_results(data, trades, offset=0, plot_margin_ratio=False, show_
         - 'side': side of the trade (-1 for short, 1 for long)
         - 'profit': profit of the trade
         - 'units': size of the side
+    margin_threshold : float
+        threshold for maximum allowed margin ratio
     offset : int
         Offset for vertical margin of the plot.
     plot_margin_ratio: bool, optional
@@ -51,7 +61,7 @@ def plot_backtest_results(data, trades, offset=0, plot_margin_ratio=False, show_
     height = 1000
 
     if plot_margin_ratio:
-        plot_margin_ratios(fig, data)
+        plot_margin_ratios(fig, data, margin_threshold)
 
         height = height + 350
 
@@ -78,7 +88,7 @@ def plot_backtest_results(data, trades, offset=0, plot_margin_ratio=False, show_
     fig.show()
 
 
-def plot_margin_ratios(fig, data):
+def plot_margin_ratios(fig, data, margin_threshold):
 
     fig.add_trace(go.Scatter(
         x=data["margin_ratios"].index,
@@ -90,7 +100,7 @@ def plot_margin_ratios(fig, data):
         )
     ), row=3, col=1)
 
-    threshold = 80
+    threshold = margin_threshold * 100
     start = data["margin_ratios"].index[0]
     end = data["margin_ratios"].index[-1]
 

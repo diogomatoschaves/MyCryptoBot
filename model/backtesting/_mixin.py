@@ -1,4 +1,5 @@
 import json
+import math
 
 import progressbar
 from scipy.optimize import brute
@@ -53,6 +54,7 @@ class BacktestMixin:
         trading_costs,
         include_margin=False,
         leverage=1,
+        margin_threshold=0.8,
         exchange='binance'
     ):
         """
@@ -62,13 +64,36 @@ class BacktestMixin:
         -----------
         symbol : str
             The trading symbol to use for the backtest.
+        amount : float
+            The initial amount of capital to allocate for the backtest.
         trading_costs : float
-            The transaction costs (e.g. spread, commissions) as a percentage.
+            The transaction costs (e.g., spread, commissions) as a percentage.
+        include_margin : bool, optional
+            Flag indicating whether margin trading is included in the backtest. Default is False.
+        leverage : float, optional
+            The initial leverage to apply for margin trading. Default is 1.
+        margin_threshold : float, optional
+            The margin ratio threshold for margin call detection. Default is 0.8.
+        exchange : str, optional
+            The exchange to simulate the backtest on. Default is 'binance'.
+
+        Raises:
+        -------
+        SymbolInvalid:
+            If the specified trading symbol is not found in the leverage brackets.
+
+        Notes:
+        ------
+        If `include_margin` is set to True, the leverage brackets for the specified symbol
+        will be loaded.
         """
-        self.include_margin = include_margin
         self.exchange = exchange
 
+        self.include_margin = False
+        self.leverage_limits = [1, 125]
+
         self.set_leverage(leverage)
+        self.set_margin_threshold(margin_threshold)
 
         self.amount = amount
         self.symbol = symbol
@@ -80,13 +105,8 @@ class BacktestMixin:
         self.outperf = 0
         self.results = None
 
-        if self.include_margin:
-            brackets = self._load_leverage_brackets()
-
-            try:
-                self._symbol_bracket = pd.DataFrame(brackets[symbol])
-            except KeyError:
-                raise SymbolInvalid(symbol)
+        if include_margin:
+            self.set_include_margin()
 
     def __getattr__(self, attr):
         """
@@ -115,10 +135,26 @@ class BacktestMixin:
         return extra_title + '<br>' + self.strategy.__repr__()
 
     def set_leverage(self, leverage):
-        if isinstance(leverage, int) and 1 <= leverage <= 125:
+        if isinstance(leverage, int) and self.leverage_limits[0] <= leverage <= self.leverage_limits[1]:
             self.leverage = leverage
         else:
             raise LeverageInvalid(leverage)
+
+    def set_margin_threshold(self, margin_threshold):
+        if isinstance(margin_threshold, (int, float)) and 0 < margin_threshold <= 1:
+            self.margin_threshold = margin_threshold
+        else:
+            raise ValueError('Margin threshold must be between 0 and 1.')
+
+    def set_include_margin(self):
+        self.include_margin = True
+
+        brackets = self._load_leverage_brackets()
+
+        try:
+            self._symbol_bracket = pd.DataFrame(brackets[self.symbol])
+        except KeyError:
+            raise SymbolInvalid(self.symbol)
 
     def load_data(self, data=None, csv_path=None):
         if data is None or csv_path:
@@ -199,7 +235,65 @@ class BacktestMixin:
         return (self._get_params_mapping(opt, strategy_params_mapping),
                 -self._update_and_run(opt, True, True, strategy_params_mapping))
 
-    def _test_strategy(self, params=None, print_results=True, plot_results=True):
+    def maximum_leverage(self, margin_threshold=None):
+        """
+        Find the maximum allowable leverage that keeps the margin ratio below a specified threshold.
+
+        Parameters:
+        -----------
+        threshold: float, optional
+            The desired maximum margin ratio threshold, must be between 0 and 1.
+
+        Raises:
+        -----------
+        ValueError: If the provided threshold is not within the valid range (0, 1].
+
+        Returns:
+        -----------
+        int:
+            The maximum allowable leverage that satisfies the specified margin ratio threshold.
+        """
+        initial_leverage = self.leverage
+        initial_margin_threshold = self.margin_threshold
+        initial_include_margin = self.include_margin
+
+        if margin_threshold is not None:
+            self.set_margin_threshold(margin_threshold)
+
+        self.set_include_margin()
+
+        left_limit, right_limit = self.leverage_limits
+
+        prev_leverage = 0
+
+        print('\tCalculating maximum allowed leverage', end='')
+
+        i = 0
+        while True:
+            leverage = math.floor((right_limit - left_limit) / 2) + left_limit
+
+            if leverage == prev_leverage:
+                break
+
+            self._test_strategy(leverage=leverage, print_results=False, plot_results=False)
+            if self.processed_data["margin_ratios"].max() >= self.margin_threshold:
+                right_limit = leverage
+            else:
+                left_limit = leverage
+
+            prev_leverage = leverage
+            i += 1
+            print('.', end='')
+
+        print()
+
+        self.set_leverage(initial_leverage)
+        self.set_margin_threshold(initial_margin_threshold)
+        self.include_margin = initial_include_margin
+
+        return leverage
+
+    def _test_strategy(self, params=None, leverage=None, print_results=True, plot_results=True, show_plot_no_tc=False):
         """Tests the trading strategy on historical data.
 
         Parameters:
@@ -207,7 +301,12 @@ class BacktestMixin:
         params : dict or None
             The parameters to use for the trading strategy
         """
-        raise NotImplementedError
+        if leverage is not None:
+            self.set_leverage(leverage)
+
+        self._fix_original_data()
+
+        self.set_parameters(params, data=self._original_data.copy())
 
     @staticmethod
     def _get_optimization_input(optimization_params, strategy):
@@ -383,6 +482,7 @@ class BacktestMixin:
             plot_backtest_results(
                 data,
                 trades_df,
+                self.margin_threshold,
                 offset,
                 plot_margin_ratio=self.include_margin,
                 show_plot_no_tc=show_plot_no_tc,
