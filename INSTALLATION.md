@@ -22,7 +22,7 @@ poetry install # it may take a while
 poetry shell
 ```
 Which will install the environment and activate the virtual environment. A `requirements.txt` file is also included 
-if you want to use another virtual environment package. 
+if you want to use another virtual environment package. If you choose to do so, make sure you use a compatible python version (`>=3.7.1,<3.10`) when creating your virtual environment.
 
 At this stage we can also define the environment variables that the application will use.
 Create an `.env` file at the root of the project, copy the template env variables from 

@@ -61,7 +61,7 @@ pluggy==1.2.0
 progress==1.6
 progressbar2==4.2.0
 prompt-toolkit==3.0.41
-psycopg2==2.9.9
+psycopg2-binary==2.9.9
 ptyprocess==0.7.0
 py==1.11.0
 pycryptodome==3.19.1
