@@ -110,6 +110,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Vscode settings
+.vscode/
+
 # Spyder project settings
 .spyderproject
 .spyproject
