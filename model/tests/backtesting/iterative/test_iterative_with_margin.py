@@ -113,3 +113,35 @@ class TestIterativeBacktesterMargin:
             )
 
             ite.run(leverage=second_leverage)
+
+    @pytest.mark.parametrize(
+        "include_margin",
+        [
+            pytest.param(True, id="include_margin=True"),
+            pytest.param(False, id="include_margin=False")
+        ],
+    )
+    @pytest.mark.parametrize(
+        "margin_threshold, expected_result",
+        [
+            pytest.param(0.1, 18, id="margin_threshold=0.1"),
+            pytest.param(0.5, 45, id="margin_threshold=0.5"),
+            pytest.param(1, 55, id="margin_threshold=1")
+        ],
+    )
+    def test_maximum_leverage(
+        self, include_margin, margin_threshold, expected_result, mocked_plotly_figure_show
+    ):
+        test_data = data.set_index("open_time")
+
+        strategy_instance = MovingAverage(4, data=test_data)
+
+        ite = IterativeBacktester(
+            strategy_instance,
+            symbol="BTCUSDT",
+            include_margin=include_margin,
+        )
+
+        result = ite.maximum_leverage(margin_threshold=margin_threshold)
+
+        assert result == expected_result
