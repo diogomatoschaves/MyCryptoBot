@@ -276,6 +276,40 @@ As evident from the results, employing a leverage of `8` led to 3 margin calls d
 showing that this particular strategy would have implied a total loss of the funds, unless more margin was
 added to the positions. 
 
+#### Calculation the Maximum Allowed Leverage
+
+The backtesting class also offers an API to determine the maximum permissible leverage for a backtest, 
+ensuring that the margin ratio remains below a specified threshold. This can be accomplished by following the 
+steps outlined in the following example.
+
+```python
+from model.backtesting import VectorizedBacktester
+from model.strategies import MovingAverageCrossover
+
+symbol = "BTCUSDT"
+trading_costs = 0.05
+
+mov_avg = MovingAverageCrossover(20, 50)
+
+vect = VectorizedBacktester(
+    mov_avg,
+    symbol,
+    amount=10000,
+    trading_costs=trading_costs,
+)
+
+vect.load_data()
+vect.maximum_leverage(margin_threshold=0.8)  # The margin threshold will be the maximum margin_ratio allowed during the 
+                                             # backtest. If omitted, then the default value of 0.8 is used. Must be 
+#                                            # between 0 and 1.
+```
+
+Which will output the maximum leverage without a margin call. In the example, it would be:
+
+```shell
+Out[2]: 5
+```
+
 ### Optimization
 
 You can use the optimization API of either the iterative or vectorized backtester in order to find the best combination 

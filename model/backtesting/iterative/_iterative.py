@@ -18,7 +18,8 @@ class IterativeBacktester(BacktestMixin, Trader):
         amount=1000,
         trading_costs=0.0,
         include_margin=False,
-        leverage=1
+        leverage=1,
+        margin_threshold=0.8
     ):
         """
         Initializes the IterativeBacktester object.
@@ -26,16 +27,35 @@ class IterativeBacktester(BacktestMixin, Trader):
         Parameters
         ----------
         strategy : object
-            The trading strategy to be tested.
+            An instance of the trading strategy to be tested.
         symbol : str, optional
             The trading symbol. Default is None.
         amount : float, optional
-            The initial amount of currency to be traded with. Default is 1000.
+            The initial amount of currency available for trading. Default is 1000.
         trading_costs : float, optional
-            The percentage of trading costs. Default is 0.
+            The percentage of trading costs (e.g., spread, commissions). Default is 0.
+        include_margin : bool, optional
+            Flag indicating whether margin trading is included in the backtest. Default is False.
+        leverage : float, optional
+            The initial leverage to apply for margin trading. Default is 1.
+        margin_threshold : float, optional
+            The margin ratio threshold for margin call detection. Default is 0.8.
+
+        Notes
+        -----
+        The IterativeBacktester is initialized with a specified trading strategy, initial trading parameters,
+        and optional margin trading features. It inherits from both BacktestMixin and Trader classes.
+
+        If a trading symbol is provided, it is assigned to the trading strategy. The positions_lst, _equity,
+        margin_ratios, returns, strategy_returns, strategy_returns_tc, and positions attributes are initialized.
+
+        Example
+        -------
+        >>> strategy = MyTradingStrategy()
+        >>> backtester = IterativeBacktester(strategy, symbol='BTCUSDT', amount=5000, trading_costs=0.01)
         """
 
-        BacktestMixin.__init__(self, symbol, amount, trading_costs, include_margin, leverage)
+        BacktestMixin.__init__(self, symbol, amount, trading_costs, include_margin, leverage, margin_threshold)
         Trader.__init__(self, amount)
 
         self.strategy = strategy
@@ -165,7 +185,14 @@ class IterativeBacktester(BacktestMixin, Trader):
 
         return price
 
-    def _test_strategy(self, params=None, print_results=True, plot_results=True, show_plot_no_tc=False):
+    def _test_strategy(
+        self,
+        params=None,
+        leverage=None,
+        print_results=True,
+        plot_results=True,
+        show_plot_no_tc=False
+    ):
         """
         Run a backtest for the given parameters and assess the performance of the strategy.
 
@@ -186,18 +213,17 @@ class IterativeBacktester(BacktestMixin, Trader):
             Dictionary containing the performance metrics of the backtest.
 
         """
-        self._fix_original_data()
+        super()._test_strategy(params, leverage)
 
-        self.set_parameters(params, data=self._original_data.copy())
         self._reset_object()
+
+        data = self._get_data().dropna().copy()
 
         # title printout
         if print_results:
             print("-" * 70)
             print(self._get_test_title())
             print("-" * 70)
-
-        data = self._get_data().dropna().copy()
 
         if data.empty:
             return 0, 0, None

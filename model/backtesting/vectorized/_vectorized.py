@@ -15,30 +15,57 @@ class VectorizedBacktester(BacktestMixin):
         amount=1000,
         trading_costs=0.0,
         include_margin=False,
-        leverage=1
+        leverage=1,
+        margin_threshold=0.8
     ):
         """
+        Initializes the Backtester object.
 
         Parameters
         ----------
         strategy : StrategyType
-            A valid strategy class as defined in model.strategies __init__ file.
-        symbol : string
-            Symbol for which we are performing the backtest. default is None.
+            A valid strategy class as defined in the 'model.strategies' __init__ file.
+        symbol : str, optional
+            The trading symbol. Default is None.
         amount : float, optional
-            The initial amount of currency to be traded with. Default is 1000.
+            The initial amount of currency available for trading. Default is 1000.
         trading_costs : float
-            The trading cost per trade in percentage of the value being traded.
+            The trading cost per trade as a percentage of the value being traded.
+        include_margin : bool, optional
+            Flag indicating whether margin trading is included in the backtest. Default is False.
+        leverage : float, optional
+            The initial leverage to apply for margin trading. Default is 1.
+        margin_threshold : float, optional
+            The margin ratio threshold for margin call detection. Default is 0.8.
+
+        Notes
+        -----
+        The Backtester is initialized with a specified trading strategy, initial trading parameters,
+        and optional margin trading features. It inherits from the BacktestMixin class.
+
+        If a trading symbol is provided, it is assigned to the trading strategy.
+
+        Example
+        -------
+        >>> strategy = MyTradingStrategy()
+        >>> backtester = VectorizedBacktester(strategy=strategy, symbol='BTCUSDT', amount=5000, trading_costs=0.01)
         """
 
-        BacktestMixin.__init__(self, symbol, amount, trading_costs, include_margin, leverage)
+        BacktestMixin.__init__(self, symbol, amount, trading_costs, include_margin, leverage, margin_threshold)
 
         self.strategy = strategy
 
         if symbol is not None:
             self.strategy.symbol = symbol
 
-    def _test_strategy(self, params=None, print_results=True, plot_results=True, show_plot_no_tc=False):
+    def _test_strategy(
+        self,
+        params=None,
+        leverage=None,
+        print_results=True,
+        plot_results=True,
+        show_plot_no_tc=False
+    ):
         """
         Parameters
         ----------
@@ -52,9 +79,7 @@ class VectorizedBacktester(BacktestMixin):
             Whether to plot the equity curve without the trading_costs applied
 
         """
-        self._fix_original_data()
-
-        self.set_parameters(params, data=self._original_data.copy())
+        super()._test_strategy(params, leverage)
 
         data = self._get_data().dropna().copy()
 
