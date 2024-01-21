@@ -1,5 +1,16 @@
 version: "3.3"
 services:
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 5432:5432
+    volumes:
+      - ./database/postgres:/var/lib/postgresql/data
   data-service:
     build:
       context: .
