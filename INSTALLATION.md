@@ -44,19 +44,21 @@ BINANCE_API_KEY_TEST # Your personal Binance API key (binance testnet)
 BINANCE_API_SECRET_TEST # Your personal Binance API secret (binance testnet)
 ```
 
+
+In order to run the bot locally, you'll need to have **`docker`** installed. You can follow the instructions [here](https://docs.docker.com/get-docker/) to install it.
+If you are on a linux based machine, verify that you can run docker commands without `sudo` privileges. If not, make sure you do the steps detailed in the [post-installation](https://docs.docker.com/engine/install/linux-postinstall/) page.
+
 ### Database
 
 This project uses PostgreSQL as a database engine in order to keep consistency between local development and production.
-Therefore, it is assumed that PostgreSQL is installed on your machine. If not, please visit this
-[page](https://www.postgresql.org/download/).
 
-We must first create the database by entering into `psql` and executing a command there:
+We can start the postgres database via `docker-compose`, as follows:
 ```shell
-psql -d postgres -U <pg_username> # Replace <pg_username> with your own postgres username
-CREATE DATABASE <database_name>; # Enter the same name as the env variable $POSTGRES_DB
-exit
+docker-compose up --build postgres
 ```
-In order to initialize the database, run the following commands:
+
+In order to initialize the database, run the following commands once the postgres container is up and running:
+
 ```shell
 python database/manage.py migrate
 python database/initial_setup.py
@@ -71,9 +73,7 @@ python database/manage.py createsuperuser
 
 ## Local Usage
 
-Now that everything is installed locally, we can run the whole system using `docker-compose`, as follows:
-(click [here](https://docs.docker.com/get-docker/) if you don't have `docker` installed).
-
+Now that everything is set up correctly, stop the postgres container with `Ctrl+C` and run the following command to start the entire system:
 ```shell
 docker-compose up --build
 ```
