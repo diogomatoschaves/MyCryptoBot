@@ -35,8 +35,8 @@ cp .env.template .env
 
 ```shell
 POSTGRES_DB # Name of the database
-POSTGRES_USER # Your local postgres username
-POSTGRES_PASSWORD # Your local postgres password
+POSTGRES_USER # A username to access the database
+POSTGRES_PASSWORD # A password to access the database
 SECRET_KEY # A secret key to hash your application
 BINANCE_API_KEY # Your personal Binance API key (check binance documentation)
 BINANCE_API_SECRET # Your personal Binance API secret (check binance documentation)
@@ -52,34 +52,42 @@ If you are on a linux based machine, verify that you can run docker commands wit
 
 This project uses PostgreSQL as a database engine in order to keep consistency between local development and production.
 
-We can start the postgres database via `docker-compose`, as follows:
+We can start the services in detached mode via `docker-compose`, as follows:
 ```shell
-docker-compose up --build postgres
+docker-compose up -d --build
+```
+This allows us to access the containers, in order to execute commands to migrate the schema and initialize the 
+database. Execute the following commands:
+
+```shell
+docker-compose exec model-service python database/manage.py migrate  # In theory any of the web services can be used for this command, 
+                                                                     # but the others will crash if there is no database yet.
+docker-compose exec model-service python database/initial_setup.py
+```
+Finally, we create a superuser, whose credentials we'll use in order to log in into the dashboard later on:
+
+```shell
+docker-compose exec model-service python database/manage.py createsuperuser
 ```
 
-In order to initialize the database, run the following commands once the postgres container is up and running:
-
+__Note:__ If needed, one can access the `psql` console inside the database container with the following steps.
+First we enter the database container with:
 ```shell
-python database/manage.py migrate
-python database/initial_setup.py
+docker-compose exec db bash
 ```
-This will load the schema onto the database and load some required initial data 
-from binance. You can then create a superuser with the following command and follow the
-instructions:
-
+Once inside the container, we can enter the psql console with:
 ```shell
-python database/manage.py createsuperuser
+psql -U $POSTGRES_USER
 ```
 
 ## Local Usage
 
-Now that everything is set up correctly, stop the postgres container with `Ctrl+C` and run the following command to start the entire system:
+Now that everything is set up correctly, we can restart all the services and start all the apps.
 ```shell
 docker-compose up --build
 ```
 
-You can now go to [http://localhost:3000](http://localhost:3000) to open the dashboard app. 
-
+You can now go to [http://localhost:3000](http://localhost:3000) to open the dashboard app and log in using your superuser credentials. 
 
 
 ## Remote Installation (On Heroku)

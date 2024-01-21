@@ -1,6 +1,6 @@
 version: "3.3"
 services:
-  postgres:
+  db:
     image: postgres:15
     restart: always
     environment:
@@ -8,9 +8,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - 5433:5432
+      - "5433:5432"
     volumes:
-      - ./database/postgres:/var/lib/postgresql/data
+      - ./database/local_db:/var/lib/postgresql/data
   data-service:
     build:
       context: .
@@ -22,11 +22,11 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5433/${POSTGRES_DB}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
       - APP_NAME=crypto-bot-data
-      - MODEL_APP_URL=http://host.docker.internal:5001
-      - EXECUTION_APP_URL=http://host.docker.internal:5002
+      - MODEL_APP_URL=http://model-service:5000
+      - EXECUTION_APP_URL=http://execution-service:5000
       - PORT=5000
       - LOGGER_LEVEL=INFO
       - CHECKS_INTERVAL=1800
@@ -41,7 +41,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5433/${POSTGRES_DB}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
       - APP_NAME=crypto-bot-model
       - PORT=5000
@@ -53,9 +53,9 @@ services:
     image: model-worker
     platform: linux/amd64
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5433/${POSTGRES_DB}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
-      - EXECUTION_APP_URL=http://host.docker.internal:5002
+      - EXECUTION_APP_URL=http://execution-service:5000
     depends_on:
       - redis
   execution-service:
@@ -65,11 +65,11 @@ services:
     image: execution-server
     platform: linux/amd64
     ports:
-      - "5002:5000"
+      - "5002:5002"
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5433/${POSTGRES_DB}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
       - APP_NAME=crypto-bot-execution
       - PORT=5000
