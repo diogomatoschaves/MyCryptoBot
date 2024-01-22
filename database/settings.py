@@ -11,7 +11,7 @@ if ENV_FILE:
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-if os.getenv("TEST", False):
+if os.getenv("TEST"):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
