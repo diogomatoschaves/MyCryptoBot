@@ -9,12 +9,9 @@ if ENV_FILE:
     load_dotenv(ENV_FILE)
 
 
-hello = 'hello'
-
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-if os.getenv("TEST", False):
+if os.getenv("TEST"):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -28,7 +25,7 @@ else:
             'NAME': os.getenv('POSTGRES_DB'),
             'USER': os.getenv('POSTGRES_USER'),
             'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-            'HOST': 'localhost',
+            'HOST': 'db',
             'PORT': '5432',
             'CONN_MAX_AGE': 500
         }

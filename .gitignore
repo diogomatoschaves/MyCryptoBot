@@ -139,4 +139,4 @@ database/datasets/
 dump.rdb
 crypto_bot.dump
 
-database/postgres
+database/local_db
