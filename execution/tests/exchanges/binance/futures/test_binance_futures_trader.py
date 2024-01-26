@@ -29,9 +29,7 @@ METHODS = [
     ("futures_symbol_ticker", "futures_symbol_ticker"),
     ("futures_change_leverage", "futures_change_leverage"),
     ("futures_create_order", "futures_create_order"),
-    ("futures_exchange_info", "futures_exchange_info"),
     ("futures_account_balance", "futures_account_balance"),
-    ("get_symbol_ticker", "get_symbol_ticker")
 ]
 
 
@@ -44,6 +42,7 @@ def test_mock_setup(
     mocker,
     create_exchange,
     create_symbol,
+    create_pipeline,
     create_pipeline_with_balance,
     create_pipeline_with_balance_2,
     ping,
@@ -51,9 +50,7 @@ def test_mock_setup(
     futures_symbol_ticker,
     futures_change_leverage,
     futures_create_order,
-    futures_exchange_info,
     futures_account_balance,
-    get_symbol_ticker,
     mock_futures_symbol_ticker
 ):
     return
@@ -69,7 +66,7 @@ class TestBinanceFuturesTrader:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "starting_equity": 100,
+                    "current_equity": 100,
                     "leverage": 10,
                     "pipeline_id": 4
                 },
@@ -81,7 +78,7 @@ class TestBinanceFuturesTrader:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "starting_equity": 100,
+                    "current_equity": 100,
                     "leverage": 10,
                     "pipeline_id": 4
                 },
@@ -93,7 +90,7 @@ class TestBinanceFuturesTrader:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "starting_equity": 100,
+                    "current_equity": 100,
                     "leverage": 10,
                     "initial_position": 1,
                     "pipeline_id": 4
@@ -106,7 +103,7 @@ class TestBinanceFuturesTrader:
             pytest.param(
                 {
                     "symbol": "BTCUSDT",
-                    "starting_equity": 100,
+                    "current_equity": 100,
                     "leverage": 10,
                     "initial_position": -1,
                     "pipeline_id": 4
@@ -135,9 +132,9 @@ class TestBinanceFuturesTrader:
 
         symbol = parameters["symbol"]
 
-        assert binance_trader.units[symbol] == -2
+        assert binance_trader.units[symbol] == -0.05
         assert binance_trader.current_balance[symbol] == 2000
-        assert binance_trader.initial_balance[symbol] == parameters["starting_equity"]
+        assert binance_trader.initial_balance[symbol] == parameters["current_equity"]
         assert binance_trader.positions[symbol] == initial_position
 
     @pytest.mark.parametrize(
@@ -267,18 +264,129 @@ class TestBinanceFuturesTrader:
             assert trades[0].amount == float(futures_order_creation["executedQty"])
             assert trades[0].open_price == float(futures_order_creation["price"])
 
+    @pytest.mark.parametrize(
+        "signal,side_effect,pipeline_id,initial_position",
+        [
+            pytest.param(
+                1,
+                [1000, 1000, None],
+                12,
+                0,
+                id="Long-1",
+            ),
+            pytest.param(
+                -1,
+                [1000, 1000, None],
+                12,
+                0,
+                id="Short-1",
+            ),
+            pytest.param(
+                1,
+                [1000, 1050, None],
+                12,
+                0,
+                id="Long-2",
+            ),
+            pytest.param(
+                -1,
+                [1000, 1050, None],
+                12,
+                0,
+                id="Short-2",
+            ),
+            pytest.param(
+                1,
+                [1000, 1300, None],
+                12,
+                0,
+                id="Long-3",
+            ),
+            pytest.param(
+                -1,
+                [1000, 1100, None],
+                12,
+                0,
+                id="Short-3",
+            ),
+            pytest.param(
+                1,
+                [1000, 1000, 990],
+                4,
+                -1,
+                id="Start at Short",
+            ),
+        ]
+    )
+    def test_current_equity_updated(
+        self,
+        signal,
+        side_effect,
+        pipeline_id,
+        initial_position,
+        test_mock_setup,
+        create_pipeline_with_balance_4,
+        create_neutral_position,
+        mocked_futures_create_order
+    ):
+        mocked_futures_create_order.side_effect = [
+            {
+                **futures_order_creation,
+                "side": "BUY" if signal == 1 else "SELL",
+                "orderId": randint(0, 1E9),
+                "cumQuote": side_effect[0]
+            },
+            {
+                **futures_order_creation,
+                "orderId": randint(0, 1E9),
+                "cumQuote": side_effect[1]
+            },
+            {
+                **futures_order_creation,
+                "orderId": randint(0, 1E9),
+                "cumQuote": side_effect[2]
+            }
+        ]
+
+        pipeline = Pipeline.objects.get(id=pipeline_id)
+
+        symbol = self.symbol
+        leverage = pipeline.leverage
+
+        parameters = dict(
+            symbol=symbol,
+            current_equity=pipeline.current_equity,
+            pipeline_id=pipeline.id,
+            leverage=leverage,
+            initial_position=initial_position
+        )
+
+        binance_trader = self.start_symbol_trading(parameters, {})
+
+        initial_equity = binance_trader.current_equity[symbol]
+        pnl = side_effect[1] - side_effect[0] if side_effect[2] is None else side_effect[2] - side_effect[0]
+
+        binance_trader.trade(self.symbol, signal, amount="all", pipeline_id=pipeline.id)
+
+        assert binance_trader.current_equity[symbol] == initial_equity
+
+        binance_trader.trade(self.symbol, 0, amount="all", pipeline_id=pipeline.id)
+
+        assert binance_trader.current_equity[symbol] == initial_equity + pnl * signal
+        assert binance_trader.current_balance[symbol] == binance_trader.current_equity[symbol] * leverage
+
     def test_all(
         self,
         create_pipeline,
         create_orders,
         test_mock_setup,
     ):
-        starting_equity = 1000
+        current_equity = 1000
         pipeline = Pipeline.objects.get(id=1)
 
         parameters = dict(
             symbol=self.symbol,
-            starting_equity=starting_equity,
+            current_equity=current_equity,
             pipeline_id=pipeline.id,
             leverage=pipeline.leverage
         )
@@ -305,14 +413,14 @@ class TestBinanceFuturesTrader:
         "parameters,symbols,times_called,expected_exception",
         [
             pytest.param(
-                {"symbol": "BTCUSDT", "starting_equity": 100, "pipeline_id": 1, "leverage": 1},
+                {"symbol": "BTCUSDT", "current_equity": 100, "pipeline_id": 1, "leverage": 1},
                 {"BTCUSDT"},
                 (0, 0, 0),
                 SymbolAlreadyTraded,
                 id="SymbolIsAlreadyBeingTraded",
             ),
             pytest.param(
-                {"symbol": "XRPBTC", "starting_equity": 100, "pipeline_id": 1, "leverage": 1},
+                {"symbol": "XRPBTC", "current_equity": 100, "pipeline_id": 1, "leverage": 1},
                 {},
                 (1, 0, 0),
                 SymbolInvalid,
@@ -433,12 +541,12 @@ class TestBinanceFuturesTrader:
         expected_value,
         test_mock_setup,
         create_pipeline_with_balance_3,
-        futures_create_order_negative_equity,
+        mocked_futures_create_order,
         create_orders,
         futures_create_order_spy,
     ):
 
-        futures_create_order_negative_equity.side_effect = side_effect
+        mocked_futures_create_order.side_effect = side_effect
 
         with pytest.raises(Exception) as exception:
 
@@ -447,7 +555,7 @@ class TestBinanceFuturesTrader:
 
             parameters = dict(
                 symbol=self.symbol,
-                starting_equity=initial_balance,
+                current_equity=initial_balance,
                 pipeline_id=pipeline_id,
                 leverage=1
             )
@@ -467,6 +575,7 @@ class TestBinanceFuturesTrader:
         binance_trader.symbols = symbols
         binance_trader.current_balance = {parameters["symbol"]: 0}
         binance_trader.initial_balance = {parameters["symbol"]: 0}
+        binance_trader.current_equity = {parameters["symbol"]: 0}
 
         binance_trader.start_symbol_trading(**parameters)
 
@@ -483,6 +592,7 @@ class TestBinanceFuturesTrader:
         binance_trader.units[symbol] = units
         binance_trader.initial_balance[symbol] = 1000
         binance_trader.current_balance[symbol] = 1000
+        binance_trader.current_equity[symbol] = 100
 
         binance_trader.stop_symbol_trading(**parameters)
 

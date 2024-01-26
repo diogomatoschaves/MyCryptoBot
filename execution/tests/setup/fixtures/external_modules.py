@@ -61,12 +61,6 @@ class MockBinanceHandler(BinanceFuturesTrader):
             "orderId": randint(0, 1E9)
         }
 
-    def get_symbol_ticker(self, symbol):
-        return {'symbol': symbol, 'price': '19084.75000000'}
-
-    def futures_exchange_info(self):
-        return exchange_info
-
     def futures_account_balance(self):
         return account_balances
 
@@ -78,8 +72,6 @@ class MockBinanceHandler(BinanceFuturesTrader):
 
         if symbol in tickers:
             return {'symbol': symbol, 'price': tickers.get(symbol)}
-
-        return {}
 
     def futures_position_information(self):
         return positions_info
@@ -159,15 +151,6 @@ def binance_mock_trader_spy_factory(method):
     return spy_binance_client
 
 
-class SideEffect:
-    def __init__(self, *fns):
-        self.fs = iter(fns)
-
-    def __call__(self, *args, **kwargs):
-        f = next(self.fs)
-        return f(*args, **kwargs)
-
-
 @pytest.fixture
-def futures_create_order_negative_equity(mocker):
+def mocked_futures_create_order(mocker):
     return mocker.patch('execution.exchanges.binance.futures._trading.BinanceFuturesTrader.futures_create_order')

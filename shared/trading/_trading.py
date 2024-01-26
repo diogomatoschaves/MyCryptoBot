@@ -125,22 +125,27 @@ class Trader:
                 self.print_current_balance(date, header, symbol=symbol)
 
     def print_current_position_value(self, date, price, header='', **kwargs):
-
-        units = self._get_units(kwargs.get("symbol", ""))
-
-        cpv = units * price
+        cpv = self.get_current_position_value(price, **kwargs)
         logging.info(header + f"| {date} | Current Position Value = {round(cpv, 2)}")
 
     def print_current_nav(self, date, price, header='', **kwargs):
-
-        units = self._get_units(kwargs.get("symbol", ""))
-        current_balance = self._get_balances(kwargs.get("symbol", ""))[1]
-
-        nav = current_balance + units * price
+        nav = self.get_current_nav(price, **kwargs)
         logging.info(header + f"| {date} | Net Asset Value = {round(nav, 2)}")
 
     def print_current_balance(self, date, header='', **kwargs):
-
-        current_balance = self._get_balances(kwargs.get("symbol", ""))[1]
+        symbol = kwargs.get("symbol", "")
+        current_balance = self._get_balances(symbol)[1]
 
         logging.info(header + f"| {date if date else datetime.now()} | Current Balance: {round(current_balance, 2)}")
+
+    def get_current_position_value(self, price, **kwargs):
+        units = self._get_units(kwargs.get("symbol", ""))
+
+        return units * price
+
+    def get_current_nav(self, price, **kwargs):
+        symbol = kwargs.get("symbol", "")
+        current_balance = self._get_balances(symbol)[1]
+        current_position_value = self.get_current_position_value(price, **kwargs)
+
+        return current_balance + current_position_value

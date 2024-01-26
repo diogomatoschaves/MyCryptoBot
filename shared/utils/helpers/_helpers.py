@@ -28,6 +28,7 @@ PIPELINE = namedtuple(
         "paper_trading",
         "active",
         "initial_equity",
+        "current_equity",
         "leverage"
     ]
 )
@@ -73,6 +74,7 @@ def get_pipeline_data(pipeline_id, return_obj=False):
             paper_trading=pipeline.paper_trading,
             active=pipeline.active,
             initial_equity=pipeline.initial_equity,
+            current_equity=pipeline.current_equity,
             leverage=pipeline.leverage
         )
 

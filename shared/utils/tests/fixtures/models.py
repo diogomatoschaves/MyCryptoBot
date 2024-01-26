@@ -148,7 +148,7 @@ def create_pipeline_with_balance(db, create_exchange, create_symbol):
         initial_equity=100,
         leverage=10,
         balance=2000,
-        units=-2,
+        units=-0.05,
         last_entry=datetime.datetime.now(pytz.utc) - datetime.timedelta(minutes=30)
     )
 
@@ -215,9 +215,10 @@ def create_pipeline_with_balance_4(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
+        leverage=10,
         initial_equity=100,
-        leverage=1,
-        balance=2000,
+        current_equity=100,
+        balance=1000,
         units=0
     )
 

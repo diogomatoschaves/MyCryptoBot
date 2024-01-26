@@ -21,9 +21,7 @@ METHODS = [
     ("ping", "ping"),
     ("futures_change_leverage", "futures_change_leverage"),
     ("futures_create_order", "futures_create_order"),
-    ("futures_exchange_info", "futures_exchange_info"),
     ("futures_account_balance", "futures_account_balance"),
-    ("get_symbol_ticker", "get_symbol_ticker")
 ]
 
 
@@ -38,7 +36,6 @@ def test_mock_setup(
     init_session,
     futures_change_leverage,
     futures_create_order,
-    futures_exchange_info,
     futures_account_balance,
 ):
     return
