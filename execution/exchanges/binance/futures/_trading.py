@@ -10,7 +10,8 @@ from database.model.models import Pipeline
 from execution.exchanges.binance import BinanceTrader
 from execution.service.blueprints.market_data import filter_balances
 from execution.service.cron_jobs.save_pipelines_snapshot import save_pipelines_snapshot
-from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits, NegativeEquity
+from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits, NegativeEquity, \
+    InsufficientBalance
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
 from execution.service.helpers.decorators import handle_order_execution_errors, binance_error_handler
 from shared.utils.decorators.failed_connection import retry_failed_connection
@@ -78,6 +79,8 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._set_initial_balance(symbol, current_equity, pipeline, header=header)
 
+        self._check_enough_balance(symbol, pipeline)
+
     def stop_symbol_trading(self, symbol, header='', **kwargs):
 
         if symbol not in self.symbols:
@@ -97,6 +100,15 @@ class BinanceFuturesTrader(BinanceTrader):
             logging.info(header + "There's no position to be closed.")
 
         self.symbols.pop(symbol)
+
+    def _check_enough_balance(self, symbol, pipeline):
+
+        balances = self.futures_account_balance()
+        balance = float(filter_balances(balances, ["USDT"])[0]["availableBalance"])
+
+        if pipeline.current_equity > balance:
+            self.symbols.pop(symbol)
+            raise InsufficientBalance(round(pipeline.current_equity, 2), round(balance, 2))
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 

@@ -1,7 +1,7 @@
 import pytest
 
 from execution.service.helpers.exceptions import LeverageSettingFail, NegativeEquity, NoSuchSymbol, NoUnits, \
-    PipelineNotActive, SignalInvalid, SignalRequired, SymbolAlreadyTraded, SymbolNotBeingTraded
+    PipelineNotActive, SignalInvalid, SignalRequired, SymbolAlreadyTraded, SymbolNotBeingTraded, InsufficientBalance
 from shared.utils.tests.fixtures.models import *
 
 
@@ -58,6 +58,11 @@ class TestExceptions:
                 f"Symbol is not being traded.",
                 id="SymbolNotBeingTraded",
             ),
+            pytest.param(
+                InsufficientBalance(),
+                f"Insufficient balance for starting pipeline.",
+                id="InsufficientBalance",
+            ),
         ],
     )
     def test_exceptions_without_args(self, exception, message):
@@ -113,6 +118,11 @@ class TestExceptions:
                 SymbolNotBeingTraded(arg),
                 f"{arg} is not being traded.",
                 id="SymbolNotBeingTraded",
+            ),
+            pytest.param(
+                InsufficientBalance(2000, 1000),
+                f"Insufficient balance for starting pipeline. 2000 USDT is required and current balance is 1000 USDT.",
+                id="InsufficientBalance",
             ),
         ],
     )

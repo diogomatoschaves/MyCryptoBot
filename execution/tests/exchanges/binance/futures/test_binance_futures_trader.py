@@ -5,7 +5,8 @@ import pytest
 
 with pytest.MonkeyPatch().context() as ctx:
     ctx.setenv("TEST", True)
-    from execution.service.helpers.exceptions import SymbolNotBeingTraded, NoUnits, SymbolAlreadyTraded, NegativeEquity
+    from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded, NegativeEquity, \
+    InsufficientBalance
     from execution.exchanges.binance.futures import BinanceFuturesTrader
     from execution.tests.setup.fixtures.external_modules import *
     from execution.tests.setup.fixtures.internal_modules import mock_futures_symbol_ticker
@@ -426,6 +427,13 @@ class TestBinanceFuturesTrader:
                 SymbolInvalid,
                 id="SymbolInvalid",
             ),
+            pytest.param(
+                {"symbol": "BTCUSDT", "current_equity": 100, "pipeline_id": 13, "leverage": 1},
+                {},
+                (1, 0, 1),
+                InsufficientBalance,
+                id="InsufficientBalance",
+            ),
         ]
     )
     def test_exception_start_symbol_trading(
@@ -435,6 +443,7 @@ class TestBinanceFuturesTrader:
         times_called,
         expected_exception,
         test_mock_setup,
+        create_pipeline_with_current_equity,
         futures_change_leverage_spy,
         futures_account_balance_spy,
         futures_create_order_spy,

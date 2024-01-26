@@ -196,10 +196,10 @@ account_balances = [
     {
         "accountAlias": "FzFzfWuXmYSguX",
         "asset": "USDT",
-        "balance": "1952.45550004",
+        "balance": "10000",
         "crossWalletBalance": "1952.45550004",
         "crossUnPnl": "0.00000000",
-        "availableBalance": "1952.45550004",
+        "availableBalance": "10000",
         "maxWithdrawAmount": "1952.45550004",
         "marginAvailable": True,
         "updateTime": 1704326426077,

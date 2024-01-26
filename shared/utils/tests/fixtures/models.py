@@ -230,6 +230,30 @@ def create_pipeline_with_balance_4(db, create_exchange, create_symbol):
 
 
 @pytest.fixture
+def create_pipeline_with_current_equity(db, create_exchange, create_symbol):
+    pipeline = Pipeline.objects.create(
+        id=13,
+        color="purple",
+        name='pipeline with current equity',
+        symbol_id='BTCUSDT',
+        exchange_id='binance',
+        interval="1h",
+        active=True,
+        leverage=1,
+        initial_equity=10000,
+        current_equity=11000,
+        balance=11000,
+        units=0
+    )
+
+    strategy_1, _ = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1)
+
+    return pipeline
+
+
+@pytest.fixture
 def create_pipeline_with_invalid_strategy(db, create_exchange, create_symbol):
     pipeline = Pipeline.objects.create(
         id=7,

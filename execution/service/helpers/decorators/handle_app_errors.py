@@ -26,9 +26,6 @@ def handle_app_errors(_func=None):
             except PipelineNotActive as e:
                 logging.info(e.message)
                 return jsonify(Responses.PIPELINE_NOT_ACTIVE(e.message))
-            except SymbolInvalid as e:
-                logging.info(e.message)
-                return jsonify(Responses.SYMBOL_INVALID(e.message))
             except SymbolAlreadyTraded as e:
                 logging.info(e.message)
                 return jsonify(Responses.SYMBOL_ALREADY_TRADED(e.message))
@@ -44,6 +41,9 @@ def handle_app_errors(_func=None):
             except LeverageSettingFail as e:
                 logging.info(e.message)
                 return jsonify(Responses.LEVERAGE_SETTING_FAILURE(e.message))
+            except InsufficientBalance as e:
+                logging.info(e.message)
+                return jsonify(Responses.INSUFFICIENT_BALANCE(e.message))
 
         return wrapper
 

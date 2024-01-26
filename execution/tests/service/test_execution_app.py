@@ -121,6 +121,14 @@ class TestExecutionService:
                 Responses.EQUITY_REQUIRED("Parameter 'equity' is required."),
                 id="EQUITY_REQUIRED",
             ),
+            pytest.param(
+                {
+                    "pipeline_id": 13
+                },
+                Responses.INSUFFICIENT_BALANCE('Insufficient balance for starting pipeline. '
+                                               '11000.0 USDT is required and current balance is 10000.0 USDT.'),
+                id="INSUFFICIENT_BALANCE",
+            ),
         ],
     )
     def test_start_pipeline_error_handling(
@@ -131,7 +139,7 @@ class TestExecutionService:
         test_mock_setup,
         exchange_data,
         create_pipeline_no_equity,
-        create_pipeline_with_balance_4,
+        create_pipeline_with_current_equity,
     ):
         res = client.post("start_symbol_trading", json=params)
 
