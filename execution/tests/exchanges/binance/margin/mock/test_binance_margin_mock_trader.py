@@ -63,6 +63,7 @@ class TestBinanceMockTrader:
         symbols,
         times_called,
         expected_value,
+        create_pipeline,
         create_symbol,
         create_exchange,
         create_structured_data,
@@ -75,7 +76,7 @@ class TestBinanceMockTrader:
         binance_trader = BinanceMockMarginTrader()
         binance_trader.symbols = symbols
 
-        return_value = binance_trader.start_symbol_trading(symbol)
+        return_value = binance_trader.start_symbol_trading(symbol, 1000, 1)
 
         assert return_value == expected_value
 
@@ -161,7 +162,7 @@ class TestBinanceMockTrader:
         create_margin_order_spy
     ):
         binance_trader = BinanceMockMarginTrader()
-        binance_trader.start_symbol_trading(self.symbol)
+        binance_trader.start_symbol_trading(self.symbol, 1000, 1)
         binance_trader.symbols = {
             self.symbol: {
                 "quote": "USDT", "base": "BTC"

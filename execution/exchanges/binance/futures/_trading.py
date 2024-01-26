@@ -44,10 +44,10 @@ class BinanceFuturesTrader(BinanceTrader):
         self,
         symbol,
         starting_equity,
-        leverage=None,
+        pipeline_id,
+        leverage,
         header='',
         initial_position=0,
-        pipeline_id=None,
         **kwargs
     ):
         if symbol in self.symbols:

@@ -30,6 +30,8 @@ services:
       - PORT=5000
       - LOGGER_LEVEL=INFO
       - CHECKS_INTERVAL=1800
+    volumes:
+      - ./database/model/migrations:/usr/src/app/database/model/migrations
   model-service:
     build:
       context: .
@@ -46,6 +48,8 @@ services:
       - APP_NAME=crypto-bot-model
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
+    volumes:
+      - ./database/model/migrations:/usr/src/app/database/model/migrations
   model-worker:
     build:
       context: .
@@ -75,8 +79,12 @@ services:
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
       - SNAPSHOTS_INTERVAL=900
+    volumes:
+      - ./database/model/migrations:/usr/src/app/database/model/migrations
   redis:
     image: redis
+    volumes:
+      - redis-data:/data
   dashboard:
     build:
       context: .
@@ -88,8 +96,9 @@ services:
       - REACT_APP_DATA_API_HOST=http://localhost:5003
       - REACT_APP_EXECUTION_API_HOST=http://localhost:5002
     volumes:
-      - ./dashboard:/app
-      - /app/node_modules
+      - ./dashboard/src:/app/src
 volumes:
-  postgres:
+  db:
+    driver: local
+  redis-data:
     driver: local

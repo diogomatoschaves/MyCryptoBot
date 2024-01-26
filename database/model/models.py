@@ -195,7 +195,8 @@ class Pipeline(models.Model):
         choices=((method, method) for method in strategy_combination_methods),
         default='Majority'
     )
-    equity = models.FloatField(null=True)
+    initial_equity = models.FloatField(null=True)
+    current_equity = models.FloatField(null=True)
     exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
     paper_trading = models.BooleanField(default=False, blank=True, null=True)
     active = models.BooleanField(default=True, blank=True)
@@ -203,7 +204,7 @@ class Pipeline(models.Model):
     color = models.TextField()
     leverage = models.IntegerField(blank=True, default=1)
     deleted = models.BooleanField(default=False, blank=True)
-    balance = models.FloatField(default=0, blank=True)
+    balance = models.FloatField(null=True, blank=True)
     units = models.FloatField(default=0, blank=True)
     last_entry = models.DateTimeField(null=True, default=None)
 
@@ -213,7 +214,7 @@ class Pipeline(models.Model):
             id=self.id,
             strategy=[obj.as_json() for obj in self.strategy.all()],
             strategyCombination=self.strategy_combination,
-            equity=self.equity,
+            equity=self.initial_equity,
             candleSize=self.interval,
             exchange=self.exchange.name,
             symbol=self.symbol.name,
@@ -226,6 +227,15 @@ class Pipeline(models.Model):
             balance=self.balance,
             units=self.units
         )
+
+    def save(self, *args, **kwargs):
+        if self.balance is None:
+            self.balance = self.initial_equity * self.leverage
+
+        if self.current_equity is None:
+            self.current_equity = self.initial_equity
+
+        super().save(*args, **kwargs)
 
 
 class Position(models.Model):

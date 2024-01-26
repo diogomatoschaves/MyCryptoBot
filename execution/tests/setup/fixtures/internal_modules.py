@@ -25,7 +25,7 @@ class MockBinanceTrader:
         self.raise_leverage_setting_failure = raise_leverage_setting_failure
         self.raise_negative_equity_error = raise_negative_equity_error
 
-    def start_symbol_trading(self, symbol, starting_equity, header='', **kwargs):
+    def start_symbol_trading(self, symbol, starting_equity, pipeline_id, header='', **kwargs):
 
         if self.raise_error_start_stop:
             raise BinanceAPIException(

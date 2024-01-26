@@ -27,7 +27,7 @@ PIPELINE = namedtuple(
         "exchange",
         "paper_trading",
         "active",
-        "equity",
+        "initial_equity",
         "leverage"
     ]
 )
@@ -54,26 +54,29 @@ def get_item_from_cache(cache, key):
     return item if item else '""'
 
 
-def get_pipeline_data(pipeline_id):
+def get_pipeline_data(pipeline_id, return_obj=False):
     try:
         pipeline = Pipeline.objects.get(id=pipeline_id)
     except Pipeline.DoesNotExist:
         raise NoSuchPipeline(pipeline_id)
 
-    pipeline = PIPELINE(
-        id=pipeline_id,
-        symbol=pipeline.symbol.name,
-        strategy=[obj.as_json() for obj in pipeline.strategy.all()],
-        strategy_combination=pipeline.strategy_combination,
-        candle_size=pipeline.interval,
-        exchange=pipeline.exchange.name,
-        paper_trading=pipeline.paper_trading,
-        active=pipeline.active,
-        equity=pipeline.equity,
-        leverage=pipeline.leverage
-    )
+    if return_obj:
+        return pipeline
+    else:
+        pipeline = PIPELINE(
+            id=pipeline_id,
+            symbol=pipeline.symbol.name,
+            strategy=[obj.as_json() for obj in pipeline.strategy.all()],
+            strategy_combination=pipeline.strategy_combination,
+            candle_size=pipeline.interval,
+            exchange=pipeline.exchange.name,
+            paper_trading=pipeline.paper_trading,
+            active=pipeline.active,
+            initial_equity=pipeline.initial_equity,
+            leverage=pipeline.leverage
+        )
 
-    return pipeline
+        return pipeline
 
 
 def get_extended_name(name):

@@ -44,7 +44,7 @@ class TestDataExternalRequests:
             pytest.param(
                 {
                     "pipeline_id": 1,
-                    "equity": 100,
+                    "initial_equity": 100,
                     "binance_trader_type": "futures"
                 },
                 "start",
@@ -53,7 +53,7 @@ class TestDataExternalRequests:
             pytest.param(
                 {
                     "pipeline_id": 1,
-                    "equity": 100,
+                    "initial_equity": 100,
                     "binance_trader_type": "futures"
                 },
                 "stop",

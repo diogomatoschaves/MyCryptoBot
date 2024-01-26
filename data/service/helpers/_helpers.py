@@ -160,7 +160,6 @@ def get_or_create_pipeline(
     strategy,
     data
 ):
-
     if exists:
         pipeline = get_existing_pipeline(dict(id=pipeline_id))
 
@@ -203,9 +202,8 @@ def convert_client_request(data):
         "exchange_id": data["exchange"].lower(),
         "paper_trading": data["paper_trading"],
         "color": data["color"],
-        "equity": data["equity"],
+        "initial_equity": data["equity"],
         "leverage": data["leverage"],
-        "balance": data["equity"] * data["leverage"],
         "strategy_combination": data["strategy_combination_method"]
     }
 

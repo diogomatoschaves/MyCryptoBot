@@ -38,7 +38,7 @@ def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
 
         symbol = position.symbol.name
 
-        response = get_ticker(position.symbol.name)
+        response = get_ticker(position.symbol.name, position.paper_trading)
 
         if response is None:
             continue
@@ -48,7 +48,7 @@ def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
         try:
             leveraged_current_equity = binance_obj.current_balance[symbol] + binance_obj.units[symbol] * current_price
 
-            initial_equity = position.pipeline.equity
+            initial_equity = position.pipeline.initial_equity
             leverage = position.pipeline.leverage
             leveraged_initial_equity = initial_equity * leverage
 

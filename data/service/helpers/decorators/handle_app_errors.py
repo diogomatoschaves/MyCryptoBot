@@ -1,6 +1,5 @@
 import functools
 import logging
-import traceback
 
 from flask import jsonify
 
@@ -82,8 +81,6 @@ def handle_app_errors(_func=None):
             except EquityRequired as e:
                 logging.info(e.message)
                 return jsonify(Responses.EQUITY_REQUIRED(e.message))
-            finally:
-                logging.error(traceback.format_exc())
 
         return wrapper
 

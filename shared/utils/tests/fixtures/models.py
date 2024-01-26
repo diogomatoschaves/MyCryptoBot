@@ -70,7 +70,7 @@ def create_pipeline(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=5000,
+        initial_equity=5000,
         leverage=1,
         balance=0,
         units=0.3,
@@ -98,7 +98,7 @@ def create_pipeline_2(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
+        initial_equity=100,
         leverage=10,
         balance=1000,
         units=0
@@ -122,7 +122,7 @@ def create_inactive_pipeline(db, create_exchange, create_symbol):
         symbol_id='BTCUSDT',
         exchange_id='binance',
         interval="1h",
-        equity=500,
+        initial_equity=500,
         active=False,
         balance=1000,
         units=0
@@ -145,8 +145,8 @@ def create_pipeline_with_balance(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
-        leverage=1,
+        initial_equity=100,
+        leverage=10,
         balance=2000,
         units=-2,
         last_entry=datetime.datetime.now(pytz.utc) - datetime.timedelta(minutes=30)
@@ -169,7 +169,7 @@ def create_pipeline_with_balance_2(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=1000,
+        initial_equity=1000,
         leverage=1,
         balance=1000,
         units=0
@@ -192,9 +192,32 @@ def create_pipeline_with_balance_3(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
+        initial_equity=100,
         leverage=1,
         balance=100,
+        units=0
+    )
+
+    strategy_1, _ = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1)
+
+    return pipeline
+
+
+@pytest.fixture
+def create_pipeline_with_balance_4(db, create_exchange, create_symbol):
+    pipeline = Pipeline.objects.create(
+        id=12,
+        color="purple",
+        name='pipeline with balance 4',
+        symbol_id='BTCUSDT',
+        exchange_id='binance',
+        interval="1h",
+        active=True,
+        initial_equity=100,
+        leverage=1,
+        balance=2000,
         units=0
     )
 
@@ -215,7 +238,7 @@ def create_pipeline_with_invalid_strategy(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
+        initial_equity=100,
         leverage=1,
         balance=100,
         units=0
@@ -238,7 +261,7 @@ def create_deleted_pipeline(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
+        initial_equity=100,
         leverage=1,
         balance=100,
         units=0
@@ -277,7 +300,7 @@ def create_pipeline_BNBBTC(db, create_exchange, create_symbol):
         symbol_id='BNBBTC',
         exchange_id='binance',
         interval="1h",
-        equity=500,
+        initial_equity=500,
         active=True,
         balance=1000,
         units=0
@@ -297,7 +320,7 @@ def create_paper_trading_pipeline(db, create_exchange, create_symbol):
         symbol_id='BTCUSDT',
         exchange_id='binance',
         interval="1h",
-        equity=500,
+        initial_equity=500,
         active=True,
         balance=1000,
         units=0,

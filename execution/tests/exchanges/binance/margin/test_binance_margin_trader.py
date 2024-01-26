@@ -77,6 +77,7 @@ class TestBinanceMarginTrader:
         expected_value,
         create_symbol,
         create_exchange,
+        create_pipeline,
         ping,
         init_session,
         get_isolated_margin_account,
@@ -93,7 +94,7 @@ class TestBinanceMarginTrader:
         binance_trader = BinanceMarginTrader()
         binance_trader.symbols = symbols
 
-        return_value = binance_trader.start_symbol_trading(symbol)
+        return_value = binance_trader.start_symbol_trading(symbol, 1000, 1)
 
         assert return_value == expected_value
 
@@ -244,7 +245,7 @@ class TestBinanceMarginTrader:
 
         binance_trader = BinanceMarginTrader()
 
-        binance_trader.start_symbol_trading(self.symbol, pipeline_id=1)
+        binance_trader.start_symbol_trading(self.symbol, 1000, 1)
         binance_trader.trade(self.symbol, 1, amount="all", pipeline_id=1)
         binance_trader.stop_symbol_trading(self.symbol, pipeline_id=1)
 

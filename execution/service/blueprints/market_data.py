@@ -18,10 +18,13 @@ client = BinanceHandler()
 testnet_client = BinanceHandler(paper_trading=True)
 
 
-def get_ticker(symbol):
+def get_ticker(symbol, paper_trading=False):
     try:
         client.validate_symbol(symbol)
-        return client.futures_symbol_ticker(symbol=symbol)
+
+        bh = testnet_client if paper_trading else client
+
+        return bh.futures_symbol_ticker(symbol=symbol)
     except (SymbolInvalid, ConnectionError, ReadTimeout):
         return {}
 

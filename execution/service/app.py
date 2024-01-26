@@ -77,11 +77,11 @@ def start_pipeline_trade(pipeline, binance_account_type, header, initial_positio
 
     bt.start_symbol_trading(
         pipeline.symbol,
-        pipeline.equity * pipeline.leverage,
+        pipeline.initial_equity * pipeline.leverage,
+        pipeline.id,
         leverage=pipeline.leverage,
         initial_position=initial_position,
         header=header,
-        pipeline_id=pipeline.id,
     )
 
 
@@ -120,7 +120,7 @@ def create_app():
 
         pipeline, parameters = extract_and_validate(request_data)
 
-        if parameters.equity is None:
+        if parameters.initial_equity is None:
             raise EquityRequired
 
         if pipeline.exchange == 'binance':

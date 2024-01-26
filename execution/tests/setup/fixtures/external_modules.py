@@ -3,6 +3,7 @@ from random import randint
 import pytest
 
 import execution
+from execution.exchanges.binance.futures import BinanceFuturesTrader
 from execution.tests.setup.test_data.binance_api_responses import (
     isolated_account_info,
     trading_fees,
@@ -10,15 +11,13 @@ from execution.tests.setup.test_data.binance_api_responses import (
 )
 
 
-class MockBinanceHandler(object):
-    def __init__(self, **kwargs):
-        pass
+class MockBinanceHandler(BinanceFuturesTrader):
 
     def _init_session(self):
-        pass
+        return None
 
     def ping(self):
-        pass
+        return None
 
     def get_isolated_margin_account(self):
         return isolated_account_info
@@ -86,7 +85,7 @@ class MockBinanceHandler(object):
         return positions_info
 
 
-def binance_client_mock_factory(method, type_='mock', account_type='margin', extra_info=None):
+def binance_client_mock_factory(method, type_='mock', account_type='margin'):
 
     @pytest.fixture
     def mock_binance_margin_client(mocker):
@@ -136,6 +135,18 @@ def binance_handler_market_data_factory(method):
         )
 
     return mock_binance_handler_market_data
+
+
+def binance_handler_execution_app_factory(method):
+    @pytest.fixture
+    def mock_binance_handler(mocker):
+        return mocker.patch.object(
+            execution.service.app.BinanceFuturesTrader,
+            method,
+            getattr(MockBinanceHandler, method)
+        )
+
+    return mock_binance_handler
 
 
 def binance_mock_trader_spy_factory(method):
