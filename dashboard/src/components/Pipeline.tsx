@@ -3,7 +3,7 @@ import {
     DeletePipeline,
     DropdownOptions, EditPipeline,
     Pipeline, PipelinesObject,
-    Position, RawPipeline, RawStrategy,
+    Position,
     StartPipeline,
     StopPipeline, Strategy,
 } from "../types";
@@ -49,7 +49,6 @@ interface Props {
     balances: BalanceObj;
     pipelines: PipelinesObject;
     positions: Position[];
-    pipelinesPnl: any
 }
 
 
@@ -72,7 +71,6 @@ function PipelineItem(props: Props) {
         balances,
         positions,
         pipelines,
-        pipelinesPnl
     } = props
 
     const [open, setOpen] = useState(false)
@@ -84,10 +82,12 @@ function PipelineItem(props: Props) {
 
     const age = pipeline.openTime ? timeFormatterDate(pipeline.openTime) : "-"
 
-    const pipelinePnl = pipelinesPnl[pipeline.id] || {profit: 0, pnl: 0}
-    const pnl = pipelinePnl ? `${pipelinePnl.profit} (${pipelinePnl.pnl}%)` : '-'
+    const pipelinePnl = pipeline.currentEquity - pipeline.initialEquity
+    const pipelinePnlPct = pipelinePnl / pipeline.initialEquity * 100
 
-    const color = pipelinePnl.profit > 0 ? GREEN : pipelinePnl.profit < 0 ? RED : "000000"
+    const pipelinePnlString = `${pipelinePnl.toFixed(2)} (${pipelinePnlPct.toFixed(2)}%)`
+
+    const color = pipelinePnl > 0 ? GREEN : pipelinePnl < 0 ? RED : "000000"
 
     const isMobile = ['mobile'].includes(size)
 
@@ -217,7 +217,7 @@ function PipelineItem(props: Props) {
                             PnL (ROI%)
                         </Grid.Column>
                         <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
-                            {pnl}
+                            {pipelinePnlString}
                         </Grid.Column>
                     </Grid.Column>
                     {!isMobile && (
@@ -263,7 +263,7 @@ function PipelineItem(props: Props) {
                             Allocated Equity
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.rightColumn} >
-                            {`${pipeline.equity} USDT`}
+                            {`${pipeline.initialEquity} USDT`}
                         </Grid.Column>
                     </Grid.Column>
                     <Grid.Column width={isMobile ? 6 : 4}>

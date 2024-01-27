@@ -530,9 +530,10 @@ class TestDashboardService:
                         "balance": 0.0,
                         "candleSize": "1h",
                         "color": "purple",
-                        "equity": 5000.0,
+                        "currentEquity": 5000.0,
                         "exchange": "binance",
                         "id": 1,
+                        "initialEquity": 5000.0,
                         "leverage": 1,
                         "name": "Hello World",
                         "numberTrades": 2,
@@ -552,9 +553,10 @@ class TestDashboardService:
                         "balance": 1000.0,
                         "candleSize": "1h",
                         "color": "purple",
-                        "equity": 100.0,
+                        "currentEquity": 100.0,
                         "exchange": "binance",
                         "id": 2,
+                        "initialEquity": 100.0,
                         "leverage": 10,
                         "name": "Hello World",
                         "numberTrades": 2,
@@ -650,62 +652,5 @@ class TestDashboardService:
         create_live_portfolio_timeseries,
     ):
         res = client.get(f'{API_PREFIX}/pipeline-equity{extra_url}')
-
-        assert res.json == jsonify(response).json
-
-    @pytest.mark.parametrize(
-        "extra_url,response",
-        [
-            pytest.param(
-                '',
-                {"success": False, "pipelinesPnl": {}},
-                id="pipelines_pnl-unspecified",
-            ),
-            pytest.param(
-                '/1',
-                {'pipelinesPnl': {'1': {'pnl': 50.0, 'profit': 2500.0}}, 'success': True},
-                id="pipelines_pnl-pipeline_1",
-            ),
-            pytest.param(
-                '/2',
-                {'pipelinesPnl': {'2': {'pnl': 0.0, 'profit': 0.0}}, 'success': True},
-                id="pipelines_pnl-pipeline_2",
-            ),
-            pytest.param(
-                '/3',
-                {'pipelinesPnl': {'3': {'pnl': 100.0, 'profit': 500.0}}, 'success': True},
-                id="pipelines_pnl-pipeline_3",
-            ),
-            pytest.param(
-                '/9',
-                {'pipelinesPnl': {}, 'success': True},
-                id="pipelines_pnl-pipeline_no_equity",
-            ),
-            pytest.param(
-                '/10',
-                {'pipelinesPnl': {}, 'success': True},
-                id="pipelines_pnl-pipeline_unsuccessful_price",
-            ),
-            pytest.param(
-                '/1,2,3',
-                {'pipelinesPnl': {'1': {'pnl': 50.0, 'profit': 2500.0}, '2': {'pnl': 0.0, 'profit': 0.0}, '3': {'pnl': 100.0, 'profit': 500.0}}, 'success': True},
-                id="pipelines_pnl-pipeline_1,2,3",
-            ),
-        ],
-    )
-    def test_pipeline_pnl(
-        self,
-        extra_url,
-        response,
-        client,
-        create_trades,
-        create_trades_2,
-        create_pipeline_no_equity,
-        create_pipeline_BNBBTC,
-        mock_get_price
-    ):
-        res = client.get(f'{API_PREFIX}/pipelines-pnl{extra_url}')
-
-        print(res.json)
 
         assert res.json == jsonify(response).json

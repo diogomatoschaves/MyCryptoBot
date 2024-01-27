@@ -57,7 +57,6 @@ interface Props {
   candleSizeOptions: DropdownOptions[];
   exchangeOptions: DropdownOptions[];
   balances: BalanceObj;
-  pipelinesPnl: Object
 }
 
 
@@ -81,7 +80,6 @@ function PipelineDetail(props: Props) {
     candleSizeOptions,
     exchangeOptions,
     balances,
-    pipelinesPnl
   } = props
 
   const fetchTradesData = async (pipelineId: string) => {
@@ -131,7 +129,6 @@ function PipelineDetail(props: Props) {
               position={positions.find((position) => String(position.pipelineId) === pipelineId)}
               segmentStyle={isMobile ? styles.mobileSegment : styles.segment}
               lastRow={true}
-              pipelinesPnl={pipelinesPnl}
             />
           </Grid.Column>
           <Grid.Column width={6}>

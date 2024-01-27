@@ -231,18 +231,3 @@ export const getEquityTimeSeries = async ({pipelineId, timeFrame}) => {
 
   return await response.json()
 }
-
-export const getPipelinesPnl = async (pipelineIds) => {
-
-  const url = `${urlPrefix}/pipelines-pnl${pipelineIds ? '/' + pipelineIds.join() : ''}`
-
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      "Accept": "application/json, text/plain, */*",
-      "Authorization": getToken()
-    }
-  })
-
-  return await response.json()
-}
