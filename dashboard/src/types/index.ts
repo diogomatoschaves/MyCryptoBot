@@ -17,6 +17,7 @@ export type Trade = {
     openPrice: number,
     closePrice: number | null,
     profitLoss: number | null,
+    profitLossPct: number | null,
     amount: number,
     side: number
     mock: boolean
@@ -37,6 +38,7 @@ export type RawTrade = {
     openPrice: number,
     closePrice: number | null,
     profitLoss: number | null,
+    profitLossPct: number | null,
     amount: number,
     side: number
     mock: boolean

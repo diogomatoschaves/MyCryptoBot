@@ -16,22 +16,15 @@ export const getResources = async (resources, history) => {
 
   const url = `${urlPrefix}/resources/${resourcesString}`
 
-  return await fetch(url, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
       "Authorization": getToken()
     }
   })
-    .then(async (res) => {
-      if (res.status >= 400) {
-        history.replace(history.location.pathname, {
-          errorStatusCode: res.status
-        });
-      } else {
-        return res.json()
-      }
-    })
+
+  return await response.json()
 }
 
 
@@ -39,20 +32,15 @@ export const getTrades = async (page, pipelineId) => {
 
   const url = `${urlPrefix}/trades${page ? '/' + page : ''}${pipelineId ? '?pipelineId=' + pipelineId : ''}`
 
-  return await fetch(url, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
       "Authorization": getToken()
     }
   })
-    .then(res => {
-      if (res.status >= 400) {
-        throw(new Error('Error fetching trades'))
-      } else {
-        return res.json()
-      }
-    })
+
+  return await response.json()
 }
 
 
@@ -60,20 +48,15 @@ export const getPipelines = async (page) => {
 
   const url = `${urlPrefix}/pipelines${page ? '/' + page : ''}`
 
-  return await fetch(url, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
       "Authorization": getToken()
     }
   })
-    .then(res => {
-      if (res.status >= 400) {
-        throw(new Error('Error fetching pipelines'))
-      } else {
-        return res.json()
-      }
-    })
+
+  return await response.json()
 }
 
 
@@ -81,20 +64,15 @@ export const getPositions = async (page) => {
 
   const url = `${urlPrefix}/positions${page ? '/' + page : ''}`
 
-  return await fetch(url, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
       "Authorization": getToken()
     }
   })
-    .then(res => {
-      if (res.status >= 400) {
-        throw(new Error('Error fetching positions'))
-      } else {
-        return res.json()
-      }
-    })
+
+  return await response.json()
 }
 
 
@@ -102,20 +80,15 @@ export const getPrice = async (symbol) => {
 
   const url = `${urlPrefix}/prices?symbol=${symbol}`
 
-  return await fetch(url, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
       "Authorization": getToken()
     }
   })
-    .then(res => {
-      if (res.status >= 400) {
-        throw(new Error('Error fetching prices'))
-      } else {
-        return res.json()
-      }
-    })
+
+  return await response.json()
 }
 
 
@@ -123,20 +96,15 @@ export const getFuturesAccountBalance = async () => {
 
   const url = `${urlPrefix}/futures_account_balance`
 
-  return await fetch(url, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       "Accept": "application/json, text/plain, */*",
       "Authorization": getToken()
     }
   })
-    .then(res => {
-      if (res.status >= 400) {
-        throw(new Error('Error fetching account balance.'))
-      } else {
-        return res.json()
-      }
-    })
+
+  return await response.json()
 }
 
 

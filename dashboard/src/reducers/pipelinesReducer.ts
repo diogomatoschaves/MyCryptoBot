@@ -18,7 +18,7 @@ export const pipelinesReducerCallback = (trades: Object) => (metrics: any, pipel
     if (trade.pipelineId === pipeline.id) {
       return {
         totalTrades: tradesMetrics.totalTrades + 1,
-        win: trade.profitLoss && trade.profitLoss > 0 ? tradesMetrics.win + 1 : tradesMetrics.win
+        win: trade.profitLossPct && trade.profitLossPct > 0 ? tradesMetrics.win + 1 : tradesMetrics.win
       }
     }
     return tradesMetrics

@@ -148,7 +148,8 @@ class BinanceTrader(BinanceHandler, Trader):
             if last_trade:
                 last_trade.close_price = closing_order.price
                 last_trade.close_time = datetime.now(tz=pytz.UTC)
-                last_trade.profit_loss = last_trade.get_profit_loss()
+                last_trade.pnl = last_trade.get_profit_loss()
+                last_trade.pnl_pct = last_trade.get_profit_loss_pct()
                 last_trade.save()
 
         if position != 0:

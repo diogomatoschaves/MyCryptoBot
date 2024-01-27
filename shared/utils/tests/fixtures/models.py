@@ -532,9 +532,9 @@ def create_trades(db, create_exchange, create_symbol, create_pipeline, create_pi
     trade_2.open_time = datetime.datetime(2023, 10, 1, 16, 5)
     trade_3.open_time = datetime.datetime(2023, 10, 1, 16, 10)
 
-    trade_1.profit_loss = trade_1.get_profit_loss()
-    trade_2.profit_loss = trade_2.get_profit_loss()
-    trade_3.profit_loss = trade_3.get_profit_loss()
+    trade_1.pnl_pct = trade_1.get_profit_loss_pct()
+    trade_2.pnl_pct = trade_2.get_profit_loss_pct()
+    trade_3.pnl_pct = trade_3.get_profit_loss_pct()
 
     trade_1.save()
     trade_2.save()
@@ -544,7 +544,7 @@ def create_trades(db, create_exchange, create_symbol, create_pipeline, create_pi
 
 
 @pytest.fixture
-def create_trades_2(db, create_inactive_pipeline):
+def create_trades_2(db, create_inactive_pipeline, create_pipeline_no_equity):
     trade_1 = Trade.objects.create(
         id=5,
         symbol_id="BTCUSDT",
@@ -576,8 +576,8 @@ def create_trades_2(db, create_inactive_pipeline):
     trade_1.open_time = datetime.datetime(2023, 10, 1, 16, 0)
     trade_2.open_time = datetime.datetime(2023, 10, 1, 16, 0)
 
-    trade_1.profit_loss = trade_1.get_profit_loss()
-    trade_2.profit_loss = trade_2.get_profit_loss()
+    trade_1.pnl_pct = trade_1.get_profit_loss_pct()
+    trade_2.pnl_pct = trade_2.get_profit_loss_pct()
 
     trade_1.save()
     trade_2.save()
