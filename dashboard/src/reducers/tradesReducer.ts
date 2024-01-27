@@ -13,12 +13,12 @@ export const tradesReducerCallback = (trades: Object) => (metrics: any, tradeId:
     numberTrades: metrics.numberTrades + 1,
     maxTradeDuration: tradeTime > metrics.maxTradeDuration ? new Date(tradeTime) : metrics.maxTradeDuration,
     totalTradeDuration: metrics.totalTradeDuration + tradeTime,
-    winningTrades: trade.profitLoss && trade.profitLoss >= 0 ? metrics.winningTrades + 1 : metrics.winningTrades,
-    closedTrades: trade.profitLoss !== null ? metrics.closedTrades + 1 : metrics.closedTrades,
-    bestTrade: trade.profitLoss && trade.profitLoss > metrics.bestTrade
-      ? trade.profitLoss : metrics.bestTrade,
-    worstTrade: trade.profitLoss && trade.profitLoss < metrics.worstTrade
-      ? trade.profitLoss : metrics.worstTrade
+    winningTrades: trade.profitLossPct && trade.profitLossPct >= 0 ? metrics.winningTrades + 1 : metrics.winningTrades,
+    closedTrades: trade.profitLossPct !== null ? metrics.closedTrades + 1 : metrics.closedTrades,
+    bestTrade: trade.profitLossPct && trade.profitLossPct > metrics.bestTrade
+      ? trade.profitLossPct : metrics.bestTrade,
+    worstTrade: trade.profitLossPct && trade.profitLossPct < metrics.worstTrade
+      ? trade.profitLossPct : metrics.worstTrade
   }
 }
 export const tradesReducerInitialState = {

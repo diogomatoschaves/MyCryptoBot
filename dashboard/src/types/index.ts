@@ -17,6 +17,7 @@ export type Trade = {
     openPrice: number,
     closePrice: number | null,
     profitLoss: number | null,
+    profitLossPct: number | null,
     amount: number,
     side: number
     mock: boolean
@@ -37,6 +38,7 @@ export type RawTrade = {
     openPrice: number,
     closePrice: number | null,
     profitLoss: number | null,
+    profitLossPct: number | null,
     amount: number,
     side: number
     mock: boolean
@@ -74,7 +76,8 @@ export type Pipeline = {
     strategyCombination: string,
     candleSize: string
     name: string,
-    equity: number,
+    initialEquity: number,
+    currentEquity: number,
     exchange: string
     symbol: string
     active: boolean
@@ -93,7 +96,8 @@ export type RawPipeline = {
     strategyCombination: string,
     candleSize: string
     name: string,
-    equity: number,
+    initialEquity: number,
+    currentEquity: number,
     exchange: string
     symbol: string
     active: boolean

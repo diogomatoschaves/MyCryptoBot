@@ -16,7 +16,7 @@ export const availableBalanceReducer = (state: any, action: any) => {
             const pipelineType = pipeline.paperTrading ? "test" : "live"
             return {
               ...accum,
-              [pipelineType]: accum[pipelineType] - (pipeline.equity)
+              [pipelineType]: accum[pipelineType] - (pipeline.currentEquity)
             }
           } else {
             return accum

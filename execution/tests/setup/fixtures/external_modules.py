@@ -3,6 +3,7 @@ from random import randint
 import pytest
 
 import execution
+from execution.exchanges.binance.futures import BinanceFuturesTrader
 from execution.tests.setup.test_data.binance_api_responses import (
     isolated_account_info,
     trading_fees,
@@ -10,15 +11,13 @@ from execution.tests.setup.test_data.binance_api_responses import (
 )
 
 
-class MockBinanceHandler(object):
-    def __init__(self, **kwargs):
-        pass
+class MockBinanceHandler(BinanceFuturesTrader):
 
     def _init_session(self):
-        pass
+        return None
 
     def ping(self):
-        pass
+        return None
 
     def get_isolated_margin_account(self):
         return isolated_account_info
@@ -62,12 +61,6 @@ class MockBinanceHandler(object):
             "orderId": randint(0, 1E9)
         }
 
-    def get_symbol_ticker(self, symbol):
-        return {'symbol': symbol, 'price': '19084.75000000'}
-
-    def futures_exchange_info(self):
-        return exchange_info
-
     def futures_account_balance(self):
         return account_balances
 
@@ -80,13 +73,11 @@ class MockBinanceHandler(object):
         if symbol in tickers:
             return {'symbol': symbol, 'price': tickers.get(symbol)}
 
-        return {}
-
     def futures_position_information(self):
         return positions_info
 
 
-def binance_client_mock_factory(method, type_='mock', account_type='margin', extra_info=None):
+def binance_client_mock_factory(method, type_='mock', account_type='margin'):
 
     @pytest.fixture
     def mock_binance_margin_client(mocker):
@@ -138,6 +129,18 @@ def binance_handler_market_data_factory(method):
     return mock_binance_handler_market_data
 
 
+def binance_handler_execution_app_factory(method):
+    @pytest.fixture
+    def mock_binance_handler(mocker):
+        return mocker.patch.object(
+            execution.service.app.BinanceFuturesTrader,
+            method,
+            getattr(MockBinanceHandler, method)
+        )
+
+    return mock_binance_handler
+
+
 def binance_mock_trader_spy_factory(method):
     @pytest.fixture
     def spy_binance_client(mocker):
@@ -148,15 +151,6 @@ def binance_mock_trader_spy_factory(method):
     return spy_binance_client
 
 
-class SideEffect:
-    def __init__(self, *fns):
-        self.fs = iter(fns)
-
-    def __call__(self, *args, **kwargs):
-        f = next(self.fs)
-        return f(*args, **kwargs)
-
-
 @pytest.fixture
-def futures_create_order_negative_equity(mocker):
+def mocked_futures_create_order(mocker):
     return mocker.patch('execution.exchanges.binance.futures._trading.BinanceFuturesTrader.futures_create_order')

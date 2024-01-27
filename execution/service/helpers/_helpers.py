@@ -1,10 +1,8 @@
 import json
 import os
 from collections import namedtuple
-from datetime import datetime
 
 import django
-import pytz
 import redis
 
 from execution.service.helpers.exceptions import SignalRequired, SignalInvalid
@@ -21,7 +19,7 @@ cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 fields = [
     "header",
     "binance_account_type",
-    "equity",
+    "initial_equity",
     "leverage",
 ]
 
@@ -53,4 +51,4 @@ def extract_and_validate(request_data):
 
     header = get_header(pipeline_id)
 
-    return pipeline, Parameters(header, binance_account_type, pipeline.equity, pipeline.leverage)
+    return pipeline, Parameters(header, binance_account_type, pipeline.initial_equity, pipeline.leverage)

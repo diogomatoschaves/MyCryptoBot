@@ -160,7 +160,6 @@ def get_or_create_pipeline(
     strategy,
     data
 ):
-
     if exists:
         pipeline = get_existing_pipeline(dict(id=pipeline_id))
 
@@ -188,8 +187,8 @@ def convert_trades_to_dict(trades_metrics):
         if trades_metrics['duration__max'] else None,
         'avgTradeDuration': trades_metrics['duration__avg'].total_seconds() * 1000
         if trades_metrics['duration__avg'] else None,
-        'bestTrade': round(trades_metrics['profit_loss__max'], 5) if trades_metrics['profit_loss__max'] else None,
-        'worstTrade': round(trades_metrics['profit_loss__min'], 5) if trades_metrics['profit_loss__min'] else None,
+        'bestTrade': round(trades_metrics['pnl_pct__max'], 5) if trades_metrics['pnl_pct__max'] else None,
+        'worstTrade': round(trades_metrics['pnl_pct__min'], 5) if trades_metrics['pnl_pct__min'] else None,
         'winningTrades': trades_metrics['winning_trade__sum'],
         'losingTrades': trades_metrics['losing_trade__sum'],
     }
@@ -203,9 +202,8 @@ def convert_client_request(data):
         "exchange_id": data["exchange"].lower(),
         "paper_trading": data["paper_trading"],
         "color": data["color"],
-        "equity": data["equity"],
+        "initial_equity": data["equity"],
         "leverage": data["leverage"],
-        "balance": data["equity"] * data["leverage"],
         "strategy_combination": data["strategy_combination_method"]
     }
 
@@ -265,14 +263,14 @@ def query_trades_metrics(pipeline=None):
 
     return qs.annotate(
         duration=F('close_time') - F('open_time'),
-        winning_trade=Count('profit_loss', filter=Q(profit_loss__gte=0)),
-        losing_trade=Count('profit_loss', filter=Q(profit_loss__lt=0))
+        winning_trade=Count('pnl_pct', filter=Q(pnl_pct__gte=0)),
+        losing_trade=Count('pnl_pct', filter=Q(pnl_pct__lt=0))
     ).aggregate(
         Max('duration'),
         Avg('duration'),
         Count('id'),
-        Max('profit_loss'),
-        Min('profit_loss'),
+        Max('pnl_pct'),
+        Min('pnl_pct'),
         Sum('winning_trade'),
         Sum('losing_trade'),
     )

@@ -41,7 +41,7 @@ class BinanceMarginTrader(BinanceTrader):
         self.conn_key = None
         self.exchange = "binance"
 
-    def start_symbol_trading(self, symbol, header='', pipeline_id=None, **kwargs):
+    def start_symbol_trading(self, symbol, equity, pipeline_id, header='', **kwargs):
 
         if symbol in self.symbols:
             return True

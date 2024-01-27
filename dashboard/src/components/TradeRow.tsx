@@ -43,16 +43,9 @@ function TradeRow(props: Props) {
   const openPrice = Number(trade.openPrice)
   const closePrice = Number(trade.closePrice)
 
-  let profit, pnl, pnlColor
-  if (trade.profitLoss !== null && trade.closePrice !== null) {
-    pnlColor = trade.profitLoss > 0 ? GREEN : RED
-    profit = ((trade.closePrice - trade.openPrice) * trade.amount * trade.side).toFixed(2)
-    pnl = (trade.profitLoss * trade.leverage * 100).toFixed(2)
-  } else {
-    pnlColor = '#000000'
-    profit = '-'
-    pnl = '-'
-  }
+  const profitLoss = trade.profitLoss ? trade.profitLoss.toFixed(2) : '-'
+  const profitLossPct = trade.profitLossPct ? (trade.profitLossPct * 100).toFixed(2) : '-'
+  const pnlColor = trade.profitLossPct ? trade.profitLossPct > 0 ? GREEN : RED : '#000000'
 
   const mobile = ['mobile'].includes(size)
   const cellType = mobile ? 'div' : 'td'
@@ -90,7 +83,7 @@ function TradeRow(props: Props) {
       {closePrice.toFixed(quoteDecimal)}
     </Table.Cell>,
     <Table.Cell as={cellType} style={{...styles.defaultCell, ...styles.quantityCell, color: pnlColor}}>
-      {`${profit} USDT (${pnl}%)`}
+      {`${profitLoss} USDT (${profitLossPct}%)`}
     </Table.Cell>
   ]
 

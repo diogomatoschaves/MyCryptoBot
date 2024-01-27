@@ -182,7 +182,7 @@ export const getInitialState = (
       symbol: symbol && symbol.value,
       candleSize: candleSize && candleSize.value,
       name: pipeline.name,
-      equity: String(pipeline.equity),
+      equity: String(pipeline.initialEquity),
       leverage: pipeline.leverage,
       dynamicStrategies,
       liveTrading: !pipeline.paperTrading,

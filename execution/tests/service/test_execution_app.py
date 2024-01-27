@@ -12,6 +12,35 @@ from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
 
+def inject_fixture(mock_name, method):
+    globals()[f"{mock_name}"] = binance_handler_execution_app_factory(method)
+
+
+METHODS = [
+    ("init_session", "_init_session"),
+    ("ping", "ping"),
+    ("futures_change_leverage", "futures_change_leverage"),
+    ("futures_create_order", "futures_create_order"),
+    ("futures_account_balance", "futures_account_balance"),
+]
+
+
+for method in METHODS:
+    inject_fixture(*method)
+
+
+@pytest.fixture
+def test_mock_setup(
+    mocker,
+    ping,
+    init_session,
+    futures_change_leverage,
+    futures_create_order,
+    futures_account_balance,
+):
+    return
+
+
 class TestExecutionService:
     def test_index_route(self, client):
 
@@ -77,7 +106,40 @@ class TestExecutionService:
         exchange_data,
         create_pipeline,
         create_inactive_pipeline,
+    ):
+        res = client.post("start_symbol_trading", json=params)
 
+        assert res.json == expected_value
+
+    @pytest.mark.parametrize(
+        "params,expected_value",
+        [
+            pytest.param(
+                {
+                    "pipeline_id": 9
+                },
+                Responses.EQUITY_REQUIRED("Parameter 'equity' is required."),
+                id="EQUITY_REQUIRED",
+            ),
+            pytest.param(
+                {
+                    "pipeline_id": 13
+                },
+                Responses.INSUFFICIENT_BALANCE('Insufficient balance for starting pipeline. '
+                                               '11000.0 USDT is required and current balance is 10000.0 USDT.'),
+                id="INSUFFICIENT_BALANCE",
+            ),
+        ],
+    )
+    def test_start_pipeline_error_handling(
+        self,
+        params,
+        expected_value,
+        client,
+        test_mock_setup,
+        exchange_data,
+        create_pipeline_no_equity,
+        create_pipeline_with_current_equity,
     ):
         res = client.post("start_symbol_trading", json=params)
 

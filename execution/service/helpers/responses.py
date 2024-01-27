@@ -20,7 +20,8 @@ RESPONSES = namedtuple(
         "SYMBOL_ALREADY_TRADED",
         "SYMBOL_NOT_BEING_TRADED",
         "LEVERAGE_SETTING_FAILURE",
-        "NEGATIVE_EQUITY"
+        "NEGATIVE_EQUITY",
+        "INSUFFICIENT_BALANCE"
     ]
 )
 
@@ -42,7 +43,8 @@ ReturnCodes = RESPONSES(
     SYMBOL_ALREADY_TRADED="SYMBOL_ALREADY_TRADED",
     SYMBOL_NOT_BEING_TRADED="SYMBOL_NOT_BEING_TRADED",
     LEVERAGE_SETTING_FAILURE="LEVERAGE_SETTING_FAILURE",
-    NEGATIVE_EQUITY="NEGATIVE_EQUITY"
+    NEGATIVE_EQUITY="NEGATIVE_EQUITY",
+    INSUFFICIENT_BALANCE="INSUFFICIENT_BALANCE"
 )
 
 
@@ -129,6 +131,11 @@ Responses = RESPONSES(
     },
     NEGATIVE_EQUITY=lambda message: {
         "code": ReturnCodes.NEGATIVE_EQUITY,
+        "success": False,
+        "message":  message
+    },
+    INSUFFICIENT_BALANCE=lambda message: {
+        "code": ReturnCodes.INSUFFICIENT_BALANCE,
         "success": False,
         "message":  message
     },

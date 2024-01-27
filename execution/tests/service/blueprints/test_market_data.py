@@ -139,8 +139,8 @@ class TestMarketData:
                         {
                             "accountAlias": "FzFzfWuXmYSguX",
                             "asset": "USDT",
-                            "availableBalance": "1952.45550004",
-                            "balance": "1952.45550004",
+                            "availableBalance": "10000",
+                            "balance": "10000",
                             "crossUnPnl": "0.00000000",
                             "crossWalletBalance": "1952.45550004",
                             "marginAvailable": True,
@@ -152,8 +152,8 @@ class TestMarketData:
                         {
                             "accountAlias": "FzFzfWuXmYSguX",
                             "asset": "USDT",
-                            "availableBalance": "1952.45550004",
-                            "balance": "1952.45550004",
+                            "availableBalance": "10000",
+                            "balance": "10000",
                             "crossUnPnl": "0.00000000",
                             "crossWalletBalance": "1952.45550004",
                             "marginAvailable": True,

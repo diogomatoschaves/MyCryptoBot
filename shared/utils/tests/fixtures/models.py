@@ -70,7 +70,7 @@ def create_pipeline(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=5000,
+        initial_equity=5000,
         leverage=1,
         balance=0,
         units=0.3,
@@ -98,7 +98,7 @@ def create_pipeline_2(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
+        initial_equity=100,
         leverage=10,
         balance=1000,
         units=0
@@ -122,7 +122,7 @@ def create_inactive_pipeline(db, create_exchange, create_symbol):
         symbol_id='BTCUSDT',
         exchange_id='binance',
         interval="1h",
-        equity=500,
+        initial_equity=500,
         active=False,
         balance=1000,
         units=0
@@ -145,10 +145,10 @@ def create_pipeline_with_balance(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
-        leverage=1,
+        initial_equity=100,
+        leverage=10,
         balance=2000,
-        units=-2,
+        units=-0.05,
         last_entry=datetime.datetime.now(pytz.utc) - datetime.timedelta(minutes=30)
     )
 
@@ -169,7 +169,7 @@ def create_pipeline_with_balance_2(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=1000,
+        initial_equity=1000,
         leverage=1,
         balance=1000,
         units=0
@@ -192,9 +192,57 @@ def create_pipeline_with_balance_3(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
+        initial_equity=100,
         leverage=1,
         balance=100,
+        units=0
+    )
+
+    strategy_1, _ = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1)
+
+    return pipeline
+
+
+@pytest.fixture
+def create_pipeline_with_balance_4(db, create_exchange, create_symbol):
+    pipeline = Pipeline.objects.create(
+        id=12,
+        color="purple",
+        name='pipeline with balance 4',
+        symbol_id='BTCUSDT',
+        exchange_id='binance',
+        interval="1h",
+        active=True,
+        leverage=10,
+        initial_equity=100,
+        current_equity=100,
+        balance=1000,
+        units=0
+    )
+
+    strategy_1, _ = create_strategies(db)
+
+    pipeline.strategy.add(strategy_1)
+
+    return pipeline
+
+
+@pytest.fixture
+def create_pipeline_with_current_equity(db, create_exchange, create_symbol):
+    pipeline = Pipeline.objects.create(
+        id=13,
+        color="purple",
+        name='pipeline with current equity',
+        symbol_id='BTCUSDT',
+        exchange_id='binance',
+        interval="1h",
+        active=True,
+        leverage=1,
+        initial_equity=10000,
+        current_equity=11000,
+        balance=11000,
         units=0
     )
 
@@ -215,7 +263,7 @@ def create_pipeline_with_invalid_strategy(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
+        initial_equity=100,
         leverage=1,
         balance=100,
         units=0
@@ -238,7 +286,7 @@ def create_deleted_pipeline(db, create_exchange, create_symbol):
         exchange_id='binance',
         interval="1h",
         active=True,
-        equity=100,
+        initial_equity=100,
         leverage=1,
         balance=100,
         units=0
@@ -277,7 +325,7 @@ def create_pipeline_BNBBTC(db, create_exchange, create_symbol):
         symbol_id='BNBBTC',
         exchange_id='binance',
         interval="1h",
-        equity=500,
+        initial_equity=500,
         active=True,
         balance=1000,
         units=0
@@ -297,7 +345,7 @@ def create_paper_trading_pipeline(db, create_exchange, create_symbol):
         symbol_id='BTCUSDT',
         exchange_id='binance',
         interval="1h",
-        equity=500,
+        initial_equity=500,
         active=True,
         balance=1000,
         units=0,
@@ -484,9 +532,9 @@ def create_trades(db, create_exchange, create_symbol, create_pipeline, create_pi
     trade_2.open_time = datetime.datetime(2023, 10, 1, 16, 5)
     trade_3.open_time = datetime.datetime(2023, 10, 1, 16, 10)
 
-    trade_1.profit_loss = trade_1.get_profit_loss()
-    trade_2.profit_loss = trade_2.get_profit_loss()
-    trade_3.profit_loss = trade_3.get_profit_loss()
+    trade_1.pnl_pct = trade_1.get_profit_loss_pct()
+    trade_2.pnl_pct = trade_2.get_profit_loss_pct()
+    trade_3.pnl_pct = trade_3.get_profit_loss_pct()
 
     trade_1.save()
     trade_2.save()
@@ -496,7 +544,7 @@ def create_trades(db, create_exchange, create_symbol, create_pipeline, create_pi
 
 
 @pytest.fixture
-def create_trades_2(db, create_inactive_pipeline):
+def create_trades_2(db, create_inactive_pipeline, create_pipeline_no_equity):
     trade_1 = Trade.objects.create(
         id=5,
         symbol_id="BTCUSDT",
@@ -528,8 +576,8 @@ def create_trades_2(db, create_inactive_pipeline):
     trade_1.open_time = datetime.datetime(2023, 10, 1, 16, 0)
     trade_2.open_time = datetime.datetime(2023, 10, 1, 16, 0)
 
-    trade_1.profit_loss = trade_1.get_profit_loss()
-    trade_2.profit_loss = trade_2.get_profit_loss()
+    trade_1.pnl_pct = trade_1.get_profit_loss_pct()
+    trade_2.pnl_pct = trade_2.get_profit_loss_pct()
 
     trade_1.save()
     trade_2.save()

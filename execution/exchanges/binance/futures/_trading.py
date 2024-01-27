@@ -8,13 +8,14 @@ import django
 
 from database.model.models import Pipeline
 from execution.exchanges.binance import BinanceTrader
+from execution.service.blueprints.market_data import filter_balances
 from execution.service.cron_jobs.save_pipelines_snapshot import save_pipelines_snapshot
-from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits, NegativeEquity
+from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits, NegativeEquity, \
+    InsufficientBalance
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
-from shared.exchanges import BinanceHandler
-from shared.trading import Trader
-from execution.service.helpers.decorators import handle_order_execution_errors
+from execution.service.helpers.decorators import handle_order_execution_errors, binance_error_handler
 from shared.utils.decorators.failed_connection import retry_failed_connection
+from shared.utils.helpers import get_pipeline_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -26,13 +27,14 @@ class BinanceFuturesTrader(BinanceTrader):
         self,
         paper_trading=False
     ):
-        BinanceHandler.__init__(self, paper_trading)
-        Trader.__init__(self, 0)
+        BinanceTrader.__init__(self, paper_trading)
 
         self.symbols = {}
+        self.leverage = {}
         self.positions = {}
         self.initial_balance = {}
         self.current_balance = {}
+        self.current_equity = {}
         self.units = {}
 
         self.open_orders = []
@@ -43,11 +45,11 @@ class BinanceFuturesTrader(BinanceTrader):
     def start_symbol_trading(
         self,
         symbol,
-        starting_equity,
-        leverage=None,
+        current_equity,
+        pipeline_id,
+        leverage,
         header='',
         initial_position=0,
-        pipeline_id=None,
         **kwargs
     ):
         if symbol in self.symbols:
@@ -67,11 +69,17 @@ class BinanceFuturesTrader(BinanceTrader):
             if return_value and "message" in return_value:
                 raise LeverageSettingFail(return_value["message"])
 
+        pipeline = get_pipeline_data(pipeline_id, return_obj=True)
+
         self._get_symbol_info(symbol)
 
-        self._set_initial_position(symbol, initial_position, header, pipeline_id=pipeline_id, **kwargs)
+        self._set_leverage(symbol, leverage)
 
-        self._set_initial_balance(symbol, starting_equity, pipeline_id=pipeline_id, header=header,)
+        self._set_initial_position(symbol, initial_position, header, pipeline_id=pipeline.id, **kwargs)
+
+        self._set_initial_balance(symbol, current_equity, pipeline, header=header)
+
+        self._check_enough_balance(symbol, pipeline)
 
     def stop_symbol_trading(self, symbol, header='', **kwargs):
 
@@ -92,6 +100,15 @@ class BinanceFuturesTrader(BinanceTrader):
             logging.info(header + "There's no position to be closed.")
 
         self.symbols.pop(symbol)
+
+    def _check_enough_balance(self, symbol, pipeline):
+
+        balances = self.futures_account_balance()
+        balance = float(filter_balances(balances, ["USDT"])[0]["availableBalance"])
+
+        if pipeline.current_equity > balance:
+            self.symbols.pop(symbol)
+            raise InsufficientBalance(round(pipeline.current_equity, 2), round(balance, 2))
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 
@@ -123,14 +140,14 @@ class BinanceFuturesTrader(BinanceTrader):
         header='',
         **kwargs
     ):
-        units_factor = 1
-        if "reducing" in kwargs:
-            kwargs.update({"reduceOnly": False})
-            units_factor = 1
+        reducing = "reducing" in kwargs
 
-        units = self._convert_units(amount, units, symbol, units_factor)
+        units = self._convert_units(amount, units, symbol)
+
+        print("units: ", units)
 
         pipeline_id = kwargs["pipeline_id"] if "pipeline_id" in kwargs else None
+        pipeline = Pipeline.objects.get(id=pipeline_id)
 
         order = self.futures_create_order(
             symbol=symbol,
@@ -141,9 +158,7 @@ class BinanceFuturesTrader(BinanceTrader):
             **kwargs
         )
 
-        order["price"] = order["avgPrice"]
-
-        order = self._process_order(order, pipeline_id)
+        order = self._process_order(order, pipeline.id)
 
         units = float(order["executed_qty"])
 
@@ -151,24 +166,28 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self.nr_trades += 1
 
-        self._update_current_balance(
+        self._update_net_value(
             symbol,
             factor * float(order['cummulative_quote_qty']),
             factor * units,
-            pipeline_id,
+            pipeline,
+            reducing
         )
 
         self.report_trade(order, units, going, header, symbol=symbol)
 
-        self.check_negative_equity(symbol, reducing="reducing" in kwargs)
+        self.check_negative_equity(symbol, reducing=reducing)
 
+    @binance_error_handler(num_times=2)
     def _convert_units(self, amount, units, symbol, units_factor=1):
         price_precision = self.symbols[symbol]["price_precision"]
         quantity_precision = self.symbols[symbol]["quantity_precision"]
 
         if amount is not None and units is None:
-            price = round(float(self.get_symbol_ticker(symbol=symbol)['price']), price_precision)
+            price = round(float(self.futures_symbol_ticker(symbol=symbol)['price']), price_precision)
             units = round(amount / price * units_factor, quantity_precision)
+
+            print(price,  amount, units)
 
             # in case units are negative
             units = max(0, units)
@@ -194,33 +213,46 @@ class BinanceFuturesTrader(BinanceTrader):
             pipeline_id=pipeline_id
         )
 
-    def _set_initial_balance(self, symbol, starting_equity, pipeline_id, header=''):
+    def _set_initial_balance(self, symbol, initial_balance, pipeline, header=''):
         logging.debug(header + f"Updating balance for symbol: {symbol}.")
 
-        self.initial_balance[symbol] = starting_equity
+        self.initial_balance[symbol] = initial_balance
         self.current_balance[symbol] = 0
         self.units[symbol] = 0
+        self.current_equity[symbol] = pipeline.current_equity
 
-        balance, units = self._retrieve_current_balance(pipeline_id)
-        self._update_current_balance(symbol, balance, -units, pipeline_id)
+        self._update_net_value(symbol, pipeline.balance, -pipeline.units, pipeline)
 
         self.print_current_balance(datetime.now(), header=header, symbol=symbol)
 
-    @staticmethod
-    def _retrieve_current_balance(pipeline_id):
-        pipeline = Pipeline.objects.get(id=pipeline_id)
+    def _set_leverage(self, symbol, leverage):
+        self.leverage[symbol] = leverage
 
-        return pipeline.balance, pipeline.units
+    def _update_net_value(self, symbol, balance, units, pipeline, reducing=False):
 
-    def _update_current_balance(self, symbol, equity, units, pipeline_id):
-
-        self.current_balance[symbol] += equity
         self.units[symbol] -= units
+        self.current_balance[symbol] += balance
 
-        Pipeline.objects.filter(id=pipeline_id).update(
-            balance=self.current_balance[symbol],
-            units=self.units[symbol]
-        )
+        print("updated balance, units: ", self.current_balance[symbol], self.units[symbol])
+        print("balance, units: ", self.current_balance[symbol], self.units[symbol])
+
+        # Correction of balance if leverage is different from 1
+        if reducing:
+            initial_balance = self.current_equity[symbol] * pipeline.leverage
+            pnl = self.current_balance[symbol] - initial_balance
+
+            print("initial_balance, pnl: ", initial_balance, pnl)
+
+            self.current_equity[symbol] = self.current_equity[symbol] + pnl
+            self.current_balance[symbol] = self.current_equity[symbol] * pipeline.leverage
+
+            print("current equity: ", self.current_equity[symbol])
+            print("current balance: ", self.current_balance[symbol])
+
+        pipeline.balance = self.current_balance[symbol]
+        pipeline.units = self.units[symbol]
+        pipeline.current_equity = self.current_equity[symbol]
+        pipeline.save()
 
     def _get_symbol_info(self, symbol):
 
