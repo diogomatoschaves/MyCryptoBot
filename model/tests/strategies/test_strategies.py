@@ -1,7 +1,6 @@
 import os
 
 import pytest
-import numpy as np
 import pandas as pd
 
 from model.tests.setup.test_data.sample_data import data

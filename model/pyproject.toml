@@ -1,18 +1,13 @@
 [tool.poetry]
-name = "quant_model"
+name = "model"
 version = "0.1.0"
-description = "Quant Model Service. Loads data from database and calculates signals. Trains machine learning models. Provides backtesting tools."
+description = "Model Service. Handles the signal generation logic."
 authors = ["Diogo Matos Chaves <diogo_chaves@hotmail.com>"]
 
 [tool.poetry.dependencies]
 python = "~3.8"
 python-dotenv = "^0.17.0"
-matplotlib = "^3.4.1"
-numpy = "^1.20.2"
-scipy = "^1.6.2"
 pandas = "^1.2.3"
-scikit-learn = "^0.24.1"
-seaborn = "^0.11.1"
 Flask = "2.2.2"
 werkzeug = "2.3.4"
 Django = "^3.1.7"
@@ -20,15 +15,11 @@ gunicorn = "^20.1.0"
 rq = "^1.8.0"
 redis = "^3.5.3"
 dj-database-url = "^0.5.0"
-ta = "^0.7.0"
 requests = "2.25.1"
 python-binance = "~1.0.19"
 Flask-JWT-Extended = "4.4.4"
-humanfriendly = "^10.0"
-plotly = "^5.14.1"
 urllib3 = "1.26.15"
-tzdata = "2022.7"
-progressbar2 = "^4.2.0"
+stratestic = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.4"

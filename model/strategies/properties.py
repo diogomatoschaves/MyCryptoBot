@@ -2,9 +2,10 @@ import importlib
 import inspect
 from typing import get_args
 
-from shared.utils.helpers import get_extended_name, clean_docstring
+from stratestic.utils.helpers import get_extended_name, clean_docstring
 
-STRATEGIES_LOCATION = "model.strategies"
+STRATESTIC_STRATEGIES_LOCATION = "stratestic.strategies"
+LOCAL_STRATEGIES_LOCATION = "model.strategies"
 
 STRATEGIES = {}
 
@@ -22,48 +23,50 @@ def map_type(type_):
         }
 
 
-for name, cls in inspect.getmembers(importlib.import_module(STRATEGIES_LOCATION), inspect.isclass):
+for location in [STRATESTIC_STRATEGIES_LOCATION, LOCAL_STRATEGIES_LOCATION]:
 
-    required = {}
-    optional = {}
-    required_ordering = []
-    optional_ordering = []
+    for name, cls in inspect.getmembers(importlib.import_module(location), inspect.isclass):
 
-    params = inspect.signature(cls.__init__).parameters
+        required = {}
+        optional = {}
+        required_ordering = []
+        optional_ordering = []
 
-    for param, props in params.items():
+        params = inspect.signature(cls.__init__).parameters
 
-        if param in ["self", "data", "kwargs"]:
-            continue
+        for param, props in params.items():
 
-        is_required = False
+            if param in ["self", "data", "kwargs"]:
+                continue
 
-        if props.default is inspect._empty:
-            is_required = True
+            is_required = False
 
-        if len(get_args(props.annotation)) != 0:
-            param_info = {
-                "type": map_type(type(get_args(props.annotation)[0]).__name__),
-                "options": get_args(props.annotation),
-            }
-        else:
-            param_info = {
-                 "type": map_type(props.annotation.__name__)
-            }
+            if props.default is inspect._empty:
+                is_required = True
 
-        if is_required:
-            required_ordering.append(param)
-            required[param] = param_info
-        else:
-            optional_ordering.append(param)
-            optional[param] = param_info
+            if len(get_args(props.annotation)) != 0:
+                param_info = {
+                    "type": map_type(type(get_args(props.annotation)[0]).__name__),
+                    "options": get_args(props.annotation),
+                }
+            else:
+                param_info = {
+                     "type": map_type(props.annotation.__name__)
+                }
 
-    STRATEGIES[name] = {
-        "name": get_extended_name(name),
-        "className": name,
-        "info": clean_docstring(cls.__doc__),
-        "params": required,
-        "optionalParams": optional,
-        "paramsOrder": required_ordering,
-        "optionalParamsOrder": optional_ordering
-    }
+            if is_required:
+                required_ordering.append(param)
+                required[param] = param_info
+            else:
+                optional_ordering.append(param)
+                optional[param] = param_info
+
+        STRATEGIES[name] = {
+            "name": get_extended_name(name),
+            "className": name,
+            "info": clean_docstring(cls.__doc__),
+            "params": required,
+            "optionalParams": optional,
+            "paramsOrder": required_ordering,
+            "optionalParamsOrder": optional_ordering
+        }
