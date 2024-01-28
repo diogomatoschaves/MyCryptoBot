@@ -2,17 +2,17 @@ import logging
 import os
 
 import django
+from stratestic.backtesting.combining import StrategyCombiner
+from stratestic.strategies.trend import Momentum
+from stratestic.strategies.moving_average import MovingAverageConvergenceDivergence, MovingAverageCrossover, MovingAverage
+from stratestic.strategies.mean_reversion import BollingerBands
 
-from model.backtesting.combining import StrategyCombiner
 from model.service.external_requests import execute_order
 from shared.utils.config_parser import get_config
 from shared.utils.exceptions import StrategyInvalid
 from shared.utils.helpers import convert_signal_to_text
 from shared.utils.logger import configure_logger
 from shared.data.queries import get_data
-from model.strategies.trend import Momentum
-from model.strategies.moving_average import MovingAverageConvergenceDivergence, MovingAverageCrossover, MovingAverage
-from model.strategies.mean_reversion import BollingerBands
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()

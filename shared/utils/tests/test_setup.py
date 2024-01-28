@@ -18,7 +18,7 @@ def get_fixtures(current_path, fixtures=None, keys=None):
 
         for filename in os.listdir(files_path):
 
-            if filename == "__pycache__":
+            if filename in ["__pycache__", "template.py"]:
                 continue
 
             name = ".".join(filename.split(".")[:-1])

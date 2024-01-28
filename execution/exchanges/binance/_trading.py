@@ -4,9 +4,9 @@ from datetime import datetime
 
 import django
 import pytz
+from stratestic.trading import Trader
 
 from shared.exchanges import BinanceHandler
-from shared.trading import Trader
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()

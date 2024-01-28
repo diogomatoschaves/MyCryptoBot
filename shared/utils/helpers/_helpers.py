@@ -1,6 +1,4 @@
-import json
 import os
-import re
 from collections import namedtuple
 
 import django
@@ -79,16 +77,6 @@ def get_pipeline_data(pipeline_id, return_obj=False):
         )
 
         return pipeline
-
-
-def get_extended_name(name):
-    re_outer = re.compile(r'([^A-Z ])([A-Z])')
-    re_inner = re.compile(r'(?<!^)([A-Z])([^A-Z])')
-    return re_outer.sub(r'\1 \2', re_inner.sub(r' \1\2', name))
-
-
-def clean_docstring(doc):
-    return doc.translate(translator).strip()
 
 
 def get_symbol_or_raise_exception(symbol):

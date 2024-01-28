@@ -1,4 +1,3 @@
-import matplotlib
 import plotly
 import pytest
 from rq.exceptions import NoSuchJobError
@@ -37,8 +36,3 @@ def mock_enqueue_call(get_signal, params):
 @pytest.fixture
 def mocked_rq_enqueue_call(mocker):
     return mocker.patch.object(model.service.app.q, "enqueue_call", mock_enqueue_call)
-
-
-@pytest.fixture
-def mocked_plotly_figure_show(mocker):
-    mocker.patch.object(plotly.graph_objs.Figure, "show", lambda self: None)

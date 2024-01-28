@@ -21,7 +21,7 @@ start trading with real money. This platform is designed to assist existing algo
 in having complete control of their trading strategies and automation. Therefore, it is recommended that 
 you only risk money that you are willing to lose.*
 
-*This Repo is still under active development and under testing*
+*This Repo is still under active development and under testing.*
 
 
 ## Installation & Usage
@@ -56,19 +56,10 @@ a request is sent to the **Model** app for processing the new data according to 
 
 The Model service is responsible for processing the data and generating a signal (Buy or Sell) according to the 
 selected strategy. Whenever a request is received to generate a new signal, the data is loaded, processed, 
-and a signal is produced, which is then sent to the **Order Execution** service with an order to be executed. 
+and a signal is produced, which is then sent to the **Order Execution** service with an order to be executed.
 
-This module also contains a comprehensive set of development and research tools for backtesting, analyzing, and 
-exploring new strategies. It also has a strategy optimization API, and has functionality to include margin calls
-according to a selected leverage.
-
-<p align="middle">
-  <img src="shared/utils/drawings/backtesting_results.png" style="width: 80%" />
-</p>
-
-For more information on how to use this module and customize your strategies, please refer to the
-[MODEL_USAGE.md](MODEL_USAGE.md) file.
-
+This is also the module where you can add a new strategy. Check [ADD_NEW_STRATEGY.md](ADD_NEW_STRATEGY.md) for more 
+details on how to do this.
 
 ### Order Execution Service
 
