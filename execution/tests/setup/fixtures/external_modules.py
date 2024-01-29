@@ -19,35 +19,6 @@ class MockBinanceHandler(BinanceFuturesTrader):
     def ping(self):
         return None
 
-    def get_isolated_margin_account(self):
-        return isolated_account_info
-
-    def create_margin_loan(self, asset, amount, isIsolated, symbol):
-        return {"tranId": 100000001}
-
-    def get_trade_fee(self, symbol):
-        return trading_fees
-
-    def get_max_margin_loan(self, asset, isolatedSymbol):
-        return {"amount": "1.69248805", "borrowLimit": "60"}
-
-    def repay_margin_loan(self, asset, amount, isIsolated, symbol):
-        return {"tranId": 100000001}
-
-    def create_margin_order(
-            self,
-            symbol,
-            side,
-            type,
-            newOrderRespType,
-            isIsolated,
-            sideEffectType,
-            quantity=None,
-            quoteOrderQty=None,
-    ):
-        if newOrderRespType == "FULL":
-            return {**margin_order_creation, "orderId": randint(0, 1E9)}
-
     def futures_change_leverage(self, symbol, leverage):
         return {'symbol': symbol, 'leverage': leverage, 'maxNotionalValue': 'INF'}
 
@@ -77,19 +48,7 @@ class MockBinanceHandler(BinanceFuturesTrader):
         return positions_info
 
 
-def binance_client_mock_factory(method, type_='mock', account_type='margin'):
-
-    @pytest.fixture
-    def mock_binance_margin_client(mocker):
-        return mocker.patch.object(
-            execution.exchanges.binance.margin._trading.BinanceMarginTrader, method, getattr(MockBinanceHandler, method)
-        )
-
-    @pytest.fixture
-    def spy_binance_margin_client(mocker):
-        return mocker.spy(
-            execution.exchanges.binance.margin._trading.BinanceMarginTrader, method
-        )
+def binance_client_mock_factory(method, type_='mock'):
 
     @pytest.fixture
     def mock_binance_futures_client(mocker):
@@ -103,18 +62,11 @@ def binance_client_mock_factory(method, type_='mock', account_type='margin'):
             execution.exchanges.binance.futures._trading.BinanceFuturesTrader, method
         )
 
-    if account_type == 'margin':
-        if type_ == 'mock':
-            return mock_binance_margin_client
+    if type_ == 'mock':
+        return mock_binance_futures_client
 
-        elif type_ == 'spy':
-            return spy_binance_margin_client
-    else:
-        if type_ == 'mock':
-            return mock_binance_futures_client
-
-        elif type_ == 'spy':
-            return spy_binance_futures_client
+    elif type_ == 'spy':
+        return spy_binance_futures_client
 
 
 def binance_handler_market_data_factory(method):
@@ -139,16 +91,6 @@ def binance_handler_execution_app_factory(method):
         )
 
     return mock_binance_handler
-
-
-def binance_mock_trader_spy_factory(method):
-    @pytest.fixture
-    def spy_binance_client(mocker):
-        return mocker.spy(
-            execution.exchanges.binance.margin.mock._trading.BinanceMockMarginTrader, method
-        )
-
-    return spy_binance_client
 
 
 @pytest.fixture

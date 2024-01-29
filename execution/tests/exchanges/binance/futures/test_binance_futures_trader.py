@@ -20,8 +20,8 @@ from shared.utils.tests.fixtures.models import *
 
 
 def inject_fixture(mock_name, method):
-    globals()[f"{mock_name}"] = binance_client_mock_factory(method, 'mock', 'futures')
-    globals()[f"{mock_name}_spy"] = binance_client_mock_factory(method, 'spy', 'futures')
+    globals()[f"{mock_name}"] = binance_client_mock_factory(method, 'mock')
+    globals()[f"{mock_name}_spy"] = binance_client_mock_factory(method, 'spy')
 
 
 METHODS = [

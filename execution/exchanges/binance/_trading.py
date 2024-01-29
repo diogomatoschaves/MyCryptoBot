@@ -193,11 +193,6 @@ class BinanceTrader(BinanceHandler, Trader):
         logging.info(header + f"{date} | number of trades executed = {self.nr_trades}")
         logging.info(header + f"" + 100 * "-")
 
-    @staticmethod
-    def _get_average_order_price(order):
-        s = sum([float(fill["price"]) * float(fill["qty"]) for fill in order["fills"]])
-        return s / float(order["executedQty"])
-
     def report_trade(self, order, units, going, header='', **kwargs):
         logging.debug(order)
 

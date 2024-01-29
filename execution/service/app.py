@@ -9,12 +9,10 @@ from flask_jwt_extended import JWTManager, jwt_required
 
 from execution.service.cron_jobs.main import start_background_scheduler
 from execution.service.helpers.decorators import binance_error_handler, handle_app_errors, handle_order_execution_errors
-from execution.exchanges.binance.margin.mock import BinanceMockMarginTrader
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_signal, extract_and_validate, get_header
 from execution.service.helpers.exceptions import PipelineNotActive
 from execution.service.helpers.responses import Responses
-from execution.exchanges.binance.margin import BinanceMarginTrader
 from execution.exchanges.binance.futures import BinanceFuturesTrader
 from shared.utils.config_parser import get_config
 from shared.utils.decorators import handle_db_connection_error
@@ -36,24 +34,14 @@ config_vars = get_config('execution')
 configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
 
 
-global binance_futures_mock_trader, binance_futures_trader, binance_margin_mock_trader, binance_margin_trader
+global binance_futures_mock_trader, binance_futures_trader
 
 
-def get_binance_trader_instance(binance_account_type, paper_trading):
-
-    if binance_account_type == 'futures':
-        if paper_trading:
-            return binance_futures_mock_trader
-        else:
-            return binance_futures_trader
-
-    if binance_account_type == 'margin':
-        if paper_trading:
-            return binance_margin_mock_trader
-        else:
-            return binance_margin_trader
-
-    return binance_futures_mock_trader
+def get_binance_trader_instance(paper_trading):
+    if paper_trading:
+        return binance_futures_mock_trader
+    else:
+        return binance_futures_trader
 
 
 def startup_task():
@@ -68,12 +56,12 @@ def startup_task():
 
         header = get_header(pipeline.id)
 
-        start_pipeline_trade(pipeline, 'futures', header, initial_position=open_position.position)
+        start_pipeline_trade(pipeline, header, initial_position=open_position.position)
 
 
-def start_pipeline_trade(pipeline, binance_account_type, header, initial_position=0):
+def start_pipeline_trade(pipeline, header, initial_position=0):
 
-    bt = get_binance_trader_instance(binance_account_type, pipeline.paper_trading)
+    bt = get_binance_trader_instance(pipeline.paper_trading)
 
     bt.start_symbol_trading(
         pipeline.symbol,
@@ -87,12 +75,10 @@ def start_pipeline_trade(pipeline, binance_account_type, header, initial_positio
 
 def create_app():
 
-    global binance_futures_mock_trader, binance_futures_trader, binance_margin_mock_trader, binance_margin_trader
+    global binance_futures_mock_trader, binance_futures_trader
 
     binance_futures_trader = BinanceFuturesTrader()
     binance_futures_mock_trader = BinanceFuturesTrader(paper_trading=True)
-    binance_margin_trader = BinanceMarginTrader()
-    binance_margin_mock_trader = BinanceMockMarginTrader()
 
     app = Flask(__name__)
     app.register_blueprint(market_data)
@@ -125,7 +111,7 @@ def create_app():
 
         if pipeline.exchange == 'binance':
 
-            start_pipeline_trade(pipeline, parameters.binance_account_type, parameters.header)
+            start_pipeline_trade(pipeline, parameters.header)
 
             return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
 
@@ -140,7 +126,7 @@ def create_app():
 
         pipeline, parameters = extract_and_validate(request_data)
 
-        bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
+        bt = get_binance_trader_instance(pipeline.paper_trading)
 
         if not pipeline.active:
             bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
@@ -172,7 +158,7 @@ def create_app():
 
         if pipeline.exchange.lower() == 'binance':
 
-            bt = get_binance_trader_instance(parameters.binance_account_type, pipeline.paper_trading)
+            bt = get_binance_trader_instance(pipeline.paper_trading)
 
             return_value = handle_order_execution_errors(
                 symbol=pipeline.symbol,

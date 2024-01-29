@@ -60,29 +60,8 @@ class MockBinanceTrader:
 
 
 @pytest.fixture
-def mock_binance_margin_trader_success(mocker):
-    return mocker.patch("execution.service.app.binance_margin_trader", MockBinanceTrader())
-
-
-@pytest.fixture
 def mock_binance_futures_trader_success(mocker):
     return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader())
-
-
-@pytest.fixture
-def mock_binance_margin_trader_fail(mocker):
-    return mocker.patch(
-        "execution.service.app.binance_margin_trader",
-        MockBinanceTrader(raise_symbol_not_being_traded=True, raise_symbol_already_traded=True),
-    )
-
-
-@pytest.fixture
-def mock_binance_margin_trader_fail_pipeline_inactive(mocker):
-    return mocker.patch(
-        "execution.service.app.binance_margin_trader",
-        MockBinanceTrader(),
-    )
 
 
 @pytest.fixture
@@ -149,7 +128,7 @@ def mock_start_pipeline_trade(mocker):
     return mocker.patch.object(
         execution.service.app,
         "start_pipeline_trade",
-        lambda pipeline, binance_account_type, header, **kwargs: None
+        lambda pipeline, header, **kwargs: None
     )
 
 

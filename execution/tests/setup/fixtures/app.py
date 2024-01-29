@@ -23,23 +23,9 @@ def futures_init_session(mocker):
 
 
 @pytest.fixture
-def margin_init_session(mocker):
-    return mocker.patch.object(
-        execution.service.app.BinanceMarginTrader, "_init_session", mock_init
-    )
-
-
-@pytest.fixture
 def futures_init(mocker, futures_init_session):
     return mocker.patch.object(
         execution.service.app.BinanceFuturesTrader, "ping", mock_init
-    )
-
-
-@pytest.fixture
-def margin_init(mocker, margin_init_session):
-    return mocker.patch.object(
-        execution.service.app.BinanceMarginTrader, "ping", mock_init
     )
 
 
@@ -52,7 +38,6 @@ def mock_client_env_vars(mocker):
 def app(
     mock_client_env_vars,
     futures_init,
-    margin_init,
     mock_jwt_required,
     mock_redis_connection,
     exchange_data,
@@ -73,7 +58,6 @@ def client(app):
 def app_with_open_positions(
     mock_client_env_vars,
     futures_init,
-    margin_init,
     mock_jwt_required,
     mock_redis_connection,
     exchange_data,

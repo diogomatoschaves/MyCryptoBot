@@ -74,14 +74,6 @@ class TestExecutionService:
             pytest.param(
                 {
                     "pipeline_id": 1,
-                    "binance_account_type": "margin",
-                },
-                Responses.SYMBOL_ALREADY_TRADED('BTCUSDT is already being traded.'),
-                id="SymbolAlreadyTraded-MARGIN",
-            ),
-            pytest.param(
-                {
-                    "pipeline_id": 1,
                     "binance_account_type": "futures",
                 },
                 Responses.SYMBOL_ALREADY_TRADED('BTCUSDT is already being traded.'),
@@ -101,7 +93,6 @@ class TestExecutionService:
         params,
         expected_value,
         client,
-        mock_binance_margin_trader_fail,
         mock_binance_futures_trader_fail,
         exchange_data,
         create_pipeline,
@@ -151,15 +142,6 @@ class TestExecutionService:
             pytest.param(
                 {
                     "pipeline_id": 1,
-                    "binance_account_type": "margin",
-                    "equity": 100
-                },
-                Responses.SYMBOL_NOT_BEING_TRADED('BTCUSDT is not being traded.'),
-                id="SymbolNotBeingTraded-MARGIN",
-            ),
-            pytest.param(
-                {
-                    "pipeline_id": 1,
                     "binance_account_type": "futures",
                     "equity": 100
                 },
@@ -179,7 +161,6 @@ class TestExecutionService:
         self,
         params,
         expected_value,
-        mock_binance_margin_trader_fail,
         mock_binance_futures_trader_fail,
         client,
         exchange_data,
@@ -206,7 +187,6 @@ class TestExecutionService:
         self,
         params,
         expected_value,
-        mock_binance_margin_trader_fail_pipeline_inactive,
         mock_binance_futures_trader_fail_pipeline_inactive,
         client,
         exchange_data,
@@ -220,10 +200,6 @@ class TestExecutionService:
     @pytest.mark.parametrize(
         "binance_account_type",
         [
-            pytest.param(
-                {"binance_account_type": "margin"},
-                id="MARGIN"
-            ),
             pytest.param(
                 {"binance_account_type": "futures"},
                 id="FUTURES"
@@ -257,7 +233,6 @@ class TestExecutionService:
         params,
         expected_value,
         binance_account_type,
-        mock_binance_margin_trader_success,
         mock_binance_futures_trader_success,
         client,
         exchange_data,
@@ -275,10 +250,6 @@ class TestExecutionService:
     @pytest.mark.parametrize(
         "binance_account_type",
         [
-            pytest.param(
-                {"binance_account_type": "margin"},
-                id="MARGIN"
-            ),
             pytest.param(
                 {"binance_account_type": "futures"},
                 id="FUTURES"
@@ -334,7 +305,6 @@ class TestExecutionService:
         params,
         expected_value,
         binance_account_type,
-        mock_binance_margin_trader_success,
         mock_binance_futures_trader_success,
         client,
         exchange_data,
