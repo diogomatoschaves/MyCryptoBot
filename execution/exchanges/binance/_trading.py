@@ -5,13 +5,17 @@ from datetime import datetime
 import django
 import pytz
 from stratestic.trading import Trader
+from stratestic.backtesting import IterativeBacktester
+from stratestic.backtesting.helpers.evaluation import get_results, log_results
 
-from shared.exchanges import BinanceHandler
+from shared.data.queries import get_data
+from shared.exchanges.binance import BinanceHandler
+from shared.utils.helpers import get_pipeline_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Position, Trade, Orders, Pipeline
+from database.model.models import Position, Trade, Orders, Pipeline, StructuredData
 
 
 class BinanceTrader(BinanceHandler, Trader):
@@ -28,6 +32,7 @@ class BinanceTrader(BinanceHandler, Trader):
         self.positions = {}
         self.filled_orders = []
         self.exchange = "binance"
+        self.start_date = {}
 
     def buy_instrument(self, symbol, date=None, row=None, units=None, amount=None, header='', **kwargs):
         self._execute_order(
@@ -118,7 +123,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
         formatted_order = self._format_order(order, pipeline_id)
 
-        order_created = Orders.objects.create(**formatted_order)
+        Orders.objects.create(**formatted_order)
 
         return formatted_order
 
@@ -173,25 +178,22 @@ class BinanceTrader(BinanceHandler, Trader):
 
         return None
 
-    def print_trading_results(self, header, date, **kwargs):
+    def print_trading_results(self, header, date, pipeline_id):
+        pipeline = get_pipeline_data(pipeline_id)
 
-        initial_balance = self._get_balances(kwargs.get("symbol", ""))[0]
-        current_balance = self._get_balances(kwargs.get("symbol", ""))[1]
+        initial_equity = self.initial_balance[pipeline.symbol]
+        current_equity = self.current_equity[pipeline.symbol]
 
         try:
-            perf = (current_balance - initial_balance) / initial_balance * 100
+            perf = (current_equity - initial_equity) / initial_equity * 100
         except ZeroDivisionError:
             perf = 0
 
-        self.print_current_balance(date, header=header, **kwargs)
-
-        header = header
-
-        logging.info(header + f"" + 100 * "-")
+        logging.info(header + f"" + 70 * "-")
         logging.info(header + f"{date} | +++ CLOSED FINAL POSITION +++")
         logging.info(header + f"{date} | net performance (%) = {round(perf, 2)}")
         logging.info(header + f"{date} | number of trades executed = {self.nr_trades}")
-        logging.info(header + f"" + 100 * "-")
+        logging.info(header + f"" + 70 * "-")
 
     def report_trade(self, order, units, going, header='', **kwargs):
         logging.debug(order)

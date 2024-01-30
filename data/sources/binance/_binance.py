@@ -10,16 +10,17 @@ import redis
 from binance import ThreadedWebsocketManager
 import progressbar
 
-import shared.exchanges.binance.constants as const
 from data.service.external_requests import start_stop_symbol_trading, get_open_positions
 from data.service.helpers.exceptions import CandleSizeInvalid, DataPipelineCouldNotBeStopped
 from data.sources import trigger_signal
 from data.sources.binance.extract import (extract_data, extract_data_db, get_earliest_date,
-                                          get_minimum_lookback_date, get_latest_date, get_end_date)
+                                          get_latest_date, get_end_date)
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
+from shared.utils.helpers import get_minimum_lookback_date, get_pipeline_max_window
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.config_parser import get_config
+import shared.exchanges.binance.constants as const
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -360,24 +361,9 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         return data, data_length, new_entries
 
-    def get_pipeline_max_window(self):
-        try:
-            strategies = Pipeline.objects.get(id=self.pipeline_id).as_json()["strategy"]
-
-            max_value_params = 0
-            for strategy in strategies:
-                max_value = max([value for param, value in strategy["params"].items()])
-
-                if max_value > max_value_params:
-                    max_value_params = max_value
-
-            return max_value_params
-        except Pipeline.DoesNotExist:
-            return 1000
-
     def get_start_date(self):
 
-        max_window = self.get_pipeline_max_window()
+        max_window = get_pipeline_max_window(self.pipeline_id)
 
         earliest_date = get_earliest_date(ExchangeData, self.symbol, self.base_candle_size)
         minimum_lookback_date = get_minimum_lookback_date(max_window, self.candle_size)

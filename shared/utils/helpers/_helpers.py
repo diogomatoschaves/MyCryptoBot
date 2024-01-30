@@ -1,14 +1,19 @@
 import os
 from collections import namedtuple
+from datetime import datetime
 
 import django
+import pandas as pd
+import pytz
+from stratestic.backtesting.helpers import Trade
 
-from shared.utils.exceptions import SymbolInvalid, NoSuchPipeline
+from shared.exchanges.binance import constants as const
+from shared.utils.exceptions import NoSuchPipeline
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Pipeline, Symbol
+from database.model.models import Pipeline
 
 escapes = ''.join([chr(char) for char in range(1, 32)])
 translator = str.maketrans('', '', escapes)
@@ -30,15 +35,6 @@ PIPELINE = namedtuple(
         "leverage"
     ]
 )
-
-
-def convert_signal_to_text(signal):
-    if signal == 1:
-        return "BUY"
-    elif signal == -1:
-        return "SELL"
-    else:
-        return "NEUTRAL"
 
 
 def get_logging_row_header(pipeline):
@@ -79,13 +75,6 @@ def get_pipeline_data(pipeline_id, return_obj=False):
         return pipeline
 
 
-def get_symbol_or_raise_exception(symbol):
-    if not Symbol.objects.filter(name=symbol).exists():
-        raise SymbolInvalid(symbol)
-    else:
-        return Symbol.objects.get(name=symbol)
-
-
 def get_input_dimensions(lst, n_dim=0):
     """
     Recursively determines the dimensions of a nested list or tuple.
@@ -118,3 +107,37 @@ def get_input_dimensions(lst, n_dim=0):
         return get_input_dimensions(lst[0], n_dim + 1) if len(lst) > 0 else 0
     else:
         return n_dim
+
+
+def convert_trade(trade):
+    return Trade(
+        entry_date=trade.open_time,
+        exit_date=trade.close_time,
+        entry_price=trade.open_price,
+        exit_price=trade.close_price,
+        units=trade.amount,
+        side=trade.side,
+        profit=trade.pnl,
+        pnl=trade.pnl_pct
+    )
+
+
+def get_minimum_lookback_date(max_window, candle_size):
+    return (datetime.now().astimezone(pytz.utc) -
+            pd.Timedelta(const.CANDLE_SIZES_MAPPER[candle_size]) * max_window * 1.4)
+
+
+def get_pipeline_max_window(pipeline_id):
+    try:
+        strategies = Pipeline.objects.get(id=pipeline_id).as_json()["strategy"]
+
+        max_value_params = 0
+        for strategy in strategies:
+            max_value = max([value for param, value in strategy["params"].items()])
+
+            if max_value > max_value_params:
+                max_value_params = max_value
+
+        return max_value_params
+    except Pipeline.DoesNotExist:
+        return 1000

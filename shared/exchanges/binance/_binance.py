@@ -1,12 +1,18 @@
 import os
 from os import environ as env
 
+import django
 from dotenv import load_dotenv, find_dotenv
 from binance.client import Client
 
 import shared.exchanges.binance.constants as const
 from shared.utils.decorators.failed_connection import retry_failed_connection
-from shared.utils.helpers import get_symbol_or_raise_exception
+from shared.utils.exceptions import SymbolInvalid
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
+django.setup()
+
+from database.model.models import Symbol
 
 
 ENV_FILE = find_dotenv()
@@ -46,4 +52,7 @@ class BinanceHandler(Client):
 
     @staticmethod
     def validate_symbol(symbol):
-        return get_symbol_or_raise_exception(symbol)
+        if not Symbol.objects.filter(name=symbol).exists():
+            raise SymbolInvalid(symbol)
+        else:
+            return Symbol.objects.get(name=symbol)

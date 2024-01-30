@@ -8,7 +8,7 @@ from django import db
 import data
 from data.tests.setup.test_data.binance_api_responses import exchange_info
 from data.tests.setup.test_data.sample_data import binance_api_historical_data
-from shared.exchanges import BinanceHandler
+from shared.exchanges.binance import BinanceHandler
 
 
 def mock_get_historical_klines_generator(symbol, candle_size, start_date, end_date, limit):

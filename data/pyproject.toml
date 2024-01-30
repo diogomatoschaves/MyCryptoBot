@@ -21,6 +21,7 @@ Flask-JWT-Extended = "^4.4.4"
 APScheduler = "^3.10.1"
 progressbar2 = "^4.2.0"
 werkzeug = "2.3.4"
+stratestic = "^1.0.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.4"

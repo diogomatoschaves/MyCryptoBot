@@ -1,6 +1,5 @@
-import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import django
 import pandas as pd
@@ -11,10 +10,6 @@ from shared.data.queries import get_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
-
-
-def get_minimum_lookback_date(max_window, candle_size):
-    return datetime.now().astimezone(pytz.utc) - pd.Timedelta(const.CANDLE_SIZES_MAPPER[candle_size]) * max_window * 1.1
 
 
 def get_earliest_date(model_class, symbol, candle_size):

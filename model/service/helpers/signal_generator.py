@@ -7,10 +7,11 @@ from stratestic.strategies.trend import Momentum
 from stratestic.strategies.moving_average import MovingAverageConvergenceDivergence, MovingAverageCrossover, MovingAverage
 from stratestic.strategies.mean_reversion import BollingerBands
 
+from model.strategies import *
 from model.service.external_requests import execute_order
+from model.service.helpers import convert_signal_to_text
 from shared.utils.config_parser import get_config
 from shared.utils.exceptions import StrategyInvalid
-from shared.utils.helpers import convert_signal_to_text
 from shared.utils.logger import configure_logger
 from shared.data.queries import get_data
 

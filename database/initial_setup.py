@@ -11,7 +11,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import Asset, Symbol, Exchange
-from shared.exchanges import BinanceHandler
+from shared.exchanges.binance import BinanceHandler
 
 
 def main():

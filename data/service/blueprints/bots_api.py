@@ -17,7 +17,7 @@ from data.service.helpers.decorators.handle_app_errors import handle_app_errors
 from data.service.helpers.exceptions import PipelineStartFail, DataPipelineDoesNotExist
 from data.service.helpers.responses import Responses
 from data.sources._sources import DataHandler
-from shared.exchanges import BinanceHandler
+from shared.exchanges.binance import BinanceHandler
 from shared.utils.decorators import handle_db_connection_error
 from shared.utils.helpers import get_item_from_cache, get_logging_row_header
 

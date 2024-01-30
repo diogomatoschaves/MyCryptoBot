@@ -81,6 +81,8 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._check_enough_balance(symbol, pipeline)
 
+        self.start_date[symbol] = datetime.now(tz=pytz.utc)
+
     def stop_symbol_trading(self, symbol, header='', **kwargs):
 
         if symbol not in self.symbols:
@@ -112,6 +114,8 @@ class BinanceFuturesTrader(BinanceTrader):
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 
+        pipeline_id = kwargs['pipeline_id']
+
         logging.info(header + f"Closing position for symbol: {symbol}")
 
         units = self._convert_units(None, self.units[symbol], symbol)
@@ -126,7 +130,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._set_position(symbol, 0, previous_position=1, **kwargs)
 
-        self.print_trading_results(header, date, symbol=symbol)
+        self.print_trading_results(header, date, pipeline_id=pipeline_id)
 
     @retry_failed_connection(num_times=2)
     def _execute_order(
@@ -143,8 +147,6 @@ class BinanceFuturesTrader(BinanceTrader):
         reducing = "reducing" in kwargs
 
         units = self._convert_units(amount, units, symbol)
-
-        print("units: ", units)
 
         pipeline_id = kwargs["pipeline_id"] if "pipeline_id" in kwargs else None
         pipeline = Pipeline.objects.get(id=pipeline_id)
@@ -186,8 +188,6 @@ class BinanceFuturesTrader(BinanceTrader):
         if amount is not None and units is None:
             price = round(float(self.futures_symbol_ticker(symbol=symbol)['price']), price_precision)
             units = round(amount / price * units_factor, quantity_precision)
-
-            print(price,  amount, units)
 
             # in case units are negative
             units = max(0, units)
@@ -233,21 +233,13 @@ class BinanceFuturesTrader(BinanceTrader):
         self.units[symbol] -= units
         self.current_balance[symbol] += balance
 
-        print("updated balance, units: ", self.current_balance[symbol], self.units[symbol])
-        print("balance, units: ", self.current_balance[symbol], self.units[symbol])
-
         # Correction of balance if leverage is different from 1
         if reducing:
             initial_balance = self.current_equity[symbol] * pipeline.leverage
             pnl = self.current_balance[symbol] - initial_balance
 
-            print("initial_balance, pnl: ", initial_balance, pnl)
-
             self.current_equity[symbol] = self.current_equity[symbol] + pnl
             self.current_balance[symbol] = self.current_equity[symbol] * pipeline.leverage
-
-            print("current equity: ", self.current_equity[symbol])
-            print("current balance: ", self.current_balance[symbol])
 
         pipeline.balance = self.current_balance[symbol]
         pipeline.units = self.units[symbol]

@@ -2,4 +2,7 @@
 
 cd $DIRECTORY/service/ || exit
 
-exec gunicorn --bind 0.0.0.0:"$PORT" --pythonpath /app wsgi:application
+exec gunicorn wsgi:application \
+--bind 0.0.0.0:"$PORT" \
+--pythonpath /app \
+--timeout 120
