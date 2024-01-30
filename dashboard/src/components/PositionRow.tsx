@@ -89,7 +89,7 @@ function PositionRow(props: Props) {
             </Fragment>
           ) : (
             <Fragment>
-                {positionsTable.map(entry => entry)}
+                {positionsTable.map((entry) => entry)}
             </Fragment>
           )}
       </Table.Row>

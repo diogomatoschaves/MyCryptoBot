@@ -58,14 +58,6 @@ const colorOptions = COLORS_NAMES.map((colorName) => {
   }
 })
 
-const strategyAssociationOptions = ['Unanimous', 'Majority'].map((method, index) => {
-  return {
-    key: method,
-    text: method,
-    value: index,
-  }
-})
-
 const NewPipeline = (props: Props) => {
 
   const {
@@ -123,6 +115,7 @@ const NewPipeline = (props: Props) => {
       pipelines,
       balances
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -139,7 +132,8 @@ const NewPipeline = (props: Props) => {
       previous.positions = positions
       previous.balances = balances
     };
-  }, [positions, balances])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positions, balances, previous])
 
   const balance = availableBalance[liveTrading ? "live" : "test"]
 

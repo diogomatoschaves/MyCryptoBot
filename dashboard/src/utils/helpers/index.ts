@@ -54,7 +54,7 @@ export const validatePipelineCreation = async (
       editPipeline: EditPipeline,
       pipelineId?: number
     }) => {
-  if (!name || !color || !equity || !symbol || strategies.length == 0 || !candleSize || exchanges.length === 0) {
+  if (!name || !color || !equity || !symbol || strategies.length === 0 || !candleSize || exchanges.length === 0) {
     updateModal({
       type: UPDATE_MESSAGE,
       message: {text: "All parameters must be specified.", success: false}

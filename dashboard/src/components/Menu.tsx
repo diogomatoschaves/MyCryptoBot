@@ -39,12 +39,12 @@ function AppMenu(props: Props) {
     return () => {
       previous.menuOption = menuOption
     };
-  }, [menuOption]);
+  }, [menuOption, previous, props]);
 
   return (
     <Menu style={{paddingTop: '50px', width: size ? '70%' : undefined}} secondary vertical size={size as any}>
-      {menuProperties.map(menuItem => (
-        <Link to={menuItem.code}>
+      {menuProperties.map((menuItem, index) => (
+        <Link key={index} to={menuItem.code}>
           <Menu.Item
             style={styles}
             active={menuOption && menuOption.code === menuItem.code}

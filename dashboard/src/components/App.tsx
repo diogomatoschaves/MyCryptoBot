@@ -76,7 +76,6 @@ interface State {
     symbols: string[],
     currentPrices: Object
     pipelinesMetrics: PipelinesMetrics
-    pipelinesPnl: Object
 }
 
 interface Props {
@@ -96,6 +95,7 @@ class App extends Component<Props, State> {
     getPricesInterval: any
     getTradesInterval: any
     getPositionsInterval: any
+    getPipelinesInterval: any
 
     static defaultProps = {
         decimals: {
@@ -140,7 +140,6 @@ class App extends Component<Props, State> {
             bestWinRate: {winRate: 0},
             mostTrades: {totalTrades: 0}
         },
-        pipelinesPnl: {}
     }
 
     componentDidMount() {
@@ -184,7 +183,7 @@ class App extends Component<Props, State> {
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
 
-        const { symbols, trades, pipelines } = this.state
+        const { symbols, trades } = this.state
 
         if (prevState.symbols.length !== symbols.length) {
             this.getCurrentPrices()
@@ -197,6 +196,7 @@ class App extends Component<Props, State> {
             clearInterval(this.getPricesInterval)
             clearInterval(this.getTradesInterval)
             clearInterval(this.getPositionsInterval)
+            clearInterval(this.getPipelinesInterval)
 
             if (pathname.includes('/dashboard')) {
                 this.getAccountBalance()
@@ -212,11 +212,12 @@ class App extends Component<Props, State> {
                 this.getTradesInterval = setInterval(() => {
                     this.updateTrades()
                 }, 20 * 1000)
-
             } else if (pathname.includes('/pipelines')){
                 this.updatePipelines()
                 this.getCurrentPrices()
-
+                this.getPipelinesInterval = setInterval(() => {
+                    this.updatePipelines()
+                }, 10 * 1000)
             } else if (pathname.includes('/positions')){
                 this.updatePositions()
                 this.getCurrentPrices()
@@ -455,7 +456,6 @@ class App extends Component<Props, State> {
             currentPrices,
             pipelinesMetrics,
             equityTimeSeries,
-            pipelinesPnl
         } = this.state
 
         const { size, decimals, menuProperties, location, removeToken, updateMessage } = this.props

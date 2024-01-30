@@ -62,7 +62,7 @@ const PositionsPanel = (props: Props) => {
             })}
           </Table.Body>
         </Table>
-          {positions.length == 0 && (
+          {positions.length === 0 && (
               <Message style={{width: "100%"}}>
                 <Message.Header>
                   There are no open positions.

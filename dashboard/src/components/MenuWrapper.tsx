@@ -1,6 +1,6 @@
 import {Fragment} from 'react'
 import styled from "styled-components";
-import {Grid, Icon} from "semantic-ui-react";
+import {Grid} from "semantic-ui-react";
 import {MenuOption, UpdateMessage} from "../types";
 import AppMenu from "./Menu";
 import MobileMenu from "./MobileMenu";
@@ -42,7 +42,7 @@ function MenuWrapper(props: Props) {
       <Fragment>
           {(size !== 'mobile' && size !== 'tablet') ? (
             <MenuColumn>
-                <Column width={4} visible={false}>
+                <Column width={4}>
                     <AppMenu
                       menuOption={menuOption}
                       menuProperties={menuProperties}

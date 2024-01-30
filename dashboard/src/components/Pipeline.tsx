@@ -85,8 +85,6 @@ function PipelineItem(props: Props) {
     const pipelinePnl = pipeline.currentEquity - pipeline.initialEquity
     const pipelinePnlPct = pipelinePnl / pipeline.initialEquity * 100
 
-    const pipelinePnlString = `${pipelinePnl.toFixed(2)} (${pipelinePnlPct.toFixed(2)}%)`
-
     const color = pipelinePnl > 0 ? GREEN : pipelinePnl < 0 ? RED : "000000"
 
     const isMobile = ['mobile'].includes(size)
@@ -142,12 +140,12 @@ function PipelineItem(props: Props) {
                                   const params = Object.keys(strategy.params)
 
                                   return (
-                                      <div>
+                                      <div key={index}>
                                           <div><span style={{fontWeight: 'bold'}}>Strategy {index + 1}:</span> {strategy.name}</div>
                                           {params.map((param, paramsIndex) => {
                                               // @ts-ignore
                                               return (
-                                                  <div>
+                                                  <div key={paramsIndex}>
                                                       {/*@ts-ignore*/}
                                                       <span style={{fontWeight: 'bold'}}>{param}:</span> {strategy.params[param]}
                                                       {paramsIndex + 1 !== params.length && <span> — </span>}
@@ -176,7 +174,7 @@ function PipelineItem(props: Props) {
                       }
                     />
                     <Grid.Column width={isMobile ? 5 : 3}>
-                        <Grid.Column only={'wee'} floated='left' style={styles.header}>
+                        <Grid.Column floated='left' style={styles.header}>
                             Active since
                         </Grid.Column>
                         <Grid.Column floated='right' style={styles.rightColumn} >
@@ -217,7 +215,8 @@ function PipelineItem(props: Props) {
                             PnL (ROI%)
                         </Grid.Column>
                         <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
-                            {pipelinePnlString}
+                            {`${pipelinePnl.toFixed(2)} USDT`}<br/>
+                            ({pipelinePnlPct.toFixed(2)}%)
                         </Grid.Column>
                     </Grid.Column>
                     {!isMobile && (

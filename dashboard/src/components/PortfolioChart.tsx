@@ -4,15 +4,6 @@ import {getEquityTimeSeries} from "../apiCalls";
 import {Data} from "../types";
 import {convertDate} from "../utils/helpers";
 
-const data1 = [
-  { time: '2022-01-01', $: 1000 },
-  { time: '2022-02-01', $: 1200 },
-  { time: '2022-03-01', $: 900 },
-  { time: '2022-04-01', $: 1100 },
-  { time: '2022-05-01', $: 1300 },
-  { time: '2022-06-01', $: 1500 },
-];
-
 interface Props {
   pipelineId?: string
   dataProp?: Data[]
@@ -45,6 +36,7 @@ const PortfolioChart = (props: Props) => {
       // @ts-ignore
       setData(dataProp)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

@@ -77,6 +77,7 @@ function Dashboard(props: Props) {
     fetchTradesData()
     .catch(() => {})
     updatePipelinesMetrics()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -102,7 +103,8 @@ function Dashboard(props: Props) {
       previous.pipelines = pipelines
       previous.currentPrices = currentPrices
     };
-  }, [trades, positions, pipelines, currentPrices]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trades, positions, pipelines, currentPrices, previous]);
 
   let totalPnl, pnlColor
   if (totalInitialEquity !== 0) {

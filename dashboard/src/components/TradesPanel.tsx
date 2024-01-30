@@ -87,13 +87,13 @@ function TradesPanel(props: Props) {
             previous.trades = trades
             previous.options = options
         };
-    }, [trades, options]);
+    }, [trades, options, previous]);
 
     return (
       <StyledDiv className="flex-column" >
           <Button.Group size="mini" style={{alignSelf: 'center'}}>
-              {Object.keys(initialOptions).map(option =>
-                <Button onClick={() => dispatch({
+              {Object.keys(initialOptions).map((option, index) =>
+                <Button key={index} onClick={() => dispatch({
                     type: TOGGLE_OPTIONS,
                     [option]: !options[option]
                 })} color={options && options[option] && 'grey'}>
