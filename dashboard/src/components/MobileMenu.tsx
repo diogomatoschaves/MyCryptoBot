@@ -1,6 +1,6 @@
 import {Fragment, useState} from 'react'
 import styled from "styled-components";
-import {Grid, Icon, Transition} from "semantic-ui-react";
+import {Icon} from "semantic-ui-react";
 import {MenuOption, UpdateMessage} from "../types";
 import AppMenu from "./Menu";
 

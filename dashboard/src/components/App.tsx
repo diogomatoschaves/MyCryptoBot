@@ -76,7 +76,6 @@ interface State {
     symbols: string[],
     currentPrices: Object
     pipelinesMetrics: PipelinesMetrics
-    pipelinesPnl: Object
 }
 
 interface Props {
@@ -141,7 +140,6 @@ class App extends Component<Props, State> {
             bestWinRate: {winRate: 0},
             mostTrades: {totalTrades: 0}
         },
-        pipelinesPnl: {}
     }
 
     componentDidMount() {
@@ -185,7 +183,7 @@ class App extends Component<Props, State> {
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
 
-        const { symbols, trades, pipelines } = this.state
+        const { symbols, trades } = this.state
 
         if (prevState.symbols.length !== symbols.length) {
             this.getCurrentPrices()
@@ -214,7 +212,6 @@ class App extends Component<Props, State> {
                 this.getTradesInterval = setInterval(() => {
                     this.updateTrades()
                 }, 20 * 1000)
-
             } else if (pathname.includes('/pipelines')){
                 this.updatePipelines()
                 this.getCurrentPrices()
@@ -459,7 +456,6 @@ class App extends Component<Props, State> {
             currentPrices,
             pipelinesMetrics,
             equityTimeSeries,
-            pipelinesPnl
         } = this.state
 
         const { size, decimals, menuProperties, location, removeToken, updateMessage } = this.props

@@ -5,7 +5,7 @@ import {
   PipelinesObject, Position,
   StartPipeline,
   StopPipeline, Strategy,
-  TradesMetrics, TradesObject, UpdateTrades
+  TradesObject, UpdateTrades
 } from "../types";
 import {Grid} from "semantic-ui-react";
 import styled from "styled-components";
@@ -101,6 +101,7 @@ function PipelineDetail(props: Props) {
   useEffect(() =>{
     fetchTradesData(pipelineId)
     .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const pipeline = pipelines[pipelineId]

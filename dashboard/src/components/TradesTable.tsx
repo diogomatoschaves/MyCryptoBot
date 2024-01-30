@@ -61,6 +61,7 @@ const TradesTable = (props: Props) => {
       filteredTrades,
       trades
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredTrades])
 
   const [bottomed, setBottomed] = useState(false)
@@ -75,13 +76,14 @@ const TradesTable = (props: Props) => {
 
   useEffect(() => {
     fetchData(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     if (!bottomed) return
     fetchMoreTrades(page);
     setPage(page + 1)
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bottomed])
 
   const fetchMoreTrades = (page: number) => {
@@ -140,7 +142,7 @@ const TradesTable = (props: Props) => {
           })}
         </Table.Body>
       </Table>
-      {sortedTrades.length == 0 && (
+      {sortedTrades.length === 0 && (
           <Message>
             <Message.Header>
               No trades to show yet.

@@ -8,7 +8,6 @@ import {
     UpdateMessage,
     DeletePipeline,
     BalanceObj,
-    PipelinesMetrics,
     PipelinesObject,
     Decimals,
     TradesObject,
@@ -146,7 +145,7 @@ function PipelinePanel(props: Props) {
             previous.pipelines = pipelines
             previous.options = options
         };
-    }, [pipelines, options]);
+    }, [pipelines, options, previous]);
 
     const pipelineMatch = Object.keys(pipelines).find(pipeline => pipeline === pipelineId)
 
@@ -227,7 +226,7 @@ function PipelinePanel(props: Props) {
                 </ButtonWrapper>
                   <div className="flex-column">
                 {filteredPipelines.map((pipelineId: string, index: number) => (
-                  <Link to={`/pipelines/${pipelineId}`} className="flex-row" style={{width: isMobile ? 'calc(100% - 30px)' : 'calc(80% - 50px)'}}>
+                  <Link key={index} to={`/pipelines/${pipelineId}`} className="flex-row" style={{width: isMobile ? 'calc(100% - 30px)' : 'calc(80% - 50px)'}}>
                     <PipelineItem
                         size={size}
                         balances={balances}
