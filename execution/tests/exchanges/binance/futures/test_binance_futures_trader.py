@@ -136,7 +136,7 @@ class TestBinanceFuturesTrader:
         assert binance_trader.units[symbol] == -0.05
         assert binance_trader.current_balance[symbol] == 2000
         assert binance_trader.initial_balance[symbol] == parameters["current_equity"]
-        assert binance_trader.positions[symbol] == initial_position
+        assert binance_trader.position[symbol] == initial_position
 
     @pytest.mark.parametrize(
         "parameters,symbols,position,units,times_called",
@@ -194,7 +194,7 @@ class TestBinanceFuturesTrader:
 
         symbol = parameters["symbol"]
 
-        assert binance_trader.positions[symbol] == 0
+        assert binance_trader.position[symbol] == 0
         assert futures_create_order_spy.call_count == times_called
 
     @pytest.mark.parametrize("signal", [-1, 0, 1])
@@ -602,6 +602,8 @@ class TestBinanceFuturesTrader:
         binance_trader.initial_balance[symbol] = 1000
         binance_trader.current_balance[symbol] = 1000
         binance_trader.current_equity[symbol] = 100
+
+        binance_trader.start_date[symbol] = datetime.datetime.now(tz=pytz.utc)
 
         binance_trader.stop_symbol_trading(**parameters)
 

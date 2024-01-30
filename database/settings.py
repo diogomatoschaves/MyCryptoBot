@@ -25,8 +25,8 @@ else:
             'NAME': os.getenv('POSTGRES_DB'),
             'USER': os.getenv('POSTGRES_USER'),
             'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-            'HOST': 'db',
-            'PORT': '5432',
+            'HOST': 'localhost',
+            'PORT': '5433',
             'CONN_MAX_AGE': 500
         }
     }

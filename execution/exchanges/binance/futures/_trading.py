@@ -31,7 +31,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self.symbols = {}
         self.leverage = {}
-        self.positions = {}
+        self.position = {}
         self.initial_balance = {}
         self.current_balance = {}
         self.current_equity = {}
@@ -130,7 +130,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self._set_position(symbol, 0, previous_position=1, **kwargs)
 
-        self.print_trading_results(header, date, pipeline_id=pipeline_id)
+        self.print_trading_results(pipeline_id=pipeline_id)
 
     @retry_failed_connection(num_times=2)
     def _execute_order(
