@@ -85,8 +85,6 @@ function PipelineItem(props: Props) {
     const pipelinePnl = pipeline.currentEquity - pipeline.initialEquity
     const pipelinePnlPct = pipelinePnl / pipeline.initialEquity * 100
 
-    const pipelinePnlString = `${pipelinePnl.toFixed(2)} (${pipelinePnlPct.toFixed(2)}%)`
-
     const color = pipelinePnl > 0 ? GREEN : pipelinePnl < 0 ? RED : "000000"
 
     const isMobile = ['mobile'].includes(size)
@@ -217,7 +215,8 @@ function PipelineItem(props: Props) {
                             PnL (ROI%)
                         </Grid.Column>
                         <Grid.Column floated='right' style={{...styles.rightColumn, color}}>
-                            {pipelinePnlString}
+                            {`${pipelinePnl.toFixed(2)} USDT`}<br/>
+                            ({pipelinePnlPct.toFixed(2)}%)
                         </Grid.Column>
                     </Grid.Column>
                     {!isMobile && (
