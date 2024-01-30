@@ -96,6 +96,7 @@ class App extends Component<Props, State> {
     getPricesInterval: any
     getTradesInterval: any
     getPositionsInterval: any
+    getPipelinesInterval: any
 
     static defaultProps = {
         decimals: {
@@ -197,6 +198,7 @@ class App extends Component<Props, State> {
             clearInterval(this.getPricesInterval)
             clearInterval(this.getTradesInterval)
             clearInterval(this.getPositionsInterval)
+            clearInterval(this.getPipelinesInterval)
 
             if (pathname.includes('/dashboard')) {
                 this.getAccountBalance()
@@ -216,7 +218,9 @@ class App extends Component<Props, State> {
             } else if (pathname.includes('/pipelines')){
                 this.updatePipelines()
                 this.getCurrentPrices()
-
+                this.getPipelinesInterval = setInterval(() => {
+                    this.updatePipelines()
+                }, 10 * 1000)
             } else if (pathname.includes('/positions')){
                 this.updatePositions()
                 this.getCurrentPrices()
