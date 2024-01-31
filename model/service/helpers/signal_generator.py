@@ -12,6 +12,7 @@ from model.service.external_requests import execute_order
 from model.service.helpers import convert_signal_to_text
 from shared.utils.config_parser import get_config
 from shared.utils.exceptions import StrategyInvalid
+from shared.utils.helpers import get_pipeline_max_window, get_minimum_lookback_date
 from shared.utils.logger import configure_logger
 from shared.data.queries import get_data
 
@@ -47,7 +48,11 @@ def send_signal(
     bearer_token,
     header=''
 ):
-    data = get_data(StructuredData, None, pipeline["symbol"], pipeline["interval"], pipeline["exchange"])
+    max_window = get_pipeline_max_window(pipeline["id"])
+
+    start_date = get_minimum_lookback_date(max_window, pipeline["interval"])
+
+    data = get_data(StructuredData, start_date, pipeline["symbol"], pipeline["interval"], pipeline["exchange"])
 
     if len(data) == 0:
         logging.debug(header + f"Empty DataFrame, aborting.")
