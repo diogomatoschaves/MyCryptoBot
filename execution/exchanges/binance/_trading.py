@@ -3,19 +3,26 @@ import os
 from datetime import datetime
 
 import django
+import numpy as np
+import pandas as pd
 import pytz
 from stratestic.trading import Trader
-from stratestic.backtesting import IterativeBacktester
-from stratestic.backtesting.helpers.evaluation import get_results, log_results
+from stratestic.backtesting.helpers.evaluation import (
+    get_overview_results,
+    get_returns_results,
+    get_drawdown_results,
+    get_trades_results,
+    log_results
+)
+from stratestic.backtesting.helpers.evaluation.metrics import exposure_time
 
-from shared.data.queries import get_data
 from shared.exchanges.binance import BinanceHandler
-from shared.utils.helpers import get_pipeline_data
+from shared.utils.helpers import get_pipeline_data, convert_trade
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Position, Trade, Orders, Pipeline, StructuredData
+from database.model.models import Position, Trade, Orders, Pipeline
 
 
 class BinanceTrader(BinanceHandler, Trader):
@@ -29,7 +36,7 @@ class BinanceTrader(BinanceHandler, Trader):
         BinanceHandler.__init__(self, paper_trading)
         Trader.__init__(self, 0)
 
-        self.positions = {}
+        self.position = {}
         self.filled_orders = []
         self.exchange = "binance"
         self.start_date = {}
@@ -68,9 +75,9 @@ class BinanceTrader(BinanceHandler, Trader):
 
     def _set_position(self, symbol, position, **kwargs):
 
-        pipeline_id = kwargs.pop("pipeline_id", None)
+        super()._set_position(symbol, position)
 
-        self.positions[symbol] = position
+        pipeline_id = kwargs.pop("pipeline_id", None)
 
         previous_position = kwargs.pop("previous_position", 0)
 
@@ -128,7 +135,7 @@ class BinanceTrader(BinanceHandler, Trader):
         return formatted_order
 
     def _get_position(self, symbol):
-        return self.positions[symbol]
+        return self.position[symbol]
 
     def _handle_trades(self, pipeline_id, symbol, previous_position, position):
 
@@ -177,23 +184,61 @@ class BinanceTrader(BinanceHandler, Trader):
             return new_trade
 
         return None
+    
+    @staticmethod
+    def _process_trading_bot_results(trades):
+        df = pd.DataFrame(trades)
 
-    def print_trading_results(self, header, date, pipeline_id):
+        df = pd.concat([df.iloc[0:1, :], df], axis=0, ignore_index=True)
+
+        df.loc[0, 'pnl'] = 0
+        df.loc[0, 'side'] = 0
+
+        df = df.rename(columns={'pnl': "strategy_returns_tc", "exit_date": "close_date"}).set_index('entry_date')
+
+        df["accumulated_strategy_returns_tc"] = df["strategy_returns_tc"].cumsum().apply(np.exp)
+
+        return df
+
+    def print_trading_results(self, pipeline_id):
         pipeline = get_pipeline_data(pipeline_id)
 
-        initial_equity = self.initial_balance[pipeline.symbol]
-        current_equity = self.current_equity[pipeline.symbol]
+        # Retrieve trading bot data
+        trades = Trade.objects.filter(
+            pipeline__id=pipeline_id,
+            open_time__gte=self.start_date[pipeline.symbol],
+            close_time__isnull=False
+        ).order_by('open_time')
 
-        try:
-            perf = (current_equity - initial_equity) / initial_equity * 100
-        except ZeroDivisionError:
-            perf = 0
+        if len(trades) == 0:
+            logging.debug('There are no executed trades.')
+            return
 
-        logging.info(header + f"" + 70 * "-")
-        logging.info(header + f"{date} | +++ CLOSED FINAL POSITION +++")
-        logging.info(header + f"{date} | net performance (%) = {round(perf, 2)}")
-        logging.info(header + f"{date} | number of trades executed = {self.nr_trades}")
-        logging.info(header + f"" + 70 * "-")
+        trades = [convert_trade(trade) for trade in trades]
+
+        data = self._process_trading_bot_results(trades)
+
+        leverage = pipeline.leverage
+        amount = self.initial_balance[pipeline.symbol]
+        results = {}
+
+        # Get metrics
+        results = get_overview_results(results, data, leverage, None, amount * pipeline.leverage)
+
+        results = get_returns_results(results, data, 1, amount, trading_days=365)
+
+        results = get_drawdown_results(results, data)
+
+        results = get_trades_results(results, trades, leverage)
+
+        results["exposure_time"] = exposure_time(self.positions)
+        results["start_date"] = results["start_date"].round('min')
+        results["end_date"] = results["end_date"].round('min')
+        results["max_trade_duration"] = pd.Timedelta(results["max_trade_duration"]).round('1s')
+        results["avg_trade_duration"] = pd.Timedelta(seconds=results["avg_trade_duration"]).round('1s')
+
+        # print results
+        log_results(results, backtesting=False)
 
     def report_trade(self, order, units, going, header='', **kwargs):
         logging.debug(order)
