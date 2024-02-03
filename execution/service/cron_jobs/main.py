@@ -3,12 +3,12 @@ import os
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from execution.service.cron_jobs.save_pipelines_snapshot import save_pipelines_snapshot
+from execution.service.cron_jobs.save_pipelines_snapshot import save_portfolio_value_snapshot
 from shared.utils.decorators import handle_db_connection_error
 
 
 @handle_db_connection_error
-def start_background_scheduler(binance_trader_objects, config_vars):
+def start_background_scheduler(config_vars):
 
     logging.info('Starting scheduler.')
 
@@ -17,7 +17,7 @@ def start_background_scheduler(binance_trader_objects, config_vars):
     # Create an instance of scheduler and add function.
     scheduler = BackgroundScheduler()
     scheduler.add_job(
-        lambda: save_pipelines_snapshot(binance_trader_objects),
+        lambda: save_portfolio_value_snapshot(),
         "interval",
         seconds=int(interval_between_snapshots)
     )

@@ -1,6 +1,6 @@
 import pytest
 
-from execution.service.cron_jobs.save_pipelines_snapshot import save_pipelines_snapshot
+from execution.service.cron_jobs.save_pipelines_snapshot import save_portfolio_value_snapshot, save_pipeline_snapshot
 from execution.tests.setup.fixtures.external_modules import binance_handler_market_data_factory
 from shared.utils.tests.fixtures.models import *
 
@@ -15,6 +15,7 @@ METHODS = [
     ("futures_symbol_ticker", "futures_symbol_ticker"),
     ("futures_account_balance", "futures_account_balance"),
     ("futures_position_information", "futures_position_information"),
+    ("futures_account", "futures_account"),
 ]
 
 for method in METHODS:
@@ -23,14 +24,13 @@ for method in METHODS:
 
 @pytest.fixture
 def test_mock_setup(
-    mocker,
-    create_open_position,
-    create_open_position_paper_trading_pipeline,
+    create_exchange,
     ping,
     init_session,
     futures_symbol_ticker,
     futures_account_balance,
-    futures_position_information
+    futures_position_information,
+    futures_account
 ):
     return
 
@@ -56,37 +56,85 @@ class TestCronJobs:
         [
             pytest.param(
                 [2, 11],
-                {"portfolio_timeseries": 4, "values": [100, 500]},
-                id="no_pipeline_id",
-            ),
-            pytest.param(
-                [2],
-                {"portfolio_timeseries": 1, "values": [100]},
-                id="existent_pipeline_2",
-            ),
-            pytest.param(
-                [11],
-                {"portfolio_timeseries": 1, "values": [500.0]},
-                id="existent_pipeline_11",
+                {"portfolio_timeseries": 4, "values": [85, 530]},
+                id="pipelines=[2, 11]",
             ),
         ],
     )
-    def test_save_pipelines_snapshot(
+    def test_save_portfolio_value_snapshot(
+        self,
+        pipelines,
+        response,
+        test_mock_setup,
+        create_open_position,
+        create_open_position_paper_trading_pipeline,
+    ):
+        save_portfolio_value_snapshot()
+
+        assert PortfolioTimeSeries.objects.count() == response["portfolio_timeseries"]
+
+        for i, pipeline in enumerate(pipelines):
+            entries = PortfolioTimeSeries.objects.filter(pipeline_id=pipeline).last()
+            assert entries.value == response["values"][i]
+
+    @pytest.mark.parametrize(
+        "pipelines,response",
+        [
+            pytest.param(
+                [],
+                0,
+                id="no_pipeline_id",
+            ),
+        ],
+    )
+    def test_save_portfolio_value_snapshot_no_open_positions(
         self,
         pipelines,
         response,
         test_mock_setup,
     ):
-        binance_instances = [MockBinanceInstance(), MockBinanceInstance(paper_trading=True)]
+        save_portfolio_value_snapshot()
 
-        kwargs = {}
-        if len(pipelines) == 1:
-            kwargs['pipeline_id'] = pipelines[0]
+        assert PortfolioTimeSeries.objects.count() == response
 
-        save_pipelines_snapshot(binance_instances, **kwargs)
+    @pytest.mark.parametrize(
+        "pipeline,unrealized_profit",
+        [
+            pytest.param(
+                2,
+                0,
+                id="pipeline_id=2-unrealized_profit=0",
+            ),
+            pytest.param(
+                2,
+                -15,
+                id="pipeline_id=2-unrealized_profit=-15",
+            ),
+            pytest.param(
+                11,
+                0,
+                id="pipeline_id=11-unrealized_profit=0",
+            ),
+            pytest.param(
+                11,
+                50,
+                id="pipeline_id=11-unrealized_profit=50",
+            ),
+        ],
+    )
+    def test_save_pipeline_snapshot(
+        self,
+        pipeline,
+        unrealized_profit,
+        create_open_position,
+        create_open_position_paper_trading_pipeline,
+        test_mock_setup,
+    ):
+        save_pipeline_snapshot(pipeline, unrealized_profit)
 
-        assert PortfolioTimeSeries.objects.count() == response["portfolio_timeseries"]
+        assert PortfolioTimeSeries.objects.count() == 1
 
-        for i, pipeline in enumerate(pipelines):
-            entries = PortfolioTimeSeries.objects.filter(pipeline_id=pipeline)
-            assert entries[0].value == response["values"][i]
+        entry = PortfolioTimeSeries.objects.filter(pipeline_id=pipeline).last()
+
+        assert entry.pipeline.id == pipeline
+        assert entry.value == entry.pipeline.current_equity + unrealized_profit

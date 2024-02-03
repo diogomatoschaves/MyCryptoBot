@@ -34,15 +34,17 @@ def create_assets(db):
     obj1 = Asset.objects.create(symbol='BTC')
     obj2 = Asset.objects.create(symbol='USDT')
     obj3 = Asset.objects.create(symbol='BNB')
+    obj4 = Asset.objects.create(symbol='ETH')
 
-    return obj1, obj2, obj3
+    return obj1, obj2, obj3, obj4
 
 
 @pytest.fixture
 def create_symbol(db, create_assets):
     obj1 = Symbol.objects.create(name='BTCUSDT', base_id='BTC', quote_id='USDT', price_precision=2, quantity_precision=3)
     obj2 = Symbol.objects.create(name='BNBBTC', base_id='BNB', quote_id='BTC', price_precision=2, quantity_precision=3)
-    return obj1, obj2
+    obj3 = Symbol.objects.create(name='ETHUSDT', base_id='ETH', quote_id='USDT', price_precision=2, quantity_precision=3)
+    return obj1, obj2, obj3
 
 
 def create_strategies(db):
@@ -342,7 +344,7 @@ def create_pipeline_BNBBTC(db, create_exchange, create_symbol):
 def create_paper_trading_pipeline(db, create_exchange, create_symbol):
     pipeline = Pipeline.objects.create(
         id=11,
-        symbol_id='BTCUSDT',
+        symbol_id='ETHUSDT',
         exchange_id='binance',
         interval="1h",
         initial_equity=500,
@@ -457,7 +459,7 @@ def create_inactive_position(db, create_inactive_pipeline):
 def create_open_position_paper_trading_pipeline(db, create_paper_trading_pipeline):
     return Position.objects.create(
         position=1,
-        symbol_id="BTCUSDT",
+        symbol_id="ETHUSDT",
         exchange_id='binance',
         pipeline_id=11,
         paper_trading=True,

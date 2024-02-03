@@ -5,63 +5,50 @@ from datetime import datetime
 import django
 import pytz
 
-from execution.service.blueprints.market_data import get_ticker, get_balances
+from execution.service.blueprints.market_data import get_account_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import PortfolioTimeSeries, Position
+from database.model.models import PortfolioTimeSeries, Pipeline, Position
 
 
-def save_pipelines_snapshot(binance_trader_objects, pipeline_id=None):
-
+def save_portfolio_value_snapshot():
     logging.debug('Saving pipelines snapshot...')
 
-    filter_dict = {
-        "pipeline__active": True
-    }
+    open_positions_test = Position.objects.filter(pipeline__active=True, paper_trading=True)
+    open_positions_live = Position.objects.filter(pipeline__active=True, paper_trading=False)
 
-    if pipeline_id is not None:
-        filter_dict["pipeline__id"] = pipeline_id
-
-    open_positions = Position.objects.filter(**filter_dict)
+    if len(open_positions_live) == 0 and len(open_positions_test) == 0:
+        return
 
     time = datetime.now(pytz.utc)
 
-    total_current_value = {
-        'live': 0,
-        'testnet': 0
-    }
-    for position in open_positions:
+    symbols = dict()
 
-        binance_obj = binance_trader_objects[0] if position.paper_trading else binance_trader_objects[1]
+    symbols["testnet"] = [{"symbol": position.symbol.name, "pipeline_id": position.pipeline.id} for position in open_positions_test]
+    symbols["live"] = [{"symbol": position.symbol.name, "pipeline_id": position.pipeline.id} for position in open_positions_live]
 
-        symbol = position.symbol.name
+    balances = get_account_data()
 
-        response = get_ticker(position.symbol.name, position.paper_trading)
+    for account_type, account_balances in balances.items():
 
-        if response is None:
-            continue
+        net_account_balance = float(account_balances["totalWalletBalance"]) - float(account_balances["totalUnrealizedProfit"])
+        PortfolioTimeSeries.objects.create(time=time, value=net_account_balance, type=account_type)
 
-        try:
-            current_portfolio_value = position.pipeline.current_equity
+        for symbol in symbols[account_type]:
 
-            PortfolioTimeSeries.objects.create(pipeline=position.pipeline, time=time, value=current_portfolio_value)
+            position = [balance for balance in account_balances["positions"] if balance["symbol"] == symbol["symbol"]][0]
 
-            account_type = 'testnet' if position.pipeline.paper_trading else 'live'
+            save_pipeline_snapshot(symbol["pipeline_id"], float(position["unrealizedProfit"]))
 
-            total_current_value[account_type] += current_portfolio_value
 
-        except TypeError:
-            continue
+def save_pipeline_snapshot(pipeline_id, unrealized_profit=0):
 
-    if pipeline_id is None and len(open_positions) > 0:
-        balances = get_balances()
+    pipeline = Pipeline.objects.get(id=pipeline_id)
 
-        for account_type in balances:
-            for asset in balances[account_type]:
-                if asset['asset'] == 'USDT':
+    time = datetime.now(pytz.utc)
 
-                    current_asset_value = float(asset["availableBalance"]) + total_current_value[account_type]
+    equity = pipeline.current_equity + unrealized_profit
 
-                    PortfolioTimeSeries.objects.create(time=time, value=current_asset_value, type=account_type)
+    PortfolioTimeSeries.objects.create(pipeline=pipeline, time=time, value=equity)

@@ -135,12 +135,3 @@ def mock_start_pipeline_trade(mocker):
 @pytest.fixture
 def spy_start_pipeline_trade(mocker):
     return mocker.spy(execution.service.app, "start_pipeline_trade")
-
-
-@pytest.fixture
-def mock_futures_symbol_ticker(mocker):
-    return mocker.patch.object(
-        execution.service.cron_jobs.save_pipelines_snapshot._save_pipelines_snapshot,
-        'get_ticker',
-        lambda symbol: {"price": 1000}
-    )
