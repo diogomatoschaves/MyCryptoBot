@@ -3,13 +3,14 @@ import os
 import django
 import pytest
 
+from execution.tests.setup.test_data.binance_api_responses import margin_order_creation
+
 with pytest.MonkeyPatch().context() as ctx:
     ctx.setenv("TEST", True)
     from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded, NegativeEquity, \
     InsufficientBalance
     from execution.exchanges.binance.futures import BinanceFuturesTrader
     from execution.tests.setup.fixtures.external_modules import *
-    from execution.tests.setup.fixtures.internal_modules import mock_futures_symbol_ticker
 
 from shared.utils.exceptions import SymbolInvalid
 
@@ -52,7 +53,6 @@ def test_mock_setup(
     futures_change_leverage,
     futures_create_order,
     futures_account_balance,
-    mock_futures_symbol_ticker
 ):
     return
 

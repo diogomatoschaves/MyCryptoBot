@@ -816,7 +816,14 @@ resources_response = {
             'quote_id': 'BTC',
             'price_precision': 2,
             'quantity_precision': 3
-        }
+        },
+        "ETHUSDT": {
+            "base_id": "ETH",
+            "name": "ETHUSDT",
+            "price_precision": 2,
+            "quantity_precision": 3,
+            "quote_id": "USDT",
+        },
     },
     "exchanges": {'binance': {'name': 'binance'}},
     "candleSizes": CANDLE_SIZES_ORDERED

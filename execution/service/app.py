@@ -46,7 +46,7 @@ def get_binance_trader_instance(paper_trading):
 
 def startup_task():
 
-    start_background_scheduler([binance_futures_mock_trader, binance_futures_trader], config_vars)
+    start_background_scheduler(config_vars)
 
     open_positions = Position.objects.filter(pipeline__active=True)
 

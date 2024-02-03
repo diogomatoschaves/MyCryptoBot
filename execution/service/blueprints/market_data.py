@@ -18,6 +18,7 @@ client = BinanceHandler()
 testnet_client = BinanceHandler(paper_trading=True)
 
 
+@retry_failed_connection(num_times=2)
 def get_ticker(symbol, paper_trading=False):
     try:
         client.validate_symbol(symbol)
@@ -33,9 +34,18 @@ def filter_balances(balances, coins):
     return [balance for balance in balances if balance['asset'] in coins]
 
 
+@retry_failed_connection(num_times=2)
 def get_balances():
     testnet_balance = filter_balances(testnet_client.futures_account_balance(), ["USDT"])
     live_balance = filter_balances(client.futures_account_balance(), ["USDT"])
+
+    return {"testnet": testnet_balance, "live": live_balance}
+
+
+@retry_failed_connection(num_times=2)
+def get_account_data():
+    testnet_balance = testnet_client.futures_account()
+    live_balance = client.futures_account()
 
     return {"testnet": testnet_balance, "live": live_balance}
 

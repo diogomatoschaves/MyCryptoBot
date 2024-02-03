@@ -209,6 +209,8 @@ class TestDashboardService:
 
         res = client.get(f'{API_PREFIX}/resources{extra_url}')
 
+        print(res.json)
+
         assert res.json == response
 
     @pytest.mark.parametrize(

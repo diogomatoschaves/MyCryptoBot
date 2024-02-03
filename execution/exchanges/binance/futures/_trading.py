@@ -9,7 +9,7 @@ import django
 from database.model.models import Pipeline
 from execution.exchanges.binance import BinanceTrader
 from execution.service.blueprints.market_data import filter_balances
-from execution.service.cron_jobs.save_pipelines_snapshot import save_pipelines_snapshot
+from execution.service.cron_jobs.save_pipelines_snapshot import save_portfolio_value_snapshot, save_pipeline_snapshot
 from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits, NegativeEquity, \
     InsufficientBalance
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
@@ -94,8 +94,6 @@ class BinanceFuturesTrader(BinanceTrader):
             pipeline_id = kwargs["pipeline_id"]
 
             self.close_pipeline(pipeline_id)
-
-            save_pipelines_snapshot([self, self], pipeline_id=pipeline_id)
 
             self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
         except NoUnits:
@@ -245,6 +243,9 @@ class BinanceFuturesTrader(BinanceTrader):
         pipeline.units = self.units[symbol]
         pipeline.current_equity = self.current_equity[symbol]
         pipeline.save()
+
+        if reducing:
+            save_pipeline_snapshot(pipeline_id=pipeline.id)
 
     def _get_symbol_info(self, symbol):
 

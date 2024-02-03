@@ -5,9 +5,7 @@ import pytest
 import execution
 from execution.exchanges.binance.futures import BinanceFuturesTrader
 from execution.tests.setup.test_data.binance_api_responses import (
-    isolated_account_info,
-    trading_fees,
-    margin_order_creation, futures_order_creation, exchange_info, account_balances, positions_info,
+    futures_order_creation, account_balances, positions_info, account_balance,
 )
 
 
@@ -46,6 +44,9 @@ class MockBinanceHandler(BinanceFuturesTrader):
 
     def futures_position_information(self):
         return positions_info
+
+    def futures_account(self):
+        return account_balance
 
 
 def binance_client_mock_factory(method, type_='mock'):
