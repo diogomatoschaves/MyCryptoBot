@@ -133,7 +133,10 @@ def get_pipeline_max_window(pipeline_id):
 
         max_value_params = 0
         for strategy in strategies:
-            max_value = max([value for param, value in strategy["params"].items()])
+            try:
+                max_value = max([value for param, value in strategy["params"].items()])
+            except ValueError:
+                continue
 
             if max_value > max_value_params:
                 max_value_params = max_value

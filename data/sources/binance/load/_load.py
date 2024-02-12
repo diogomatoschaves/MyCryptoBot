@@ -55,9 +55,11 @@ def save_new_entry_db(model_class, fields, count_updates=True):
 
             fields_subset = {key: value for key, value in fields.items() if key in unique_fields}
 
-            rows = model_class.objects.filter(**fields_subset).update(**fields)
+            model_class.objects.filter(**fields_subset).delete()
+            with transaction.atomic():
+                new_entry = model_class.objects.create(**fields)
 
-            if rows != 0 and count_updates:
-                new_entry = True
+            if not count_updates:
+                new_entry = False
 
     return new_entry
