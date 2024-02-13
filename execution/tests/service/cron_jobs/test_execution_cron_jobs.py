@@ -35,20 +35,6 @@ def test_mock_setup(
     return
 
 
-class MockBinanceInstance:
-
-    def __init__(self, paper_trading=False):
-        self.paper_trading = paper_trading
-
-        self.current_balance = {
-            "BTCUSDT": 1000
-        }
-
-        self.units = {
-            "BTCUSDT": 0.1
-        }
-
-
 class TestCronJobs:
 
     @pytest.mark.parametrize(

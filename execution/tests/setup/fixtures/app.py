@@ -11,21 +11,17 @@ import execution
 TEST_APP_NAME = "test_app"
 
 
-def mock_init(x=None, **kwargs):
-    pass
-
-
 @pytest.fixture
 def futures_init_session(mocker):
     return mocker.patch.object(
-        execution.service.app.BinanceFuturesTrader, "_init_session", mock_init
+        execution.service.app.BinanceFuturesTrader, "_init_session", lambda x=None, **kwargs: None
     )
 
 
 @pytest.fixture
 def futures_init(mocker, futures_init_session):
     return mocker.patch.object(
-        execution.service.app.BinanceFuturesTrader, "ping", mock_init
+        execution.service.app.BinanceFuturesTrader, "ping", lambda x=None, **kwargs: None
     )
 
 
