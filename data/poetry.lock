@@ -2302,13 +2302,13 @@ test = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "stratestic"
-version = "1.2.1"
+version = "1.2.2"
 description = "Library for testing and analysing trading strategies."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "stratestic-1.2.1-py3-none-any.whl", hash = "sha256:e15b47c5910a40a4a8f2d63756ac3fd40df964464b0ba2bc4ef30a54424c6b74"},
-    {file = "stratestic-1.2.1.tar.gz", hash = "sha256:555e891f87bb506d04762bfa30341083e0007bb875cfa6da2e6e043b9d85a287"},
+    {file = "stratestic-1.2.2-py3-none-any.whl", hash = "sha256:33e292ff8b8261fc6ebc8c30c4adedb857e343d1aab260079395b511e5d41e94"},
+    {file = "stratestic-1.2.2.tar.gz", hash = "sha256:1c650811bac2a3e504e443f1c752591954b525d3eb9e8f7a1f4fe22006140342"},
 ]
 
 [package.dependencies]
