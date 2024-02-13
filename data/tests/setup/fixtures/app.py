@@ -70,7 +70,7 @@ def app_with_open_position(
     create_exchange,
     create_assets,
     create_symbol,
-    create_neutral_open_inactive_position
+    create_positions
 ):
     app = create_app(testing=True)
     return app

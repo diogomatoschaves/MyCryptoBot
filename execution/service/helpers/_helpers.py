@@ -47,7 +47,7 @@ def extract_and_validate(request_data):
     binance_account_type = request_data.get('binance_account_type', 'futures')
     pipeline_id = request_data.get("pipeline_id", None)
 
-    pipeline = get_pipeline_data(pipeline_id)
+    pipeline = get_pipeline_data(pipeline_id, return_obj=True)
 
     header = get_header(pipeline_id)
 

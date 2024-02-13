@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import django
 import pytz
 
+from shared.utils.decorators import handle_db_connection_error
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
@@ -12,6 +14,7 @@ from database.model.models import Pipeline
 from data.service.blueprints.bots_api import stop_instance
 
 
+@handle_db_connection_error
 def check_app_is_running():
     """
     """

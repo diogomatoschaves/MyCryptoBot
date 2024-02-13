@@ -35,20 +35,6 @@ def test_mock_setup(
     return
 
 
-class MockBinanceInstance:
-
-    def __init__(self, paper_trading=False):
-        self.paper_trading = paper_trading
-
-        self.current_balance = {
-            "BTCUSDT": 1000
-        }
-
-        self.units = {
-            "BTCUSDT": 0.1
-        }
-
-
 class TestCronJobs:
 
     @pytest.mark.parametrize(
@@ -56,7 +42,7 @@ class TestCronJobs:
         [
             pytest.param(
                 [2, 11],
-                {"portfolio_timeseries": 4, "values": [85, 530]},
+                {"portfolio_timeseries": 4, "values": [85, 100030]},
                 id="pipelines=[2, 11]",
             ),
         ],

@@ -5,7 +5,7 @@ from binance.exceptions import BinanceAPIException
 
 import execution
 from execution.service.helpers.exceptions import SymbolNotBeingTraded, SymbolAlreadyTraded, LeverageSettingFail, \
-    NegativeEquity
+    NegativeEquity, InsufficientBalance
 
 
 class MockBinanceTrader:
@@ -25,7 +25,7 @@ class MockBinanceTrader:
         self.raise_leverage_setting_failure = raise_leverage_setting_failure
         self.raise_negative_equity_error = raise_negative_equity_error
 
-    def start_symbol_trading(self, symbol, current_equity, pipeline_id, header='', **kwargs):
+    def start_symbol_trading(self, pipeline_id, header='', **kwargs):
 
         if self.raise_error_start_stop:
             raise BinanceAPIException(
@@ -34,11 +34,11 @@ class MockBinanceTrader:
                 '{"msg": "ReduceOnly Order is rejected.", "code": -2022}'
             )
         elif self.raise_symbol_already_traded:
-            raise SymbolAlreadyTraded(symbol)
+            raise SymbolAlreadyTraded('BTCUSDT')
         elif self.raise_leverage_setting_failure:
             raise LeverageSettingFail("")
 
-    def stop_symbol_trading(self, symbol, header='', **kwargs):
+    def stop_symbol_trading(self, pipeline_id, header='', **kwargs):
         if self.raise_error_start_stop:
             raise BinanceAPIException(
                 '',
@@ -46,7 +46,7 @@ class MockBinanceTrader:
                 '{"msg": "ReduceOnly Order is rejected.", "code": -2022}'
             )
         if self.raise_symbol_not_being_traded:
-            raise SymbolNotBeingTraded(symbol)
+            raise SymbolNotBeingTraded('BTCUSDT')
 
     def trade(self, symbol, signal, amount, header='', **kwargs):
         if self.raise_error_trade:
@@ -129,6 +129,19 @@ def mock_start_pipeline_trade(mocker):
         execution.service.app,
         "start_pipeline_trade",
         lambda pipeline, header, **kwargs: None
+    )
+
+
+def raise_insufficient_balance(pipeline, header, **kwargs):
+    raise InsufficientBalance
+
+
+@pytest.fixture
+def mock_start_pipeline_trade_raise_exception(mocker):
+    return mocker.patch.object(
+        execution.service.app,
+        "start_pipeline_trade",
+        raise_insufficient_balance
     )
 
 

@@ -11,21 +11,17 @@ import execution
 TEST_APP_NAME = "test_app"
 
 
-def mock_init(x=None, **kwargs):
-    pass
-
-
 @pytest.fixture
 def futures_init_session(mocker):
     return mocker.patch.object(
-        execution.service.app.BinanceFuturesTrader, "_init_session", mock_init
+        execution.service.app.BinanceFuturesTrader, "_init_session", lambda x=None, **kwargs: None
     )
 
 
 @pytest.fixture
 def futures_init(mocker, futures_init_session):
     return mocker.patch.object(
-        execution.service.app.BinanceFuturesTrader, "ping", mock_init
+        execution.service.app.BinanceFuturesTrader, "ping", lambda x=None, **kwargs: None
     )
 
 
@@ -61,8 +57,23 @@ def app_with_open_positions(
     mock_jwt_required,
     mock_redis_connection,
     exchange_data,
-    create_neutral_open_inactive_position,
+    create_positions,
     mock_start_pipeline_trade,
+    spy_start_pipeline_trade
+):
+    app = create_app(testing=True)
+    return app
+
+
+@pytest.fixture
+def app_with_open_positions_insufficient_balance(
+    mock_client_env_vars,
+    futures_init,
+    mock_jwt_required,
+    mock_redis_connection,
+    exchange_data,
+    create_positions,
+    mock_start_pipeline_trade_raise_exception,
     spy_start_pipeline_trade
 ):
     app = create_app(testing=True)

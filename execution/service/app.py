@@ -11,7 +11,7 @@ from execution.service.cron_jobs.main import start_background_scheduler
 from execution.service.helpers.decorators import binance_error_handler, handle_app_errors, handle_order_execution_errors
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_signal, extract_and_validate, get_header
-from execution.service.helpers.exceptions import PipelineNotActive
+from execution.service.helpers.exceptions import PipelineNotActive, InsufficientBalance
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.futures import BinanceFuturesTrader
 from shared.utils.config_parser import get_config
@@ -52,11 +52,16 @@ def startup_task():
 
     for open_position in open_positions:
 
-        pipeline = get_pipeline_data(open_position.pipeline_id)
+        pipeline = get_pipeline_data(open_position.pipeline_id, return_obj=True)
 
         header = get_header(pipeline.id)
 
-        start_pipeline_trade(pipeline, header, initial_position=open_position.position)
+        try:
+            start_pipeline_trade(pipeline, header, initial_position=open_position.position)
+        except InsufficientBalance:
+            logging.info(f"Insufficient balance to start pipeline {pipeline.id}.")
+            pipeline.active = False
+            pipeline.save()
 
 
 def start_pipeline_trade(pipeline, header, initial_position=0):
@@ -64,10 +69,7 @@ def start_pipeline_trade(pipeline, header, initial_position=0):
     bt = get_binance_trader_instance(pipeline.paper_trading)
 
     bt.start_symbol_trading(
-        pipeline.symbol,
-        pipeline.current_equity,
         pipeline.id,
-        leverage=pipeline.leverage,
         initial_position=initial_position,
         header=header,
     )
@@ -109,11 +111,11 @@ def create_app():
         if parameters.initial_equity is None:
             raise EquityRequired
 
-        if pipeline.exchange == 'binance':
+        if pipeline.exchange.name == 'binance':
 
             start_pipeline_trade(pipeline, parameters.header)
 
-            return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol))
+            return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol.name))
 
     @app.route('/stop_symbol_trading', methods=['POST'])
     @handle_app_errors
@@ -129,12 +131,12 @@ def create_app():
         bt = get_binance_trader_instance(pipeline.paper_trading)
 
         if not pipeline.active:
-            bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
+            bt.stop_symbol_trading(pipeline.id, header=parameters.header)
             raise PipelineNotActive(pipeline.id)
 
-        bt.stop_symbol_trading(pipeline.symbol, header=parameters.header, pipeline_id=pipeline.id)
+        bt.stop_symbol_trading(pipeline.id, header=parameters.header)
 
-        return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol))
+        return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol.name))
 
     @app.route('/execute_order', methods=['POST'])
     @handle_app_errors
@@ -156,12 +158,12 @@ def create_app():
 
         validate_signal(signal=signal)
 
-        if pipeline.exchange.lower() == 'binance':
+        if pipeline.exchange.name.lower() == 'binance':
 
             bt = get_binance_trader_instance(pipeline.paper_trading)
 
             return_value = handle_order_execution_errors(
-                symbol=pipeline.symbol,
+                symbol=pipeline.symbol.name,
                 trader_instance=bt,
                 header=parameters.header,
                 pipeline_id=pipeline.id
@@ -172,7 +174,7 @@ def create_app():
             if return_value:
                 return jsonify(return_value)
 
-        return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol))
+        return jsonify(Responses.ORDER_EXECUTION_SUCCESS(pipeline.symbol.name))
 
     return app
 

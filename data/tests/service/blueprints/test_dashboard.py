@@ -278,12 +278,18 @@ class TestDashboardService:
         extra_url,
         included_positions,
         client,
-        create_neutral_open_inactive_position
+        create_neutral_position,
+        create_open_position,
+        create_inactive_position
     ):
         res = client.get(f'{API_PREFIX}/positions{extra_url}')
 
+        print(Position.objects.all())
+
         positions = [position.as_json() for position in Position.objects.all() if
                   position.pipeline.active and position.pipeline.id in included_positions]
+
+        print(positions)
 
         response = {"positions": positions}
 
