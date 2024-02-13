@@ -168,7 +168,14 @@ def create_app():
                 header=parameters.header,
                 pipeline_id=pipeline.id
             )(
-                lambda: bt.trade(pipeline.symbol, signal, amount=amount, header=parameters.header, pipeline_id=pipeline.id)
+                lambda: bt.trade(
+                    pipeline.symbol.name,
+                    signal,
+                    amount=amount,
+                    header=parameters.header,
+                    pipeline_id=pipeline.id,
+                    print_results=True
+                )
             )()
 
             if return_value:
