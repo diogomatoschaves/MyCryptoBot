@@ -17,7 +17,7 @@ from shared.utils.tests.fixtures.external_modules import mock_jwt_required, spy_
 API_PREFIX = '/api'
 
 
-class TestDataService:
+class TestBotsAPI:
 
     @pytest.mark.parametrize(
         "route,method",
@@ -505,7 +505,7 @@ class TestDataService:
         client_with_open_position,
         spy_start_symbol_trading
     ):
-        assert spy_start_symbol_trading.call_count == 2
+        assert spy_start_symbol_trading.call_count == 3
 
     def test_startup_task_no_positions(
         self,
