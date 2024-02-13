@@ -225,11 +225,11 @@ class BinanceTrader(BinanceHandler, Trader):
         # Get metrics
         results = get_overview_results(results, data, leverage, None, amount * pipeline.leverage)
 
-        results = get_returns_results(results, data, 1, amount, trading_days=365)
+        results = get_returns_results(results, data, amount, trading_days=365)
 
         results = get_drawdown_results(results, data)
 
-        results = get_trades_results(results, trades, leverage)
+        results = get_trades_results(results, trades)
 
         results["exposure_time"] = exposure_time(self.positions)
         results["start_date"] = results["start_date"].round('min')

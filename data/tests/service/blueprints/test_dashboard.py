@@ -278,7 +278,7 @@ class TestDashboardService:
         extra_url,
         included_positions,
         client,
-        create_neutral_open_inactive_position
+        create_positions
     ):
         res = client.get(f'{API_PREFIX}/positions{extra_url}')
 

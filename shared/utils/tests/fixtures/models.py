@@ -352,7 +352,8 @@ def create_paper_trading_pipeline(db, create_exchange, create_symbol):
         balance=1000,
         units=0,
         paper_trading=True,
-        leverage=4
+        leverage=4,
+        current_equity=100000
     )
 
     strategy_1, strategy_2 = create_strategies(db)
@@ -458,7 +459,7 @@ def create_inactive_position(db, create_inactive_pipeline):
 @pytest.fixture
 def create_open_position_paper_trading_pipeline(db, create_paper_trading_pipeline):
     return Position.objects.create(
-        position=1,
+        position=0,
         symbol_id="ETHUSDT",
         exchange_id='binance',
         pipeline_id=11,
@@ -470,7 +471,13 @@ def create_open_position_paper_trading_pipeline(db, create_paper_trading_pipelin
 
 
 @pytest.fixture
-def create_neutral_open_inactive_position(db, create_inactive_position, create_open_position, create_neutral_position):
+def create_positions(
+    db,
+    create_inactive_position,
+    create_open_position,
+    create_neutral_position,
+    create_open_position_paper_trading_pipeline
+):
     return
 
 

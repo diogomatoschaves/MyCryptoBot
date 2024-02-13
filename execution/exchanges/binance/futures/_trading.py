@@ -44,46 +44,36 @@ class BinanceFuturesTrader(BinanceTrader):
 
     def start_symbol_trading(
         self,
-        symbol,
-        current_equity,
         pipeline_id,
-        leverage,
         header='',
         initial_position=0,
         **kwargs
     ):
+        pipeline = get_pipeline_data(pipeline_id, return_obj=True)
+
+        symbol = pipeline.symbol.name
+
         if symbol in self.symbols:
             raise SymbolAlreadyTraded(symbol)
 
-        if isinstance(leverage, int):
-
-            return_value = handle_order_execution_errors(
-                symbol=symbol,
-                trader_instance=self,
-                header=header,
-                pipeline_id=pipeline_id
-            )(
-                lambda: self.futures_change_leverage(symbol=symbol, leverage=leverage)
-            )()
-
-            if return_value and "message" in return_value:
-                raise LeverageSettingFail(return_value["message"])
-
-        pipeline = get_pipeline_data(pipeline_id, return_obj=True)
-
         self._get_symbol_info(symbol)
 
-        self._set_leverage(symbol, leverage)
+        self._set_leverage(pipeline, symbol, header)
 
         self._set_initial_position(symbol, initial_position, header, pipeline_id=pipeline.id, **kwargs)
 
-        self._set_initial_balance(symbol, current_equity, pipeline, header=header)
+        self._set_initial_balance(symbol, pipeline, header=header)
 
-        self._check_enough_balance(symbol, pipeline)
+        if initial_position == 0:
+            self._check_enough_balance(symbol, pipeline)
 
         self.start_date[symbol] = datetime.now(tz=pytz.utc)
 
-    def stop_symbol_trading(self, symbol, header='', **kwargs):
+    def stop_symbol_trading(self, pipeline_id, header=''):
+
+        pipeline = get_pipeline_data(pipeline_id, return_obj=True)
+
+        symbol = pipeline.symbol.name
 
         if symbol not in self.symbols:
             raise SymbolNotBeingTraded(symbol)
@@ -91,20 +81,34 @@ class BinanceFuturesTrader(BinanceTrader):
         logging.info(header + f"Stopping trading.")
 
         try:
-            pipeline_id = kwargs["pipeline_id"]
+            self.close_pipeline(pipeline.id)
 
-            self.close_pipeline(pipeline_id)
-
-            self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, **kwargs)
+            self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, pipeline_id=pipeline_id)
         except NoUnits:
             logging.info(header + "There's no position to be closed.")
 
         self.symbols.pop(symbol)
 
+    def _set_leverage(self, pipeline, symbol, header):
+        return_value = handle_order_execution_errors(
+            symbol=symbol,
+            trader_instance=self,
+            header=header,
+            pipeline_id=pipeline.id
+        )(
+            lambda: self.futures_change_leverage(symbol=symbol, leverage=pipeline.leverage)
+        )()
+
+        if return_value and "message" in return_value:
+            raise LeverageSettingFail(return_value["message"])
+
     def _check_enough_balance(self, symbol, pipeline):
 
         balances = self.futures_account_balance()
         balance = float(filter_balances(balances, ["USDT"])[0]["availableBalance"])
+
+        print(pipeline.current_equity)
+        print(pipeline.balance)
 
         if pipeline.current_equity > balance:
             self.symbols.pop(symbol)
@@ -211,10 +215,10 @@ class BinanceFuturesTrader(BinanceTrader):
             pipeline_id=pipeline_id
         )
 
-    def _set_initial_balance(self, symbol, initial_balance, pipeline, header=''):
+    def _set_initial_balance(self, symbol, pipeline, header=''):
         logging.debug(header + f"Updating balance for symbol: {symbol}.")
 
-        self.initial_balance[symbol] = initial_balance
+        self.initial_balance[symbol] = pipeline.current_equity * pipeline.leverage
         self.current_balance[symbol] = 0
         self.units[symbol] = 0
         self.current_equity[symbol] = pipeline.current_equity
@@ -222,9 +226,6 @@ class BinanceFuturesTrader(BinanceTrader):
         self._update_net_value(symbol, pipeline.balance, -pipeline.units, pipeline)
 
         self.print_current_balance(datetime.now(), header=header, symbol=symbol)
-
-    def _set_leverage(self, symbol, leverage):
-        self.leverage[symbol] = leverage
 
     def _update_net_value(self, symbol, balance, units, pipeline, reducing=False):
 

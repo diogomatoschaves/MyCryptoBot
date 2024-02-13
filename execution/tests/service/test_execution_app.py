@@ -421,12 +421,25 @@ class TestExecutionService:
 
         assert res.json == Responses.LEVERAGE_SETTING_FAILURE("Failed to set leverage. ")
 
+    @pytest.mark.slow
     def test_startup_task_with_open_positions(
         self,
         client_with_open_positions,
         spy_start_pipeline_trade
     ):
-        assert spy_start_pipeline_trade.call_count == 2
+        assert spy_start_pipeline_trade.call_count == 3
+
+    @pytest.mark.slow
+    def test_startup_task_with_open_positions_insufficient_balance(
+        self,
+        app_with_open_positions_insufficient_balance,
+        spy_start_pipeline_trade
+    ):
+        assert spy_start_pipeline_trade.call_count == 3
+
+        pipeline_11 = Pipeline.objects.get(id=11)
+
+        assert pipeline_11.active is False
 
     def test_startup_task_no_open_positions(
         self,

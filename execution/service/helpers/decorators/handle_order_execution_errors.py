@@ -25,7 +25,7 @@ def handle_order_execution_errors(symbol, trader_instance, header, pipeline_id, 
                     logging.warning(e)
 
                     try:
-                        trader_instance.stop_symbol_trading(symbol=symbol, header=header, pipeline_id=pipeline_id)
+                        trader_instance.stop_symbol_trading(pipeline_id, header=header)
                     except SymbolNotBeingTraded:
                         pass
 
@@ -40,7 +40,7 @@ def handle_order_execution_errors(symbol, trader_instance, header, pipeline_id, 
                     logging.warning(e.message)
 
                     try:
-                        trader_instance.stop_symbol_trading(symbol=symbol, header=header, pipeline_id=pipeline_id)
+                        trader_instance.stop_symbol_trading(pipeline_id, header=header)
                     except SymbolNotBeingTraded:
                         pass
 

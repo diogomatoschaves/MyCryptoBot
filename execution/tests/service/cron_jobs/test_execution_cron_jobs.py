@@ -56,7 +56,7 @@ class TestCronJobs:
         [
             pytest.param(
                 [2, 11],
-                {"portfolio_timeseries": 4, "values": [85, 530]},
+                {"portfolio_timeseries": 4, "values": [85, 100030]},
                 id="pipelines=[2, 11]",
             ),
         ],
