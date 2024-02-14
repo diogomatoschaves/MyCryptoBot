@@ -24,6 +24,8 @@ export const getResources = async (resources, history) => {
     }
   })
 
+  if (response.status === 401 || response.status === 422) throw Error
+
   return await response.json()
 }
 
@@ -39,6 +41,8 @@ export const getTrades = async (page, pipelineId) => {
       "Authorization": getToken()
     }
   })
+
+  if (response.status === 401 || response.status === 422) throw Error
 
   return await response.json()
 }
@@ -56,6 +60,8 @@ export const getPipelines = async (page) => {
     }
   })
 
+  if (response.status === 401 || response.status === 422) throw Error
+
   return await response.json()
 }
 
@@ -71,6 +77,8 @@ export const getPositions = async (page) => {
       "Authorization": getToken()
     }
   })
+
+  if (response.status === 401 || response.status === 422) throw Error
 
   return await response.json()
 }
@@ -88,6 +96,8 @@ export const getPrice = async (symbol) => {
     }
   })
 
+  if (response.status === 401 || response.status === 422) throw Error
+
   return await response.json()
 }
 
@@ -103,6 +113,8 @@ export const getFuturesAccountBalance = async () => {
       "Authorization": getToken()
     }
   })
+
+  if (response.status === 401 || response.status === 422) throw Error
 
   return await response.json()
 }
@@ -183,6 +195,8 @@ export const getTradesMetrics = async (pipelineId) => {
     }
   })
 
+  if (response.status === 401 || response.status === 422) throw Error
+
   return await response.json()
 }
 
@@ -197,6 +211,8 @@ export const getPipelinesMetrics = async () => {
       "Authorization": getToken()
     }
   })
+
+  if (response.status === 401 || response.status === 422) throw Error
 
   return await response.json()
 }
@@ -228,6 +244,8 @@ export const getEquityTimeSeries = async ({pipelineId, timeFrame}) => {
       "Authorization": getToken()
     }
   })
+
+  if (response.status === 401 || response.status === 422) throw Error
 
   return await response.json()
 }

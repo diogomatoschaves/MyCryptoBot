@@ -1,6 +1,6 @@
 import '../App.css';
 import {Component} from 'react'
-import {Route, Switch, Redirect} from 'react-router-dom'
+import {Route, Switch, Redirect, useHistory} from 'react-router-dom'
 import {Location} from 'history'
 import styled from 'styled-components'
 import {
@@ -91,11 +91,11 @@ interface Props {
 
 class App extends Component<Props, State> {
 
-    messageTimeout: any
     getPricesInterval: any
     getTradesInterval: any
     getPositionsInterval: any
     getPipelinesInterval: any
+    getPipelineMetricsInterval: any
 
     static defaultProps = {
         decimals: {
@@ -166,7 +166,7 @@ class App extends Component<Props, State> {
                     }
                 })
             })
-            .catch(() => {})
+            .catch(() => this.logoutUser())
 
         this.updateTrades()
 
@@ -197,6 +197,7 @@ class App extends Component<Props, State> {
             clearInterval(this.getTradesInterval)
             clearInterval(this.getPositionsInterval)
             clearInterval(this.getPipelinesInterval)
+            clearInterval(this.getPipelineMetricsInterval)
 
             if (pathname.includes('/dashboard')) {
                 this.getAccountBalance()
@@ -205,6 +206,10 @@ class App extends Component<Props, State> {
                 this.getPricesInterval = setInterval(() => {
                     this.getCurrentPrices()
                 }, 10 * 1000)
+                this.getPipelineMetricsInterval = setInterval(() => {
+                    this.updatePipelinesMetrics()
+                }, 30 * 1000)
+
 
             } else if (pathname.includes('/trades')){
                 this.updateTrades()
@@ -340,7 +345,8 @@ class App extends Component<Props, State> {
     getCurrentPrices: GetCurrentPrices = () => {
         Array.isArray(this.state.symbols) && Promise.allSettled(
             this.state.symbols.map(symbol => getPrice(symbol))
-        ).then(results => {
+        )
+          .then(results => {
             this.setState({
                 currentPrices: results.reduce((prices, result) => {
                     if (result.status === 'fulfilled') {
@@ -348,7 +354,8 @@ class App extends Component<Props, State> {
                     } else return prices
                 }, {})
             })
-        }).catch(() => {})
+          })
+          .catch(() => this.logoutUser())
     }
 
     getTotalEquityTimeSeries = () => {
@@ -361,7 +368,7 @@ class App extends Component<Props, State> {
                 }
               })
           })
-          .catch(() => {})
+          .catch(() => this.logoutUser())
     }
 
     getAccountBalance = () => {
@@ -377,7 +384,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
-          .catch(() => {})
+          .catch(() => this.logoutUser())
     }
 
     updatePipelinesMetrics = () => {
@@ -387,7 +394,7 @@ class App extends Component<Props, State> {
                   pipelinesMetrics: response
               })
           })
-          .catch(() => {})
+          .catch(() => this.logoutUser())
     }
 
     updateTrades = (page?: number, pipelineId?: string) => {
@@ -405,7 +412,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
-          .catch(() => {})
+          .catch(() => this.logoutUser())
     }
 
     updatePipelines = () => {
@@ -423,7 +430,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
-          .catch(() => {})
+          .catch(() => this.logoutUser())
     }
 
     updatePositions = () => {
@@ -439,7 +446,19 @@ class App extends Component<Props, State> {
                   }
               })
           })
-          .catch(() => {})
+          .catch(() => this.logoutUser())
+    }
+
+    logoutUser = () => {
+        const {removeToken, updateMessage} = this.props
+        updateMessage({text: 'Token Expired', success: false})
+        removeToken()
+
+        clearInterval(this.getPricesInterval)
+        clearInterval(this.getTradesInterval)
+        clearInterval(this.getPositionsInterval)
+        clearInterval(this.getPipelinesInterval)
+        clearInterval(this.getPipelineMetricsInterval)
     }
 
     render() {

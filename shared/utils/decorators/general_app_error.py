@@ -15,8 +15,9 @@ def general_app_error(func):
         try:
             return func(*args, **kwargs)
         except ExpiredSignatureError as e:
-            return Response(f"{str(e)}", status=422, mimetype='application/json')
-        except Exception as e:
+            print(e)
+            return Response({"msg": f"{str(e)}"}, status=422, mimetype='application/json')
+        except Exception:
 
             logging.warning('Error encountered. Restarting app.')
 
