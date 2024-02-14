@@ -4,7 +4,7 @@ import logging
 from flask import jsonify
 
 from execution.service.helpers.exceptions import *
-from shared.utils.exceptions import SymbolInvalid, NoSuchPipeline, EquityRequired
+from shared.utils.exceptions import NoSuchPipeline, EquityRequired
 
 
 def handle_app_errors(_func=None):
@@ -44,6 +44,9 @@ def handle_app_errors(_func=None):
             except InsufficientBalance as e:
                 logging.info(e.message)
                 return jsonify(Responses.INSUFFICIENT_BALANCE(e.message))
+            except NegativeEquity as e:
+                logging.info(e.message)
+                return jsonify(Responses.NEGATIVE_EQUITY(e.message))
 
         return wrapper
 

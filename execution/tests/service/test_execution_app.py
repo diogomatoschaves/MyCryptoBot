@@ -350,9 +350,10 @@ class TestExecutionService:
         assert res.json == expected_value
 
     @pytest.mark.parametrize(
-        "params,expected_value",
+        "endpoint,params,expected_value",
         [
             pytest.param(
+                "/execute_order",
                 {
                     "pipeline_id": 1,
                     "signal": 1
@@ -360,10 +361,20 @@ class TestExecutionService:
                 Responses.NEGATIVE_EQUITY('Pipeline 1 has reached negative equity.'),
                 id="NEGATIVE_EQUITY-execute-order",
             ),
+            pytest.param(
+                "/stop_symbol_trading",
+                {
+                    "pipeline_id": 1,
+                    "signal": 1
+                },
+                Responses.NEGATIVE_EQUITY('Pipeline 1 has reached negative equity.'),
+                id="NEGATIVE_EQUITY-stop_symbol_trading",
+            ),
         ]
     )
     def test_failed_execute_order_negative_equity(
         self,
+        endpoint,
         params,
         expected_value,
         mock_binance_futures_trader_raise_negative_equity_error,
@@ -373,7 +384,7 @@ class TestExecutionService:
         create_inactive_pipeline,
     ):
 
-        res = client.post(f"/execute_order", json=params)
+        res = client.post(endpoint, json=params)
 
         assert res.json == expected_value
 

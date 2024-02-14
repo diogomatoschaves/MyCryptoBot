@@ -9,7 +9,7 @@ import django
 from database.model.models import Pipeline
 from execution.exchanges.binance import BinanceTrader
 from execution.service.blueprints.market_data import filter_balances
-from execution.service.cron_jobs.save_pipelines_snapshot import save_portfolio_value_snapshot, save_pipeline_snapshot
+from execution.service.cron_jobs.save_pipelines_snapshot import save_pipeline_snapshot
 from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits, NegativeEquity, \
     InsufficientBalance
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
@@ -123,9 +123,26 @@ class BinanceFuturesTrader(BinanceTrader):
             raise NoUnits
 
         if self.units[symbol] < 0:
-            self.buy_instrument(symbol, date, row, units=-self.units[symbol], header=header, reducing=True, **kwargs)
+            self.buy_instrument(
+                symbol,
+                date,
+                row,
+                units=-self.units[symbol],
+                header=header,
+                reducing=True,
+                stop_trading=True,
+                **kwargs)
         else:
-            self.sell_instrument(symbol, date, row, units=self.units[symbol], header=header, reducing=True, **kwargs)
+            self.sell_instrument(
+                symbol,
+                date,
+                row,
+                units=self.units[symbol],
+                header=header,
+                reducing=True,
+                stop_trading=True,
+                **kwargs
+            )
 
         self._set_position(symbol, 0, previous_position=1, **kwargs)
 
@@ -143,7 +160,8 @@ class BinanceFuturesTrader(BinanceTrader):
         header='',
         **kwargs
     ):
-        reducing = "reducing" in kwargs
+        reducing = kwargs.get('reducing', False)
+        stop_trading = kwargs.get('stop_trading', False)
 
         units = self._convert_units(amount, units, symbol)
 
@@ -177,7 +195,7 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self.report_trade(order, units, going, header, symbol=symbol)
 
-        self.check_negative_equity(symbol, reducing=reducing)
+        self.check_negative_equity(symbol, reducing=reducing, stop_trading=stop_trading)
 
     @binance_error_handler(num_times=2)
     def _convert_units(self, amount, units, symbol, units_factor=1):
@@ -260,7 +278,7 @@ class BinanceFuturesTrader(BinanceTrader):
     def close_pipeline(pipeline_id):
         Pipeline.objects.filter(id=pipeline_id).update(active=False, open_time=None)
 
-    def check_negative_equity(self, symbol, reducing):
-        if reducing:
+    def check_negative_equity(self, symbol, reducing, stop_trading=False):
+        if reducing and not stop_trading:
             if self.current_balance[symbol] < 0:
                 raise NegativeEquity(self.current_balance[symbol])
