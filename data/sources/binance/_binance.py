@@ -1,10 +1,7 @@
 import logging
 import os
-import math
-from datetime import datetime
 
 import pandas as pd
-import pytz
 import django
 import redis
 from binance import ThreadedWebsocketManager
@@ -13,11 +10,17 @@ import progressbar
 from data.service.external_requests import start_stop_symbol_trading, get_open_positions
 from data.service.helpers.exceptions import CandleSizeInvalid, DataPipelineCouldNotBeStopped
 from data.sources import trigger_signal
-from data.sources.binance.extract import (extract_data, extract_data_db, get_earliest_date,
-                                          get_latest_date, get_end_date)
+from data.sources.binance.extract import (extract_data, extract_data_db)
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
-from shared.utils.helpers import get_minimum_lookback_date, get_pipeline_max_window
+from shared.utils.helpers import (
+    get_minimum_lookback_date,
+    get_pipeline_max_window,
+    get_number_of_batches,
+    get_earliest_date,
+    get_latest_date,
+    get_end_date
+)
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.config_parser import get_config
 import shared.exchanges.binance.constants as const
@@ -110,7 +113,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         self.delete_last_entry()
 
         start_date = self.get_start_date()
-        iterations = self.get_number_of_batches(start_date) + 1
+        iterations = get_number_of_batches(start_date, self.base_candle_size, self.batch_size) + 1
 
         logging.info(f"Extracting historical data. Starting from {start_date}")
 
@@ -207,10 +210,9 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         # Extract
         if data is None:
             data = extract_data(self.get_historical_klines, self.symbol, candle_size,
-                                start_date=start_date, header=header, klines_batch_size=self.batch_size)
+                                start_date=start_date, klines_batch_size=self.batch_size)
         if use_db:
-            data = extract_data_db(ExchangeData, model_class, self.symbol, candle_size,
-                                   self.base_candle_size, start_date=start_date)
+            data = extract_data_db(ExchangeData, self.symbol, self.base_candle_size, start_date=start_date)
 
         # Transform
         transformed_data = transform_data(
@@ -402,12 +404,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                 ).last().delete()
             except AttributeError:
                 pass
-
-    def get_number_of_batches(self, start_date):
-        time_diff = datetime.now().astimezone(pytz.utc) - start_date
-        time_slots = time_diff / pd.Timedelta(const.CANDLE_SIZES_MAPPER[self.base_candle_size])
-
-        return math.ceil(time_slots / self.batch_size)
 
     def print_added_entries(self, new_entries, model_class):
 

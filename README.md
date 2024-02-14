@@ -11,7 +11,7 @@
 </p>
 
 Welcome to the MyCryptoBot repository, a free, open source, and extensible trading platform that utilizes a 
-micro-services architecture. The platform empowers you to run your own trading bots and strategies locally 
+microservices architecture. The platform empowers you to run your own trading bots and strategies locally 
 or in the cloud. At present, the app is integrated with Binance, supporting both the 
 [testnet](https://testnet.binancefuture.com) and [live](https://www.binance.com/en/futures) *Futures* 
 accounts. Additionally, it features backtesting, plotting, and strategy optimization tools.
@@ -51,6 +51,12 @@ preprocesses it, and stores it in a database. When a new trading bot is initiate
 a new data pipeline is initiated, fetching live data from the various sources. Whenever a new candle is completed, 
 a request is sent to the **Model** app for processing the new data according to the strategy.
 
+This service can also be used to retrieve historical data for any symbol.
+
+```python
+from data.sources.binance import get_historical_data
+data = get_historical_data("BTCUSDT", "1h", "2021-01-01", "2021-01-31", save_file=True)
+```
 
 ### Model Service
 
