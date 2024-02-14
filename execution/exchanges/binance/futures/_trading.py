@@ -107,9 +107,6 @@ class BinanceFuturesTrader(BinanceTrader):
         balances = self.futures_account_balance()
         balance = float(filter_balances(balances, ["USDT"])[0]["availableBalance"])
 
-        print(pipeline.current_equity)
-        print(pipeline.balance)
-
         if pipeline.current_equity > balance:
             self.symbols.pop(symbol)
             raise InsufficientBalance(round(pipeline.current_equity, 2), round(balance, 2))
