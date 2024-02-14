@@ -4,7 +4,7 @@ import sys
 import traceback
 
 from flask import Response
-from jwt import ExpiredSignatureError
+from jwt import ExpiredSignatureError, DecodeError
 
 
 def general_app_error(func):
@@ -15,7 +15,11 @@ def general_app_error(func):
         try:
             return func(*args, **kwargs)
         except ExpiredSignatureError as e:
-            return Response(f"{str(e)}", status=422, mimetype='application/json')
+            logging.debug(e)
+            return Response({"msg": f"{str(e)}"}, status=422, mimetype='application/json')
+        except DecodeError as e:
+            logging.debug(e)
+            return Response({"msg": f"{str(e)}"}, status=401, mimetype='application/json')
         except Exception as e:
 
             logging.warning('Error encountered. Restarting app.')

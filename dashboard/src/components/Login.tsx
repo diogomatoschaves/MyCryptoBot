@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import {Button, Form, Input} from "semantic-ui-react";
+import {Button, Dimmer, Form, Input, Loader} from "semantic-ui-react";
 import {userLogin} from "../apiCalls";
 import styled from "styled-components";
 import {capitalize} from "../utils/helpers";
@@ -30,12 +30,16 @@ function Login(props: Props) {
     password: ""
   })
 
+  const [loading, setLoading] = useState(false)
+
   function logMeIn(event: any) {
+    setLoading(true)
     userLogin({
       username: loginForm.username,
       password: loginForm.password
     })
       .then((response) => {
+        setLoading(false)
         if (response.access_token) {
           saveToken(response.access_token)
           updateMessage({
@@ -50,11 +54,17 @@ function Login(props: Props) {
         }
 
       }).catch((error) => {
-      if (error.response) {
-        console.log(error.response)
-        console.log(error.response.status)
-        console.log(error.response.headers)
-      }
+        updateMessage({
+            text: 'Something went wrong... Check server logs.',
+            success: false
+          })
+        setLoading(false)
+
+        if (error.response) {
+          console.log(error.response)
+          console.log(error.response.status)
+          console.log(error.response.headers)
+        }
     })
 
     setloginForm(({
@@ -74,6 +84,9 @@ function Login(props: Props) {
 
   return (
     <LoginForm>
+      <Dimmer active={loading}>
+        <Loader indeterminate active={loading}></Loader>
+      </Dimmer>
       <Form className="flex-column" style={{width: '100%', height: '100%'}}>
         {Object.keys(loginForm).map(name => (
           <Form.Field
@@ -96,6 +109,7 @@ function Login(props: Props) {
           Login
         </Form.Field>
       </Form>
+      <Loader/>
     </LoginForm>
   );
 }

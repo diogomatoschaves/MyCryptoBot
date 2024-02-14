@@ -5,8 +5,8 @@ import Login from "./Login";
 import {Redirect, Route, Switch} from "react-router-dom";
 import withMessage from "../higherOrderComponents/withMessage";
 import {UpdateMessage} from "../types";
-import ErrorHandler from "./ErrorHandler";
 import withWindowSizeListener from "../higherOrderComponents/withWindowSizeListener";
+import {Fragment} from "react";
 
 
 interface Props {
@@ -25,7 +25,7 @@ const AppLogin = (props: Props) => {
   const { size, location, history, token, saveToken, removeToken, updateMessage } = props
 
   return (
-    <ErrorHandler removeToken={removeToken} location={location}>
+    <Fragment>
       {token ? (
         <App
           size={size}
@@ -52,7 +52,7 @@ const AppLogin = (props: Props) => {
           </Route>
         </Switch>
       )}
-    </ErrorHandler>
+    </Fragment>
   )
 }
 
