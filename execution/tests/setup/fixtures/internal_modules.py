@@ -47,6 +47,8 @@ class MockBinanceTrader:
             )
         if self.raise_symbol_not_being_traded:
             raise SymbolNotBeingTraded('BTCUSDT')
+        elif self.raise_negative_equity_error:
+            raise NegativeEquity(1)
 
     def trade(self, symbol, signal, amount, header='', **kwargs):
         if self.raise_error_trade:

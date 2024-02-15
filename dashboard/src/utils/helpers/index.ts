@@ -161,7 +161,7 @@ export const validateParams = (strategy: any) => {
     const paramValue = paramData.options ? paramData.options[params[param]] : params[param]
 
     let typedParam
-    if (strategy.params[param].type) {
+    if (strategy.optionalParams[param].type) {
       const typedParam = eval(strategy.optionalParams[param].type.func)(paramValue)
       if (typedParam !== typedParam || typeof (typedParam) !== paramData.type.type) {
         return {

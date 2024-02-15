@@ -166,7 +166,7 @@ class App extends Component<Props, State> {
                     }
                 })
             })
-            .catch(() => this.logoutUser())
+            .catch((error) => this.logoutUser(error.message))
 
         this.updateTrades()
 
@@ -355,7 +355,7 @@ class App extends Component<Props, State> {
                 }, {})
             })
           })
-          .catch(() => this.logoutUser())
+          .catch((error) => this.logoutUser(error.message))
     }
 
     getTotalEquityTimeSeries = () => {
@@ -368,7 +368,7 @@ class App extends Component<Props, State> {
                 }
               })
           })
-          .catch(() => this.logoutUser())
+          .catch((error) => this.logoutUser(error.message))
     }
 
     getAccountBalance = () => {
@@ -384,7 +384,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
-          .catch(() => this.logoutUser())
+          .catch((error) => this.logoutUser(error.message))
     }
 
     updatePipelinesMetrics = () => {
@@ -394,7 +394,7 @@ class App extends Component<Props, State> {
                   pipelinesMetrics: response
               })
           })
-          .catch(() => this.logoutUser())
+          .catch((error) => this.logoutUser(error.message))
     }
 
     updateTrades = (page?: number, pipelineId?: string) => {
@@ -412,7 +412,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
-          .catch(() => this.logoutUser())
+          .catch((error) => this.logoutUser(error.message))
     }
 
     updatePipelines = () => {
@@ -430,7 +430,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
-          .catch(() => this.logoutUser())
+          .catch((error) => this.logoutUser(error.message))
     }
 
     updatePositions = () => {
@@ -446,10 +446,15 @@ class App extends Component<Props, State> {
                   }
               })
           })
-          .catch(() => this.logoutUser())
+          .catch((error) => this.logoutUser(error.message))
     }
 
-    logoutUser = () => {
+    logoutUser = (statusCode: string) => {
+        
+        if (!["401", "422"].includes(statusCode)) {
+            return
+        }
+        
         const {removeToken, updateMessage} = this.props
         updateMessage({text: 'Token Expired', success: false})
         removeToken()
