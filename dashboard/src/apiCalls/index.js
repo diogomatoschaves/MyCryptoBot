@@ -78,7 +78,7 @@ export const getPositions = async (page) => {
     }
   })
 
-  if (response.status === 401 || response.status === 422) throw Error
+  if (response.status === 401 || response.status === 422) throw Error(response.status)
 
   return await response.json()
 }
