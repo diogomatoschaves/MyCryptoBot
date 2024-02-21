@@ -363,9 +363,10 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
     def get_start_date(self):
 
-        max_window = get_pipeline_max_window(self.pipeline_id)
+        max_window = get_pipeline_max_window(self.pipeline_id, config_vars.default_min_rows)
 
         earliest_date = get_earliest_date(ExchangeData, self.symbol, self.base_candle_size)
+
         minimum_lookback_date = get_minimum_lookback_date(max_window, self.candle_size)
 
         if self.start_date is not None and self.start_date < minimum_lookback_date:

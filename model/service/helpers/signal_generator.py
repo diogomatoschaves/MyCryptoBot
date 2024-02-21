@@ -43,12 +43,8 @@ def strategy_combiner(strategies, combination_method, data):
     return combined_strategy
 
 
-def send_signal(
-    pipeline,
-    bearer_token,
-    header=''
-):
-    max_window = get_pipeline_max_window(pipeline["id"])
+def send_signal(pipeline, bearer_token, header=''):
+    max_window = get_pipeline_max_window(pipeline["id"], config_vars.default_min_rows)
 
     start_date = get_minimum_lookback_date(max_window, pipeline["interval"])
 
