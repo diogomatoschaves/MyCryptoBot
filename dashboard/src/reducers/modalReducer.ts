@@ -138,6 +138,10 @@ export const getInitialState = (
       (strategiesArray: any, pipelineStrategy: RawStrategy) => {
         const strategy = strategies.find((strategy: Strategy) => strategy.className === pipelineStrategy.name)
 
+        if (!strategy) {
+          return strategiesArray
+        }
+
         let strategyValue = strategy.value
 
         while (strategiesArray.includes(strategyValue)) {

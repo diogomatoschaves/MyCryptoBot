@@ -346,7 +346,11 @@ class TestBotsAPI:
                     "color": "purple",
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
+                    "strategy": [{
+                        "name": "MovingAverage",
+                        "className": "MovingAverage",
+                        "params": {"ma": 30}
+                    }],
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": 3,
@@ -380,7 +384,9 @@ class TestBotsAPI:
 
         assert pipeline.symbol.name == params["symbol"]
         assert pipeline.exchange.name == params["exchanges"].lower()
-        assert pipeline.as_json()["strategy"] == params["strategy"]
+
+        strategy = [{k: v for k, v in strat.items() if k in ["name", "params"]} for strat in params["strategy"]]
+        assert pipeline.as_json()["strategy"] == strategy
         assert len(pipeline.strategy.all()) == len(strategies)
 
         assert pipeline.interval == params["candleSize"]
@@ -393,7 +399,11 @@ class TestBotsAPI:
                     "color": "purple",
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
+                    "strategy": [{
+                        "name": "MovingAverage",
+                        "className": "MovingAverage",
+                        "params": {"ma": 30}
+                    }],
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "equity": 1000

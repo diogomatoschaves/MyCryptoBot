@@ -68,14 +68,12 @@ def check_input(strategies, edit_pipeline=False, **kwargs):
         raise StrategyInvalid(strategy_input)
 
     for strategy in strategy_input:
-
         try:
             strategy_name = strategy["name"]
         except KeyError:
             raise StrategyInvalid(strategy_input)
 
         if strategy_name in strategies:
-
             try:
                 params = strategy["params"]
             except KeyError:
@@ -148,7 +146,7 @@ def get_existing_pipeline(fields):
 def add_strategies(strategies):
     strategies_objs = []
     for strategy in strategies:
-        strategy_obj = Strategy.objects.create(name=strategy["name"], params=json.dumps(strategy["params"]))
+        strategy_obj = Strategy.objects.create(name=strategy["className"], params=json.dumps(strategy["params"]))
         strategies_objs.append(strategy_obj)
 
     return strategies_objs

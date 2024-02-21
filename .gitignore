@@ -140,3 +140,5 @@ dump.rdb
 crypto_bot.dump
 
 database/local_db
+
+model/strategies/models/

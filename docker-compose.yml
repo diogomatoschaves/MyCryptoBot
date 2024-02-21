@@ -51,6 +51,7 @@ services:
       - LOGGER_LEVEL=DEBUG
     volumes:
       - ./database/model:/usr/src/app/database/model
+      - ./model/strategies/models:/usr/src/app/model/strategies/models
   model-worker:
     build:
       context: .
@@ -63,6 +64,9 @@ services:
       - EXECUTION_APP_URL=http://execution-service:5000
     depends_on:
       - redis
+    volumes:
+      - ./database/model:/usr/src/app/database/model
+      - ./model/strategies/models:/usr/src/app/model/strategies/models
   execution-service:
     build:
       context: .

@@ -14,3 +14,8 @@ def convert_signal_to_text(signal):
         return "SELL"
     else:
         return "NEUTRAL"
+
+
+strategies_defaults = {
+    'MachineLearning': {"verbose": False, "models_dir": 'model/strategies/models'}
+}

@@ -150,3 +150,12 @@ def get_pipeline_max_window(pipeline_id, default_min_rows):
             continue
 
     return max(max_value_params, int(default_min_rows))
+
+
+def get_root_dir():
+    return os.path.realpath(
+        os.path.join(
+            os.path.dirname(__file__),
+            '../../..'
+        )
+    )

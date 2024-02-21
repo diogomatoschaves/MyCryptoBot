@@ -394,7 +394,11 @@ class TestDashboardService:
                     "color": "purple",
                     "name": "Hello World",
                     "symbol": "BTCUSDT",
-                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
+                    "strategy": [{
+                        "name": "MovingAverage",
+                        "className": "MovingAverage",
+                        "params": {"ma": 30}
+                    }],
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": 3,
@@ -409,7 +413,11 @@ class TestDashboardService:
                     "color": "purple",
                     "name": "New pipeline",
                     "symbol": "BTCUSDT",
-                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
+                    "strategy": [{
+                        "name": "MovingAverage",
+                        "className": "MovingAverage",
+                        "params": {"ma": 30}
+                    }],
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": 3,
@@ -428,7 +436,11 @@ class TestDashboardService:
                     "color": "purple",
                     "name": "New pipeline",
                     "symbol": "BTCUSDT",
-                    "strategy": [{"name": "MovingAverage", "params": {"ma": 30}}],
+                    "strategy": [{
+                        "name": "MovingAverage",
+                        "className": "MovingAverage",
+                        "params": {"ma": 30}
+                    }],
                     "candleSize": "1h",
                     "exchanges": "Binance",
                     "leverage": 3,

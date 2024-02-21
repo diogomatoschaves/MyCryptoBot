@@ -85,8 +85,21 @@ export const validatePipelineCreation = async (
     const strategy = dynamicStrategies.find(strategy => strategy.value === index)
 
     return {
-      name: strategy?.className,
-      params: strategy?.selectedParams
+      name: strategy?.strategyName,
+      className: strategy?.className,
+      params: Object.keys(strategy?.selectedParams).reduce((acc, param) => {
+        const paramsObj = {
+          ...strategy?.params,
+          ...strategy?.optionalParams
+        }
+
+        return {
+            ...acc,
+            [param]: paramsObj[param].options ?
+              paramsObj[param].options[strategy?.selectedParams[param]] :
+              strategy?.selectedParams[param]
+          }
+      }, {})
     }
   })
 
@@ -121,6 +134,7 @@ export const validateParams = (strategy: any) => {
   const params = strategy.selectedParams
 
   const requiredParams = strategy.paramsOrder.reduce((reduced: any, param: string) => {
+
     if (!params.hasOwnProperty(param) || (params[param] === "")) {
       return {
         success: false,

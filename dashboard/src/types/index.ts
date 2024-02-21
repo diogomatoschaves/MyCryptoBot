@@ -66,9 +66,9 @@ export type Strategy = {
 
 export type RawStrategy = {
     name: string | undefined
+    className: string | undefined
     params: any
 }
-
 
 export type Pipeline = {
     id: number
