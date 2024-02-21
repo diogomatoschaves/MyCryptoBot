@@ -144,6 +144,7 @@ class TestBinanceFuturesTrader:
         assert binance_trader.initial_balance[symbol] == pipeline.current_equity * pipeline.leverage
         assert binance_trader.position[symbol] == parameters["initial_position"]
 
+    @pytest.mark.slow
     @pytest.mark.parametrize(
         "parameters,symbols,position,units,times_called",
         [
@@ -176,6 +177,36 @@ class TestBinanceFuturesTrader:
                 -0.1,
                 1,
                 id="SymbolExists-NegativeUnits-True",
+            ),
+            pytest.param(
+                {"pipeline_id": 1},
+                {
+                    "BTCUSDT": {
+                        "price_precision": 2,
+                        "quantity_precision": 3,
+                        "baseAsset": "BTC",
+                        "quoteAsset": "USDT"
+                    }
+                },
+                0,
+                0,
+                0,
+                id="SymbolExists-NoUnits-True",
+            ),
+            pytest.param(
+                {"pipeline_id": 1},
+                {
+                    "BTCUSDT": {
+                        "price_precision": 2,
+                        "quantity_precision": 3,
+                        "baseAsset": "BTC",
+                        "quoteAsset": "USDT"
+                    }
+                },
+                0,
+                None,
+                0,
+                id="SymbolExists-NullUnits-True",
             ),
         ]
     )
@@ -585,7 +616,9 @@ class TestBinanceFuturesTrader:
         binance_trader.symbols = symbols
 
         binance_trader._set_position(symbol, position, pipeline_id=1)
-        binance_trader.units[symbol] = units
+        if units is not None:
+            binance_trader.units[symbol] = units
+
         binance_trader.initial_balance[symbol] = 1000
         binance_trader.current_balance[symbol] = 1000
         binance_trader.current_equity[symbol] = 100
