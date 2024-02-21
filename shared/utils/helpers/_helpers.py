@@ -127,20 +127,35 @@ def get_minimum_lookback_date(max_window, candle_size):
             pd.Timedelta(const.CANDLE_SIZES_MAPPER[candle_size]) * max_window * 1.4)
 
 
-def get_pipeline_max_window(pipeline_id):
+def get_pipeline_max_window(pipeline_id, default_min_rows):
     try:
-        strategies = Pipeline.objects.get(id=pipeline_id).as_json()["strategy"]
+        pipeline = Pipeline.objects.get(id=pipeline_id).as_json()
+    except Pipeline.DoesNotExist:
+        return int(default_min_rows)
 
-        max_value_params = 0
-        for strategy in strategies:
-            try:
-                max_value = max([value for param, value in strategy["params"].items()])
-            except ValueError:
-                continue
+    strategies = pipeline["strategy"]
+
+    max_value_params = 0
+    for strategy in strategies:
+
+        try:
+            max_value = max([
+                value for param, value in strategy["params"].items()
+                if isinstance(value, (int, float))
+            ])
 
             if max_value > max_value_params:
                 max_value_params = max_value
+        except ValueError:
+            continue
 
-        return max_value_params
-    except Pipeline.DoesNotExist:
-        return 1000
+    return max(max_value_params, int(default_min_rows))
+
+
+def get_root_dir():
+    return os.path.realpath(
+        os.path.join(
+            os.path.dirname(__file__),
+            '../../..'
+        )
+    )

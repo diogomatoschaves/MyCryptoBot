@@ -86,6 +86,8 @@ class BinanceFuturesTrader(BinanceTrader):
             self.close_pos(symbol, date=datetime.now(tz=pytz.UTC), header=header, pipeline_id=pipeline_id)
         except NoUnits:
             logging.info(header + "There's no position to be closed.")
+        except KeyError:
+            logging.info(header + "There's no position to be closed.")
 
         self.symbols.pop(symbol)
 

@@ -154,7 +154,8 @@ class App extends Component<Props, State> {
                             key: index + 1,
                             text: resource !== 'candleSizes' ? resources[resource][name].name : name,
                             value: index + 1,
-                            ...(resource !== 'candleSizes' && resources[resource][name])
+                            ...(resource !== 'candleSizes' && resources[resource][name]),
+                            ...(resource !== 'candleSizes' && resources[resource][name].className && {strategyName: name})
                         }))
                     }
                 }, {}) : []
@@ -527,7 +528,6 @@ class App extends Component<Props, State> {
                                   match={match}
                                   symbolsOptions={symbolsOptions}
                                   strategiesOptions={strategiesOptions}
-
                                   candleSizeOptions={candleSizeOptions}
                                   exchangeOptions={exchangeOptions}
                                   pipelines={pipelines}
