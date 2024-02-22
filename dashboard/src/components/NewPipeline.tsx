@@ -254,6 +254,7 @@ const NewPipeline = (props: Props) => {
               <Form.Field >
                 <label>Equity</label>
                 <Input
+                  disabled={edit}
                   onChange={(e: any, {value}: {value?: any}) => {
                     updateModal({
                       type: UPDATE_PARAMS,
@@ -289,6 +290,7 @@ const NewPipeline = (props: Props) => {
                     max={125}
                     step={1}
                     dots
+                    disabled={edit}
                     value={leverage}
                     onChange={(value: number | number[]) => {
                       updateModal({
@@ -320,6 +322,7 @@ const NewPipeline = (props: Props) => {
             <Form.Group widths={'equal'}>
               <Form.Checkbox
                 toggle
+                disabled={edit}
                 label={'📡 Live trading'}
                 onChange={() => updateModal({type: UPDATE_CHECKBOX})}
                 checked={liveTrading}
