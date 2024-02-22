@@ -1,10 +1,7 @@
 import logging
 import os
-import math
-from datetime import datetime
 
 import pandas as pd
-import pytz
 import django
 import redis
 from binance import ThreadedWebsocketManager
@@ -13,8 +10,13 @@ import progressbar
 from data.service.external_requests import start_stop_symbol_trading, get_open_positions
 from data.service.helpers.exceptions import CandleSizeInvalid, DataPipelineCouldNotBeStopped
 from data.sources import trigger_signal
-from data.sources.binance.extract import (extract_data, extract_data_db, get_earliest_date,
-                                          get_latest_date, get_end_date)
+from data.sources.binance.extract import (
+    extract_data,
+    extract_data_db,
+    get_earliest_missing_date,
+    get_number_of_batches,
+    get_end_date
+)
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.utils.helpers import get_minimum_lookback_date, get_pipeline_max_window
@@ -29,7 +31,7 @@ from database.model.models import ExchangeData, StructuredData, Pipeline, Positi
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
-config_vars = get_config()
+config_vars = get_config('data')
 
 cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
@@ -41,9 +43,9 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     only time based steps).
     """
 
-    def __init__(self, symbol, candle_size, pipeline_id=None, base_candle_size='5m', start_date=None):
+    def __init__(self, symbol, candle_size, pipeline_id=None, start_date=None):
 
-        BinanceHandler.__init__(self, base_candle_size=base_candle_size)
+        BinanceHandler.__init__(self, base_candle_size=config_vars.base_candle_size)
         ThreadedWebsocketManager.__init__(self, self.binance_api_key, self.binance_api_secret)
 
         self._validate_input(symbol, candle_size)
@@ -66,9 +68,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         self.start()
         self.started = True
-
-    def __str__(self):
-        return self.__name__
 
     def _validate_input(self, symbol, candle_size):
         """
@@ -110,15 +109,19 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         self.delete_last_entry()
 
         start_date = self.get_start_date()
-        iterations = self.get_number_of_batches(start_date) + 1
 
-        logging.info(f"Extracting historical data. Starting from {start_date}")
+        if start_date is None:
+            nr_batches = 0
+        else:
+            nr_batches = get_number_of_batches(start_date, self.base_candle_size, self.batch_size) + 1
 
-        with progressbar.ProgressBar(max_value=iterations, redirect_stdout=True) as bar:
-            i = 0
-            end_reached = False
-            # Get raw data
-            while not end_reached:
+        # Get raw data
+        with progressbar.ProgressBar(max_value=nr_batches, redirect_stdout=True) as bar:
+            for i in range(nr_batches):
+                logging.info(f"Extracting historical data. Starting from {start_date}")
+
+                old_data = data
+
                 batch_data, new_entries = self._etl_pipeline(
                     ExchangeData,
                     self.base_candle_size,
@@ -127,22 +130,19 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                     header=header
                 )
 
-                old_data = data
-
                 data = data.append(batch_data).drop_duplicates(["open_time"])
                 start_date = get_end_date(start_date, self.base_candle_size, self.batch_size)
 
-                end_reached = old_data.equals(data)
-
                 bar.update(i)
-                i += 1
+
+                if old_data.equals(data):
+                    break
 
         # Get structured data
         self._etl_pipeline(
             StructuredData,
             self.candle_size,
-            data=data,
-            use_db=self.candle_size != self.base_candle_size,
+            use_db=True,
             remove_zeros=True,
             remove_rows=True,
             update_duplicate=False,
@@ -155,7 +155,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         if start_pipeline:
             self._start_kline_websockets(self.symbol, self._websocket_callback, header=header)
 
-    # TODO: Refactor to allow for more than one conn_key
     def stop_data_ingestion(self, header=''):
         """
         Public method which stops the data pipeline for the symbol.
@@ -206,11 +205,11 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         # Extract
         if data is None:
-            data = extract_data(self.get_historical_klines, self.symbol, candle_size,
-                                start_date=start_date, header=header, klines_batch_size=self.batch_size)
-        if use_db:
-            data = extract_data_db(ExchangeData, model_class, self.symbol, candle_size,
-                                   self.base_candle_size, start_date=start_date)
+            if not use_db:
+                data = extract_data(self.get_historical_klines, self.symbol, candle_size,
+                                    start_date=start_date, klines_batch_size=self.batch_size)
+            else:
+                data = extract_data_db(ExchangeData, self.symbol, self.base_candle_size, start_date=start_date)
 
         # Transform
         transformed_data = transform_data(
@@ -362,31 +361,15 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         return data, data_length, new_entries
 
     def get_start_date(self):
-
-        max_window = get_pipeline_max_window(self.pipeline_id, config_vars.default_min_rows)
-
-        earliest_date = get_earliest_date(ExchangeData, self.symbol, self.base_candle_size)
-
-        minimum_lookback_date = get_minimum_lookback_date(max_window, self.candle_size)
-
-        if self.start_date is not None and self.start_date < minimum_lookback_date:
-            start_date = self.start_date
+        if self.start_date is not None:
+            minimum_lookback_date = self.start_date
         else:
-            if minimum_lookback_date < earliest_date:
-                start_date = minimum_lookback_date
-            else:
-                start_date = get_latest_date(
-                    ExchangeData,
-                    self.symbol,
-                    self.base_candle_size,
-                    upper_date_limit=minimum_lookback_date
-                )
+            max_window = get_pipeline_max_window(self.pipeline_id, config_vars.default_min_rows)
+            minimum_lookback_date = get_minimum_lookback_date(max_window, self.candle_size)
 
-                start_date = minimum_lookback_date if not start_date else start_date
+        self.start_date = minimum_lookback_date
 
-        self.start_date = start_date
-
-        return start_date
+        return get_earliest_missing_date(minimum_lookback_date, self.symbol)
 
     def delete_last_entry(self):
 
@@ -402,12 +385,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                 ).last().delete()
             except AttributeError:
                 pass
-
-    def get_number_of_batches(self, start_date):
-        time_diff = datetime.now().astimezone(pytz.utc) - start_date
-        time_slots = time_diff / pd.Timedelta(const.CANDLE_SIZES_MAPPER[self.base_candle_size])
-
-        return math.ceil(time_slots / self.batch_size)
 
     def print_added_entries(self, new_entries, model_class):
 

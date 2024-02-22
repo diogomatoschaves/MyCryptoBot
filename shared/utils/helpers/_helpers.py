@@ -13,7 +13,7 @@ from shared.utils.exceptions import NoSuchPipeline
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Pipeline
+from database.model.models import Pipeline, Trade as DBTrade
 
 escapes = ''.join([chr(char) for char in range(1, 32)])
 translator = str.maketrans('', '', escapes)
@@ -35,6 +35,15 @@ PIPELINE = namedtuple(
         "leverage"
     ]
 )
+
+
+def get_root_dir():
+    return os.path.realpath(
+        os.path.join(
+            os.path.dirname(__file__),
+            '../../..'
+        )
+    )
 
 
 def get_logging_row_header(pipeline):
@@ -109,7 +118,23 @@ def get_input_dimensions(lst, n_dim=0):
         return n_dim
 
 
-def convert_trade(trade):
+def convert_trade(trade: DBTrade):
+    """
+    Converts a database Trade object into a standardized Trade object with structured attributes.
+
+    Parameters
+    ----------
+    trade : Trade object or similar
+        The raw trade object containing trade details such as open and close times, prices,
+         amount, side, and profit.
+
+    Returns
+    -------
+    Trade
+        A structured Trade object containing the processed information from the db trade.
+
+    """
+
     return Trade(
         entry_date=trade.open_time,
         exit_date=trade.close_time,
@@ -123,11 +148,58 @@ def convert_trade(trade):
 
 
 def get_minimum_lookback_date(max_window, candle_size):
+    """
+    Calculates the minimum lookback date required based on the maximum window size and the candle size.
+
+    Parameters
+    ----------
+    max_window : int
+        The maximum window size used in strategy calculations, which determines how far back the data
+         needs to go.
+    candle_size : str
+        The size of the candle (e.g., "1h", "1d") which impacts the calculation of the lookback period.
+
+    Returns
+    -------
+    datetime
+        The calculated minimum lookback date as a datetime object, timezone-aware and adjusted to UTC.
+
+    Notes
+    -----
+    The function uses a multiplier (1.4) to ensure a slightly larger buffer is included in the
+     lookback period.
+    """
     return (datetime.now().astimezone(pytz.utc) -
             pd.Timedelta(const.CANDLE_SIZES_MAPPER[candle_size]) * max_window * 1.4)
 
 
 def get_pipeline_max_window(pipeline_id, default_min_rows):
+    """
+    Determines the maximum window size for a given pipeline by inspecting its strategies and parameters.
+
+    Parameters
+    ----------
+    pipeline_id : int
+        The identifier of the pipeline.
+    default_min_rows : int
+        The default minimum number of rows to fall back on if no specific value is determined.
+
+    Returns
+    -------
+    int
+        The maximum window size calculated based on the strategy parameters
+        within the pipeline, or the default minimum if no specific value is determined.
+
+    Raises
+    ------
+    Pipeline.DoesNotExist
+        If no pipeline with the given `pipeline_id` exists.
+
+    Notes
+    -----
+    This function is useful for dynamically adjusting the amount of data fetched
+    based on the needs of the pipeline's strategies.
+    """
     try:
         pipeline = Pipeline.objects.get(id=pipeline_id).as_json()
     except Pipeline.DoesNotExist:
@@ -150,12 +222,3 @@ def get_pipeline_max_window(pipeline_id, default_min_rows):
             continue
 
     return max(max_value_params, int(default_min_rows))
-
-
-def get_root_dir():
-    return os.path.realpath(
-        os.path.join(
-            os.path.dirname(__file__),
-            '../../..'
-        )
-    )

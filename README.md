@@ -11,18 +11,14 @@
 </p>
 
 Welcome to the MyCryptoBot repository, a free, open source, and extensible trading platform that utilizes a 
-micro-services architecture. The platform empowers you to run your own trading bots and strategies locally 
+microservices architecture. The platform empowers you to run your own trading bots and strategies locally 
 or in the cloud. At present, the app is integrated with Binance, supporting both the 
-[testnet](https://testnet.binancefuture.com) and [live](https://www.binance.com/en/futures) *Futures* 
-accounts. Additionally, it features backtesting, plotting, and strategy optimization tools.
+[testnet](https://testnet.binancefuture.com) and [live](https://www.binance.com/en/futures) *Futures* accounts.
 
-*Please note that the contents of this repository are not intended as trading advice or encouragement to 
-start trading with real money. This platform is designed to assist existing algo traders/professionals 
-in having complete control of their trading strategies and automation. Therefore, it is recommended that 
-you only risk money that you are willing to lose.*
+For those looking to validate trading strategies against historical data, **[stratestic](https://github.com/diogomatoschaves/stratestic)** 
+offers a comprehensive backtesting framework and integrates seamleassly with this trading platform.
 
-*This Repo is still under active development and under testing.*
-
+*Please check the **[disclaimer](DISCLAIMER.md)** before using this repository.*
 
 ## Installation & Usage
 
@@ -51,6 +47,12 @@ preprocesses it, and stores it in a database. When a new trading bot is initiate
 a new data pipeline is initiated, fetching live data from the various sources. Whenever a new candle is completed, 
 a request is sent to the **Model** app for processing the new data according to the strategy.
 
+This service can also be used to retrieve historical data for any symbol.
+
+```python
+from data.sources.binance import get_historical_data
+data = get_historical_data("BTCUSDT", "1h", "2021-01-01", "2021-01-31", save_file=True)
+```
 
 ### Model Service
 

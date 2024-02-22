@@ -6,5 +6,5 @@ from shared.utils.helpers._helpers import (
     convert_trade,
     get_pipeline_max_window,
     get_minimum_lookback_date,
-    get_root_dir
+    get_root_dir,
 )
