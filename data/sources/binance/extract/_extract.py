@@ -1,17 +1,14 @@
 import os
 from datetime import datetime
 
-import django
 import pandas as pd
 import progressbar
 import pytz
 
 import shared.exchanges.binance.constants as const
 from shared.data.queries import get_data
-from shared.utils.helpers import get_root_dir, get_number_of_batches, get_end_date
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
-django.setup()
+from shared.utils.helpers import get_root_dir
+from data.sources.binance.extract._helpers import get_number_of_batches, get_end_date
 
 
 def get_historical_data(

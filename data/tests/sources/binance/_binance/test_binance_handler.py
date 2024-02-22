@@ -1,9 +1,12 @@
 import datetime
 
+import pandas as pd
+
 from data.service.helpers.exceptions import CandleSizeInvalid
+from data.sources.binance import get_historical_data
 from data.tests.setup.fixtures.internal_modules import *
 from data.tests.setup.fixtures.external_modules import *
-from data.tests.setup.test_data.sample_data import processed_historical_data_5m
+from data.tests.setup.test_data.sample_data import processed_historical_data_5m, processed_historical_data_5m_2
 from shared.utils.exceptions import SymbolInvalid
 from shared.utils.tests.test_setup import get_fixtures
 from shared.utils.tests.fixtures.external_modules import *
@@ -33,6 +36,7 @@ def common_fixture(
 
 class TestBinanceDataHandler:
 
+    @pytest.mark.slow
     @pytest.mark.parametrize(
         "input_params,output",
         [
@@ -156,7 +160,10 @@ class TestBinanceDataHandler:
         create_open_position
     ):
 
-        input_params["start_date"] = datetime.datetime(2023, 9, 1).replace(tzinfo=pytz.utc)
+        input_params["start_date"] = datetime.datetime(2023, 9, 1, tzinfo=pytz.utc)
+
+        print(ExchangeData.objects.all().count())
+        print(StructuredData.objects.all().count())
 
         binance_data_handler = BinanceDataHandler(**input_params)
         binance_data_handler.start_data_ingestion()
@@ -333,3 +340,25 @@ class TestBinanceDataHandler:
             binance_data_handler = BinanceDataHandler(**input_value)
 
         assert excinfo.type == exception
+
+    def test_get_historical_data(
+        self,
+        common_fixture,
+        tmp_path
+    ):
+        historical_data = get_historical_data(
+            'BTCUSDT',
+            '5m',
+            "2023-09-01 14:00",
+            end_date="2023-09-01 15:00",
+            batch_size=1000,
+            save_file=True,
+            directory=tmp_path
+        )
+
+        df = historical_data.reset_index()
+        data_records = df.to_dict(orient='records')
+
+        for i, record in enumerate(data_records):
+            for column, column_value in record.items():
+                assert processed_historical_data_5m_2[i][column] == column_value
