@@ -2,7 +2,7 @@ import logging
 import os
 
 import boto3
-from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.exceptions import ClientError, NoCredentialsError, ParamValidationError
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -40,12 +40,13 @@ def check_aws_config():
     try:
         s3.list_objects(Bucket=bucket)
         return True
-    except ClientError:
+    except (ClientError, ParamValidationError):
         logging.warning(f"Bucket {bucket} does not exist. AWS_BUCKET must be set.")
         return False
     except NoCredentialsError:
         logging.warning(f"The provided credentials are wrong. "
                         f"AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set.")
+        return False
 
 
 def upload_models(local_models_dir):
