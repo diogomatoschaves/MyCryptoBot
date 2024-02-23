@@ -8,8 +8,10 @@ from stratestic.backtesting.combining import StrategyCombiner
 from stratestic.strategies import *
 
 from model.strategies import *
+from model.service.helpers import LOCAL_MODELS_LOCATION
+from model.service.cloud_storage import upload_models
 from model.service.external_requests import execute_order
-from model.service.helpers import convert_signal_to_text, strategies_defaults
+from model.signal_generation._helpers import convert_signal_to_text, strategies_defaults
 from shared.utils.config_parser import get_config
 from shared.utils.exceptions import StrategyInvalid
 from shared.utils.helpers import get_pipeline_max_window, get_minimum_lookback_date
@@ -77,7 +79,7 @@ def strategy_combiner(strategies, combination_method: Literal["Unanimous", "Majo
     return StrategyCombiner(strategies_objs, method=combination_method, data=data)
 
 
-def send_signal(pipeline, bearer_token, header=''):
+def signal_generator(pipeline, bearer_token, header=''):
     """
     Generates a trading signal based on a composite strategy and attempts to execute
     a trade based on this signal.
@@ -116,6 +118,10 @@ def send_signal(pipeline, bearer_token, header=''):
         return False
 
     combined_strategy = strategy_combiner(pipeline["strategies"], pipeline["strategy_combination"], data)
+
+    # Upload new models to the cloud
+    if os.getenv('USE_CLOUD_STORAGE'):
+        upload_models(LOCAL_MODELS_LOCATION)
 
     logging.info(header + "Generating signal.")
 

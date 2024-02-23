@@ -5,12 +5,12 @@ from typing import get_args
 
 from stratestic.utils.helpers import get_extended_name, clean_docstring
 
-from shared.utils.helpers import get_root_dir
-
-STRATESTIC_STRATEGIES_LOCATION = "stratestic.strategies"
-LOCAL_STRATEGIES_LOCATION = "model.strategies"
-
-LOCAL_MODELS_LOCATION = "model/strategies/models"
+from model.service.cloud_storage import download_models, get_saved_models, check_aws_config
+from model.service.helpers import (
+    STRATESTIC_STRATEGIES_LOCATION,
+    LOCAL_STRATEGIES_LOCATION,
+    LOCAL_MODELS_LOCATION
+)
 
 
 def map_type(element):
@@ -30,21 +30,6 @@ def map_type(element):
             "type": "string",
             "func": "String"
         }
-
-
-def get_saved_models():
-    models_path = os.path.abspath(
-        os.path.join(
-            get_root_dir(),
-            LOCAL_MODELS_LOCATION
-        )
-    )
-
-    all_files = [f for f in os.listdir(models_path) if os.path.isfile(os.path.join(models_path, f))]
-
-    models = [f for f in all_files if '.pkl' in f]
-
-    return models
 
 
 def process_ml_strategies(strategies_obj):
@@ -69,7 +54,7 @@ def process_ml_strategies(strategies_obj):
                     "type": "string",
                     "func": "String"
                 },
-                "options": get_saved_models()
+                "options": get_saved_models(LOCAL_MODELS_LOCATION)
             }},
             "paramsOrder": ["load_model"],
             "optionalParams": {},
@@ -80,7 +65,12 @@ def process_ml_strategies(strategies_obj):
     return strategies_obj
 
 
-def get_strategies():
+def compile_strategies():
+
+    # Download models from the cloud
+    if os.getenv('USE_CLOUD_STORAGE') and check_aws_config():
+        download_models(LOCAL_MODELS_LOCATION)
+
     strategies = {}
 
     for location in [STRATESTIC_STRATEGIES_LOCATION, LOCAL_STRATEGIES_LOCATION]:
@@ -134,6 +124,3 @@ def get_strategies():
             }
 
     return process_ml_strategies(strategies)
-
-
-STRATEGIES = get_strategies()

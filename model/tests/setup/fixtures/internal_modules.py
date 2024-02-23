@@ -22,17 +22,17 @@ def mock_settings_env_vars(mocker):
 
 @pytest.fixture()
 def mock_get_data(mocker):
-    return mocker.patch("model.service.helpers.signal_generator.get_data")
+    return mocker.patch("model.signal_generation._signal_generation.get_data")
 
 
 @pytest.fixture()
 def mock_trigger_order(mocker):
-    return mocker.patch("model.service.helpers.signal_generator.trigger_order")
+    return mocker.patch("model.signal_generation._signal_generation.trigger_order")
 
 
 @pytest.fixture()
 def mock_execute_order(mocker):
-    return mocker.patch("model.service.helpers.signal_generator.execute_order")
+    return mocker.patch("model.signal_generation._signal_generation.execute_order")
 
 
 def mock_strategy(*args, **kwargs):
@@ -49,14 +49,14 @@ def mock_strategy(*args, **kwargs):
 def mock_strategy_factory(strategy):
     @pytest.fixture()
     def mocked_strategy(mocker):
-        mocker.patch.object(model.service.helpers.signal_generator, strategy, mock_strategy)
+        mocker.patch.object(model.signal_generation._signal_generation, strategy, mock_strategy)
 
     return mocked_strategy
 
 
 @pytest.fixture()
 def mocked_strategy_combiner(mocker):
-    mocker.patch.object(model.service.helpers.signal_generator, 'StrategyCombiner', mock_strategy)
+    mocker.patch.object(model.signal_generation._signal_generation, 'StrategyCombiner', mock_strategy)
 
 
 def mock_redis():
@@ -83,5 +83,29 @@ def mock_redis_connection(mocker):
 
 
 @pytest.fixture
-def mock_strategies(mocker):
-    mocker.patch.object(model.service.app, "STRATEGIES", STRATEGIES)
+def mock_compile_strategies(mocker):
+    mocker.patch.object(model.service.app, 'compile_strategies', lambda: STRATEGIES)
+
+
+@pytest.fixture
+def spy_upload_file(mocker):
+    return mocker.spy(model.service.cloud_storage._cloud_storage, "upload_file")
+
+
+@pytest.fixture
+def spy_download_file(mocker):
+    return mocker.spy(model.service.cloud_storage._cloud_storage, "download_file")
+
+
+@pytest.fixture
+def mock_local_models_storage(mocker, tmp_path):
+    return mocker.patch(
+        "model.signal_generation._signal_generation.LOCAL_MODELS_LOCATION",
+        tmp_path
+    )
+
+
+@pytest.fixture
+def create_mock_file(tmp_path):
+    with open(os.path.join(tmp_path, 'mock-file.pkl'), 'w') as f:
+        f.write("Mock")
