@@ -1,9 +1,17 @@
+import json
 import os
 
 import pytest
 import pandas as pd
 
+from model.strategies import compile_strategies
 from model.tests.setup.test_data.sample_data import data
+from model.tests.setup.fixtures.internal_modules import spy_download_file
+from model.tests.setup.fixtures.external_modules import (
+    mock_boto3_client,
+    mock_boto3_client_raise_client_error,
+    mock_boto3_client_raise_no_credentials_error
+)
 from shared.utils.tests.test_setup import get_fixtures
 
 current_path = os.path.dirname(os.path.realpath(__file__))
@@ -86,3 +94,32 @@ class TestStrategy:
         instance = strategy(**params, data=data)
 
         assert instance.get_signal() == fixture["out"]["expected_signal"]
+
+    def test_compile_strategies(self, mock_boto3_client, spy_download_file):
+        strategies = compile_strategies()
+
+        json.dumps(strategies)
+
+        assert spy_download_file.call_count == 2
+
+    def test_compile_strategies_raise_client_error(
+        self,
+        mock_boto3_client_raise_client_error,
+        spy_download_file
+    ):
+        strategies = compile_strategies()
+
+        json.dumps(strategies)
+
+        assert spy_download_file.call_count == 0
+
+    def test_compile_strategies_raise_no_credentials_error(
+        self,
+        mock_boto3_client_raise_no_credentials_error,
+        spy_download_file
+    ):
+        strategies = compile_strategies()
+
+        json.dumps(strategies)
+
+        assert spy_download_file.call_count == 0

@@ -1,16 +1,22 @@
 from model.service.helpers.responses import Responses
-from model.tests.setup.fixtures.app import *
+from model.tests.setup.fixtures.app import client, app, mock_client_env_vars
 from model.tests.setup.fixtures.internal_modules import *
+from model.tests.setup.fixtures.external_modules import mock_boto3_client
 from model.tests.setup.test_data.sample_data import STRATEGIES
 from model.tests.setup.fixtures.external_modules import *
 from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
 
-class TestModelService:
-    def test_index_route(self, client, mock_jwt_required):
+@pytest.fixture
+def app_client(client, mock_jwt_required):
+    return client
 
-        res = client.get("/")
+
+class TestModelService:
+    def test_index_route(self, app_client):
+
+        res = app_client.get("/")
 
         assert res.data.decode(res.charset) == "It's up!"
 
@@ -64,7 +70,7 @@ class TestModelService:
             ),
         ],
     )
-    def test_routes_disallowed_methods(self, route, method, client):
+    def test_routes_disallowed_methods(self, route, method, app_client):
         """
         GIVEN a method for a certain route
         WHEN the method is invalid
@@ -76,7 +82,7 @@ class TestModelService:
 
         """
 
-        res = getattr(client, method)(route)
+        res = getattr(app_client, method)(route)
 
         print(res.data)
 
@@ -110,22 +116,22 @@ class TestModelService:
         ],
     )
     def test_check_job_status(
-        self, return_value, expected_value, client, mocked_rq_job, mock_jwt_required
+        self, return_value, expected_value, app_client, mocked_rq_job
     ):
 
         mocked_rq_job.return_value = return_value
 
-        res = client.get("/check_job/123")
+        res = app_client.get("/check_job/123")
 
         assert res.json == expected_value
 
-    def test_check_job_status_no_such_job_error(self, client, mocked_rq_job, mock_jwt_required):
+    def test_check_job_status_no_such_job_error(self, app_client, mocked_rq_job):
 
         mocked_rq_job.side_effect = lambda job_id, connection: mock_rq_job(
             raise_error=True
         )
 
-        res = client.get("/check_job/123")
+        res = app_client.get("/check_job/123")
 
         assert res.json == Responses.JOB_NOT_FOUND
 
@@ -150,29 +156,30 @@ class TestModelService:
         self,
         params,
         expected_value,
-        client,
+        app_client,
         mock_settings_env_vars,
         mocked_rq_enqueue_call,
         mock_redis_connection,
-        mock_jwt_required,
         create_exchange,
         create_pipeline
     ):
-        res = client.post("/generate_signal", json=params)
+        res = app_client.post("/generate_signal", json=params)
 
         assert res.json == expected_value
 
+    @pytest.mark.slow
     def test_get_strategies(
         self,
-        client,
+        app_client,
         mock_settings_env_vars,
         mocked_rq_enqueue_call,
         mock_redis_connection,
-        mock_strategies,
-        mock_jwt_required,
+        mock_compile_strategies,
         create_exchange,
         create_pipeline
     ):
-        res = client.get("/strategies")
+        res = app_client.get("/strategies")
+
+        print(res.json)
 
         assert res.json == STRATEGIES

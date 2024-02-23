@@ -1,0 +1,1 @@
+from model.strategies.properties import compile_strategies

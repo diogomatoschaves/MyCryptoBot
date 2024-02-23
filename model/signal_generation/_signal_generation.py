@@ -8,6 +8,8 @@ from stratestic.backtesting.combining import StrategyCombiner
 from stratestic.strategies import *
 
 from model.strategies import *
+from model.service.helpers import LOCAL_MODELS_LOCATION
+from model.service.cloud_storage import upload_models
 from model.service.external_requests import execute_order
 from model.signal_generation._helpers import convert_signal_to_text, strategies_defaults
 from shared.utils.config_parser import get_config
@@ -116,6 +118,10 @@ def signal_generator(pipeline, bearer_token, header=''):
         return False
 
     combined_strategy = strategy_combiner(pipeline["strategies"], pipeline["strategy_combination"], data)
+
+    # Upload new models to the cloud
+    if os.getenv('USE_CLOUD_STORAGE'):
+        upload_models(LOCAL_MODELS_LOCATION)
 
     logging.info(header + "Generating signal.")
 

@@ -83,5 +83,29 @@ def mock_redis_connection(mocker):
 
 
 @pytest.fixture
-def mock_strategies(mocker):
-    mocker.patch.object(model.service.app, "STRATEGIES", STRATEGIES)
+def mock_compile_strategies(mocker):
+    mocker.patch.object(model.service.app, 'compile_strategies', lambda: STRATEGIES)
+
+
+@pytest.fixture
+def spy_upload_file(mocker):
+    return mocker.spy(model.service.cloud_storage._cloud_storage, "upload_file")
+
+
+@pytest.fixture
+def spy_download_file(mocker):
+    return mocker.spy(model.service.cloud_storage._cloud_storage, "download_file")
+
+
+@pytest.fixture
+def mock_local_models_storage(mocker, tmp_path):
+    return mocker.patch(
+        "model.signal_generation._signal_generation.LOCAL_MODELS_LOCATION",
+        tmp_path
+    )
+
+
+@pytest.fixture
+def create_mock_file(tmp_path):
+    with open(os.path.join(tmp_path, 'mock-file.pkl'), 'w') as f:
+        f.write("Mock")

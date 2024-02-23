@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+from distutils.util import strtobool
 
 import redis
 from dotenv import find_dotenv, load_dotenv
@@ -11,10 +12,11 @@ from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
+from model.service.cloud_storage import check_aws_config
 from model.service.helpers.decorators.handle_app_errors import handle_app_errors
 from model.service.helpers.responses import Responses
 from model.signal_generation import signal_generator
-from model.strategies.properties import STRATEGIES
+from model.strategies import compile_strategies
 from model.worker import conn
 from shared.utils.config_parser import get_config
 from shared.utils.decorators import handle_db_connection_error
@@ -33,6 +35,7 @@ if ENV_FILE:
 config_vars = get_config('model')
 
 configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
 
 cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
@@ -45,6 +48,13 @@ def create_app():
 
     app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
     jwt = JWTManager(app)
+
+    try:
+        upload_files_s3 = bool(strtobool(os.getenv("USE_CLOUD_STORAGE", "false")))
+    except ValueError:
+        upload_files_s3 = False
+
+    os.environ["USE_CLOUD_STORAGE"] = str(upload_files_s3 and check_aws_config())
 
     @app.route('/')
     @jwt_required()
@@ -116,7 +126,8 @@ def create_app():
     @jwt_required()
     @handle_db_connection_error
     def get_strategies():
-        return jsonify(STRATEGIES)
+        strategies = compile_strategies()
+        return jsonify(strategies)
 
     return app
 

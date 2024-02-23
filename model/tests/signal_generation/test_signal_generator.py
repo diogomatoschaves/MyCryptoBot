@@ -4,8 +4,12 @@ from model.tests.setup.fixtures.internal_modules import (
     mock_trigger_order,
     mock_redis_connection,
     mock_settings_env_vars,
-    mock_get_data
+    mock_get_data,
+    spy_upload_file,
+    mock_local_models_storage,
+    create_mock_file
 )
+from model.tests.setup.fixtures.external_modules import mock_boto3_client
 from model.tests.setup.test_data.sample_data import data
 from shared.utils.exceptions import StrategyInvalid
 from shared.utils.tests.fixtures.models import *
@@ -13,18 +17,20 @@ from shared.utils.tests.fixtures.models import *
 
 class TestSignalGeneration:
     @pytest.mark.parametrize(
-        "pipeline_id,side_effect,expected_value",
+        "pipeline_id,side_effect,expected_value,upload_call_count",
         [
             pytest.param(
                 1,
                 data,
                 True,
+                1,
                 id="ValidInput",
             ),
             pytest.param(
                 2,
                 [],
                 False,
+                0,
                 id="EmptyDataFrame",
             ),
         ],
@@ -34,8 +40,13 @@ class TestSignalGeneration:
         pipeline_id,
         side_effect,
         expected_value,
+        upload_call_count,
         mock_settings_env_vars,
         mock_redis_connection,
+        mock_boto3_client,
+        create_mock_file,
+        mock_local_models_storage,
+        spy_upload_file,
         create_pipeline,
         create_pipeline_2,
         create_pipeline_with_invalid_strategy,
@@ -48,7 +59,6 @@ class TestSignalGeneration:
         THEN the return value is equal to the expected response
 
         """
-
         mock_get_data.return_value = side_effect
         mock_trigger_order.return_value = True
 
@@ -72,6 +82,8 @@ class TestSignalGeneration:
 
         assert res == expected_value
 
+        assert spy_upload_file.call_count == upload_call_count
+
     @pytest.mark.parametrize(
         "pipeline_id,exception",
         [
@@ -87,6 +99,7 @@ class TestSignalGeneration:
         pipeline_id,
         exception,
         mock_settings_env_vars,
+        mock_boto3_client,
         mock_redis_connection,
         create_pipeline_with_invalid_strategy,
         mock_get_data,
@@ -136,7 +149,14 @@ class TestSignalGeneration:
             ),
         ],
     )
-    def test_trigger_order(self, side_effect, expected_value, mock_execute_order, mock_redis_connection):
+    def test_trigger_order(
+        self,
+        side_effect,
+        expected_value,
+        mock_execute_order,
+        mock_redis_connection,
+        mock_boto3_client
+    ):
         """
         GIVEN some params
         WHEN the method trigger_order is called
