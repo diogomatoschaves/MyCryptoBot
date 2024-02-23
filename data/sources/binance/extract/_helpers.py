@@ -20,7 +20,7 @@ from database.model.models import ExchangeData
 config_vars = get_config('data')
 
 
-def get_missing_dates(start_date, symbol, end_date=None):
+def get_missing_dates(start_date, symbol, end_date):
     """
     Identifies missing datetime entries in the market data for a given symbol and candle
      size between a specified start and end date.
@@ -31,7 +31,7 @@ def get_missing_dates(start_date, symbol, end_date=None):
         The start date of the period for which to check for missing data. Must have tzinfo set.
     symbol : str
         The market symbol (e.g., "BTCUSDT") for which to check for missing data.
-    end_date : datetime, optional
+    end_date : datetime
         The end date of the period for which to check for missing data.
         If None, defaults to the current date and time.
 
@@ -46,12 +46,7 @@ def get_missing_dates(start_date, symbol, end_date=None):
         If `base_candle_size` does not correspond to a valid key in `CANDLE_SIZES_MAPPER`.
     """
 
-    start_date = round_date(start_date, config_vars.base_candle_size)
-
     data = get_data(ExchangeData, start_date, symbol, config_vars.base_candle_size, exchange='binance')
-
-    if end_date is None:
-        end_date = datetime.now(tz=pytz.utc)
 
     freq = CANDLE_SIZES_MAPPER[config_vars.base_candle_size]
 
@@ -98,24 +93,24 @@ def get_earliest_missing_date(start_date, symbol, end_date=None):
     otherwise, None is returned, indicating complete data coverage within the specified range.
     """
 
-    if isinstance(start_date, str):
-        start_date = pd.Timestamp(start_date, tzinfo=pytz.utc)
-
-    if isinstance(end_date, str):
-        end_date = pd.Timestamp(end_date, tzinfo=pytz.utc)
+    start_date = convert_date(start_date)
+    end_date = convert_date(end_date)
 
     missing_dates = get_missing_dates(start_date, symbol, end_date)
 
     return missing_dates[0] if len(missing_dates) > 0 else None
 
 
-def round_date(date, timeframe='5m'):
-    if timeframe == '5m':
-        return date.replace(
-            minute=date.minute - date.minute % 5,
-            second=0,
-            microsecond=0
-        )
+def convert_date(date):
+    if date is None:
+        date = datetime.now()
+
+    pd_date = pd.Timestamp(date).round(CANDLE_SIZES_MAPPER[config_vars.base_candle_size])
+
+    if pd_date.tzinfo is None:
+        pd_date = pd_date.tz_localize(pytz.utc)
+
+    return pd_date
 
 
 def get_number_of_batches(start_date, candle_size, batch_size, end_date=None):

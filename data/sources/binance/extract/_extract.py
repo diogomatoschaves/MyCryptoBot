@@ -8,7 +8,7 @@ import pytz
 import shared.exchanges.binance.constants as const
 from shared.data.queries import get_data
 from shared.utils.helpers import get_root_dir
-from data.sources.binance.extract._helpers import get_number_of_batches, get_end_date
+from data.sources.binance.extract._helpers import get_number_of_batches, get_end_date, convert_date
 
 
 def get_historical_data(
@@ -69,12 +69,9 @@ def get_historical_data(
     - If `save_file` is True, this function writes a CSV file to disk in the specified `directory`.
     """
 
-    if end_date is None:
-        end_date = datetime.now(tz=pytz.utc)
-    else:
-        end_date = pd.Timestamp(end_date, tzinfo=pytz.utc)
+    start_date = convert_date(start_date)
+    end_date = convert_date(end_date)
 
-    start_date = pd.Timestamp(start_date, tzinfo=pytz.utc)
     batch_start_date = start_date
 
     from shared.exchanges.binance import BinanceHandler
