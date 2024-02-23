@@ -34,7 +34,7 @@ BINANCE_API_SECRET_TEST # Your personal Binance API secret (binance testnet)
 USE_CLOUD_STORAGE # Either true or false - tells the app whether to use a cloud storage
 AWS_ACCESS_KEY_ID # Your Personal AWS access key
 AWS_SECRET_ACCESS_KEY # Your Personal AWS secret access key
-AWS_BUCKET # The name of the bucket where you'll keep you files
+AWS_BUCKET # The name of the S3 bucket where you'll keep your files
 ```
 
 *Note: The remote cloud storage ones (AWS) are only required to be set if you want to have that option enabled for local usage. 
@@ -46,7 +46,7 @@ The database is handled by a postgres docker container as a service, which ensur
 from local installations. When the database service is up, the database can be accessed on the local server on 
 the port `5433`, instead of the usual `5432`.
 
-In order to setup the database we need to start the services in detached mode via `docker-compose`, as follows:
+In order to set up the database we need to start the services in detached mode via `docker-compose`, as follows:
 
     $ docker-compose up -d --build
 
