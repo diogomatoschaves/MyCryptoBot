@@ -1,7 +1,12 @@
-from model.service.helpers.signal_generator import send_signal, trigger_order
-from model.tests.setup.fixtures.internal_modules import *
-from model.tests.setup.test_data.sample_data import sample_structured_data, data
-from model.strategies.properties import STRATEGIES
+from model.signal_generation import signal_generator, trigger_order
+from model.tests.setup.fixtures.internal_modules import (
+    mock_execute_order,
+    mock_trigger_order,
+    mock_redis_connection,
+    mock_settings_env_vars,
+    mock_get_data
+)
+from model.tests.setup.test_data.sample_data import data
 from shared.utils.exceptions import StrategyInvalid
 from shared.utils.tests.fixtures.models import *
 
@@ -24,7 +29,7 @@ class TestSignalGeneration:
             ),
         ],
     )
-    def test_send_signal(
+    def test_signal_generator(
         self,
         pipeline_id,
         side_effect,
@@ -63,7 +68,7 @@ class TestSignalGeneration:
             "bearer_token": "abc"
         }
 
-        res = send_signal(**params)
+        res = signal_generator(**params)
 
         assert res == expected_value
 
@@ -77,7 +82,7 @@ class TestSignalGeneration:
             )
         ],
     )
-    def test_send_signal_raise_exception(
+    def test_signal_generator_raise_exception(
         self,
         pipeline_id,
         exception,
@@ -112,7 +117,7 @@ class TestSignalGeneration:
         }
 
         with pytest.raises(exception) as excinfo:
-            send_signal(**params)
+            signal_generator(**params)
 
         assert excinfo.type == exception
 

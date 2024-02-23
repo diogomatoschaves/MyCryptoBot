@@ -13,7 +13,7 @@ from rq.job import Job
 
 from model.service.helpers.decorators.handle_app_errors import handle_app_errors
 from model.service.helpers.responses import Responses
-from model.service.helpers.signal_generator import send_signal
+from model.signal_generation import signal_generator
 from model.strategies.properties import STRATEGIES
 from model.worker import conn
 from shared.utils.config_parser import get_config
@@ -79,7 +79,7 @@ def create_app():
         )
 
         job = q.enqueue_call(
-            send_signal, (
+            signal_generator, (
                 pipeline_dict,
                 bearer_token,
                 header
