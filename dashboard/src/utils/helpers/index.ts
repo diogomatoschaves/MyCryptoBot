@@ -138,7 +138,7 @@ export const validateParams = (strategy: any) => {
     if (!params.hasOwnProperty(param) || (params[param] === "")) {
       return {
         success: false,
-        strategiesParameters: reduced.params
+        params: reduced.params
       }
     }
 
@@ -176,7 +176,7 @@ export const validateParams = (strategy: any) => {
 
     let typedParam
     if (strategy.optionalParams[param].type) {
-      const typedParam = eval(strategy.optionalParams[param].type.func)(paramValue)
+      typedParam = eval(strategy.optionalParams[param].type.func)(paramValue)
       if (typedParam !== typedParam || typeof (typedParam) !== paramData.type.type) {
         return {
           success: reduced.success && false,
@@ -187,12 +187,14 @@ export const validateParams = (strategy: any) => {
 
     return {
       success: reduced.success,
-      strategiesParameters: {
+      params: {
         ...reduced.params,
         [param]: typedParam ? typedParam : paramValue
       }
     }
   }, {success: true, params: {}})
+
+  debugger
 
   return {
     success: requiredParams.success && optionalParams.success,
