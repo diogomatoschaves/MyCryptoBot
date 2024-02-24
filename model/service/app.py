@@ -15,7 +15,6 @@ from rq.job import Job
 from model.service.cloud_storage import check_aws_config
 from model.service.helpers.decorators.handle_app_errors import handle_app_errors
 from model.service.helpers.responses import Responses
-from model.signal_generation._signal_generation import signal_generator
 from model.strategies import compile_strategies
 from model.worker import conn
 from shared.utils.config_parser import get_config
@@ -89,7 +88,7 @@ def create_app():
         )
 
         job = q.enqueue_call(
-            signal_generator, (
+            "model.signal_generation.signal_generator", (
                 pipeline_dict,
                 bearer_token,
                 header
