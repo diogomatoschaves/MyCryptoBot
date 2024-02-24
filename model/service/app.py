@@ -88,7 +88,7 @@ def create_app():
         )
 
         job = q.enqueue_call(
-            "model.signal_generation.signal_generator", (
+            "model.signal_generation._signal_generation.signal_generator", (
                 pipeline_dict,
                 bearer_token,
                 header
