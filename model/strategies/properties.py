@@ -13,25 +13,6 @@ from model.service.helpers import (
 )
 
 
-def map_type(element):
-
-    try:
-        type_ = element.__name__
-    except AttributeError:
-        type_ = type(element).__name__
-
-    if type_ in ['int', 'float']:
-        return {
-            "type": "number",
-            "func": "Number"
-        }
-    elif type_ == 'str':
-        return {
-            "type": "string",
-            "func": "String"
-        }
-
-
 def process_ml_strategies(strategies_obj):
 
     estimator = strategies_obj["MachineLearning"]["optionalParamsOrder"][0]
@@ -65,6 +46,49 @@ def process_ml_strategies(strategies_obj):
     return strategies_obj
 
 
+def check_typing(props):
+    typing_type = str(props.annotation).replace('typing.', '').split('[')
+
+    if len(typing_type) > 1:
+        return typing_type[0]
+    return props.annotation
+
+
+def map_type(type_, args):
+    if type_ in [int, float]:
+        return {
+            "type": {
+                "type": "number",
+                "func": "Number"
+            }
+        }
+    elif type_ == 'List':
+        return {
+            "type": {
+                "type": "object",
+                "func": "Split"
+            }
+        }
+
+    elif type_ == 'Literal':
+        return {
+            "type": {
+                "type": "string",
+                "func": "String"
+            },
+            "options": args
+        }
+    elif type_ == str:
+        return {
+            "type": {
+                "type": "string",
+                "func": "String"
+            }
+        }
+    else:
+        return None
+
+
 def compile_strategies():
 
     # Download models from the cloud
@@ -96,15 +120,11 @@ def compile_strategies():
 
                 args = get_args(props.annotation)
 
-                if len(args) != 0:
-                    param_info = {"type": map_type(args[0])}
+                typing_type = check_typing(props)
+                param_info = map_type(typing_type, args)
 
-                    if type(args[0]) is not type:
-                        param_info.update({"options": args})
-                else:
-                    param_info = {
-                         "type": map_type(props.annotation)
-                    }
+                if param_info is None:
+                    continue
 
                 if is_required:
                     required_ordering.append(param)

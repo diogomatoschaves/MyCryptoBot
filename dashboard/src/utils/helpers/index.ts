@@ -194,8 +194,6 @@ export const validateParams = (strategy: any) => {
     }
   }, {success: true, params: {}})
 
-  debugger
-
   return {
     success: requiredParams.success && optionalParams.success,
     updatedParams: {...requiredParams.params, ...optionalParams.params}
@@ -287,4 +285,10 @@ export const convertDate = (timeStamp: number) => {
 export const addLineBreaks = (text: string) => {
   const regex = /\s{2}/g;
   return text.replace(regex, '<br/>')
+}
+
+
+const Split = (str: string) => {
+  const re = /\s*(?:,|$)\s*/;
+  return str.split(re)
 }
