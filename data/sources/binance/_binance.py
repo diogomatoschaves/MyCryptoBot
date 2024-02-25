@@ -130,7 +130,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                     header=header
                 )
 
-                data = data.append(batch_data).drop_duplicates(["open_time"])
+                data = pd.concat([data, batch_data], axis=0).drop_duplicates(["open_time"])
+
                 start_date = get_end_date(start_date, self.base_candle_size, self.batch_size)
 
                 bar.update(i)
@@ -315,7 +316,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
             }
         ).set_index('open_time')
 
-        data = data.append(new_data)
+        data = pd.concat([data, new_data], axis=0)
 
         data = resample_data(
             data,

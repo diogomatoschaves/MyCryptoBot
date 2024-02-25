@@ -1,3 +1,4 @@
+import logging
 import os
 
 
@@ -53,5 +54,7 @@ def download_file(client, bucket, local_dir, filename):
             filename
         )
     )
+
+    logging.info(f"Downloading file {filename}")
 
     client.download_file(bucket, filename, abs_path)
