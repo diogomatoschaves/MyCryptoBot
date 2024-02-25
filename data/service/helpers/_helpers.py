@@ -242,6 +242,8 @@ def resample_equity_data(df, timeframes, max_size):
 
     original_size = df.shape[0]
 
+    timeframe = list(timeframes)[0]
+
     for timeframe in timeframes:
         df = df.resample(timeframe).mean().ffill()
 
@@ -251,7 +253,18 @@ def resample_equity_data(df, timeframes, max_size):
         else:
             break
 
-    return df.reset_index()
+    return df, timeframe
+
+
+def add_current_timestamp(df, time_frame):
+
+    now = pd.Timestamp(datetime.datetime.now(tz=pytz.utc)).round(time_frame) - pd.Timedelta(time_frame)
+
+    df_now = pd.DataFrame(data={df.columns[0]: [None]}, index=[now])
+
+    df = pd.concat([df, df_now], axis=0)
+
+    return df.ffill()
 
 
 def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, max_items=500):
@@ -266,7 +279,11 @@ def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, max_item
 
     df = pd.DataFrame(timeseries).set_index('time').rename(columns={"value": "$"})
 
-    df = resample_equity_data(df, const.CANDLE_SIZES_MAPPER.values(), max_items)
+    df, timeframe = resample_equity_data(df, const.CANDLE_SIZES_MAPPER.values(), max_items)
+
+    df = add_current_timestamp(df, timeframe)
+
+    df = df.reset_index()
 
     return json.loads(df.to_json(orient='records'))
 

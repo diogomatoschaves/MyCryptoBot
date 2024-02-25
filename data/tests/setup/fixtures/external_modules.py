@@ -1,3 +1,5 @@
+import datetime
+
 import flask_jwt_extended
 import pytest
 import redis
@@ -75,3 +77,17 @@ def mock_create_access_token_user_mgmt(mocker):
 @pytest.fixture
 def spy_db_connection(mocker):
     return mocker.spy(db.connections, 'all')
+
+
+FAKE_TIME = datetime.datetime(2023, 11, 1, )
+
+
+@pytest.fixture
+def patch_datetime_now(monkeypatch):
+
+    class mydatetime(datetime.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return FAKE_TIME
+
+    monkeypatch.setattr(datetime, 'datetime', mydatetime)
