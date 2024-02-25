@@ -260,7 +260,7 @@ def add_current_timestamp(df, time_frame):
 
     now = pd.Timestamp(datetime.datetime.now(tz=pytz.utc)).round(time_frame) - pd.Timedelta(time_frame)
 
-    df_now = pd.DataFrame(data={df.columns[0]: [None]}, index=[now])
+    df_now = pd.DataFrame(data={df.columns[0]: [None], "time": [now]}).set_index('time')
 
     df = pd.concat([df, df_now], axis=0)
 
