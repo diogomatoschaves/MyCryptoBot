@@ -233,9 +233,9 @@ export const userLogin = async (requestData) => {
   return await response.json()
 }
 
-export const getEquityTimeSeries = async ({pipelineId, timeFrame}) => {
+export const getEquityTimeSeries = async ({pipelineId, maxItems}) => {
 
-  const url = `${urlPrefix}/pipeline-equity${pipelineId ? '/' + pipelineId : ''}${timeFrame ? `?timeFrame=${timeFrame}` : ''}`
+  const url = `${urlPrefix}/pipeline-equity${pipelineId ? '/' + pipelineId : ''}${maxItems ? `?maxItems=${maxItems}` : ''}`
 
   const response = await fetch(url, {
     method: 'GET',

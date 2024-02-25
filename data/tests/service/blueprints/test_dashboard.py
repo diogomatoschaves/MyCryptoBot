@@ -615,49 +615,57 @@ class TestDashboardService:
         "extra_url,response",
         [
             pytest.param(
-                '?timeFrame=100h',
-                {"success": False, "message": "The provided time frame is not valid."},
-                id="pipelines_metrics-wrong_timeframe",
-            ),
-            pytest.param(
-                '/1?timeFrame=30m',
+                '/1',
                 {
                     "data": [
-                        {"$": 1000.0, "time": 1696172400000},
-                        {"$": 1010.0, "time": 1696174200000},
-                        {"$": 1020.0, "time": 1696176000000},
-                        {"$": 1015.0, "time": 1696177800000},
-                        {"$": 1025.0, "time": 1696179600000},
-                        {"$": 1030.0, "time": 1696181400000},
+                        {"$": 1012.5, "index": 1696172400000},
+                        {"$": 1010.0, "index": 1696174200000},
+                        {"$": 1020.0, "index": 1696176000000},
+                        {"$": 1015.0, "index": 1696177800000},
+                        {"$": 1025.0, "index": 1696179600000},
+                        {"$": 1030.0, "index": 1696181400000},
+                        {"$": 1030.0, "index": 1698795000000},
                     ],
                     "success": True,
                 },
-                id="pipelines_metrics-pipeline-30m",
+                id="pipeline-equity-timeseries_no-max-items",
             ),
             pytest.param(
-                '/1?timeFrame=1d',
-                {'data': [{'$': 1000.0, 'time': 1696118400000}], 'success': True},
-                id="pipelines_metrics-pipeline-1d",
+                '/1?maxItems=1',
+                {
+                    "data": [
+                        {"$": 1016.875, "index": 1696118400000},
+                        {"$": 1016.875, "index": 1698710400000},
+                    ],
+                    "success": True,
+                },
+                id="pipeline-equity-timeseries_max-items=1",
             ),
             pytest.param(
-                '?timeFrame=1h',
+                '/2',
+                {'data': [], 'success': True},
+                id="equity-timeseries_non-existent-pipeline",
+            ),
+            pytest.param(
+                '?maxItems=3',
                 {
                     "data": {
                         "live": [
-                            {"$": 1000.0, "time": 1696172400000},
-                            {"$": 1020.0, "time": 1696176000000},
-                            {"$": 1025.0, "time": 1696179600000},
+                            {"$": 1011.25, "index": 1696172400000},
+                            {"$": 1017.5, "index": 1696176000000},
+                            {"$": 1027.5, "index": 1696179600000},
+                            {"$": 1027.5, "index": 1698793200000},
                         ],
                         "testnet": [
-                            {"$": 1000.0, "time": 1696172400000},
-                            {"$": 1020.0, "time": 1696176000000},
-                            {"$": 1025.0, "time": 1696179600000},
+                            {"$": 1011.25, "index": 1696172400000},
+                            {"$": 1017.5, "index": 1696176000000},
+                            {"$": 1027.5, "index": 1696179600000},
+                            {"$": 1027.5, "index": 1698793200000},
                         ],
                     },
                     "success": True,
-                }
-                ,
-                id="pipelines_metrics-portfolio-1h",
+                },
+                id="portfolio-equity-timeseries_max-items=3",
             ),
         ],
     )
@@ -666,11 +674,14 @@ class TestDashboardService:
         extra_url,
         response,
         client,
+        patch_datetime_now,
         create_trades,
         create_pipeline_timeseries,
         create_testnet_portfolio_timeseries,
         create_live_portfolio_timeseries,
     ):
         res = client.get(f'{API_PREFIX}/pipeline-equity{extra_url}')
+
+        print(res.json)
 
         assert res.json == jsonify(response).json

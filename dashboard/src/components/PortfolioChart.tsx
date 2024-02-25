@@ -21,7 +21,7 @@ const PortfolioChart = (props: Props) => {
   const [data, setData] = useState([])
 
   const fetchEquityData = (pipelineId: string) => {
-    getEquityTimeSeries({pipelineId, timeFrame: '15m'})
+    getEquityTimeSeries({pipelineId, maxItems: 500})
       .then((response) => {
         if (response.success) {
           setData(response.data)
@@ -37,7 +37,7 @@ const PortfolioChart = (props: Props) => {
       setData(dataProp)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [dataProp])
 
   return (
       <Fragment>

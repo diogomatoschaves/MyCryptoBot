@@ -360,7 +360,7 @@ class App extends Component<Props, State> {
     }
 
     getTotalEquityTimeSeries = () => {
-        getEquityTimeSeries({pipelineId: null, timeFrame: '15m'})
+        getEquityTimeSeries({pipelineId: null, maxItems: 500})
           .then(response => {
               this.setState({
                 equityTimeSeries: {
