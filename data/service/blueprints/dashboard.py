@@ -287,16 +287,11 @@ def get_pipelines_metrics():
 @handle_db_connection_error
 def get_pipeline_equity(pipeline_id):
 
-    time_frame = request.args.get("timeFrame", '1h')
-
-    try:
-        time_frame_converted = CANDLE_SIZES_MAPPER[time_frame]
-    except KeyError:
-        return jsonify({"success": False, "message": "The provided time frame is not valid."})
+    max_items = int(request.args.get("maxItems", 500))
 
     if pipeline_id:
 
-        data = get_pipeline_equity_timeseries(pipeline_id=pipeline_id, time_frame_converted=time_frame_converted)
+        data = get_pipeline_equity_timeseries(pipeline_id=pipeline_id, max_items=max_items)
 
         return jsonify({"success": True, "data": data})
 
@@ -310,7 +305,7 @@ def get_pipeline_equity(pipeline_id):
 
             data[account_type] = get_pipeline_equity_timeseries(
                 account_type=account_type,
-                time_frame_converted=time_frame_converted
+                max_items=max_items
             )
 
         return jsonify({"success": True, "data": data})

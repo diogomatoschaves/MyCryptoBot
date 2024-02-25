@@ -238,7 +238,23 @@ def extract_request_params(request):
     )
 
 
-def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, time_frame_converted='1H'):
+def resample_equity_data(df, timeframes, max_size):
+
+    original_size = df.shape[0]
+
+    for timeframe in timeframes:
+        df = df.resample(timeframe).mean().ffill()
+
+        if df.shape[0] > max_size or df.shape[0] > original_size:
+            continue
+
+        else:
+            break
+
+    return df.reset_index()
+
+
+def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, max_items=500):
 
     if pipeline_id is not None:
         timeseries = PortfolioTimeSeries.objects.filter(pipeline__id=pipeline_id).values('time', 'value')
@@ -249,7 +265,8 @@ def get_pipeline_equity_timeseries(pipeline_id=None, account_type=None, time_fra
         return []
 
     df = pd.DataFrame(timeseries).set_index('time').rename(columns={"value": "$"})
-    df = df.resample(time_frame_converted).first().ffill().reset_index()
+
+    df = resample_equity_data(df, const.CANDLE_SIZES_MAPPER.values(), max_items)
 
     return json.loads(df.to_json(orient='records'))
 
