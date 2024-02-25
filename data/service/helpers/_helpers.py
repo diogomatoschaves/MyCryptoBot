@@ -108,8 +108,8 @@ def check_input(strategies, edit_pipeline=False, **kwargs):
     name = kwargs.get('name')
     if name is None:
         raise NameRequired
-    if (not isinstance(name, str) or Pipeline.objects.exclude(id=pipeline_id, deleted=True)
-            .filter(name=name).exists()):
+    if (not isinstance(name, str)
+            or Pipeline.objects.exclude(id=pipeline_id).exclude(deleted=True).filter(name=name).exists()):
 
         raise NameInvalid(name)
 
