@@ -128,6 +128,7 @@ This page shows all the trades executed by any of the trading bots. It is possib
 
 ## Software Requirements
 
-- [Poetry](https://python-poetry.org/docs/) (For creating an environment for local dev.)
+- [Poetry](https://python-poetry.org/docs/) (For creating an environment for local development.)
 - [Docker](https://docs.docker.com/get-docker/) (For running the app locally.)
 - [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) (For deploying the app to a Heroku.)
+- [AWS S3](https://signin.aws.amazon.com/) (For storing machine learning models in the cloud.)
