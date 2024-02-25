@@ -4,7 +4,7 @@ import os
 import pytest
 import pandas as pd
 
-from model.strategies import compile_strategies
+from model.strategies.properties import compile_strategies
 from model.tests.setup.test_data.sample_data import data
 from model.tests.setup.fixtures.internal_modules import spy_download_file
 from model.tests.setup.fixtures.external_modules import (

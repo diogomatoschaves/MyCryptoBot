@@ -15,7 +15,7 @@ from rq.job import Job
 from model.service.cloud_storage import check_aws_config
 from model.service.helpers.decorators.handle_app_errors import handle_app_errors
 from model.service.helpers.responses import Responses
-from model.strategies import compile_strategies
+from model.strategies.properties import compile_strategies
 from model.worker import conn
 from shared.utils.config_parser import get_config
 from shared.utils.decorators import handle_db_connection_error

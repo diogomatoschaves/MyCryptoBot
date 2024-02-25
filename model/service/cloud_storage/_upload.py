@@ -1,4 +1,4 @@
-import os.path
+import os
 
 
 def upload_file(client, bucket, local_dir, filename):
