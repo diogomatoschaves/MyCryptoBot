@@ -103,7 +103,7 @@ def get_earliest_missing_date(start_date, symbol, end_date=None):
 
 def convert_date(date):
     if date is None:
-        date = datetime.now()
+        date = datetime.now(pytz.utc)
 
     pd_date = pd.Timestamp(date).round(CANDLE_SIZES_MAPPER[config_vars.base_candle_size])
 
