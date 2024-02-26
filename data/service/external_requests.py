@@ -53,7 +53,7 @@ def generate_signal(pipeline_id, header=''):
     return response
 
 
-@retry_failed_connection(num_times=4)
+@retry_failed_connection(num_times=3)
 @json_error_handler
 def start_stop_symbol_trading(payload, start_or_stop):
 

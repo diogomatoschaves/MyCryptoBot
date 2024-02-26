@@ -416,13 +416,49 @@ class TestBotsAPI:
         self,
         params,
         client,
-        mock_start_stop_symbol_trading_success_false,
+        mock_start_stop_symbol_trading_raise_error,
         mock_binance_handler_start_data_ingestion,
     ):
 
         res = client.put(f'{API_PREFIX}/start_bot', json=params)
 
         assert res.json["message"] == 'Pipeline start failed.'
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            pytest.param(
+                {
+                    "color": "purple",
+                    "name": "Hello World",
+                    "symbol": "BTCUSDT",
+                    "strategy": [{
+                        "name": "MovingAverage",
+                        "className": "MovingAverage",
+                        "params": {"ma": 30}
+                    }],
+                    "candleSize": "1h",
+                    "exchanges": "Binance",
+                    "equity": 1000
+                },
+                id="DATA_PIPELINE_FAIL_EXTERNAL_CALL",
+            ),
+        ],
+    )
+    def test_start_bot_unsuccessful_response(
+        self,
+        params,
+        client,
+        mock_start_stop_symbol_trading_success_false,
+        mock_binance_handler_start_data_ingestion,
+    ):
+        res = client.put(f'{API_PREFIX}/start_bot', json=params)
+
+        pipeline = Pipeline.objects.get(id=1)
+
+        assert pipeline.active is False
+
+        assert res.json["message"] == "Pipeline 1 failed to start."
 
     @pytest.mark.parametrize(
         "params,response",
@@ -513,9 +549,9 @@ class TestBotsAPI:
     def test_startup_task_existing_positions(
         self,
         client_with_open_position,
-        spy_start_symbol_trading
+        spy_start_stop_symbol_trading
     ):
-        assert spy_start_symbol_trading.call_count == 3
+        assert spy_start_stop_symbol_trading.call_count == 3
 
     def test_startup_task_no_positions(
         self,

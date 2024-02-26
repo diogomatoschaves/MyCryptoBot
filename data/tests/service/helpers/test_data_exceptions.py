@@ -171,7 +171,7 @@ class TestExceptions:
             ),
             pytest.param(
                 PipelineStartFail(arg),
-                f"Pipeline {arg} failed to start",
+                f"Pipeline {arg} failed to start.",
                 id="PipelineStartFail",
             ),
             pytest.param(

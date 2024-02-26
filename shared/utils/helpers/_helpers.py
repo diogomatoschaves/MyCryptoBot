@@ -1,3 +1,4 @@
+import json
 import os
 from collections import namedtuple
 from datetime import datetime
@@ -46,9 +47,15 @@ def get_root_dir():
     )
 
 
-def get_logging_row_header(pipeline):
+def get_logging_row_header(cache, pipeline):
+    header = f"{pipeline.symbol}|{pipeline.name}|{pipeline.id}|{pipeline.interval}: "
 
-    return f"{pipeline.name}|{pipeline.id}|{pipeline.interval}: "
+    cache.set(
+        f"pipeline {pipeline.id}",
+        json.dumps(header)
+    )
+
+    return header
 
 
 def get_item_from_cache(cache, key):

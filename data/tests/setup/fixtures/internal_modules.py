@@ -179,6 +179,11 @@ def mock_start_stop_symbol_trading_success_true(mocker):
 
 
 @pytest.fixture
+def spy_start_stop_symbol_trading(mocker):
+    return mocker.spy(data.service.blueprints.bots_api, 'start_stop_symbol_trading')
+
+
+@pytest.fixture
 def mock_start_stop_symbol_trading_success_true_binance_handler(mocker):
     mocker.patch.object(
         data.sources.binance._binance,
@@ -202,11 +207,20 @@ def mock_get_open_positions(mocker):
 
 
 @pytest.fixture
-def mock_start_stop_symbol_trading_success_false(mocker):
+def mock_start_stop_symbol_trading_raise_error(mocker):
     return mocker.patch.object(
         data.service.blueprints.bots_api,
         'start_stop_symbol_trading',
         raise_pipeline_start_fail,
+    )
+
+
+@pytest.fixture
+def mock_start_stop_symbol_trading_success_false(mocker):
+    return mocker.patch.object(
+        data.service.blueprints.bots_api,
+        'start_stop_symbol_trading',
+        lambda payload, start_or_stop: {"success": False, "message": "Pipeline could not be started."},
     )
 
 
@@ -324,7 +338,6 @@ def mock_start_symbol_trading(mocker):
 @pytest.fixture
 def spy_start_symbol_trading(mocker):
     return mocker.spy(data.service.app, 'start_symbol_trading')
-
 
 def fake_get_strategies_error():
     raise InterfaceError

@@ -11,13 +11,12 @@ from execution.service.cron_jobs.main import start_background_scheduler
 from execution.service.helpers.decorators import binance_error_handler, handle_app_errors, handle_order_execution_errors
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_signal, extract_and_validate, get_header
-from execution.service.helpers.exceptions import PipelineNotActive, InsufficientBalance
+from execution.service.helpers.exceptions import PipelineNotActive
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.futures import BinanceFuturesTrader
 from shared.utils.config_parser import get_config
 from shared.utils.decorators import handle_db_connection_error
 from shared.utils.exceptions import EquityRequired
-from shared.utils.helpers import get_pipeline_data
 from shared.utils.logger import configure_logger
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -44,27 +43,12 @@ def get_binance_trader_instance(paper_trading):
         return binance_futures_trader
 
 
-def startup_task():
+def start_pipeline_trade(pipeline, header):
 
-    start_background_scheduler(config_vars)
-
-    open_positions = Position.objects.filter(pipeline__active=True)
-
-    for open_position in open_positions:
-
-        pipeline = get_pipeline_data(open_position.pipeline_id, return_obj=True)
-
-        header = get_header(pipeline.id)
-
-        try:
-            start_pipeline_trade(pipeline, header, initial_position=open_position.position)
-        except InsufficientBalance:
-            logging.info(f"Insufficient balance to start pipeline {pipeline.id}.")
-            pipeline.active = False
-            pipeline.save()
-
-
-def start_pipeline_trade(pipeline, header, initial_position=0):
+    try:
+        initial_position = Position.objects.get(pipeline__id=pipeline.id).position
+    except Position.DoesNotExist:
+        initial_position = 0
 
     bt = get_binance_trader_instance(pipeline.paper_trading)
 
@@ -90,7 +74,7 @@ def create_app():
 
     CORS(app)
 
-    startup_task()
+    start_background_scheduler(config_vars)
 
     @app.route('/')
     @jwt_required()

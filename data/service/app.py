@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from datetime import timedelta
@@ -48,9 +49,10 @@ def startup_task(app):
         cache.set("bearer_token", bearer_token)
 
     for open_position in open_positions:
-        start_symbol_trading(open_position.pipeline)
-        open_position.pipeline.active = True
-        open_position.pipeline.save()
+        response = start_symbol_trading(open_position.pipeline)
+
+        if not response["success"]:
+            logging.info(f"Pipeline {open_position.pipeline.id} could not be started. {response['message']}")
 
 
 def create_app():
@@ -66,7 +68,7 @@ def create_app():
     app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=config_vars.token_expires_days)
 
-    jwt = JWTManager(app)
+    JWTManager(app)
 
     CORS(app)
 

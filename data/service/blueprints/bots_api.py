@@ -68,21 +68,34 @@ def stop_instance(pipeline_id, header):
 
 
 def start_symbol_trading(pipeline):
+    payload = {
+        "pipeline_id": pipeline.id,
+        "binance_trader_type": "futures",
+    }
 
-    header = get_logging_row_header(pipeline)
-
-    cache.set(
-        f"pipeline {pipeline.id}",
-        json.dumps(header)
-    )
+    header = get_logging_row_header(cache, pipeline)
 
     logging.info(header + f"Starting data pipeline.")
+
+    response = start_stop_symbol_trading(payload, 'start')
+
+    if response["success"]:
+        pipeline.last_entry = None
+        pipeline.save()
+    else:
+        pipeline.active = False
+        pipeline.open_time = None
+        pipeline.save()
+
+        return response
 
     executor.submit(
         initialize_data_collection,
         pipeline,
         header
     )
+
+    return response
 
 
 @bots_api.put('/start_bot')
@@ -111,24 +124,10 @@ def start_bot():
         data
     )
 
-    payload = {
-        "pipeline_id": pipeline.id,
-        "binance_trader_type": "futures",
-    }
-
-    response = start_stop_symbol_trading(payload, 'start')
+    response = start_symbol_trading(pipeline)
 
     if not response["success"]:
-        pipeline.active = False
-        pipeline.open_time = None
-        pipeline.save()
-
-        raise PipelineStartFail(response["message"])
-    else:
-        pipeline.last_entry = None
-        pipeline.save()
-
-    start_symbol_trading(pipeline)
+        raise PipelineStartFail(pipeline.id)
 
     return jsonify(Responses.DATA_PIPELINE_START_OK(pipeline))
 
