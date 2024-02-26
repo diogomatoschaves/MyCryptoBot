@@ -244,7 +244,7 @@ def resample_equity_data(df, timeframes, max_size):
 
     df_now = pd.DataFrame(data={df.columns[0]: [None], "time": [now]}).set_index('time')
 
-    df = pd.concat([df, df_now], axis=0).ffill()
+    df = pd.concat([df, df_now], axis=0).ffill().round(1)
 
     for timeframe in timeframes:
 
