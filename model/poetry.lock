@@ -2003,18 +2003,18 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
 
 [[package]]
 name = "rq"
-version = "1.16.0"
+version = "1.14.1"
 description = "RQ is a simple, lightweight, library for creating background jobs, and processing them."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.6"
 files = [
-    {file = "rq-1.16.0-py3-none-any.whl", hash = "sha256:d71859da6f3af597bd79675b240e138587878ce9b693d1bcf681443e2a8193ce"},
-    {file = "rq-1.16.0.tar.gz", hash = "sha256:aab9e0fc90d7ffd100241b0f8dd7458c1ee4039edc2bfea9f7e2cfc0567f5710"},
+    {file = "rq-1.14.1-py2.py3-none-any.whl", hash = "sha256:37e003db1da205e08db6cc4653b7c6ccfd9292000954240308abfce2ebde43ba"},
+    {file = "rq-1.14.1.tar.gz", hash = "sha256:5fb86038922ddd76eb2d9aa0adeec6dcf64f159dbbe730b26358b1417120dd44"},
 ]
 
 [package.dependencies]
-click = ">=5"
-redis = ">=3.5"
+click = ">=5.0.0"
+redis = ">=3.5.0"
 
 [[package]]
 name = "s3transfer"
