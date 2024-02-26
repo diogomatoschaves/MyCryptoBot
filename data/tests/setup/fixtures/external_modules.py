@@ -2,6 +2,7 @@ import datetime
 
 import flask_jwt_extended
 import pytest
+import pytz
 import redis
 from binance import ThreadedWebsocketManager
 from binance.client import Client
@@ -79,7 +80,7 @@ def spy_db_connection(mocker):
     return mocker.spy(db.connections, 'all')
 
 
-FAKE_TIME = datetime.datetime(2023, 11, 1, )
+FAKE_TIME = datetime.datetime(2023, 10, 4, tzinfo=pytz.utc)
 
 
 @pytest.fixture
