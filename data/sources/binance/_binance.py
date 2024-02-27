@@ -156,7 +156,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         if start_pipeline:
             self._start_kline_websockets(self.symbol, self._websocket_callback, header=header)
 
-    def stop_data_ingestion(self, header=''):
+    def stop_data_ingestion(self, header='', raise_exception=False):
         """
         Public method which stops the data pipeline for the symbol.
 
@@ -173,21 +173,16 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         response = start_stop_symbol_trading({"pipeline_id": self.pipeline_id}, 'stop')
 
-        Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
-
-        if not response["success"]:
+        if response["success"]:
+            Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
+            Position.objects.filter(pipeline__id=self.pipeline_id).update(open=False, position=0)
+        else:
             logging.info(response["message"])
 
-            positions = get_open_positions(symbol=self.symbol)
+            if raise_exception:
+                raise DataPipelineCouldNotBeStopped(response["message"])
 
-            pipeline = Pipeline.objects.get(id=self.pipeline_id)
-
-            if positions["success"]:
-                if (pipeline.paper_trading and positions["positions"]["testnet"] != 0) \
-                        or (not pipeline.paper_trading and positions["positions"]["live"] != 0):
-                    raise DataPipelineCouldNotBeStopped(response["message"])
-
-        Position.objects.filter(pipeline_id=self.pipeline_id).update(open=False, position=0)
+        return response["success"]
 
     def _etl_pipeline(
         self,
@@ -266,7 +261,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                 success = self.generate_new_signal(header, retries=retries + 1)
             else:
                 logging.warning(header + message)
-                self.stop_data_ingestion(header=header)
+                stopped = self.stop_data_ingestion(header=header)
 
         return success
 
@@ -373,7 +368,6 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         return get_earliest_missing_date(minimum_lookback_date, self.symbol)
 
     def delete_last_entry(self):
-
         for model_class, candle_size in [
             (ExchangeData, self.base_candle_size),
             (StructuredData, self.candle_size)

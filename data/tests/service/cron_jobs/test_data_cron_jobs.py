@@ -9,6 +9,7 @@ API_PREFIX = '/api'
 
 class TestCronJobs:
 
+    @pytest.mark.slow
     def test_check_app_is_running(
         self,
         create_all_pipelines,

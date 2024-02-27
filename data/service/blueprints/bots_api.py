@@ -48,23 +48,37 @@ def initialize_data_collection(pipeline, header):
     data_handler.binance_handler.start_data_ingestion(header=header)
 
 
-def reduce_instances(instances, instance, pipeline_id, header):
+def reduce_instances(accumulator, instance, pipeline_id, header, raise_exception):
+
     if pipeline_id == instance.pipeline_id:
-        instance.stop_data_ingestion(header=header)
-        return instances
+        return_value = instance.stop_data_ingestion(header=header, raise_exception=raise_exception)
+        return {
+            **accumulator,
+            "return_values": [*accumulator["return_values"], return_value]
+        }
+
     else:
-        return [*instances, instance]
+        return {
+            **accumulator,
+            "instances": [*accumulator["instances"], instance]
+        }
 
 
-def stop_instance(pipeline_id, header):
+def stop_instance(pipeline_id, header, raise_exception=False):
 
     global binance_instances
 
-    binance_instances = reduce(
-        lambda instances, instance: reduce_instances(instances, instance, pipeline_id, header),
+    reduced_instances = reduce(
+        lambda accumulator, instance: reduce_instances(
+            accumulator, instance, pipeline_id, header, raise_exception
+        ),
         binance_instances,
-        []
+        {"instances": [], "return_values": []}
     )
+
+    binance_instances = reduced_instances["instances"]
+
+    return reduced_instances["return_values"]
 
 
 def start_symbol_trading(pipeline):
@@ -153,7 +167,7 @@ def stop_bot():
 
         logging.info(header + f"Stopping pipeline {pipeline_id}.")
 
-        stop_instance(pipeline_id, header=header)
+        stop_instance(pipeline_id, header=header, raise_exception=True)
 
         pipeline = Pipeline.objects.get(id=pipeline_id)
         pipeline.active = False

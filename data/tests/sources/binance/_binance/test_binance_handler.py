@@ -36,7 +36,6 @@ def common_fixture(
 
 class TestBinanceDataHandler:
 
-    @pytest.mark.slow
     @pytest.mark.parametrize(
         "input_params,output",
         [
@@ -131,6 +130,7 @@ class TestBinanceDataHandler:
         assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
         assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
 
+    @pytest.mark.slow
     @pytest.mark.parametrize(
         "input_params,output",
         [
@@ -186,13 +186,12 @@ class TestBinanceDataHandler:
         assert position.position == 0
 
     @pytest.mark.parametrize(
-        "pipeline_id,exception,start_stop_symbol_return_value,get_open_positions_return_value,expected_values",
+        "pipeline_id,exception,start_stop_symbol_return_value,expected_values",
         [
             pytest.param(
                 2,
                 False,
                 {"success": True, "message": ''},
-                {"success": True, "positions": {"testnet": 1, "live": 0}},
                 {
                     "pipeline_active": False,
                     "position_active": False,
@@ -204,19 +203,17 @@ class TestBinanceDataHandler:
                 2,
                 False,
                 {"success": False, "message": ''},
-                {"success": True, "positions": {"testnet": 0, "live": 0}},
                 {
-                    "pipeline_active": False,
-                    "position_active": False,
-                    "position_side": 0,
+                    "pipeline_active": True,
+                    "position_active": True,
+                    "position_side": 1,
                 },
-                id="start_stop-False|get_open_positions-True-positions==0",
+                id="start_stop-False",
             ),
             pytest.param(
                 11,
                 False,
                 {"success": True, "message": ''},
-                {"success": True, "positions": {"testnet": 1, "live": 0}},
                 {
                     "pipeline_active": False,
                     "position_active": False,
@@ -228,37 +225,23 @@ class TestBinanceDataHandler:
                 11,
                 False,
                 {"success": False, "message": ''},
-                {"success": True, "positions": {"testnet": 0, "live": 0}},
                 {
-                    "pipeline_active": False,
-                    "position_active": False,
+                    "pipeline_active": True,
+                    "position_active": True,
                     "position_side": 0,
                 },
-                id="start_stop-False|get_open_positions-True-positions==0|paper_trading",
-            ),
-            pytest.param(
-                2,
-                False,
-                {"success": False, "message": ''},
-                {"success": False, "positions": {"testnet": 0, "live": 0}},
-                {
-                    "pipeline_active": False,
-                    "position_active": False,
-                    "position_side": 0,
-                },
-                id="start_stop-False|get_open_positions-False",
+                id="start_stop-False|paper_trading",
             ),
             pytest.param(
                 2,
                 True,
                 {"success": False, "message": 'API ERROR'},
-                {"success": True, "positions": {"testnet": 1, "live": 1}},
                 {
-                    "pipeline_active": False,
+                    "pipeline_active": True,
                     "position_active": True,
                     "position_side": 1,
                 },
-                id="start_stop-False|get_open_positions-True-positions!=0",
+                id="start_stop-False|raise_exception",
             ),
         ],
     )
@@ -267,7 +250,6 @@ class TestBinanceDataHandler:
         pipeline_id,
         exception,
         start_stop_symbol_return_value,
-        get_open_positions_return_value,
         expected_values,
         common_fixture,
         create_open_position,
@@ -285,13 +267,12 @@ class TestBinanceDataHandler:
         }
 
         mock_start_stop_symbol_trading.return_value = start_stop_symbol_return_value
-        mock_get_open_positions.return_value = get_open_positions_return_value
 
         if exception:
             with pytest.raises(Exception) as exception:
                 binance_data_handler = BinanceDataHandler(**input_params)
                 binance_data_handler.start_data_ingestion()
-                binance_data_handler.stop_data_ingestion()
+                binance_data_handler.stop_data_ingestion(raise_exception=True)
 
             assert exception.type == DataPipelineCouldNotBeStopped
 

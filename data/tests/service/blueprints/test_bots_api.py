@@ -460,6 +460,7 @@ class TestBotsAPI:
 
         assert res.json["message"] == "Pipeline 1 failed to start."
 
+    @pytest.mark.slow
     @pytest.mark.parametrize(
         "params,response",
         [
@@ -520,6 +521,7 @@ class TestBotsAPI:
 
         assert res.json == getattr(Responses, response)(f'Data pipeline {params["pipelineId"]} does not exist.')
 
+    @pytest.mark.slow
     @pytest.mark.parametrize(
         "params,response",
         [

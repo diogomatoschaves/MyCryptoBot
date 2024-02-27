@@ -32,4 +32,4 @@ def check_app_is_running():
 
             logging.info(f'Pipeline {pipeline.id} found to be stuck. Sending stop request...')
 
-            stop_instance(pipeline.id, '')
+            stop_instance(pipeline.id, '', raise_exception=False)

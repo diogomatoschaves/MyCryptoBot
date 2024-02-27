@@ -41,28 +41,6 @@ def mock_trigger_signal_fail(mocker):
     )
 
 
-def fake_get_price(symbol):
-
-    prices = {
-        "BTCUSDT": 25000,
-        "ETHBTC": 0.245
-    }
-
-    if symbol in prices:
-        return {"success": True, "price": prices[symbol]}
-    else:
-        return {"success": False}
-
-
-@pytest.fixture
-def mock_get_price(mocker):
-    mocker.patch.object(
-        data.service.blueprints.dashboard,
-        'get_price',
-        fake_get_price,
-    )
-
-
 @pytest.fixture
 def trigger_signal_spy(mocker):
     return mocker.spy(data.sources.binance._binance, 'trigger_signal')
@@ -104,8 +82,9 @@ def mock_binance_handler_start_data_ingestion(mocker):
     )
 
 
-def fake_stop_data_ingestion(self, header):
+def fake_stop_data_ingestion(self, header, raise_exception):
     Pipeline.objects.filter(id=1).update(active=False)
+    return True
 
 
 @pytest.fixture
@@ -192,10 +171,6 @@ def mock_start_stop_symbol_trading_success_true_binance_handler(mocker):
     )
 
 
-def raise_pipeline_start_fail(pipeline_id, start_or_stop):
-    raise PipelineStartFail
-
-
 @pytest.fixture
 def mock_start_stop_symbol_trading(mocker):
     return mocker.patch('data.sources.binance._binance.start_stop_symbol_trading')
@@ -207,15 +182,6 @@ def mock_get_open_positions(mocker):
 
 
 @pytest.fixture
-def mock_start_stop_symbol_trading_raise_error(mocker):
-    return mocker.patch.object(
-        data.service.blueprints.bots_api,
-        'start_stop_symbol_trading',
-        raise_pipeline_start_fail,
-    )
-
-
-@pytest.fixture
 def mock_start_stop_symbol_trading_success_false(mocker):
     return mocker.patch.object(
         data.service.blueprints.bots_api,
@@ -224,9 +190,10 @@ def mock_start_stop_symbol_trading_success_false(mocker):
     )
 
 
-def raise_pipeline_stop_fail(pipeline_id, header):
-    raise DataPipelineCouldNotBeStopped("APIError(code=-1021): "
-                                        "Timestamp for this request is outside of the recvWindow.")
+def raise_pipeline_stop_fail(pipeline_id, header, raise_exception):
+    if raise_exception:
+        raise DataPipelineCouldNotBeStopped("APIError(code=-1021): "
+                                            "Timestamp for this request is outside of the recvWindow.")
 
 
 @pytest.fixture
@@ -243,7 +210,7 @@ def mock_stop_instance(mocker):
     return mocker.patch.object(
         data.service.cron_jobs.check_app_is_running._check_app_is_running,
         'stop_instance',
-        lambda pipeline_id, header: None,
+        lambda pipeline_id, header, raise_exception: True,
     )
 
 
@@ -328,11 +295,6 @@ def mock_get_jwt(mocker):
 @pytest.fixture
 def mock_get_strategies_raise_exception(mocker):
     return mocker.patch('data.service.blueprints.dashboard.get_strategies')
-
-
-@pytest.fixture
-def mock_start_symbol_trading(mocker):
-    return mocker.patch.object(data.service.app, 'start_symbol_trading', lambda pipeline: None)
 
 
 @pytest.fixture
