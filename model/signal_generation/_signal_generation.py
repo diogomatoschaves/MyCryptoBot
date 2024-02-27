@@ -106,7 +106,6 @@ def signal_generator(pipeline, bearer_token, header=''):
         a trade based on this signal.
     - Logging is used to provide information about the process and any potential issues encountered.
     """
-
     max_window = get_pipeline_max_window(pipeline["id"], config_vars.default_min_rows)
 
     start_date = get_minimum_lookback_date(max_window, pipeline["interval"])

@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import sys
-from distutils.util import strtobool
 
 import redis
 from dotenv import find_dotenv, load_dotenv
@@ -12,7 +11,7 @@ from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
-from model.service.cloud_storage import check_aws_config
+from model.service.cloud_storage import cloud_storage_startup
 from model.service.helpers.decorators.handle_app_errors import handle_app_errors
 from model.service.helpers.responses import Responses
 from model.strategies.properties import compile_strategies
@@ -48,12 +47,7 @@ def create_app():
     app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
     jwt = JWTManager(app)
 
-    try:
-        upload_files_s3 = bool(strtobool(os.getenv("USE_CLOUD_STORAGE", "false")))
-    except ValueError:
-        upload_files_s3 = False
-
-    os.environ["USE_CLOUD_STORAGE"] = str(upload_files_s3 and check_aws_config())
+    cloud_storage_startup()
 
     @app.route('/')
     @jwt_required()

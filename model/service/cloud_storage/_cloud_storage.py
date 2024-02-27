@@ -1,5 +1,6 @@
 import logging
 import os
+from distutils.util import strtobool
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError, ParamValidationError
@@ -16,6 +17,15 @@ if ENV_FILE:
 
 bucket = os.getenv('AWS_BUCKET')
 s3 = boto3.client('s3')
+
+
+def cloud_storage_startup():
+    try:
+        upload_files_s3 = bool(strtobool(os.getenv("USE_CLOUD_STORAGE", "false")))
+    except ValueError:
+        upload_files_s3 = False
+
+    os.environ["USE_CLOUD_STORAGE"] = str(upload_files_s3 and check_aws_config())
 
 
 def check_aws_config():
