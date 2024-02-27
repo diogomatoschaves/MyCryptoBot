@@ -58,6 +58,8 @@ services:
       dockerfile: model/Dockerfile.worker
     image: model-worker
     platform: linux/amd64
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
