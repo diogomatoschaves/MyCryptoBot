@@ -132,7 +132,10 @@ def fake_executor_submit(mocker):
 def binance_handler_instances_spy_stop_bot(db, create_symbol, create_assets, create_exchange, mocker):
     return mocker.patch(
         'data.service.blueprints.bots_api.binance_instances',
-        [BinanceDataHandler(symbol='BTCUSDT', candle_size="1h", pipeline_id=1)]
+        [
+            BinanceDataHandler(symbol='BTCUSDT', candle_size="1h", pipeline_id=1),
+            BinanceDataHandler(symbol='BTCUSDT', candle_size="1h", pipeline_id=2)
+        ]
     )
 
 
@@ -177,11 +180,6 @@ def mock_start_stop_symbol_trading(mocker):
 
 
 @pytest.fixture
-def mock_get_open_positions(mocker):
-    return mocker.patch('data.sources.binance._binance.get_open_positions')
-
-
-@pytest.fixture
 def mock_start_stop_symbol_trading_success_false(mocker):
     return mocker.patch.object(
         data.service.blueprints.bots_api,
@@ -209,14 +207,14 @@ def mock_stop_instance_raise_exception(mocker):
 def mock_stop_instance(mocker):
     return mocker.patch.object(
         data.service.cron_jobs.check_app_is_running._check_app_is_running,
-        'stop_instance',
+        'stop_pipeline',
         lambda pipeline_id, header, raise_exception: True,
     )
 
 
 @pytest.fixture
 def spy_stop_instance(mocker):
-    return mocker.spy(data.service.cron_jobs.check_app_is_running._check_app_is_running, 'stop_instance')
+    return mocker.spy(data.service.cron_jobs.check_app_is_running._check_app_is_running, 'stop_pipeline')
 
 
 @pytest.fixture

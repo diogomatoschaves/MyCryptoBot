@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 import django
 import pytz
 
+from data.service.helpers.health import stop_pipeline
 from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 from database.model.models import Pipeline
-from data.service.blueprints.bots_api import stop_instance
 
 
 @handle_db_connection_error
@@ -32,4 +32,4 @@ def check_app_is_running():
 
             logging.info(f'Pipeline {pipeline.id} found to be stuck. Sending stop request...')
 
-            stop_instance(pipeline.id, '', raise_exception=False)
+            stop_pipeline(pipeline.id, '', raise_exception=False)

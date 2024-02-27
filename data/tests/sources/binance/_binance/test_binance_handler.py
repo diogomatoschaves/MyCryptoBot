@@ -155,6 +155,8 @@ class TestBinanceDataHandler:
         output,
         common_fixture,
         mock_trigger_signal_fail,
+        binance_handler_instances_spy_stop_bot,
+        patch_time_sleep,
         mock_redis_connection_external_requests,
         trigger_signal_spy,
         create_open_position
@@ -256,7 +258,6 @@ class TestBinanceDataHandler:
         create_open_position_paper_trading_pipeline,
         mock_trigger_signal_successfully,
         mock_start_stop_symbol_trading,
-        mock_get_open_positions,
         mock_redis_connection_external_requests,
         create_paper_trading_pipeline
     ):

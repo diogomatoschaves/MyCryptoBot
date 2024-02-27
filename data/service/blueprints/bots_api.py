@@ -78,7 +78,10 @@ def stop_instance(pipeline_id, header, raise_exception=False):
 
     binance_instances = reduced_instances["instances"]
 
-    return reduced_instances["return_values"]
+    try:
+        return reduced_instances["return_values"][0]
+    except IndexError:
+        return False
 
 
 def start_symbol_trading(pipeline):

@@ -487,7 +487,7 @@ class TestBotsAPI:
         binance_handler_instances_spy_stop_bot,
         create_pipeline
     ):
-        assert len(binance_handler_instances_spy_stop_bot) == 1
+        assert len(binance_handler_instances_spy_stop_bot) == 2
 
         res = client.put(f'{API_PREFIX}/stop_bot', json=params)
 

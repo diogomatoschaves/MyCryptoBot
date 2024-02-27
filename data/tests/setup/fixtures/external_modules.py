@@ -1,4 +1,5 @@
 import datetime
+import time
 
 import flask_jwt_extended
 import pytest
@@ -92,3 +93,8 @@ def patch_datetime_now(monkeypatch):
             return FAKE_TIME
 
     monkeypatch.setattr(datetime, 'datetime', mydatetime)
+
+
+@pytest.fixture
+def patch_time_sleep(mocker):
+    return mocker.patch.object(time, 'sleep', lambda seconds: None)

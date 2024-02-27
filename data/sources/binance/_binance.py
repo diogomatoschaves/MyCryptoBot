@@ -7,8 +7,9 @@ import redis
 from binance import ThreadedWebsocketManager
 import progressbar
 
-from data.service.external_requests import start_stop_symbol_trading, get_open_positions
+from data.service.external_requests import start_stop_symbol_trading
 from data.service.helpers.exceptions import CandleSizeInvalid, DataPipelineCouldNotBeStopped
+from data.service.helpers.health import stop_pipeline
 from data.sources import trigger_signal
 from data.sources.binance.extract import (
     extract_data,
@@ -261,7 +262,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                 success = self.generate_new_signal(header, retries=retries + 1)
             else:
                 logging.warning(header + message)
-                stopped = self.stop_data_ingestion(header=header)
+
+                stop_pipeline(self.pipeline_id, header, raise_exception=False)
 
         return success
 
