@@ -18,9 +18,9 @@ cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
 fields = [
     "header",
-    "binance_account_type",
     "initial_equity",
     "leverage",
+    "force"
 ]
 
 Parameters = namedtuple(
@@ -44,11 +44,11 @@ def get_header(pipeline_id):
 
 def extract_and_validate(request_data):
 
-    binance_account_type = request_data.get('binance_account_type', 'futures')
     pipeline_id = request_data.get("pipeline_id", None)
+    force = request_data.get("force", False)
 
     pipeline = get_pipeline_data(pipeline_id, return_obj=True)
 
     header = get_header(pipeline_id)
 
-    return pipeline, Parameters(header, binance_account_type, pipeline.initial_equity, pipeline.leverage)
+    return pipeline, Parameters(header, pipeline.initial_equity, pipeline.leverage, force)

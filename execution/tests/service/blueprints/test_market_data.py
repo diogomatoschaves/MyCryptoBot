@@ -188,7 +188,7 @@ class TestMarketData:
             ),
             pytest.param(
                 '?symbol=BTCUSDT',
-                {'positions': {'live': 0.0, 'testnet': 0.0}, 'success': True},
+                {'positions': {'live': 0.017, 'testnet': 0.017}, 'success': True},
                 id="open_positions-existent_symbol",
             ),
             pytest.param(

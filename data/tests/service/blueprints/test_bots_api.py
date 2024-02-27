@@ -539,6 +539,7 @@ class TestBotsAPI:
         params,
         response,
         client,
+        create_pipeline,
         mock_stop_instance_raise_exception
     ):
         res = client.put(f'{API_PREFIX}/stop_bot', json=params)

@@ -82,7 +82,7 @@ def mock_binance_handler_start_data_ingestion(mocker):
     )
 
 
-def fake_stop_data_ingestion(self, header, raise_exception):
+def fake_stop_data_ingestion(self, header, raise_exception, force):
     Pipeline.objects.filter(id=1).update(active=False)
     return True
 
@@ -103,7 +103,7 @@ def binance_handler_stop_data_ingestion_spy(mocker):
 
 @pytest.fixture
 def binance_handler_instances_spy_start_bot(mocker):
-    return mocker.patch('data.service.blueprints.bots_api.binance_instances', new_callable=list)
+    return mocker.patch('data.service.blueprints.bots_api._helpers.binance_instances', new_callable=list)
 
 
 def immediate_execution(initialize_data_collection, pipeline_id, header=''):
@@ -113,7 +113,7 @@ def immediate_execution(initialize_data_collection, pipeline_id, header=''):
 @pytest.fixture
 def mock_executor_submit(mocker):
     mocker.patch.object(
-        data.service.blueprints.bots_api.executor,
+        data.service.blueprints.bots_api._helpers.executor,
         "submit",
         immediate_execution
     )
@@ -122,7 +122,7 @@ def mock_executor_submit(mocker):
 @pytest.fixture
 def fake_executor_submit(mocker):
     mocker.patch.object(
-        data.service.blueprints.bots_api.executor,
+        data.service.blueprints.bots_api._helpers.executor,
         "submit",
         lambda x, y, z=None: None
     )
@@ -131,17 +131,12 @@ def fake_executor_submit(mocker):
 @pytest.fixture
 def binance_handler_instances_spy_stop_bot(db, create_symbol, create_assets, create_exchange, mocker):
     return mocker.patch(
-        'data.service.blueprints.bots_api.binance_instances',
+        'data.service.blueprints.bots_api._helpers.binance_instances',
         [
             BinanceDataHandler(symbol='BTCUSDT', candle_size="1h", pipeline_id=1),
             BinanceDataHandler(symbol='BTCUSDT', candle_size="1h", pipeline_id=2)
         ]
     )
-
-
-@pytest.fixture
-def binance_handler_instances_spy(mocker):
-    return mocker.spy(data.service.blueprints.bots_api, 'binance_instances')
 
 
 def fake_start_stop_trading(pipeline_id, start_or_stop):
@@ -154,7 +149,7 @@ def fake_start_stop_trading(pipeline_id, start_or_stop):
 @pytest.fixture
 def mock_start_stop_symbol_trading_success_true(mocker):
     mocker.patch.object(
-        data.service.blueprints.bots_api,
+        data.service.blueprints.bots_api._helpers,
         'start_stop_symbol_trading',
         fake_start_stop_trading,
     )
@@ -162,7 +157,7 @@ def mock_start_stop_symbol_trading_success_true(mocker):
 
 @pytest.fixture
 def spy_start_stop_symbol_trading(mocker):
-    return mocker.spy(data.service.blueprints.bots_api, 'start_stop_symbol_trading')
+    return mocker.spy(data.service.blueprints.bots_api._helpers, 'start_stop_symbol_trading')
 
 
 @pytest.fixture
@@ -182,7 +177,7 @@ def mock_start_stop_symbol_trading(mocker):
 @pytest.fixture
 def mock_start_stop_symbol_trading_success_false(mocker):
     return mocker.patch.object(
-        data.service.blueprints.bots_api,
+        data.service.blueprints.bots_api._helpers,
         'start_stop_symbol_trading',
         lambda payload, start_or_stop: {"success": False, "message": "Pipeline could not be started."},
     )
@@ -197,7 +192,7 @@ def raise_pipeline_stop_fail(pipeline_id, header, raise_exception):
 @pytest.fixture
 def mock_stop_instance_raise_exception(mocker):
     return mocker.patch.object(
-        data.service.blueprints.bots_api,
+        data.service.blueprints.bots_api._bots_api,
         'stop_instance',
         raise_pipeline_stop_fail,
     )
@@ -205,10 +200,8 @@ def mock_stop_instance_raise_exception(mocker):
 
 @pytest.fixture
 def mock_stop_instance(mocker):
-    return mocker.patch.object(
-        data.service.cron_jobs.check_app_is_running._check_app_is_running,
-        'stop_pipeline',
-        lambda pipeline_id, header, raise_exception: True,
+    return mocker.patch(
+        'data.service.blueprints.bots_api._helpers.stop_instance',
     )
 
 
@@ -268,7 +261,12 @@ def mock_redis_connection_external_requests(mocker):
 
 @pytest.fixture
 def mock_redis_connection_bots_api(mocker):
-    return mocker.patch("data.service.blueprints.bots_api.cache", mock_redis())
+    return mocker.patch("data.service.blueprints.bots_api._bots_api.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_redis_connection_bots_api_helpers(mocker):
+    return mocker.patch("data.service.blueprints.bots_api._helpers.cache", mock_redis())
 
 
 @pytest.fixture
@@ -318,7 +316,7 @@ class SideEffect:
 
 @pytest.fixture
 def mock_get_strategies(mocker):
-    mocker.patch.object(data.service.blueprints.bots_api, "get_strategies", fake_get_strategies_no_error)
+    mocker.patch.object(data.service.blueprints.bots_api._bots_api, "get_strategies", fake_get_strategies_no_error)
 
 
 @pytest.fixture

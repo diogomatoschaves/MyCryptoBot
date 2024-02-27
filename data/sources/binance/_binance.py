@@ -9,7 +9,7 @@ import progressbar
 
 from data.service.external_requests import start_stop_symbol_trading
 from data.service.helpers.exceptions import CandleSizeInvalid, DataPipelineCouldNotBeStopped
-from data.service.helpers.health import stop_pipeline
+from data.service.blueprints.bots_api import stop_pipeline
 from data.sources import trigger_signal
 from data.sources.binance.extract import (
     extract_data,
@@ -157,7 +157,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         if start_pipeline:
             self._start_kline_websockets(self.symbol, self._websocket_callback, header=header)
 
-    def stop_data_ingestion(self, header='', raise_exception=False):
+    def stop_data_ingestion(self, header='', raise_exception=False, force=False):
         """
         Public method which stops the data pipeline for the symbol.
 
@@ -172,7 +172,12 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         self.delete_last_entry()
 
-        response = start_stop_symbol_trading({"pipeline_id": self.pipeline_id}, 'stop')
+        payload = {
+            "pipeline_id": self.pipeline_id,
+            "force": force
+        }
+
+        response = start_stop_symbol_trading(payload, 'stop')
 
         if response["success"]:
             Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)

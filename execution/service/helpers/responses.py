@@ -52,12 +52,12 @@ Responses = RESPONSES(
     TRADING_SYMBOL_START=lambda symbol: {
         "code": ReturnCodes.TRADING_SYMBOL_START,
         "success": True,
-        "message": f"{symbol}: Trading symbol successfully started."
+        "message": f"Trading for {symbol} successfully started."
     },
     TRADING_SYMBOL_STOP=lambda symbol: {
         "code": ReturnCodes.TRADING_SYMBOL_STOP,
         "success": True,
-        "message": f"{symbol}: Trading symbol successfully stopped."
+        "message": f"Trading for {symbol} successfully stopped."
     },
     PIPELINE_NOT_ACTIVE=lambda message: {
         "code": ReturnCodes.PIPELINE_NOT_ACTIVE,

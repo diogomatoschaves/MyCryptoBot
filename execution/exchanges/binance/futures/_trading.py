@@ -69,16 +69,24 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self.start_date[symbol] = datetime.now(tz=pytz.utc)
 
-    def stop_symbol_trading(self, pipeline_id, header=''):
+    def stop_symbol_trading(self, pipeline_id, header='', force=False):
 
         pipeline = get_pipeline_data(pipeline_id, return_obj=True)
 
         symbol = pipeline.symbol.name
 
-        if symbol not in self.symbols:
-            raise SymbolNotBeingTraded(symbol)
+        if force:
+            units = self._get_position_amt(symbol)
 
-        logging.info(header + f"Stopping trading.")
+            if not units:
+                return
+
+            self.units[symbol] = units
+        else:
+            if symbol not in self.symbols:
+                raise SymbolNotBeingTraded(symbol)
+
+        logging.info(header + f"Stopping trading for pipeline {pipeline.id}, symbol {symbol}.")
 
         try:
             self.close_pipeline(pipeline.id)
@@ -89,7 +97,8 @@ class BinanceFuturesTrader(BinanceTrader):
         except KeyError:
             logging.info(header + "There's no position to be closed.")
 
-        self.symbols.pop(symbol)
+        if symbol in self.symbols:
+            self.symbols.pop(symbol)
 
     def _set_leverage(self, pipeline, symbol, header):
         return_value = handle_order_execution_errors(
@@ -112,6 +121,14 @@ class BinanceFuturesTrader(BinanceTrader):
         if pipeline.current_equity > balance:
             self.symbols.pop(symbol)
             raise InsufficientBalance(round(pipeline.current_equity, 2), round(balance, 2))
+
+    @retry_failed_connection(num_times=2)
+    def _get_position_amt(self, symbol):
+        positions = self.futures_position_information()
+        for symbol_info in positions:
+            if symbol_info["symbol"] == symbol:
+                logging.info(f"Closing position for symbol {symbol}.")
+                return float(symbol_info["positionAmt"])
 
     def close_pos(self, symbol, date=None, row=None, header='', **kwargs):
 

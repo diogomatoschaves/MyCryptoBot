@@ -22,6 +22,7 @@ METHODS = [
     ("futures_change_leverage", "futures_change_leverage"),
     ("futures_create_order", "futures_create_order"),
     ("futures_account_balance", "futures_account_balance"),
+    ("futures_position_information", "futures_position_information"),
 ]
 
 
@@ -37,6 +38,7 @@ def test_mock_setup(
     futures_change_leverage,
     futures_create_order,
     futures_account_balance,
+    futures_position_information
 ):
     return
 
@@ -142,11 +144,9 @@ class TestExecutionService:
             pytest.param(
                 {
                     "pipeline_id": 1,
-                    "binance_account_type": "futures",
-                    "equity": 100
                 },
                 Responses.SYMBOL_NOT_BEING_TRADED('BTCUSDT is not being traded.'),
-                id="SymbolNotBeingTraded-FUTURES",
+                id="SymbolNotBeingTraded",
             ),
             pytest.param(
                 {
@@ -181,6 +181,14 @@ class TestExecutionService:
                 Responses.PIPELINE_NOT_ACTIVE('Pipeline 3 is not active.'),
                 id="TRADING_SYMBOL_NOT_ACTIVE",
             ),
+            pytest.param(
+                {
+                    "pipeline_id": 3,
+                    "force": True
+                },
+                Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
+                id="TRADING_SYMBOL_NOT_ACTIVE-force",
+            ),
         ],
     )
     def test_binance_trader_fail_stop_pipeline_inactive(
@@ -197,15 +205,6 @@ class TestExecutionService:
 
         assert res.json == expected_value
 
-    @pytest.mark.parametrize(
-        "binance_account_type",
-        [
-            pytest.param(
-                {"binance_account_type": "futures"},
-                id="FUTURES"
-            ),
-        ],
-    )
     @pytest.mark.parametrize(
         "route,params,expected_value",
         [
@@ -232,30 +231,52 @@ class TestExecutionService:
         route,
         params,
         expected_value,
-        binance_account_type,
         mock_binance_futures_trader_success,
         client,
         exchange_data,
         create_pipeline,
     ):
-        payload = {
-            **params,
-            **binance_account_type
-        }
 
-        res = client.post(route, json=payload)
+        res = client.post(route, json=params)
 
         assert res.json == expected_value
 
     @pytest.mark.parametrize(
-        "binance_account_type",
+        "route,params,expected_value",
         [
             pytest.param(
-                {"binance_account_type": "futures"},
-                id="FUTURES"
+                "start_symbol_trading",
+                {
+                    "pipeline_id": 1,
+                },
+                Responses.TRADING_SYMBOL_START("BTCUSDT"),
+                id="START_SYMBOL_TRADING_VALID-no_mock",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "pipeline_id": 1,
+                    "force": True,
+                },
+                Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-Force",
             ),
         ],
     )
+    def test_valid_input_no_mock(
+        self,
+        route,
+        params,
+        test_mock_setup,
+        expected_value,
+        client,
+        exchange_data,
+        create_pipeline,
+    ):
+        res = client.post(route, json=params)
+
+        assert res.json == expected_value
+
     @pytest.mark.parametrize(
         "params,expected_value",
         [
@@ -304,20 +325,13 @@ class TestExecutionService:
         self,
         params,
         expected_value,
-        binance_account_type,
         mock_binance_futures_trader_success,
         client,
         exchange_data,
         create_pipeline,
         create_inactive_pipeline,
     ):
-
-        payload = {
-            **params,
-            **binance_account_type
-        }
-
-        res = client.post(f"/execute_order", json=payload)
+        res = client.post(f"/execute_order", json=params)
 
         assert res.json == expected_value
 

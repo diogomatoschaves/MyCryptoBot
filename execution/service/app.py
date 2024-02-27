@@ -15,7 +15,7 @@ from execution.service.helpers.exceptions import PipelineNotActive
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.futures import BinanceFuturesTrader
 from shared.utils.config_parser import get_config
-from shared.utils.decorators import handle_db_connection_error
+from shared.utils.decorators import handle_db_connection_error, retry_failed_connection
 from shared.utils.exceptions import EquityRequired
 from shared.utils.logger import configure_logger
 
@@ -41,22 +41,6 @@ def get_binance_trader_instance(paper_trading):
         return binance_futures_mock_trader
     else:
         return binance_futures_trader
-
-
-def start_pipeline_trade(pipeline, header):
-
-    try:
-        initial_position = Position.objects.get(pipeline__id=pipeline.id).position
-    except Position.DoesNotExist:
-        initial_position = 0
-
-    bt = get_binance_trader_instance(pipeline.paper_trading)
-
-    bt.start_symbol_trading(
-        pipeline.id,
-        initial_position=initial_position,
-        header=header,
-    )
 
 
 def create_app():
@@ -97,7 +81,18 @@ def create_app():
 
         if pipeline.exchange.name == 'binance':
 
-            start_pipeline_trade(pipeline, parameters.header)
+            try:
+                initial_position = Position.objects.get(pipeline__id=pipeline.id).position
+            except Position.DoesNotExist:
+                initial_position = 0
+
+            bt = get_binance_trader_instance(pipeline.paper_trading)
+
+            bt.start_symbol_trading(
+                pipeline.id,
+                initial_position=initial_position,
+                header=parameters.header,
+            )
 
             return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol.name))
 
@@ -112,15 +107,16 @@ def create_app():
 
         pipeline, parameters = extract_and_validate(request_data)
 
-        bt = get_binance_trader_instance(pipeline.paper_trading)
-
-        if not pipeline.active:
-            bt.stop_symbol_trading(pipeline.id, header=parameters.header)
+        if not pipeline.active and not parameters.force:
             raise PipelineNotActive(pipeline.id)
 
-        bt.stop_symbol_trading(pipeline.id, header=parameters.header)
+        if pipeline.exchange.name == 'binance':
 
-        return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol.name))
+            bt = get_binance_trader_instance(pipeline.paper_trading)
+
+            bt.stop_symbol_trading(pipeline.id, header=parameters.header, force=parameters.force)
+
+            return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol.name))
 
     @app.route('/execute_order', methods=['POST'])
     @handle_app_errors

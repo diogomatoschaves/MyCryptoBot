@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import django
 import pytz
 
-from data.service.helpers.health import stop_pipeline
+from data.service.blueprints.bots_api import stop_pipeline
 from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")

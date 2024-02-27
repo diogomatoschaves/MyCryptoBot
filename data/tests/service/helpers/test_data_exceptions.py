@@ -4,7 +4,6 @@ from data.service.helpers.exceptions import CandleSizeInvalid, CandleSizeRequire
     DataPipelineCouldNotBeStopped, DataPipelineDoesNotExist, DataPipelineOngoing, ExchangeInvalid, ExchangeRequired, \
     NameInvalid, NameRequired, ParamsInvalid, ParamsRequired, PipelineStartFail, SymbolRequired, \
     StrategyCombinationInvalid
-from data.tests.setup.fixtures.internal_modules import mock_stop_instance, spy_stop_instance
 from shared.utils.tests.fixtures.models import *
 
 API_PREFIX = '/api'

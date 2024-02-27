@@ -11,7 +11,7 @@ class FakeBinanceClient:
 
 @pytest.fixture(autouse=True)
 def mock_binance_client(mocker):
-    return mocker.patch('data.service.blueprints.bots_api.binance_client', FakeBinanceClient())
+    return mocker.patch('data.service.blueprints.bots_api._helpers.binance_client', FakeBinanceClient())
 
 
 @pytest.fixture(autouse=True)

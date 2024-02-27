@@ -9,6 +9,7 @@ from data.tests.setup.fixtures.internal_modules import (
     mock_settings_env_vars,
     mock_get_strategies,
     mock_redis_connection_bots_api,
+    mock_redis_connection_bots_api_helpers,
     spy_start_symbol_trading
 )
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
@@ -30,6 +31,7 @@ def app(
     mock_create_access_token,
     mock_redis_connection,
     mock_redis_connection_bots_api,
+    mock_redis_connection_bots_api_helpers,
     mock_jwt_required,
     mock_settings_env_vars,
     mock_get_strategies,
@@ -60,6 +62,7 @@ def app_with_open_position(
     mock_create_access_token,
     mock_redis_connection,
     mock_redis_connection_bots_api,
+    mock_redis_connection_bots_api_helpers,
     mock_jwt_required,
     mock_settings_env_vars,
     mock_get_strategies,
