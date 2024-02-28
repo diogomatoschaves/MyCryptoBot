@@ -150,7 +150,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
             closing_order = orders.pop()
 
-            last_trade = Trade.objects.filter(pipeline_id=pipeline_id, symbol_id=symbol).last()
+            last_trade = Trade.objects.filter(pipeline_id=pipeline_id, pipeline__symbol=symbol).last()
 
             if last_trade:
                 last_trade.close_price = closing_order.price
@@ -163,17 +163,11 @@ class BinanceTrader(BinanceHandler, Trader):
 
             new_order = orders.pop(0)
 
-            leverage = Pipeline.objects.get(id=pipeline_id).leverage
-
             new_trade = Trade.objects.create(
-                symbol_id=symbol,
                 open_price=new_order.price,
                 amount=new_order.executed_qty,
                 side=1 if new_order.side == "BUY" else -1,
-                exchange_id=self.exchange,
-                mock=new_order.mock,
                 pipeline_id=pipeline_id,
-                leverage=leverage
             )
 
             return new_trade

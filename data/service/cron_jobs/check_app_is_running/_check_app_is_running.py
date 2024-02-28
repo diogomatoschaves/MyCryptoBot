@@ -30,10 +30,6 @@ def check_active_pipelines():
             stop_pipeline(pipeline.id, '', raise_exception=False)
 
 
-# def check_inconsistencies():
-
-
-
 @handle_db_connection_error
 def check_app_is_running():
     """
