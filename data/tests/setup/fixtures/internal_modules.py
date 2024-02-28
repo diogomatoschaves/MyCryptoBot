@@ -207,7 +207,7 @@ def mock_stop_instance(mocker):
 
 @pytest.fixture
 def spy_stop_instance(mocker):
-    return mocker.spy(data.service.cron_jobs.check_app_is_running._check_app_is_running, 'stop_pipeline')
+    return mocker.spy(data.service.cron_jobs.app_health._app_health, 'stop_pipeline')
 
 
 @pytest.fixture
@@ -339,3 +339,23 @@ get_strategies_side_effect_1_errors = SideEffect(
 get_strategies_side_effect_0_errors = SideEffect(
     fake_get_strategies_no_error, fake_get_strategies_no_error, fake_get_strategies_no_error
 )
+
+
+def mock_positions():
+    return {
+        "success": True,
+        "positions": {
+            "testnet": [{"symbol": "BTCUSDT", "units": 0.01}, {"symbol": "ETHUSDT", "units": -0.01}],
+            "live": [{"symbol": "BTCUSDT", "units": 0.01}, {"symbol": "ETHUSDT", "units": -0.01}],
+        }
+    }
+
+
+@pytest.fixture
+def mock_get_open_positions(mocker):
+    mocker.patch.object(data.service.cron_jobs.app_health._app_health, 'get_open_positions', mock_positions)
+
+
+@pytest.fixture
+def mock_get_open_positions_unsuccessful(mocker):
+    mocker.patch.object(data.service.cron_jobs.app_health._app_health, 'get_open_positions', lambda: {"success": False})

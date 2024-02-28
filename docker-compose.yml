@@ -30,7 +30,6 @@ services:
       - EXECUTION_APP_URL=http://execution-service:5000
       - PORT=5000
       - LOGGER_LEVEL=INFO
-      - CHECKS_INTERVAL=1800
     volumes:
       - ./database/model:/usr/src/app/database/model
   model-service:

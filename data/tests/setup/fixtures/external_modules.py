@@ -95,6 +95,19 @@ def patch_datetime_now(monkeypatch):
     monkeypatch.setattr(datetime, 'datetime', mydatetime)
 
 
+FUTURE_TIME = datetime.datetime.now(pytz.utc) + datetime.timedelta(minutes=10)
+
+
+@pytest.fixture
+def patch_datetime_future(monkeypatch):
+    class mydatetime(datetime.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return FUTURE_TIME
+
+    monkeypatch.setattr(datetime, 'datetime', mydatetime)
+
+
 @pytest.fixture
 def patch_time_sleep(mocker):
     return mocker.patch.object(time, 'sleep', lambda seconds: None)

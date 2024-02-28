@@ -455,6 +455,16 @@ def create_open_position_paper_trading_pipeline(db, create_paper_trading_pipelin
 
 
 @pytest.fixture
+def create_open_position_pipeline_10(db, create_pipeline_BNBBTC):
+    return Position.objects.create(
+        position=1,
+        pipeline_id=10,
+        buying_price=1000,
+        amount=0.1,
+    )
+
+
+@pytest.fixture
 def create_positions(
     db,
     create_inactive_position,

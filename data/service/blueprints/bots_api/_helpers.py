@@ -34,7 +34,11 @@ def initialize_data_collection(pipeline, header):
 def reduce_instances(accumulator, instance, pipeline_id, header, raise_exception, force):
 
     if pipeline_id == instance.pipeline_id:
-        return_value = instance.stop_data_ingestion(header=header, raise_exception=raise_exception, force=force)
+        return_value = instance.stop_data_ingestion(
+            header=header,
+            raise_exception=raise_exception,
+            force=force,
+        )
         return {
             **accumulator,
             "return_values": [*accumulator["return_values"], return_value]
@@ -67,8 +71,8 @@ def stop_instance(pipeline_id, header, raise_exception=False, force=False):
         return False
 
 
-def stop_pipeline(pipeline_id, header='', raise_exception=False, nr_retries=3):
-    success = stop_instance(pipeline_id, header, raise_exception)
+def stop_pipeline(pipeline_id, header='', raise_exception=False, nr_retries=3, force=False):
+    success = stop_instance(pipeline_id, header, raise_exception, force=force)
 
     retries = 0
     while not success:
