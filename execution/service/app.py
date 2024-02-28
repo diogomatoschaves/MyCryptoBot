@@ -76,7 +76,7 @@ def create_app():
 
         pipeline, parameters = extract_and_validate(request_data)
 
-        if parameters.initial_equity is None:
+        if pipeline.initial_equity is None:
             raise EquityRequired
 
         if pipeline.exchange.name == 'binance':
@@ -107,16 +107,20 @@ def create_app():
 
         pipeline, parameters = extract_and_validate(request_data)
 
-        if not pipeline.active and not parameters.force:
+        if not parameters.force and not pipeline.active:
             raise PipelineNotActive(pipeline.id)
 
-        if pipeline.exchange.name == 'binance':
+        if parameters.force or pipeline.exchange.name == 'binance':
 
-            bt = get_binance_trader_instance(pipeline.paper_trading)
+            paper_trading = pipeline.paper_trading if pipeline is not None else parameters.paper_trading
+            symbol = pipeline.symbol.name if pipeline is not None else parameters.symbol
+            pipeline_id = pipeline.id if pipeline is not None else None
 
-            bt.stop_symbol_trading(pipeline.id, header=parameters.header, force=parameters.force)
+            bt = get_binance_trader_instance(paper_trading)
 
-            return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol.name))
+            bt.stop_symbol_trading(pipeline_id, symbol, header=parameters.header, force=parameters.force)
+
+            return jsonify(Responses.TRADING_SYMBOL_STOP(symbol))
 
     @app.route('/execute_order', methods=['POST'])
     @handle_app_errors
@@ -133,10 +137,7 @@ def create_app():
         if not pipeline.active:
             raise PipelineNotActive(pipeline.id)
 
-        signal = request_data.get("signal", None)
-        amount = request_data.get("amount", "all")
-
-        validate_signal(signal=signal)
+        validate_signal(signal=parameters.signal)
 
         if pipeline.exchange.name.lower() == 'binance':
 
@@ -150,8 +151,8 @@ def create_app():
             )(
                 lambda: bt.trade(
                     pipeline.symbol.name,
-                    signal,
-                    amount=amount,
+                    parameters.signal,
+                    amount=parameters.amount,
                     header=parameters.header,
                     pipeline_id=pipeline.id,
                     print_results=True

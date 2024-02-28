@@ -261,6 +261,42 @@ class TestExecutionService:
                 Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
                 id="STOP_SYMBOL_TRADING_VALID-no_mock-Force",
             ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "force": True,
+                },
+                Responses.NO_SUCH_PIPELINE('Pipeline None was not found.'),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-missing_params",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "paper_trading": True,
+                    "force": True,
+                },
+                Responses.NO_SUCH_PIPELINE('Pipeline None was not found.'),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-no_symbol",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "symbol": "BTCUSDT",
+                    "force": True,
+                },
+                Responses.NO_SUCH_PIPELINE('Pipeline None was not found.'),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-no_paper_trading",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "symbol": "BTCUSDT",
+                    "paper_trading": True,
+                    "force": True,
+                },
+                Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-no_paper_trading",
+            ),
         ],
     )
     def test_valid_input_no_mock(

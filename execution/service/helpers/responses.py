@@ -61,7 +61,7 @@ Responses = RESPONSES(
     },
     PIPELINE_NOT_ACTIVE=lambda message: {
         "code": ReturnCodes.PIPELINE_NOT_ACTIVE,
-        "success": False,
+        "success": True,
         "message":  message
     },
     NO_SUCH_PIPELINE=lambda message: {
@@ -121,7 +121,7 @@ Responses = RESPONSES(
     },
     SYMBOL_NOT_BEING_TRADED=lambda message: {
         "code": ReturnCodes.SYMBOL_NOT_BEING_TRADED,
-        "success": False,
+        "success": True,
         "message":  message
     },
     LEVERAGE_SETTING_FAILURE=lambda message: {

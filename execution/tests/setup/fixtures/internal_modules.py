@@ -38,7 +38,7 @@ class MockBinanceTrader:
         elif self.raise_leverage_setting_failure:
             raise LeverageSettingFail("")
 
-    def stop_symbol_trading(self, pipeline_id, header='', **kwargs):
+    def stop_symbol_trading(self, pipeline, symbol, header='', **kwargs):
         if self.raise_error_start_stop:
             raise BinanceAPIException(
                 '',

@@ -48,7 +48,7 @@ def get_root_dir():
 
 
 def get_logging_row_header(cache, pipeline):
-    header = f"{pipeline.symbol}|{pipeline.name}|{pipeline.id}|{pipeline.interval}: "
+    header = f"{pipeline.symbol.name}|{pipeline.name}|{pipeline.id}|{pipeline.interval}: "
 
     cache.set(
         f"pipeline {pipeline.id}",
@@ -65,11 +65,18 @@ def get_item_from_cache(cache, key):
     return item if item else '""'
 
 
-def get_pipeline_data(pipeline_id, return_obj=False):
+def get_pipeline_data(pipeline_id, return_obj=False, ignore_exception=False):
+
+    if pipeline_id is None and ignore_exception:
+        return None
+
     try:
         pipeline = Pipeline.objects.get(id=pipeline_id)
     except Pipeline.DoesNotExist:
-        raise NoSuchPipeline(pipeline_id)
+        if ignore_exception:
+            return None
+        else:
+            raise NoSuchPipeline(pipeline_id)
 
     if return_obj:
         return pipeline

@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from requests.exceptions import ConnectionError, ReadTimeout
 
+from execution.service.helpers import extract_and_validate
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.decorators import retry_failed_connection
 from shared.utils.exceptions import SymbolInvalid
@@ -68,35 +69,29 @@ def get_futures_account_balance():
     return jsonify(balances)
 
 
+def process_positions(positions, open_positions):
+    for symbol_info in positions:
+        units = float(symbol_info["positionAmt"])
+        if units != 0:
+            open_positions.append({
+                "symbol": symbol_info["symbol"],
+                "units": units
+            })
+
+    return open_positions
+
+
 @market_data.get('/open-positions')
 @retry_failed_connection(num_times=2)
 @jwt_required()
 def get_open_positions():
 
-    symbol = request.args.get("symbol", None)
-
     test_positions = testnet_client.futures_position_information()
     live_positions = client.futures_position_information()
 
-    test_position = None
-    live_position = None
-
-    for symbol_info in test_positions:
-        if symbol_info["symbol"] == symbol:
-            test_position = float(symbol_info["positionAmt"])
-
-    for symbol_info in live_positions:
-        if symbol_info["symbol"] == symbol:
-            live_position = float(symbol_info["positionAmt"])
-
     open_positions = {
-        "testnet": test_position,
-        "live": live_position
+        "testnet": process_positions(test_positions, []),
+        "live": process_positions(live_positions, [])
     }
 
-    success = test_position is not None and live_position is not None
-
-    return jsonify({"positions": open_positions, "success": success})
-
-
-
+    return jsonify({"positions": open_positions, "success": True})
