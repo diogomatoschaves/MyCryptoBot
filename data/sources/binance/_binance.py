@@ -181,7 +181,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         if response["success"]:
             Pipeline.objects.filter(id=self.pipeline_id).update(active=False, open_time=None)
-            Position.objects.filter(pipeline__id=self.pipeline_id).update(open=False, position=0)
+            Position.objects.filter(pipeline__id=self.pipeline_id).update(position=0)
         else:
             logging.info(response["message"])
 

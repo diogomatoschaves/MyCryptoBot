@@ -16,8 +16,8 @@ from database.model.models import PortfolioTimeSeries, Pipeline, Position
 def save_portfolio_value_snapshot():
     logging.debug('Saving pipelines snapshot...')
 
-    open_positions_test = Position.objects.filter(pipeline__active=True, paper_trading=True)
-    open_positions_live = Position.objects.filter(pipeline__active=True, paper_trading=False)
+    open_positions_test = Position.objects.filter(pipeline__active=True, pipeline__paper_trading=True)
+    open_positions_live = Position.objects.filter(pipeline__active=True, pipeline__paper_trading=False)
 
     if len(open_positions_live) == 0 and len(open_positions_test) == 0:
         return
@@ -26,8 +26,8 @@ def save_portfolio_value_snapshot():
 
     symbols = dict()
 
-    symbols["testnet"] = [{"symbol": position.symbol.name, "pipeline_id": position.pipeline.id} for position in open_positions_test]
-    symbols["live"] = [{"symbol": position.symbol.name, "pipeline_id": position.pipeline.id} for position in open_positions_live]
+    symbols["testnet"] = [{"symbol": position.pipeline.symbol.name, "pipeline_id": position.pipeline.id} for position in open_positions_test]
+    symbols["live"] = [{"symbol": position.pipeline.symbol.name, "pipeline_id": position.pipeline.id} for position in open_positions_live]
 
     balances = get_account_data()
 

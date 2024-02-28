@@ -418,13 +418,9 @@ def create_orders(db, create_exchange, create_symbol, create_pipeline):
 def create_neutral_position(db, create_pipeline):
     return Position.objects.create(
         position=0,
-        symbol_id="BTCUSDT",
-        exchange_id='binance',
         pipeline_id=1,
-        paper_trading=True,
         buying_price=0,
         amount=0,
-        open=False,
     )
 
 
@@ -432,13 +428,9 @@ def create_neutral_position(db, create_pipeline):
 def create_open_position(db, create_pipeline_2):
     return Position.objects.create(
         position=1,
-        symbol_id="BTCUSDT",
-        exchange_id='binance',
         pipeline_id=2,
-        paper_trading=True,
         buying_price=1000,
         amount=0.1,
-        open=True,
     )
 
 
@@ -446,13 +438,9 @@ def create_open_position(db, create_pipeline_2):
 def create_inactive_position(db, create_inactive_pipeline):
     return Position.objects.create(
         position=1,
-        symbol_id="BTCUSDT",
-        exchange_id='binance',
         pipeline_id=3,
-        paper_trading=True,
         buying_price=10000,
         amount=0.1,
-        open=True,
     )
 
 
@@ -460,13 +448,9 @@ def create_inactive_position(db, create_inactive_pipeline):
 def create_open_position_paper_trading_pipeline(db, create_paper_trading_pipeline):
     return Position.objects.create(
         position=0,
-        symbol_id="ETHUSDT",
-        exchange_id='binance',
         pipeline_id=11,
-        paper_trading=True,
         buying_price=1000,
         amount=0.1,
-        open=True,
     )
 
 

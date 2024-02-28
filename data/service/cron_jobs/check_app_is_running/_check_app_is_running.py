@@ -14,12 +14,7 @@ django.setup()
 from database.model.models import Pipeline
 
 
-@handle_db_connection_error
-def check_app_is_running():
-    """
-    """
-    logging.info('Checking app status...')
-
+def check_active_pipelines():
     active_pipelines = Pipeline.objects.filter(active=True)
 
     for pipeline in active_pipelines:
@@ -33,3 +28,18 @@ def check_app_is_running():
             logging.info(f'Pipeline {pipeline.id} found to be stuck. Sending stop request...')
 
             stop_pipeline(pipeline.id, '', raise_exception=False)
+
+
+# def check_inconsistencies():
+
+
+
+@handle_db_connection_error
+def check_app_is_running():
+    """
+    """
+    logging.info('Checking app status...')
+
+    check_active_pipelines()
+
+

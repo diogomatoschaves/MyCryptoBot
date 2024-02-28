@@ -184,7 +184,6 @@ class TestBinanceDataHandler:
         assert pipeline.active is False
 
         position = Position.objects.get(pipeline_id=pipeline_id)
-        assert position.open is False
         assert position.position == 0
 
     @pytest.mark.parametrize(
@@ -196,7 +195,6 @@ class TestBinanceDataHandler:
                 {"success": True, "message": ''},
                 {
                     "pipeline_active": False,
-                    "position_active": False,
                     "position_side": 0,
                 },
                 id="start_stop-True",
@@ -207,7 +205,6 @@ class TestBinanceDataHandler:
                 {"success": False, "message": ''},
                 {
                     "pipeline_active": True,
-                    "position_active": True,
                     "position_side": 1,
                 },
                 id="start_stop-False",
@@ -218,7 +215,6 @@ class TestBinanceDataHandler:
                 {"success": True, "message": ''},
                 {
                     "pipeline_active": False,
-                    "position_active": False,
                     "position_side": 0,
                 },
                 id="start_stop-True|paper_trading",
@@ -229,7 +225,6 @@ class TestBinanceDataHandler:
                 {"success": False, "message": ''},
                 {
                     "pipeline_active": True,
-                    "position_active": True,
                     "position_side": 0,
                 },
                 id="start_stop-False|paper_trading",
@@ -240,7 +235,6 @@ class TestBinanceDataHandler:
                 {"success": False, "message": 'API ERROR'},
                 {
                     "pipeline_active": True,
-                    "position_active": True,
                     "position_side": 1,
                 },
                 id="start_stop-False|raise_exception",
@@ -287,7 +281,6 @@ class TestBinanceDataHandler:
         assert pipeline.active is expected_values["pipeline_active"]
 
         position = Position.objects.get(pipeline_id=pipeline_id)
-        assert position.open is expected_values["position_active"]
         assert position.position == expected_values["position_side"]
 
     @pytest.mark.parametrize(

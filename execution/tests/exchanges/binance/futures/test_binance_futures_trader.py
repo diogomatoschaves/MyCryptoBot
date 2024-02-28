@@ -291,7 +291,6 @@ class TestBinanceFuturesTrader:
             position = Position.objects.get(pipeline__id=pipeline_id)
 
             assert position.position == signal
-            assert position.open if signal != 0 else not position.open
 
         if initial_position == signal:
             assert Trade.objects.all().count() == abs(initial_position)
@@ -432,7 +431,7 @@ class TestBinanceFuturesTrader:
 
         assert len(positions) == 1
         assert positions[0].position == 0
-        assert not positions[0].open
+        assert not positions[0].pipeline.active
 
         trades = Trade.objects.all()
 

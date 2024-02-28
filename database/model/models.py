@@ -242,13 +242,9 @@ class Pipeline(models.Model):
 class Position(models.Model):
 
     position = models.IntegerField()
-    symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
-    exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
-    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE, null=True)
-    paper_trading = models.BooleanField(default=False, blank=True, null=True)
+    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE)
     buying_price = models.FloatField(null=True, blank=True)
     amount = models.FloatField(null=True, blank=True)
-    open = models.BooleanField(default=True, blank=True)
     open_time = models.DateTimeField(auto_now_add=True, null=True)
     close_time = models.DateTimeField(null=True, blank=True)
 
@@ -256,17 +252,16 @@ class Position(models.Model):
         return dict(
             id=self.id,
             position=self.position,
-            symbol=self.symbol.name,
-            exchange=self.exchange.name,
+            symbol=self.pipeline.symbol.name,
+            exchange=self.pipeline.exchange.name,
             pipelineId=self.pipeline.id,
             pipelineName=self.pipeline.name,
-            paperTrading=self.paper_trading,
+            paperTrading=self.pipeline.paper_trading,
             price=self.buying_price,
             amount=self.amount,
-            open=self.open,
             openTime=self.open_time,
             closeTime=self.close_time,
-            leverage=self.pipeline.leverage if self.pipeline else None,
+            leverage=self.pipeline.leverage,
         )
 
 

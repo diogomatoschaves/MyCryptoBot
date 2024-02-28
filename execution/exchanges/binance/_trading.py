@@ -89,7 +89,6 @@ class BinanceTrader(BinanceHandler, Trader):
                     pipeline_id=pipeline_id,
                 ).update(
                     position=position,
-                    open=False,
                     amount=None,
                     buying_price=None,
                     open_time=None,
@@ -100,7 +99,6 @@ class BinanceTrader(BinanceHandler, Trader):
                         pipeline_id=pipeline_id,
                     ).update(
                         position=position,
-                        open=True,
                         open_time=datetime.now(tz=pytz.UTC),
                         buying_price=new_trade.open_price,
                         amount=new_trade.amount
@@ -108,10 +106,7 @@ class BinanceTrader(BinanceHandler, Trader):
         else:
             Position.objects.create(
                 position=position,
-                symbol_id=symbol,
-                exchange_id=self.exchange,
                 pipeline_id=pipeline_id,
-                paper_trading=self.paper_trading,
                 buying_price=new_trade.open_price if new_trade else None,
                 amount=new_trade.amount if new_trade else None,
             )
