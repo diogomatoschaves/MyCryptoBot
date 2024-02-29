@@ -1,4 +1,5 @@
 import os
+from collections import namedtuple
 from datetime import datetime, timedelta
 
 import pytest
@@ -207,6 +208,11 @@ def mock_stop_instance(mocker):
 
 @pytest.fixture
 def spy_stop_instance(mocker):
+    return mocker.spy(data.service.blueprints.bots_api._helpers, 'stop_instance')
+
+
+@pytest.fixture
+def spy_stop_pipeline(mocker):
     return mocker.spy(data.service.cron_jobs.app_health._app_health, 'stop_pipeline')
 
 
@@ -359,3 +365,25 @@ def mock_get_open_positions(mocker):
 @pytest.fixture
 def mock_get_open_positions_unsuccessful(mocker):
     mocker.patch.object(data.service.cron_jobs.app_health._app_health, 'get_open_positions', lambda: {"success": False})
+
+
+FakeConfig = namedtuple(
+    'fake_config',
+    [
+        'check_inconsistencies',
+        'restart_failed_pipelines',
+        'restart_retries'
+    ]
+)
+fake_config_no_restart = FakeConfig('false', 'false', '2')
+fake_config_no_retries = FakeConfig('false', 'true', '0')
+
+
+@pytest.fixture
+def mock_config_no_restart(mocker):
+    mocker.patch('data.service.cron_jobs.app_health._app_health.config', fake_config_no_restart)
+
+
+@pytest.fixture
+def mock_config_no_retries(mocker):
+    mocker.patch('data.service.cron_jobs.app_health._app_health.config', fake_config_no_retries)

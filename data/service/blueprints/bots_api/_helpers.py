@@ -86,7 +86,6 @@ def stop_pipeline(pipeline_id, header='', raise_exception=False, nr_retries=3, f
         if not success:
             time.sleep(60 * retries)
 
-
 def start_symbol_trading(pipeline):
     payload = {
         "pipeline_id": pipeline.id,

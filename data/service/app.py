@@ -10,6 +10,7 @@ from flask_cors import CORS
 import redis
 from flask_jwt_extended import JWTManager, create_access_token
 
+from data.service.cron_jobs.app_health import check_matching_remote_position
 from data.service.cron_jobs.main import start_background_scheduler
 from shared.utils.config_parser import get_config
 
@@ -27,7 +28,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 
-from database.model.models import Position
+from database.model.models import Pipeline
 from shared.utils.logger import configure_logger
 
 config_vars = get_config('data')
@@ -41,18 +42,18 @@ def startup_task(app):
 
     start_background_scheduler(config_vars)
 
-    open_positions = Position.objects.filter(pipeline__active=True)
+    active_pipelines = Pipeline.objects.filter(active=True)
 
     with app.app_context():
         access_token = create_access_token(identity='abc', expires_delta=False)
         bearer_token = 'Bearer ' + access_token
         cache.set("bearer_token", bearer_token)
 
-    for open_position in open_positions:
-        response = start_symbol_trading(open_position.pipeline)
+    for pipeline in active_pipelines:
+        response = start_symbol_trading(pipeline)
 
         if not response["success"]:
-            logging.info(f"Pipeline {open_position.pipeline.id} could not be started. {response['message']}")
+            logging.info(f"Pipeline {pipeline.id} could not be started. {response['message']}")
 
 
 def create_app():

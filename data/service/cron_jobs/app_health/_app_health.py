@@ -1,11 +1,12 @@
 import logging
 import os
 import datetime
+from distutils.util import strtobool
 
 import django
 import pytz
 
-from data.service.blueprints.bots_api import stop_pipeline
+from data.service.blueprints.bots_api import stop_pipeline, start_symbol_trading
 from data.service.external_requests import get_open_positions, start_stop_symbol_trading
 from shared.utils.config_parser import get_config
 from shared.utils.decorators import handle_db_connection_error
@@ -42,6 +43,19 @@ def find_position(positions, symbol):
     return None
 
 
+def restart_pipeline(pipeline):
+    if strtobool(config.restart_failed_pipelines) and pipeline.restarted < int(config.restart_retries):
+
+        logging.info(f"Restarting pipeline {pipeline.id}...")
+
+        start_symbol_trading(pipeline)
+
+        pipeline.restarted += 1
+        pipeline.open_time = datetime.datetime.now(pytz.utc)
+        pipeline.active = True
+        pipeline.save()
+
+
 def check_pipeline_stuck(pipeline):
     """
     Checks if a trading pipeline is stuck based on the time elapsed since its last entry.
@@ -65,6 +79,8 @@ def check_pipeline_stuck(pipeline):
 
         logging.info(f'Pipeline {pipeline.id} found to be stuck. Sending stop request...')
         stop_pipeline(pipeline.id, '', raise_exception=False)
+
+        return True
 
 
 def check_matching_remote_position(positions, pipeline):
@@ -96,7 +112,7 @@ def check_matching_remote_position(positions, pipeline):
 
     if td > datetime.timedelta(minutes=5) and position is None:
 
-        logging.info(f'Remote position for pipeline {pipeline.id} not found. Stopping pipeline.')
+        logging.info(f'Remote position for pipeline {pipeline.id} not found. Stopping pipeline...')
 
         stop_pipeline(pipeline.id, '', raise_exception=False, force=True)
 
@@ -107,6 +123,8 @@ def check_matching_remote_position(positions, pipeline):
         pipeline.save()
 
         Position.objects.filter(pipeline__id=pipeline.id).update(position=0)
+
+        return True
 
 
 def check_active_pipelines(positions):
@@ -128,9 +146,12 @@ def check_active_pipelines(positions):
 
     for pipeline in active_pipelines:
 
-        check_pipeline_stuck(pipeline)
+        restart1 = check_pipeline_stuck(pipeline)
 
-        check_matching_remote_position(positions, pipeline)
+        restart2 = check_matching_remote_position(positions, pipeline)
+
+        if restart1 or restart2:
+            restart_pipeline(pipeline)
 
 
 def check_inconsistencies(positions):
@@ -168,7 +189,7 @@ def check_inconsistencies(positions):
                 }
 
                 logging.info(f'No active pipeline found matching {position["symbol"]} position. '
-                             f'Closing {position["symbol"]} position.')
+                             f'Closing {position["symbol"]} position...')
 
                 # Close remote position for symbol
                 start_stop_symbol_trading(payload, 'stop')
@@ -198,7 +219,7 @@ def check_app_health():
 
     positions = response["positions"]
 
-    if config.check_inconsistencies:
+    if strtobool(config.check_inconsistencies):
         check_inconsistencies(positions)
 
     check_active_pipelines(positions)

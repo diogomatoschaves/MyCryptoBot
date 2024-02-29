@@ -207,6 +207,7 @@ class Pipeline(models.Model):
     balance = models.FloatField(null=True, blank=True)
     units = models.FloatField(default=0, blank=True)
     last_entry = models.DateTimeField(null=True, default=None)
+    restarted = models.IntegerField(default=0, blank=True)
 
     def as_json(self):
         return dict(

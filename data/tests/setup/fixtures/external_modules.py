@@ -19,10 +19,6 @@ def mock_get_historical_klines_generator(symbol, candle_size, start_date, end_da
     return binance_api_historical_data
 
 
-def mock_client_init_session(self):
-    return None
-
-
 @pytest.fixture
 def mock_binance_handler_klines(mocker):
     mocker.patch.object(
