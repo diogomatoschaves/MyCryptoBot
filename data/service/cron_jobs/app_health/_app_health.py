@@ -5,6 +5,7 @@ from distutils.util import strtobool
 
 import django
 import pytz
+import redis
 
 from data.service.blueprints.bots_api import stop_pipeline, start_symbol_trading
 from data.service.external_requests import get_open_positions, start_stop_symbol_trading
@@ -18,6 +19,8 @@ from database.model.models import Pipeline, Position
 
 
 config = get_config()
+
+cache = redis.from_url(os.getenv('REDIS_URL', config.redis_url))
 
 
 def find_position(positions, symbol):

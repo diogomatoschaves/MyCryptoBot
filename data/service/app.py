@@ -1,6 +1,8 @@
+import json
 import logging
 import os
 import sys
+import time
 from datetime import timedelta
 
 from flask import Flask, send_from_directory
@@ -10,9 +12,10 @@ from flask_cors import CORS
 import redis
 from flask_jwt_extended import JWTManager, create_access_token
 
-from data.service.cron_jobs.app_health import check_matching_remote_position
+from data.service.cron_jobs.app_health import check_app_health
 from data.service.cron_jobs.main import start_background_scheduler
 from shared.utils.config_parser import get_config
+from shared.utils.helpers import is_pipeline_loading, LOADING
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -40,6 +43,8 @@ cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
 def startup_task(app):
 
+    cache.set(LOADING, json.dumps([]))
+
     start_background_scheduler(config_vars)
 
     active_pipelines = Pipeline.objects.filter(active=True)
@@ -50,10 +55,16 @@ def startup_task(app):
         cache.set("bearer_token", bearer_token)
 
     for pipeline in active_pipelines:
+
         response = start_symbol_trading(pipeline)
 
         if not response["success"]:
             logging.info(f"Pipeline {pipeline.id} could not be started. {response['message']}")
+
+    while any(is_pipeline_loading(cache, pipeline.id) for pipeline in active_pipelines):
+        time.sleep(10)
+
+    check_app_health()
 
 
 def create_app():

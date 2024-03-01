@@ -20,7 +20,7 @@ from data.sources.binance.extract import (
 )
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
-from shared.utils.helpers import get_minimum_lookback_date, get_pipeline_max_window
+from shared.utils.helpers import get_minimum_lookback_date, get_pipeline_max_window, remove_pipeline_loading
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.config_parser import get_config
 import shared.exchanges.binance.constants as const
@@ -156,6 +156,8 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         if start_pipeline:
             self._start_kline_websockets(self.symbol, self._websocket_callback, header=header)
+
+        remove_pipeline_loading(cache, self.pipeline_id)
 
     def stop_data_ingestion(self, header='', raise_exception=False, force=False):
         """

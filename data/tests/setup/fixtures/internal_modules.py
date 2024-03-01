@@ -372,11 +372,12 @@ FakeConfig = namedtuple(
     [
         'check_inconsistencies',
         'restart_failed_pipelines',
-        'restart_retries'
+        'restart_retries',
+        'redis_url'
     ]
 )
-fake_config_no_restart = FakeConfig('false', 'false', '2')
-fake_config_no_retries = FakeConfig('false', 'true', '0')
+fake_config_no_restart = FakeConfig('false', 'false', '2', '')
+fake_config_no_retries = FakeConfig('false', 'true', '0', '')
 
 
 @pytest.fixture

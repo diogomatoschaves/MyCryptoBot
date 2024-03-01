@@ -10,7 +10,7 @@ from data.service.external_requests import start_stop_symbol_trading
 from data.sources._sources import DataHandler
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.config_parser import get_config
-from shared.utils.helpers import get_logging_row_header
+from shared.utils.helpers import get_logging_row_header, add_pipeline_loading, is_pipeline_loading
 
 config_vars = get_config()
 
@@ -87,6 +87,9 @@ def stop_pipeline(pipeline_id, header='', raise_exception=False, nr_retries=3, f
             time.sleep(60 * retries)
 
 def start_symbol_trading(pipeline):
+
+    add_pipeline_loading(cache, pipeline.id)
+
     payload = {
         "pipeline_id": pipeline.id,
         "binance_trader_type": "futures",

@@ -20,6 +20,9 @@ escapes = ''.join([chr(char) for char in range(1, 32)])
 translator = str.maketrans('', '', escapes)
 
 
+LOADING = "Loading"
+
+
 PIPELINE = namedtuple(
     'Pipeline',
     [
@@ -63,6 +66,40 @@ def get_item_from_cache(cache, key):
     item = cache.get(f"pipeline {key}")
 
     return item if item else '""'
+
+
+def add_pipeline_loading(cache, pipeline_id):
+
+    loading = set(json.loads(cache.get(LOADING))) if cache.get(LOADING) is not None else set()
+
+    loading.add(pipeline_id)
+
+    cache.set(
+        LOADING,
+        json.dumps(list(set(loading)))
+    )
+
+
+def remove_pipeline_loading(cache, pipeline_id):
+
+    loading = set(json.loads(cache.get(LOADING))) if cache.get(LOADING) is not None else set()
+
+    try:
+        loading.remove(pipeline_id)
+    except KeyError:
+        pass
+
+    cache.set(
+        LOADING,
+        json.dumps(list(loading))
+    )
+
+
+def is_pipeline_loading(cache, pipeline_id):
+
+    loading = set(json.loads(cache.get(LOADING)))
+
+    return pipeline_id in loading
 
 
 def get_pipeline_data(pipeline_id, return_obj=False, ignore_exception=False):
