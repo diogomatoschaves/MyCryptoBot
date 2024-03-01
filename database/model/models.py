@@ -207,6 +207,7 @@ class Pipeline(models.Model):
     balance = models.FloatField(null=True, blank=True)
     units = models.FloatField(default=0, blank=True)
     last_entry = models.DateTimeField(null=True, default=None)
+    restarted = models.IntegerField(default=0, blank=True)
 
     def as_json(self):
         return dict(
@@ -242,13 +243,9 @@ class Pipeline(models.Model):
 class Position(models.Model):
 
     position = models.IntegerField()
-    symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
-    exchange = models.ForeignKey(Exchange, null=True, on_delete=models.SET_NULL)
-    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE, null=True)
-    paper_trading = models.BooleanField(default=False, blank=True, null=True)
+    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE)
     buying_price = models.FloatField(null=True, blank=True)
     amount = models.FloatField(null=True, blank=True)
-    open = models.BooleanField(default=True, blank=True)
     open_time = models.DateTimeField(auto_now_add=True, null=True)
     close_time = models.DateTimeField(null=True, blank=True)
 
@@ -256,23 +253,22 @@ class Position(models.Model):
         return dict(
             id=self.id,
             position=self.position,
-            symbol=self.symbol.name,
-            exchange=self.exchange.name,
+            symbol=self.pipeline.symbol.name,
+            exchange=self.pipeline.exchange.name,
             pipelineId=self.pipeline.id,
             pipelineName=self.pipeline.name,
-            paperTrading=self.paper_trading,
+            paperTrading=self.pipeline.paper_trading,
             price=self.buying_price,
             amount=self.amount,
-            open=self.open,
             openTime=self.open_time,
             closeTime=self.close_time,
-            leverage=self.pipeline.leverage if self.pipeline else None,
+            leverage=self.pipeline.leverage,
         )
 
 
 class Trade(models.Model):
 
-    symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
+    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE)
     open_time = models.DateTimeField(auto_now_add=True)
     close_time = models.DateTimeField(null=True, blank=True)
     open_price = models.FloatField()
@@ -281,28 +277,22 @@ class Trade(models.Model):
     pnl = models.FloatField(null=True, blank=True)
     pnl_pct = models.FloatField(null=True, blank=True)
     side = models.IntegerField()
-    exchange = models.ForeignKey(Exchange, default='binance', on_delete=models.SET_DEFAULT)
-    mock = models.BooleanField(null=True, default=False)
-    pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
-    leverage = models.IntegerField(null=True, default=None)
 
-    def save(self, *args, **kwargs):
-        if self.leverage is None:
-            self.leverage = self.pipeline.leverage
-
-        super().save(*args, **kwargs)
+    @property
+    def symbol(self):
+        return self.pipeline.symbol
 
     def get_profit_loss(self):
         return (self.close_price - self.open_price) * self.amount * self.side
 
     def get_profit_loss_pct(self):
-        return (math.exp(math.log(self.close_price / self.open_price) * self.side) - 1) * self.leverage
+        return (math.exp(math.log(self.close_price / self.open_price) * self.side) - 1) * self.pipeline.leverage
 
     def as_json(self):
         return dict(
             id=self.id,
-            symbol=self.symbol.name,
-            exchange=self.exchange.name,
+            symbol=self.pipeline.symbol.name,
+            exchange=self.pipeline.exchange.name,
             openTime=self.open_time,
             closeTime=self.close_time,
             openPrice=self.open_price,
@@ -311,11 +301,11 @@ class Trade(models.Model):
             profitLossPct=self.pnl_pct,
             amount=self.amount,
             side=self.side,
-            mock=self.mock,
-            pipelineId=self.pipeline.id if self.pipeline else None,
-            pipelineName=self.pipeline.name if self.pipeline else None,
-            pipelineColor=self.pipeline.color if self.pipeline else None,
-            leverage=self.leverage if self.leverage else self.pipeline.leverage if self.pipeline else None,
+            mock=self.pipeline.paper_trading,
+            pipelineId=self.pipeline.id,
+            pipelineName=self.pipeline.name,
+            pipelineColor=self.pipeline.color,
+            leverage=self.pipeline.leverage,
         )
 
 

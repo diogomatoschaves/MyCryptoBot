@@ -22,6 +22,7 @@ METHODS = [
     ("futures_change_leverage", "futures_change_leverage"),
     ("futures_create_order", "futures_create_order"),
     ("futures_account_balance", "futures_account_balance"),
+    ("futures_position_information", "futures_position_information"),
 ]
 
 
@@ -37,6 +38,7 @@ def test_mock_setup(
     futures_change_leverage,
     futures_create_order,
     futures_account_balance,
+    futures_position_information
 ):
     return
 
@@ -142,11 +144,9 @@ class TestExecutionService:
             pytest.param(
                 {
                     "pipeline_id": 1,
-                    "binance_account_type": "futures",
-                    "equity": 100
                 },
                 Responses.SYMBOL_NOT_BEING_TRADED('BTCUSDT is not being traded.'),
-                id="SymbolNotBeingTraded-FUTURES",
+                id="SymbolNotBeingTraded",
             ),
             pytest.param(
                 {
@@ -181,6 +181,14 @@ class TestExecutionService:
                 Responses.PIPELINE_NOT_ACTIVE('Pipeline 3 is not active.'),
                 id="TRADING_SYMBOL_NOT_ACTIVE",
             ),
+            pytest.param(
+                {
+                    "pipeline_id": 3,
+                    "force": True
+                },
+                Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
+                id="TRADING_SYMBOL_NOT_ACTIVE-force",
+            ),
         ],
     )
     def test_binance_trader_fail_stop_pipeline_inactive(
@@ -197,15 +205,6 @@ class TestExecutionService:
 
         assert res.json == expected_value
 
-    @pytest.mark.parametrize(
-        "binance_account_type",
-        [
-            pytest.param(
-                {"binance_account_type": "futures"},
-                id="FUTURES"
-            ),
-        ],
-    )
     @pytest.mark.parametrize(
         "route,params,expected_value",
         [
@@ -232,30 +231,88 @@ class TestExecutionService:
         route,
         params,
         expected_value,
-        binance_account_type,
         mock_binance_futures_trader_success,
         client,
         exchange_data,
         create_pipeline,
     ):
-        payload = {
-            **params,
-            **binance_account_type
-        }
 
-        res = client.post(route, json=payload)
+        res = client.post(route, json=params)
 
         assert res.json == expected_value
 
     @pytest.mark.parametrize(
-        "binance_account_type",
+        "route,params,expected_value",
         [
             pytest.param(
-                {"binance_account_type": "futures"},
-                id="FUTURES"
+                "start_symbol_trading",
+                {
+                    "pipeline_id": 1,
+                },
+                Responses.TRADING_SYMBOL_START("BTCUSDT"),
+                id="START_SYMBOL_TRADING_VALID-no_mock",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "pipeline_id": 1,
+                    "force": True,
+                },
+                Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-Force",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "force": True,
+                },
+                Responses.NO_SUCH_PIPELINE('Pipeline None was not found.'),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-missing_params",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "paper_trading": True,
+                    "force": True,
+                },
+                Responses.NO_SUCH_PIPELINE('Pipeline None was not found.'),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-no_symbol",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "symbol": "BTCUSDT",
+                    "force": True,
+                },
+                Responses.NO_SUCH_PIPELINE('Pipeline None was not found.'),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-no_paper_trading",
+            ),
+            pytest.param(
+                "stop_symbol_trading",
+                {
+                    "symbol": "BTCUSDT",
+                    "paper_trading": True,
+                    "force": True,
+                },
+                Responses.TRADING_SYMBOL_STOP("BTCUSDT"),
+                id="STOP_SYMBOL_TRADING_VALID-no_mock-no_paper_trading",
             ),
         ],
     )
+    def test_valid_input_no_mock(
+        self,
+        route,
+        params,
+        test_mock_setup,
+        expected_value,
+        client,
+        exchange_data,
+        create_pipeline,
+    ):
+        res = client.post(route, json=params)
+
+        assert res.json == expected_value
+
     @pytest.mark.parametrize(
         "params,expected_value",
         [
@@ -304,20 +361,13 @@ class TestExecutionService:
         self,
         params,
         expected_value,
-        binance_account_type,
         mock_binance_futures_trader_success,
         client,
         exchange_data,
         create_pipeline,
         create_inactive_pipeline,
     ):
-
-        payload = {
-            **params,
-            **binance_account_type
-        }
-
-        res = client.post(f"/execute_order", json=payload)
+        res = client.post(f"/execute_order", json=params)
 
         assert res.json == expected_value
 
@@ -431,30 +481,3 @@ class TestExecutionService:
         res = client.post(f"start_symbol_trading", json={"pipeline_id": 1})
 
         assert res.json == Responses.LEVERAGE_SETTING_FAILURE("Failed to set leverage. ")
-
-    @pytest.mark.slow
-    def test_startup_task_with_open_positions(
-        self,
-        client_with_open_positions,
-        spy_start_pipeline_trade
-    ):
-        assert spy_start_pipeline_trade.call_count == 3
-
-    @pytest.mark.slow
-    def test_startup_task_with_open_positions_insufficient_balance(
-        self,
-        app_with_open_positions_insufficient_balance,
-        spy_start_pipeline_trade
-    ):
-        assert spy_start_pipeline_trade.call_count == 3
-
-        pipeline_11 = Pipeline.objects.get(id=11)
-
-        assert pipeline_11.active is False
-
-    def test_startup_task_no_open_positions(
-        self,
-        client,
-        spy_start_pipeline_trade
-    ):
-        spy_start_pipeline_trade.assert_not_called()

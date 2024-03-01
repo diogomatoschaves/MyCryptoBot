@@ -53,11 +53,11 @@ def generate_signal(pipeline_id, header=''):
     return response
 
 
-@retry_failed_connection(num_times=4)
+@retry_failed_connection(num_times=3)
 @json_error_handler
 def start_stop_symbol_trading(payload, start_or_stop):
 
-    header = json.loads(get_item_from_cache(cache, payload["pipeline_id"]))
+    header = json.loads(get_item_from_cache(cache, payload["pipeline_id"])) if "pipeline_id" in payload else ''
     logging.info(header + f"Sending {start_or_stop} request to Execution app.")
 
     endpoint = f"{start_or_stop.upper()}_SYMBOL_TRADING"
@@ -128,11 +128,11 @@ def get_balance():
 
 @retry_failed_connection(num_times=2)
 @json_error_handler
-def get_open_positions(symbol):
+def get_open_positions():
 
     endpoint = "GET_OPEN_POSITIONS"
 
-    url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL")) + f"?symbol={symbol}"
+    url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL"))
 
     r = requests.get(url, headers={"Authorization": cache.get("bearer_token")})
     logging.debug("get_open_positions: " + r.text)

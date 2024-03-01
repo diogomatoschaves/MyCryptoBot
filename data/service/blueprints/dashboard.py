@@ -223,12 +223,16 @@ def get_trades_metrics():
     except NoSuchPipeline:
         aggregate_values = convert_trades_to_dict(query_trades_metrics())
 
-        symbols_objs = Symbol.objects.annotate(trade_count=Count('trade', filter=~Q(trade__close_time=None)))
+        symbols_objs = Symbol.objects.all()
+
         symbols = []
 
         for symbol in symbols_objs:
-            if symbol.trade_count > 0:
-                symbol_dict = {"name": symbol.name, "value": symbol.trade_count}
+
+            trades = Trade.objects.filter(pipeline__symbol=symbol).exclude(close_time=None).count()
+
+            if trades > 0:
+                symbol_dict = {"name": symbol.name, "value": trades}
 
                 symbols.append(symbol_dict)
 

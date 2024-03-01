@@ -418,13 +418,9 @@ def create_orders(db, create_exchange, create_symbol, create_pipeline):
 def create_neutral_position(db, create_pipeline):
     return Position.objects.create(
         position=0,
-        symbol_id="BTCUSDT",
-        exchange_id='binance',
         pipeline_id=1,
-        paper_trading=True,
         buying_price=0,
         amount=0,
-        open=False,
     )
 
 
@@ -432,13 +428,9 @@ def create_neutral_position(db, create_pipeline):
 def create_open_position(db, create_pipeline_2):
     return Position.objects.create(
         position=1,
-        symbol_id="BTCUSDT",
-        exchange_id='binance',
         pipeline_id=2,
-        paper_trading=True,
         buying_price=1000,
         amount=0.1,
-        open=True,
     )
 
 
@@ -446,13 +438,9 @@ def create_open_position(db, create_pipeline_2):
 def create_inactive_position(db, create_inactive_pipeline):
     return Position.objects.create(
         position=1,
-        symbol_id="BTCUSDT",
-        exchange_id='binance',
         pipeline_id=3,
-        paper_trading=True,
         buying_price=10000,
         amount=0.1,
-        open=True,
     )
 
 
@@ -460,13 +448,19 @@ def create_inactive_position(db, create_inactive_pipeline):
 def create_open_position_paper_trading_pipeline(db, create_paper_trading_pipeline):
     return Position.objects.create(
         position=0,
-        symbol_id="ETHUSDT",
-        exchange_id='binance',
         pipeline_id=11,
-        paper_trading=True,
         buying_price=1000,
         amount=0.1,
-        open=True,
+    )
+
+
+@pytest.fixture
+def create_open_position_pipeline_10(db, create_pipeline_BNBBTC):
+    return Position.objects.create(
+        position=1,
+        pipeline_id=10,
+        buying_price=1000,
+        amount=0.1,
     )
 
 
@@ -485,55 +479,43 @@ def create_positions(
 def create_trades(db, create_exchange, create_symbol, create_pipeline, create_pipeline_2):
     trade_1 = Trade.objects.create(
         id=1,
-        symbol_id="BTCUSDT",
         open_price=3998.3,
         close_price=4005.2,
         open_time=datetime.datetime(2023, 10, 1, 16, 0),
         close_time=datetime.datetime(2023, 10, 1, 16, 5),
         amount=10,
         side=1,
-        exchange_id='binance',
-        mock=True,
         pipeline_id=1,
     )
 
     trade_2 = Trade.objects.create(
         id=2,
-        symbol_id="BTCUSDT",
         open_price=4005.2,
         close_price=4002.3,
         open_time=datetime.datetime(2023, 10, 1, 16, 5),
         close_time=datetime.datetime(2023, 10, 1, 16, 10),
         amount=11,
         side=-1,
-        exchange_id='binance',
-        mock=True,
         pipeline_id=2,
     )
 
     trade_3 = Trade.objects.create(
         id=3,
-        symbol_id="BTCUSDT",
         open_price=4002.3,
         close_price=4010.8,
         open_time=datetime.datetime(2023, 10, 1, 16, 10),
         close_time=datetime.datetime(2023, 10, 1, 16, 15),
         amount=9,
         side=1,
-        exchange_id='binance',
-        mock=True,
         pipeline_id=2,
     )
 
     trade_4 = Trade.objects.create(
         id=4,
-        symbol_id="BTCUSDT",
         open_price=4002.3,
         open_time=datetime.datetime(2023, 10, 1, 16, 15),
         amount=9,
         side=1,
-        exchange_id='binance',
-        mock=True,
         pipeline_id=1,
     )
 
@@ -556,29 +538,23 @@ def create_trades(db, create_exchange, create_symbol, create_pipeline, create_pi
 def create_trades_2(db, create_inactive_pipeline, create_pipeline_no_equity):
     trade_1 = Trade.objects.create(
         id=5,
-        symbol_id="BTCUSDT",
         open_price=3998.3,
         close_price=4005.2,
         open_time=datetime.datetime(2023, 10, 1, 16, 0),
         close_time=datetime.datetime(2023, 10, 1, 16, 5),
         amount=10,
         side=1,
-        exchange_id='binance',
-        mock=True,
         pipeline_id=3,
     )
 
     trade_2 = Trade.objects.create(
         id=6,
-        symbol_id="BNBBTC",
         open_price=3998.3,
         close_price=4005.2,
         open_time=datetime.datetime(2023, 10, 1, 16, 0),
         close_time=datetime.datetime(2023, 10, 1, 16, 5),
         amount=10,
         side=1,
-        exchange_id='binance',
-        mock=True,
         pipeline_id=9,
     )
 

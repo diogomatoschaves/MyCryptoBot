@@ -38,7 +38,7 @@ class MockBinanceTrader:
         elif self.raise_leverage_setting_failure:
             raise LeverageSettingFail("")
 
-    def stop_symbol_trading(self, pipeline_id, header='', **kwargs):
+    def stop_symbol_trading(self, pipeline, symbol, header='', **kwargs):
         if self.raise_error_start_stop:
             raise BinanceAPIException(
                 '',
@@ -123,30 +123,3 @@ def mock_binance_futures_trader_raise_exception_start_stop(mocker):
 @pytest.fixture
 def mock_binance_futures_trader_raise_leverage_setting_fail(mocker):
     return mocker.patch("execution.service.app.binance_futures_trader", MockBinanceTrader(raise_leverage_setting_failure=True))
-
-
-@pytest.fixture
-def mock_start_pipeline_trade(mocker):
-    return mocker.patch.object(
-        execution.service.app,
-        "start_pipeline_trade",
-        lambda pipeline, header, **kwargs: None
-    )
-
-
-def raise_insufficient_balance(pipeline, header, **kwargs):
-    raise InsufficientBalance
-
-
-@pytest.fixture
-def mock_start_pipeline_trade_raise_exception(mocker):
-    return mocker.patch.object(
-        execution.service.app,
-        "start_pipeline_trade",
-        raise_insufficient_balance
-    )
-
-
-@pytest.fixture
-def spy_start_pipeline_trade(mocker):
-    return mocker.spy(execution.service.app, "start_pipeline_trade")

@@ -1,5 +1,8 @@
+import json
+import logging
 import os
 import sys
+import time
 from datetime import timedelta
 
 from flask import Flask, send_from_directory
@@ -9,8 +12,10 @@ from flask_cors import CORS
 import redis
 from flask_jwt_extended import JWTManager, create_access_token
 
+from data.service.cron_jobs.app_health import check_app_health
 from data.service.cron_jobs.main import start_background_scheduler
 from shared.utils.config_parser import get_config
+from shared.utils.helpers import is_pipeline_loading, LOADING
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -26,7 +31,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
 
-from database.model.models import Position
+from database.model.models import Pipeline
 from shared.utils.logger import configure_logger
 
 config_vars = get_config('data')
@@ -38,19 +43,28 @@ cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
 def startup_task(app):
 
+    cache.set(LOADING, json.dumps([]))
+
     start_background_scheduler(config_vars)
 
-    open_positions = Position.objects.filter(pipeline__active=True)
+    active_pipelines = Pipeline.objects.filter(active=True)
 
     with app.app_context():
         access_token = create_access_token(identity='abc', expires_delta=False)
         bearer_token = 'Bearer ' + access_token
         cache.set("bearer_token", bearer_token)
 
-    for open_position in open_positions:
-        start_symbol_trading(open_position.pipeline)
-        open_position.pipeline.active = True
-        open_position.pipeline.save()
+    for pipeline in active_pipelines:
+
+        response = start_symbol_trading(pipeline)
+
+        if not response["success"]:
+            logging.info(f"Pipeline {pipeline.id} could not be started. {response['message']}")
+
+    while any(is_pipeline_loading(cache, pipeline.id) for pipeline in active_pipelines):
+        time.sleep(10)
+
+    check_app_health()
 
 
 def create_app():
@@ -66,7 +80,7 @@ def create_app():
     app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=config_vars.token_expires_days)
 
-    jwt = JWTManager(app)
+    JWTManager(app)
 
     CORS(app)
 

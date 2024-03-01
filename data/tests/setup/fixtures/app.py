@@ -9,9 +9,13 @@ from data.tests.setup.fixtures.internal_modules import (
     mock_settings_env_vars,
     mock_get_strategies,
     mock_redis_connection_bots_api,
-    spy_start_symbol_trading
+    mock_redis_connection_bots_api_helpers,
+    mock_redis_connection_external_requests,
+    mock_start_stop_symbol_trading_success_true,
+    spy_start_symbol_trading,
+    mock_get_open_positions,
 )
-from shared.utils.tests.fixtures.external_modules import mock_jwt_required
+from shared.utils.tests.fixtures.external_modules import mock_jwt_required, mock_requests_post
 from shared.utils.tests.fixtures.models import *
 
 
@@ -30,15 +34,20 @@ def app(
     mock_create_access_token,
     mock_redis_connection,
     mock_redis_connection_bots_api,
+    mock_redis_connection_bots_api_helpers,
+    mock_redis_connection_external_requests,
+    mock_start_stop_symbol_trading_success_true,
     mock_jwt_required,
     mock_settings_env_vars,
     mock_get_strategies,
     mock_binance_client_exchange_info,
+    mock_requests_post,
     create_exchange,
     create_assets,
     create_symbol,
     spy_start_symbol_trading,
-    monkeypatch
+    monkeypatch,
+    mock_get_open_positions
 ):
 
     # monkeypatch.setenv("TEST", )
@@ -56,17 +65,20 @@ def client(app):
 @pytest.fixture
 def app_with_open_position(
     db,
-    # mock_client_env_vars,
     mock_create_access_token,
     mock_redis_connection,
     mock_redis_connection_bots_api,
+    mock_redis_connection_bots_api_helpers,
+    mock_redis_connection_external_requests,
     mock_jwt_required,
     mock_settings_env_vars,
     mock_get_strategies,
     mock_binance_client_exchange_info,
-    fake_executor_submit,
+    mock_get_open_positions,
     mock_start_stop_symbol_trading_success_true,
-    spy_start_symbol_trading,
+    mock_requests_post,
+    spy_start_stop_symbol_trading,
+    fake_executor_submit,
     create_exchange,
     create_assets,
     create_symbol,

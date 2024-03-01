@@ -179,33 +179,27 @@ class TestMarketData:
         assert res.json == response
 
     @pytest.mark.parametrize(
-        "extra_url,response",
+        "response",
         [
             pytest.param(
-                '',
-                {'positions': {'live': None, 'testnet': None}, 'success': False},
-                id="open_positions-no_symbol",
-            ),
-            pytest.param(
-                '?symbol=BTCUSDT',
-                {'positions': {'live': 0.0, 'testnet': 0.0}, 'success': True},
-                id="open_positions-existent_symbol",
-            ),
-            pytest.param(
-                '?symbol=BTC',
-                {'positions': {'live': None, 'testnet': None}, 'success': False},
-                id="open_positions-non_existent_symbol",
+                {
+                    'positions': {
+                        'live': [{'symbol': 'BTCUSDT', 'units': 0.017}],
+                        'testnet': [{'symbol': 'BTCUSDT', 'units': 0.017}]
+                    },
+                    'success': True
+                },
+                id="open_positions",
             ),
         ],
     )
-    def test_open_positions(
+    def test_get_open_positions(
         self,
-        extra_url,
         response,
         client,
         test_mock_setup
     ):
-        res = client.get(f'/open-positions{extra_url}')
+        res = client.get(f'/open-positions')
 
         print(res.json)
 

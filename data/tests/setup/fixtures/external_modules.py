@@ -1,4 +1,5 @@
 import datetime
+import time
 
 import flask_jwt_extended
 import pytest
@@ -16,10 +17,6 @@ from shared.exchanges.binance import BinanceHandler
 
 def mock_get_historical_klines_generator(symbol, candle_size, start_date, end_date, limit):
     return binance_api_historical_data
-
-
-def mock_client_init_session(self):
-    return None
 
 
 @pytest.fixture
@@ -92,3 +89,21 @@ def patch_datetime_now(monkeypatch):
             return FAKE_TIME
 
     monkeypatch.setattr(datetime, 'datetime', mydatetime)
+
+
+FUTURE_TIME = datetime.datetime.now(pytz.utc) + datetime.timedelta(minutes=10)
+
+
+@pytest.fixture
+def patch_datetime_future(monkeypatch):
+    class mydatetime(datetime.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return FUTURE_TIME
+
+    monkeypatch.setattr(datetime, 'datetime', mydatetime)
+
+
+@pytest.fixture
+def patch_time_sleep(mocker):
+    return mocker.patch.object(time, 'sleep', lambda seconds: None)

@@ -1,3 +1,4 @@
+import json
 import os
 from collections import namedtuple
 from datetime import datetime
@@ -17,6 +18,9 @@ from database.model.models import Pipeline, Trade as DBTrade
 
 escapes = ''.join([chr(char) for char in range(1, 32)])
 translator = str.maketrans('', '', escapes)
+
+
+LOADING = "Loading"
 
 
 PIPELINE = namedtuple(
@@ -46,9 +50,15 @@ def get_root_dir():
     )
 
 
-def get_logging_row_header(pipeline):
+def get_logging_row_header(cache, pipeline):
+    header = f"{pipeline.symbol.name}|{pipeline.name}|{pipeline.id}|{pipeline.interval}: "
 
-    return f"{pipeline.name}|{pipeline.id}|{pipeline.interval}: "
+    cache.set(
+        f"pipeline {pipeline.id}",
+        json.dumps(header)
+    )
+
+    return header
 
 
 def get_item_from_cache(cache, key):
@@ -58,11 +68,52 @@ def get_item_from_cache(cache, key):
     return item if item else '""'
 
 
-def get_pipeline_data(pipeline_id, return_obj=False):
+def add_pipeline_loading(cache, pipeline_id):
+
+    loading = set(json.loads(cache.get(LOADING))) if cache.get(LOADING) is not None else set()
+
+    loading.add(pipeline_id)
+
+    cache.set(
+        LOADING,
+        json.dumps(list(set(loading)))
+    )
+
+
+def remove_pipeline_loading(cache, pipeline_id):
+
+    loading = set(json.loads(cache.get(LOADING))) if cache.get(LOADING) is not None else set()
+
+    try:
+        loading.remove(pipeline_id)
+    except KeyError:
+        pass
+
+    cache.set(
+        LOADING,
+        json.dumps(list(loading))
+    )
+
+
+def is_pipeline_loading(cache, pipeline_id):
+
+    loading = set(json.loads(cache.get(LOADING)))
+
+    return pipeline_id in loading
+
+
+def get_pipeline_data(pipeline_id, return_obj=False, ignore_exception=False):
+
+    if pipeline_id is None and ignore_exception:
+        return None
+
     try:
         pipeline = Pipeline.objects.get(id=pipeline_id)
     except Pipeline.DoesNotExist:
-        raise NoSuchPipeline(pipeline_id)
+        if ignore_exception:
+            return None
+        else:
+            raise NoSuchPipeline(pipeline_id)
 
     if return_obj:
         return pipeline

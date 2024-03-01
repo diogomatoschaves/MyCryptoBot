@@ -139,6 +139,7 @@ def get_existing_pipeline(fields):
     else:
         pipeline.active = True
         pipeline.open_time = datetime.datetime.now(pytz.utc)
+        pipeline.restarted = 0
 
         pipeline.save()
 

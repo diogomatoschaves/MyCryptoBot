@@ -149,7 +149,7 @@ class TestBinanceFuturesTrader:
         "parameters,symbols,position,units,times_called",
         [
             pytest.param(
-                {"pipeline_id": 1},
+                {"pipeline_id": 1, "symbol": "BTCUSDT"},
                 {
                     "BTCUSDT": {
                         "price_precision": 2,
@@ -164,7 +164,7 @@ class TestBinanceFuturesTrader:
                 id="SymbolExists-PositiveUnits-True",
             ),
             pytest.param(
-                {"pipeline_id": 1},
+                {"pipeline_id": 1, "symbol": "BTCUSDT"},
                 {
                     "BTCUSDT": {
                         "price_precision": 2,
@@ -179,7 +179,7 @@ class TestBinanceFuturesTrader:
                 id="SymbolExists-NegativeUnits-True",
             ),
             pytest.param(
-                {"pipeline_id": 1},
+                {"pipeline_id": 1, "symbol": "BTCUSDT"},
                 {
                     "BTCUSDT": {
                         "price_precision": 2,
@@ -194,7 +194,7 @@ class TestBinanceFuturesTrader:
                 id="SymbolExists-NoUnits-True",
             ),
             pytest.param(
-                {"pipeline_id": 1},
+                {"pipeline_id": 1, "symbol": "BTCUSDT"},
                 {
                     "BTCUSDT": {
                         "price_precision": 2,
@@ -225,7 +225,6 @@ class TestBinanceFuturesTrader:
 
         binance_trader = self.stop_symbol_trading(
             parameters,
-            symbol,
             symbols,
             position,
             units,
@@ -291,7 +290,6 @@ class TestBinanceFuturesTrader:
             position = Position.objects.get(pipeline__id=pipeline_id)
 
             assert position.position == signal
-            assert position.open if signal != 0 else not position.open
 
         if initial_position == signal:
             assert Trade.objects.all().count() == abs(initial_position)
@@ -426,13 +424,12 @@ class TestBinanceFuturesTrader:
 
         binance_trader.trade(self.symbol, 1, amount="all", pipeline_id=1)
 
-        binance_trader.stop_symbol_trading(1)
+        binance_trader.stop_symbol_trading(1, self.symbol)
 
         positions = Position.objects.all()
 
         assert len(positions) == 1
         assert positions[0].position == 0
-        assert not positions[0].open
 
         trades = Trade.objects.all()
 
@@ -483,7 +480,7 @@ class TestBinanceFuturesTrader:
         "parameters,symbols,position,units,times_called,expected_value",
         [
             pytest.param(
-                {"pipeline_id": 1},
+                {"pipeline_id": 1, "symbol": "BTCUSDT"},
                 {},
                 0,
                 0.1,
@@ -506,9 +503,8 @@ class TestBinanceFuturesTrader:
         futures_create_order_spy,
     ):
         with pytest.raises(Exception) as exception:
-            bt = self.stop_symbol_trading(
+            self.stop_symbol_trading(
                 parameters,
-                self.symbol,
                 symbols,
                 position,
                 units,
@@ -611,7 +607,10 @@ class TestBinanceFuturesTrader:
         return binance_trader
 
     @staticmethod
-    def stop_symbol_trading(parameters, symbol, symbols, position, units):
+    def stop_symbol_trading(parameters, symbols, position, units):
+
+        symbol = parameters["symbol"]
+
         binance_trader = BinanceFuturesTrader()
         binance_trader.symbols = symbols
 

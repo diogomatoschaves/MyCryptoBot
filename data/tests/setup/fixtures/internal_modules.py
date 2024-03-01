@@ -1,4 +1,5 @@
 import os
+from collections import namedtuple
 from datetime import datetime, timedelta
 
 import pytest
@@ -38,28 +39,6 @@ def mock_trigger_signal_fail(mocker):
         data.sources.binance._binance,
         'trigger_signal',
         lambda pipeline_id, header='': (False, ""),
-    )
-
-
-def fake_get_price(symbol):
-
-    prices = {
-        "BTCUSDT": 25000,
-        "ETHBTC": 0.245
-    }
-
-    if symbol in prices:
-        return {"success": True, "price": prices[symbol]}
-    else:
-        return {"success": False}
-
-
-@pytest.fixture
-def mock_get_price(mocker):
-    mocker.patch.object(
-        data.service.blueprints.dashboard,
-        'get_price',
-        fake_get_price,
     )
 
 
@@ -104,8 +83,9 @@ def mock_binance_handler_start_data_ingestion(mocker):
     )
 
 
-def fake_stop_data_ingestion(self, header):
+def fake_stop_data_ingestion(self, header, raise_exception, force):
     Pipeline.objects.filter(id=1).update(active=False)
+    return True
 
 
 @pytest.fixture
@@ -124,7 +104,7 @@ def binance_handler_stop_data_ingestion_spy(mocker):
 
 @pytest.fixture
 def binance_handler_instances_spy_start_bot(mocker):
-    return mocker.patch('data.service.blueprints.bots_api.binance_instances', new_callable=list)
+    return mocker.patch('data.service.blueprints.bots_api._helpers.binance_instances', new_callable=list)
 
 
 def immediate_execution(initialize_data_collection, pipeline_id, header=''):
@@ -134,7 +114,7 @@ def immediate_execution(initialize_data_collection, pipeline_id, header=''):
 @pytest.fixture
 def mock_executor_submit(mocker):
     mocker.patch.object(
-        data.service.blueprints.bots_api.executor,
+        data.service.blueprints.bots_api._helpers.executor,
         "submit",
         immediate_execution
     )
@@ -143,7 +123,7 @@ def mock_executor_submit(mocker):
 @pytest.fixture
 def fake_executor_submit(mocker):
     mocker.patch.object(
-        data.service.blueprints.bots_api.executor,
+        data.service.blueprints.bots_api._helpers.executor,
         "submit",
         lambda x, y, z=None: None
     )
@@ -152,14 +132,12 @@ def fake_executor_submit(mocker):
 @pytest.fixture
 def binance_handler_instances_spy_stop_bot(db, create_symbol, create_assets, create_exchange, mocker):
     return mocker.patch(
-        'data.service.blueprints.bots_api.binance_instances',
-        [BinanceDataHandler(symbol='BTCUSDT', candle_size="1h", pipeline_id=1)]
+        'data.service.blueprints.bots_api._helpers.binance_instances',
+        [
+            BinanceDataHandler(symbol='BTCUSDT', candle_size="1h", pipeline_id=1),
+            BinanceDataHandler(symbol='BTCUSDT', candle_size="1h", pipeline_id=2)
+        ]
     )
-
-
-@pytest.fixture
-def binance_handler_instances_spy(mocker):
-    return mocker.spy(data.service.blueprints.bots_api, 'binance_instances')
 
 
 def fake_start_stop_trading(pipeline_id, start_or_stop):
@@ -172,10 +150,15 @@ def fake_start_stop_trading(pipeline_id, start_or_stop):
 @pytest.fixture
 def mock_start_stop_symbol_trading_success_true(mocker):
     mocker.patch.object(
-        data.service.blueprints.bots_api,
+        data.service.blueprints.bots_api._helpers,
         'start_stop_symbol_trading',
         fake_start_stop_trading,
     )
+
+
+@pytest.fixture
+def spy_start_stop_symbol_trading(mocker):
+    return mocker.spy(data.service.blueprints.bots_api._helpers, 'start_stop_symbol_trading')
 
 
 @pytest.fixture
@@ -187,38 +170,30 @@ def mock_start_stop_symbol_trading_success_true_binance_handler(mocker):
     )
 
 
-def raise_pipeline_start_fail(pipeline_id, start_or_stop):
-    raise PipelineStartFail
-
-
 @pytest.fixture
 def mock_start_stop_symbol_trading(mocker):
     return mocker.patch('data.sources.binance._binance.start_stop_symbol_trading')
 
 
 @pytest.fixture
-def mock_get_open_positions(mocker):
-    return mocker.patch('data.sources.binance._binance.get_open_positions')
-
-
-@pytest.fixture
 def mock_start_stop_symbol_trading_success_false(mocker):
     return mocker.patch.object(
-        data.service.blueprints.bots_api,
+        data.service.blueprints.bots_api._helpers,
         'start_stop_symbol_trading',
-        raise_pipeline_start_fail,
+        lambda payload, start_or_stop: {"success": False, "message": "Pipeline could not be started."},
     )
 
 
-def raise_pipeline_stop_fail(pipeline_id, header):
-    raise DataPipelineCouldNotBeStopped("APIError(code=-1021): "
-                                        "Timestamp for this request is outside of the recvWindow.")
+def raise_pipeline_stop_fail(pipeline_id, header, raise_exception):
+    if raise_exception:
+        raise DataPipelineCouldNotBeStopped("APIError(code=-1021): "
+                                            "Timestamp for this request is outside of the recvWindow.")
 
 
 @pytest.fixture
 def mock_stop_instance_raise_exception(mocker):
     return mocker.patch.object(
-        data.service.blueprints.bots_api,
+        data.service.blueprints.bots_api._bots_api,
         'stop_instance',
         raise_pipeline_stop_fail,
     )
@@ -226,16 +201,19 @@ def mock_stop_instance_raise_exception(mocker):
 
 @pytest.fixture
 def mock_stop_instance(mocker):
-    return mocker.patch.object(
-        data.service.cron_jobs.check_app_is_running._check_app_is_running,
-        'stop_instance',
-        lambda pipeline_id, header: None,
+    return mocker.patch(
+        'data.service.blueprints.bots_api._helpers.stop_instance',
     )
 
 
 @pytest.fixture
 def spy_stop_instance(mocker):
-    return mocker.spy(data.service.cron_jobs.check_app_is_running._check_app_is_running, 'stop_instance')
+    return mocker.spy(data.service.blueprints.bots_api._helpers, 'stop_instance')
+
+
+@pytest.fixture
+def spy_stop_pipeline(mocker):
+    return mocker.spy(data.service.cron_jobs.app_health._app_health, 'stop_pipeline')
 
 
 @pytest.fixture
@@ -289,7 +267,12 @@ def mock_redis_connection_external_requests(mocker):
 
 @pytest.fixture
 def mock_redis_connection_bots_api(mocker):
-    return mocker.patch("data.service.blueprints.bots_api.cache", mock_redis())
+    return mocker.patch("data.service.blueprints.bots_api._bots_api.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_redis_connection_bots_api_helpers(mocker):
+    return mocker.patch("data.service.blueprints.bots_api._helpers.cache", mock_redis())
 
 
 @pytest.fixture
@@ -317,14 +300,8 @@ def mock_get_strategies_raise_exception(mocker):
 
 
 @pytest.fixture
-def mock_start_symbol_trading(mocker):
-    return mocker.patch.object(data.service.app, 'start_symbol_trading', lambda pipeline: None)
-
-
-@pytest.fixture
 def spy_start_symbol_trading(mocker):
     return mocker.spy(data.service.app, 'start_symbol_trading')
-
 
 def fake_get_strategies_error():
     raise InterfaceError
@@ -345,7 +322,7 @@ class SideEffect:
 
 @pytest.fixture
 def mock_get_strategies(mocker):
-    mocker.patch.object(data.service.blueprints.bots_api, "get_strategies", fake_get_strategies_no_error)
+    mocker.patch.object(data.service.blueprints.bots_api._bots_api, "get_strategies", fake_get_strategies_no_error)
 
 
 @pytest.fixture
@@ -368,3 +345,46 @@ get_strategies_side_effect_1_errors = SideEffect(
 get_strategies_side_effect_0_errors = SideEffect(
     fake_get_strategies_no_error, fake_get_strategies_no_error, fake_get_strategies_no_error
 )
+
+
+def mock_positions():
+    return {
+        "success": True,
+        "positions": {
+            "testnet": [{"symbol": "BTCUSDT", "units": 0.01}, {"symbol": "ETHUSDT", "units": -0.01}],
+            "live": [{"symbol": "BTCUSDT", "units": 0.01}, {"symbol": "ETHUSDT", "units": -0.01}],
+        }
+    }
+
+
+@pytest.fixture
+def mock_get_open_positions(mocker):
+    mocker.patch.object(data.service.cron_jobs.app_health._app_health, 'get_open_positions', mock_positions)
+
+
+@pytest.fixture
+def mock_get_open_positions_unsuccessful(mocker):
+    mocker.patch.object(data.service.cron_jobs.app_health._app_health, 'get_open_positions', lambda: {"success": False})
+
+
+FakeConfig = namedtuple(
+    'fake_config',
+    [
+        'check_inconsistencies',
+        'restart_failed_pipelines',
+        'restart_retries',
+        'redis_url'
+    ]
+)
+fake_config_no_restart = FakeConfig('false', 'false', '2', '')
+fake_config_no_retries = FakeConfig('false', 'true', '0', '')
+
+
+@pytest.fixture
+def mock_config_no_restart(mocker):
+    mocker.patch('data.service.cron_jobs.app_health._app_health.config', fake_config_no_restart)
+
+
+@pytest.fixture
+def mock_config_no_retries(mocker):
+    mocker.patch('data.service.cron_jobs.app_health._app_health.config', fake_config_no_retries)

@@ -89,7 +89,6 @@ class BinanceTrader(BinanceHandler, Trader):
                     pipeline_id=pipeline_id,
                 ).update(
                     position=position,
-                    open=False,
                     amount=None,
                     buying_price=None,
                     open_time=None,
@@ -100,7 +99,6 @@ class BinanceTrader(BinanceHandler, Trader):
                         pipeline_id=pipeline_id,
                     ).update(
                         position=position,
-                        open=True,
                         open_time=datetime.now(tz=pytz.UTC),
                         buying_price=new_trade.open_price,
                         amount=new_trade.amount
@@ -108,10 +106,7 @@ class BinanceTrader(BinanceHandler, Trader):
         else:
             Position.objects.create(
                 position=position,
-                symbol_id=symbol,
-                exchange_id=self.exchange,
                 pipeline_id=pipeline_id,
-                paper_trading=self.paper_trading,
                 buying_price=new_trade.open_price if new_trade else None,
                 amount=new_trade.amount if new_trade else None,
             )
@@ -155,7 +150,7 @@ class BinanceTrader(BinanceHandler, Trader):
 
             closing_order = orders.pop()
 
-            last_trade = Trade.objects.filter(pipeline_id=pipeline_id, symbol_id=symbol).last()
+            last_trade = Trade.objects.filter(pipeline_id=pipeline_id, pipeline__symbol=symbol).last()
 
             if last_trade:
                 last_trade.close_price = closing_order.price
@@ -168,17 +163,11 @@ class BinanceTrader(BinanceHandler, Trader):
 
             new_order = orders.pop(0)
 
-            leverage = Pipeline.objects.get(id=pipeline_id).leverage
-
             new_trade = Trade.objects.create(
-                symbol_id=symbol,
                 open_price=new_order.price,
                 amount=new_order.executed_qty,
                 side=1 if new_order.side == "BUY" else -1,
-                exchange_id=self.exchange,
-                mock=new_order.mock,
                 pipeline_id=pipeline_id,
-                leverage=leverage
             )
 
             return new_trade

@@ -196,10 +196,11 @@ class TestDataExternalRequests:
 
         symbol = 'BTCUSDT'
 
-        res = get_open_positions(symbol)
+        res = get_open_positions()
 
         assert res == response
+
         requests_get_spy.assert_called_with(
-            EXECUTION_APP_ENDPOINTS["GET_OPEN_POSITIONS"](os.getenv("EXECUTION_APP_URL")) + f"?symbol={symbol}",
+            EXECUTION_APP_ENDPOINTS["GET_OPEN_POSITIONS"](os.getenv("EXECUTION_APP_URL")),
             headers={"Authorization": "mock bearer_token"}
         )

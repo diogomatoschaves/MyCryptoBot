@@ -273,7 +273,7 @@ positions_info = [
     },
     {
         "symbol": "BTCUSDT",
-        "positionAmt": "0.000",
+        "positionAmt": "0.017",
         "entryPrice": "0.00000000",
         "breakEvenPrice": "0.00000000",
         "markPrice": "43907.54607229",

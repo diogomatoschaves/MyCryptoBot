@@ -6,9 +6,9 @@ from binance.exceptions import BinanceAPIException
 from execution.service.helpers.exceptions import SymbolNotBeingTraded, NegativeEquity
 
 
-def stop_symbol_trading(trader_instance, pipeline_id, header):
+def stop_symbol_trading(trader_instance, pipeline_id, symbol, header):
     try:
-        trader_instance.stop_symbol_trading(pipeline_id, header=header)
+        trader_instance.stop_symbol_trading(pipeline_id, symbol, header=header)
     except SymbolNotBeingTraded:
         pass
 
@@ -31,7 +31,7 @@ def handle_order_execution_errors(symbol, trader_instance, header, pipeline_id, 
 
                     logging.warning(e)
 
-                    stop_symbol_trading(trader_instance, pipeline_id, header)
+                    stop_symbol_trading(trader_instance, pipeline_id, symbol, header)
 
                     message = e.message
                     logging.warning(message)
@@ -43,7 +43,7 @@ def handle_order_execution_errors(symbol, trader_instance, header, pipeline_id, 
                 except NegativeEquity as e:
                     logging.warning(e.message)
 
-                    stop_symbol_trading(trader_instance, pipeline_id, header)
+                    stop_symbol_trading(trader_instance, pipeline_id, symbol, header)
 
                     from execution.service.helpers.responses import Responses
 

@@ -11,13 +11,12 @@ from execution.service.cron_jobs.main import start_background_scheduler
 from execution.service.helpers.decorators import binance_error_handler, handle_app_errors, handle_order_execution_errors
 from execution.service.blueprints.market_data import market_data
 from execution.service.helpers import validate_signal, extract_and_validate, get_header
-from execution.service.helpers.exceptions import PipelineNotActive, InsufficientBalance
+from execution.service.helpers.exceptions import PipelineNotActive
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.futures import BinanceFuturesTrader
 from shared.utils.config_parser import get_config
-from shared.utils.decorators import handle_db_connection_error
+from shared.utils.decorators import handle_db_connection_error, retry_failed_connection
 from shared.utils.exceptions import EquityRequired
-from shared.utils.helpers import get_pipeline_data
 from shared.utils.logger import configure_logger
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -44,37 +43,6 @@ def get_binance_trader_instance(paper_trading):
         return binance_futures_trader
 
 
-def startup_task():
-
-    start_background_scheduler(config_vars)
-
-    open_positions = Position.objects.filter(pipeline__active=True)
-
-    for open_position in open_positions:
-
-        pipeline = get_pipeline_data(open_position.pipeline_id, return_obj=True)
-
-        header = get_header(pipeline.id)
-
-        try:
-            start_pipeline_trade(pipeline, header, initial_position=open_position.position)
-        except InsufficientBalance:
-            logging.info(f"Insufficient balance to start pipeline {pipeline.id}.")
-            pipeline.active = False
-            pipeline.save()
-
-
-def start_pipeline_trade(pipeline, header, initial_position=0):
-
-    bt = get_binance_trader_instance(pipeline.paper_trading)
-
-    bt.start_symbol_trading(
-        pipeline.id,
-        initial_position=initial_position,
-        header=header,
-    )
-
-
 def create_app():
 
     global binance_futures_mock_trader, binance_futures_trader
@@ -90,7 +58,7 @@ def create_app():
 
     CORS(app)
 
-    startup_task()
+    start_background_scheduler(config_vars)
 
     @app.route('/')
     @jwt_required()
@@ -108,12 +76,23 @@ def create_app():
 
         pipeline, parameters = extract_and_validate(request_data)
 
-        if parameters.initial_equity is None:
+        if pipeline.initial_equity is None:
             raise EquityRequired
 
         if pipeline.exchange.name == 'binance':
 
-            start_pipeline_trade(pipeline, parameters.header)
+            try:
+                initial_position = Position.objects.get(pipeline__id=pipeline.id).position
+            except Position.DoesNotExist:
+                initial_position = 0
+
+            bt = get_binance_trader_instance(pipeline.paper_trading)
+
+            bt.start_symbol_trading(
+                pipeline.id,
+                initial_position=initial_position,
+                header=parameters.header,
+            )
 
             return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol.name))
 
@@ -128,15 +107,20 @@ def create_app():
 
         pipeline, parameters = extract_and_validate(request_data)
 
-        bt = get_binance_trader_instance(pipeline.paper_trading)
-
-        if not pipeline.active:
-            bt.stop_symbol_trading(pipeline.id, header=parameters.header)
+        if not parameters.force and not pipeline.active:
             raise PipelineNotActive(pipeline.id)
 
-        bt.stop_symbol_trading(pipeline.id, header=parameters.header)
+        if parameters.force or pipeline.exchange.name == 'binance':
 
-        return jsonify(Responses.TRADING_SYMBOL_STOP(pipeline.symbol.name))
+            paper_trading = pipeline.paper_trading if pipeline is not None else parameters.paper_trading
+            symbol = pipeline.symbol.name if pipeline is not None else parameters.symbol
+            pipeline_id = pipeline.id if pipeline is not None else None
+
+            bt = get_binance_trader_instance(paper_trading)
+
+            bt.stop_symbol_trading(pipeline_id, symbol, header=parameters.header, force=parameters.force)
+
+            return jsonify(Responses.TRADING_SYMBOL_STOP(symbol))
 
     @app.route('/execute_order', methods=['POST'])
     @handle_app_errors
@@ -153,10 +137,7 @@ def create_app():
         if not pipeline.active:
             raise PipelineNotActive(pipeline.id)
 
-        signal = request_data.get("signal", None)
-        amount = request_data.get("amount", "all")
-
-        validate_signal(signal=signal)
+        validate_signal(signal=parameters.signal)
 
         if pipeline.exchange.name.lower() == 'binance':
 
@@ -170,8 +151,8 @@ def create_app():
             )(
                 lambda: bt.trade(
                     pipeline.symbol.name,
-                    signal,
-                    amount=amount,
+                    parameters.signal,
+                    amount=parameters.amount,
                     header=parameters.header,
                     pipeline_id=pipeline.id,
                     print_results=True
