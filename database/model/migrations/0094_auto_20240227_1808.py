@@ -4,6 +4,12 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def delete_referecing_null(apps, _):
+    Trade = apps.get_model('model', 'Trade')
+
+    Trade.objects.filter(pipeline__id=None).delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,6 +17,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(delete_referecing_null),
         migrations.RemoveField(
             model_name='trade',
             name='exchange',
