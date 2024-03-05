@@ -87,7 +87,7 @@ def stop_pipeline(pipeline_id, header='', raise_exception=False, nr_retries=3, f
             time.sleep(60 * retries)
 
 
-def start_symbol_trading(pipeline):
+def start_symbol_trading(pipeline, restart=False):
 
     add_pipeline_loading(cache, pipeline.id)
 
@@ -102,15 +102,16 @@ def start_symbol_trading(pipeline):
 
     response = start_stop_symbol_trading(payload, 'start')
 
-    if response["success"]:
-        pipeline.last_entry = None
-        pipeline.save()
-    else:
+    if not response["success"] and not (response["code"] == "SYMBOL_ALREADY_TRADED" and restart):
         pipeline.active = False
         pipeline.open_time = None
         pipeline.save()
 
         return response
+    else:
+        response["success"] = True
+        pipeline.last_entry = None
+        pipeline.save()
 
     executor.submit(
         initialize_data_collection,
