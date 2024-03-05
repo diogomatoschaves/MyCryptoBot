@@ -144,7 +144,7 @@ def fake_start_stop_trading(pipeline_id, start_or_stop):
     if start_or_stop == 'stop':
         Pipeline.objects.get(id=pipeline_id).update(active=False)
 
-    return {"success": True, "message": ''}
+    return {"success": True, "message": '', "code": ""}
 
 
 @pytest.fixture
@@ -166,7 +166,7 @@ def mock_start_stop_symbol_trading_success_true_binance_handler(mocker):
     mocker.patch.object(
         data.sources.binance._binance,
         'start_stop_symbol_trading',
-        lambda pipeline_id, start_or_stop: {"success": True, "message": ''},
+        lambda pipeline_id, start_or_stop: {"success": True, "message": '', "code": ""},
     )
 
 
@@ -180,7 +180,7 @@ def mock_start_stop_symbol_trading_success_false(mocker):
     return mocker.patch.object(
         data.service.blueprints.bots_api._helpers,
         'start_stop_symbol_trading',
-        lambda payload, start_or_stop: {"success": False, "message": "Pipeline could not be started."},
+        lambda payload, start_or_stop: {"success": False, "message": "Pipeline could not be started.", "code": ""},
     )
 
 
