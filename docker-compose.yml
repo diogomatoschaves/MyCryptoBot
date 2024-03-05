@@ -11,7 +11,7 @@ services:
       - "5433:5432"
     volumes:
       - ./database/local_db:/var/lib/postgresql/data
-      - ./database/local_db/custom_postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=syslog"]
   data-service:
     build:
       context: .

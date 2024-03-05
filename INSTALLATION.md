@@ -24,8 +24,8 @@ Create an `.env` file at the root of the project, copy the template env variable
 
 ```shell
 POSTGRES_DB # Name of the database
-POSTGRES_USER # A username to access the database
-POSTGRES_PASSWORD # A password to access the database
+POSTGRES_USER=postgres # Don't change this to avoid conflicts
+POSTGRES_PASSWORD=postgres # Don't change this to avoid conflicts
 SECRET_KEY # A secret key to hash your application
 BINANCE_API_KEY # Your personal Binance API key (check binance documentation)
 BINANCE_API_SECRET # Your personal Binance API secret (check binance documentation)
