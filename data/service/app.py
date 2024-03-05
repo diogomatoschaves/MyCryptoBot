@@ -58,7 +58,7 @@ def startup_task(app):
 
         response = start_symbol_trading(pipeline)
 
-        if not response["success"]:
+        if not response["success"] and response["code"] != "SYMBOL_ALREADY_TRADED":
             logging.info(f"Pipeline {pipeline.id} could not be started. {response['message']}")
 
     while any(is_pipeline_loading(cache, pipeline.id) for pipeline in active_pipelines):
