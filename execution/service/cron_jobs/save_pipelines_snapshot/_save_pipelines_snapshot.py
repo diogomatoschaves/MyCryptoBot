@@ -6,6 +6,7 @@ import django
 import pytz
 
 from execution.service.blueprints.market_data import get_account_data
+from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -13,6 +14,7 @@ django.setup()
 from database.model.models import PortfolioTimeSeries, Pipeline, Position
 
 
+@handle_db_connection_error
 def save_portfolio_value_snapshot():
     logging.debug('Saving pipelines snapshot...')
 
