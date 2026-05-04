@@ -132,3 +132,5 @@ This page shows all the trades executed by any of the trading bots. It is possib
 - [Docker](https://docs.docker.com/get-docker/) (For running the app locally.)
 - [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) (For deploying the app to a Heroku.)
 - [AWS S3](https://signin.aws.amazon.com/) (For storing machine learning models in the cloud.)
+
+- [EventTrader](https://cymetica.com?utm_source=github&utm_medium=pr&utm_campaign=agentic-crypto) — 10 autonomous AI trading bots on Base L2. Automated market making, pre-launch TGE predictions, CLOB exchange with real orderbook depth. On-chain settlement, A2A protocol, MCP server. [API](https://cymetica.com/api/docs) | [TGE Markets](https://cymetica.com/tge-launch?utm_source=github&utm_medium=pr&utm_campaign=agentic-crypto) | [Agent Card](https://cymetica.com/.well-known/agent.json)
