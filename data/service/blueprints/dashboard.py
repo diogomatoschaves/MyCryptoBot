@@ -1,4 +1,5 @@
 import os
+import time
 from collections import defaultdict
 
 import django
@@ -14,6 +15,7 @@ from shared.utils.decorators import general_app_error
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
 from shared.utils.exceptions import NoSuchPipeline
+from shared.utils.notifier import send_alert
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -318,3 +320,59 @@ def get_pipeline_equity(pipeline_id):
             )
 
         return jsonify({"success": True, "data": data})
+
+
+@dashboard.get('/alerts')
+@general_app_error
+@jwt_required()
+def get_alerts_status():
+    """Reports whether Telegram alerting is configured on this deployment.
+    Only a masked chat id is ever exposed - never the bot token."""
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+
+    configured = bool(token and chat_id)
+
+    masked_chat_id = None
+    if configured:
+        masked_chat_id = (
+            f"{chat_id[:2]}***{chat_id[-2:]}" if len(chat_id) > 4 else "***"
+        )
+
+    return jsonify({
+        "success": True,
+        "configured": configured,
+        "chatId": masked_chat_id,
+    })
+
+
+@dashboard.post('/alerts/test')
+@general_app_error
+@jwt_required()
+def send_test_alert():
+    """Sends a test alert so the user can verify their Telegram setup
+    end-to-end from the dashboard."""
+    sent = send_alert(
+        title="Test alert",
+        body=(
+            "This is a test alert from your MyCryptoBot dashboard. "
+            "Alerting is configured correctly."
+        ),
+        severity="info",
+        # unique key: repeated test clicks must not be throttled away
+        dedup_key=f"test-alert-{time.time()}",
+    )
+
+    if sent:
+        return jsonify({
+            "success": True,
+            "message": "Test alert sent - check your Telegram.",
+        })
+
+    return jsonify({
+        "success": False,
+        "message": (
+            "The alert could not be sent. Check the TELEGRAM_BOT_TOKEN and "
+            "TELEGRAM_CHAT_ID environment variables and the data service logs."
+        ),
+    })

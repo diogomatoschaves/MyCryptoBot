@@ -93,3 +93,9 @@ export const logout = () =>
 
 export const getEquityTimeSeries = ({ pipelineId, maxItems }: { pipelineId?: number | string | null, maxItems?: number }) =>
   request(`/pipeline-equity${pipelineId ? '/' + pipelineId : ''}${maxItems ? `?maxItems=${maxItems}` : ''}`)
+
+export const getAlertsStatus = () =>
+  request('/alerts')
+
+export const sendTestAlert = () =>
+  request('/alerts/test', { method: 'POST' })

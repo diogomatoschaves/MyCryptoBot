@@ -37,6 +37,7 @@ import TradesPanel from "./TradesPanel";
 import {parseTrade, organizePositions, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
 import Dashboard from "./Dashboard";
+import AlertsPanel from "./AlertsPanel";
 import {MOBILE_TOPBAR_HEIGHT} from "./MobileMenu";
 import {balanceReducer} from "../reducers/balancesReducer";
 
@@ -121,6 +122,7 @@ class App extends Component<Props, State> {
             {icon: 'play', emoji: '🤖', text: 'Trading Bots', code: "/pipelines"},
             {icon: 'list', emoji: '📒', text: 'Positions', code: "/positions"},
             {icon: 'dollar', emoji: '💵', text: 'Trades', code: "/trades"},
+            {icon: 'bell', emoji: '🔔', text: 'Alerts', code: "/alerts"},
         ]
     }
 
@@ -393,8 +395,8 @@ class App extends Component<Props, State> {
                   return {
                       ...state,
                       balances: {
-                          live: response.live && response.live.reduce(balanceReducer, {}),
-                          test: response.testnet && response.testnet.reduce(balanceReducer, {})
+                          live: response.live ? response.live.reduce(balanceReducer, {}) : state.balances.live,
+                          test: response.testnet ? response.testnet.reduce(balanceReducer, {}) : state.balances.test
                       }
                   }
               })
@@ -561,6 +563,9 @@ class App extends Component<Props, State> {
                                   equityTimeSeries={equityTimeSeries}
                                   updatePipelinesMetrics={this.updatePipelinesMetrics}
                                 />
+                            </Route>
+                            <Route path="/alerts">
+                                <AlertsPanel/>
                             </Route>
                             <Route path="/positions">
                                 <PositionsPanel

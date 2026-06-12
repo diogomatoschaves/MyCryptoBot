@@ -729,3 +729,44 @@ class TestDashboardService:
         print(res.json)
 
         assert res.json == jsonify(response).json
+
+
+class TestAlertsEndpoints:
+
+    def test_alerts_status_unconfigured(self, client, monkeypatch):
+        monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+        monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+
+        res = client.get(f'{API_PREFIX}/alerts')
+
+        assert res.json == {"success": True, "configured": False, "chatId": None}
+
+    def test_alerts_status_configured_masks_chat_id(self, client, monkeypatch):
+        monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:abc")
+        monkeypatch.setenv("TELEGRAM_CHAT_ID", "987654321")
+
+        res = client.get(f'{API_PREFIX}/alerts')
+
+        assert res.json["configured"] is True
+        assert res.json["chatId"] == "98***21"
+        assert "123" not in str(res.json)
+
+    def test_send_test_alert_success(self, client, mocker):
+        mock_alert = mocker.patch(
+            "data.service.blueprints.dashboard.send_alert", return_value=True
+        )
+
+        res = client.post(f'{API_PREFIX}/alerts/test')
+
+        assert res.json["success"] is True
+        mock_alert.assert_called_once()
+        assert mock_alert.call_args.kwargs["severity"] == "info"
+
+    def test_send_test_alert_failure(self, client, mocker):
+        mocker.patch(
+            "data.service.blueprints.dashboard.send_alert", return_value=False
+        )
+
+        res = client.post(f'{API_PREFIX}/alerts/test')
+
+        assert res.json["success"] is False

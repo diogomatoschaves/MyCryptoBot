@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import {Link} from 'react-router-dom'
-import {Activity, ArrowLeftRight, Bot, Layers, LogOut} from 'lucide-react'
+import {Activity, ArrowLeftRight, Bell, Bot, Layers, LogOut} from 'lucide-react'
 import {MenuOption, UpdateMessage} from "../types";
 
 
@@ -9,6 +9,7 @@ const NAV_ICONS: Record<string, React.ComponentType<any>> = {
   '/pipelines': Bot,
   '/positions': Layers,
   '/trades': ArrowLeftRight,
+  '/alerts': Bell,
 }
 
 const Nav = styled.nav`
