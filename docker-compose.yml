@@ -1,4 +1,3 @@
-version: "3.3"
 services:
   db:
     image: postgres:15
@@ -100,7 +99,8 @@ services:
         - VITE_DATA_API_HOST=http://localhost:5003
     image: dashboard-server
     ports:
-      - "3000:80"
+      # Picks the first free host port in the range (3000 if available)
+      - "3000-3010:80"
 volumes:
   db:
     driver: local

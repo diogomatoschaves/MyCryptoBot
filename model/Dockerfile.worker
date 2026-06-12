@@ -1,12 +1,7 @@
 FROM --platform=linux/amd64 python:3.8-slim
 
-ARG EXECUTION_APP_URL
-ARG APP_NAME
-ARG SECRET_KEY
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_SECRET_ACCESS_KEY
-ARG AWS_BUCKET
-ARG USE_CLOUD_STORAGE
+# Secrets and app config are injected at runtime (Heroku config vars /
+# compose env_file) — never as build args, which persist in image layers.
 
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -42,13 +37,5 @@ RUN useradd -m myuser
 USER myuser
 
 ENV PYTHONPATH="${PYTHONPATH}:/usr/src/app/"
-
-ENV EXECUTION_APP_URL=$EXECUTION_APP_URL
-ENV APP_NAME=$APP_NAME
-ENV SECRET_KEY=$SECRET_KEY
-ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-ENV AWS_BUCKET=$AWS_BUCKET
-ENV USE_CLOUD_STORAGE=$USE_CLOUD_STORAGE
 
 CMD python $DIRECTORY/worker.py

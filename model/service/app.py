@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+from datetime import timedelta
 
 import redis
 from dotenv import find_dotenv, load_dotenv
@@ -16,9 +17,10 @@ from model.service.helpers.decorators.handle_app_errors import handle_app_errors
 from model.service.helpers.responses import Responses
 from model.strategies.properties import compile_strategies
 from model.worker import conn
+import shared.exchanges.binance.constants as const
 from shared.utils.config_parser import get_config
 from shared.utils.decorators import handle_db_connection_error
-from shared.utils.helpers import get_pipeline_data, get_item_from_cache
+from shared.utils.helpers import get_pipeline_data, get_item_from_cache, get_jwt_secret_key
 from shared.utils.logger import configure_logger
 
 
@@ -44,7 +46,7 @@ def create_app():
 
     app = Flask(__name__)
 
-    app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
+    app.config["JWT_SECRET_KEY"] = get_jwt_secret_key()
     jwt = JWTManager(app)
 
     cloud_storage_startup()
@@ -81,12 +83,17 @@ def create_app():
             interval=pipeline.candle_size
         )
 
+        # a job that hasn't started within one candle period is superseded by
+        # the next candle's job - discard it instead of firing a stale order
+        ttl = int(timedelta(**const.CANDLE_SIZE_TIMEDELTA[pipeline.candle_size]).total_seconds())
+
         job = q.enqueue_call(
             "model.signal_generation._signal_generation.signal_generator", (
                 pipeline_dict,
                 bearer_token,
                 header
-            )
+            ),
+            ttl=ttl
         )
 
         job_id = job.get_id()
@@ -109,10 +116,12 @@ def create_app():
         elif job.is_queued:
             return jsonify(Responses.IN_QUEUE)
 
-        elif job.is_started:
+        elif job.is_started or job.is_deferred or job.is_scheduled:
             return jsonify(Responses.WAITING)
 
-        elif job.is_failed:
+        else:
+            # failed, stopped, canceled or any unknown state: report failure
+            # instead of returning None (which made callers wait forever)
             return jsonify(Responses.FAILED)
 
     @app.route('/strategies', methods=['GET'])

@@ -43,6 +43,12 @@ INSTALLED_APPS = (
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
+if not SECRET_KEY:
+    if os.getenv("TEST"):
+        SECRET_KEY = 'insecure-test-only-secret-key'
+    else:
+        raise EnvironmentError("SECRET_KEY environment variable must be set")
+
 USE_TZ = True
 
 AUTH_USER_MODEL = 'model.User'

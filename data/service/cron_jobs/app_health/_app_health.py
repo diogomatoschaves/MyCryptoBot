@@ -51,12 +51,17 @@ def restart_pipeline(pipeline):
 
         logging.info(f"Restarting pipeline {pipeline.id}...")
 
-        start_symbol_trading(pipeline)
+        response = start_symbol_trading(pipeline, restart=True)
 
-        pipeline.restarted += 1
-        pipeline.open_time = datetime.datetime.now(pytz.utc)
-        pipeline.active = True
-        pipeline.save()
+        if not response or not response["success"]:
+            logging.warning(f"Pipeline {pipeline.id} could not be restarted.")
+            return
+
+        Pipeline.objects.filter(id=pipeline.id).update(
+            restarted=pipeline.restarted + 1,
+            open_time=datetime.datetime.now(pytz.utc),
+            active=True,
+        )
 
 
 def check_pipeline_stuck(pipeline):
@@ -113,17 +118,24 @@ def check_matching_remote_position(positions, pipeline):
 
     td = datetime.datetime.now(pytz.utc) - pipeline.open_time
 
-    if td > datetime.timedelta(minutes=5) and position is None:
+    # a pipeline whose strategy is in a neutral state legitimately has no
+    # remote position - only flag a mismatch when the local position is open
+    local_position_open = Position.objects.filter(
+        pipeline__id=pipeline.id, position__in=[1, -1]
+    ).exists()
+
+    if td > datetime.timedelta(minutes=5) and position is None and local_position_open:
 
         logging.info(f'Remote position for pipeline {pipeline.id} not found. Stopping pipeline...')
 
         stop_pipeline(pipeline.id, '', raise_exception=False, force=True)
 
         # Restore balance of pipeline
-        pipeline.active = False
-        pipeline.units = 0
-        pipeline.balance = pipeline.current_equity * pipeline.leverage
-        pipeline.save()
+        Pipeline.objects.filter(id=pipeline.id).update(
+            active=False,
+            units=0,
+            balance=pipeline.current_equity * pipeline.leverage,
+        )
 
         Position.objects.filter(pipeline__id=pipeline.id).update(position=0)
 

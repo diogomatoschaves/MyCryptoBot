@@ -43,7 +43,6 @@ def refresh_expiring_jwts(response):
             data = response.get_json()
             if type(data) is dict:
                 data["access_token"] = access_token
-                cache.set("bearer_token", f"Bearer {access_token}")
                 response.data = json.dumps(data)
         return response
     except (RuntimeError, KeyError, NoAuthorizationError, DecodeError, ExpiredSignatureError):
@@ -67,8 +66,6 @@ def create_token():
         return {"msg": "Wrong email or password"}, 401
 
     access_token = create_access_token(identity=username)
-
-    cache.set("bearer_token", f"Bearer {access_token}")
 
     response = {"access_token": access_token}
 

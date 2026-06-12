@@ -606,11 +606,11 @@ class TestBotsAPI:
 
         mock_get_strategies_raise_exception.side_effect = side_effect
 
-        if raises_error:
-            client.get(f'{API_PREFIX}/resources/strategies')
-        else:
-            client.get(f'{API_PREFIX}/resources/strategies')
+        res = client.get(f'{API_PREFIX}/resources/strategies')
 
         assert spy_db_connection.call_count == call_count
 
-        assert spy_sys_exit.call_count > 0 if raises_error else spy_sys_exit.call_count == 0
+        # unhandled errors no longer kill the worker - they return a 500
+        assert spy_sys_exit.call_count == 0
+        if raises_error:
+            assert res.status_code == 500

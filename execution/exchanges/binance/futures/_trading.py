@@ -1,10 +1,14 @@
 import logging
+import time
+import uuid
 
 import pytz
 import os
 from datetime import datetime
 
 import django
+from binance.exceptions import BinanceAPIException
+from requests import ReadTimeout, ConnectionError
 
 from database.model.models import Pipeline
 from execution.exchanges.binance import BinanceTrader
@@ -279,7 +283,39 @@ class BinanceFuturesTrader(BinanceTrader):
             self._set_position(symbol, 0, previous_position=1, **kwargs)
             self.print_trading_results(pipeline_id=pipeline_id)
 
-    @retry_failed_connection(num_times=2)
+    def _place_order_idempotent(self, num_times=2, **order_kwargs):
+        """
+        Places an order, retrying on connection errors without ever placing it
+        twice: the same newClientOrderId is reused across attempts, and after a
+        timeout the order status is checked first — the request may have
+        reached Binance even though the response was lost.
+
+        Raises the original connection error if the order status cannot be
+        confirmed, so callers never mistake an unknown outcome for success.
+        """
+        symbol = order_kwargs["symbol"]
+        client_order_id = order_kwargs["newClientOrderId"]
+
+        retries = 0
+        while True:
+            try:
+                return self.futures_create_order(**order_kwargs)
+            except (ConnectionError, ReadTimeout) as conn_error:
+                try:
+                    return self.futures_get_order(
+                        symbol=symbol, origClientOrderId=client_order_id
+                    )
+                except BinanceAPIException as e:
+                    if e.code != -2013:  # anything but ORDER_DOES_NOT_EXIST
+                        raise            # outcome unknown - do not re-place
+
+                retries += 1
+                if retries > num_times:
+                    raise conn_error
+
+                logging.debug("Retrying order placement.")
+                time.sleep(2 ** (retries - 1))
+
     def _execute_order(
         self,
         symbol,
@@ -318,21 +354,26 @@ class BinanceFuturesTrader(BinanceTrader):
         This method is responsible for the actual execution of trades on the Binance Futures market,
         handling order creation and response processing.
         """
-        reducing = kwargs.get('reducing', False)
-        stop_trading = kwargs.get('stop_trading', False)
+        # internal kwargs - never forwarded to the Binance API
+        reducing = kwargs.pop('reducing', False)
+        stop_trading = kwargs.pop('stop_trading', False)
+        pipeline_id = kwargs.pop('pipeline_id', None)
 
         units = self._convert_units(amount, units, symbol)
 
-        pipeline_id = kwargs.get('pipeline_id')
         pipeline = get_pipeline_data(pipeline_id, return_obj=True, ignore_exception=True)
 
-        order = self.futures_create_order(
+        # reused across retries so Binance can deduplicate a re-placed order
+        client_order_id = f"{pipeline_id or 'manual'}-{uuid.uuid4().hex}"[:36]
+
+        order = self._place_order_idempotent(
             symbol=symbol,
             side=order_side,
             type=order_type,
             newOrderRespType='RESULT',
             quantity=units,
-            **kwargs
+            newClientOrderId=client_order_id,
+            **({"reduceOnly": True} if reducing else {})
         )
 
         order = self._process_order(order, pipeline_id)
@@ -485,7 +526,7 @@ class BinanceFuturesTrader(BinanceTrader):
         pipeline.balance = self.current_balance[symbol]
         pipeline.units = self.units[symbol]
         pipeline.current_equity = self.current_equity[symbol]
-        pipeline.save()
+        pipeline.save(update_fields=["balance", "units", "current_equity"])
 
         if reducing:
             save_pipeline_snapshot(pipeline_id=pipeline.id)

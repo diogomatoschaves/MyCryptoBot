@@ -15,7 +15,7 @@ from flask_jwt_extended import JWTManager, create_access_token
 from data.service.cron_jobs.app_health import check_app_health
 from data.service.cron_jobs.main import start_background_scheduler
 from shared.utils.config_parser import get_config
-from shared.utils.helpers import is_pipeline_loading, LOADING
+from shared.utils.helpers import is_pipeline_loading, get_jwt_secret_key, LOADING
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -52,7 +52,7 @@ def startup_task(app):
     with app.app_context():
         access_token = create_access_token(identity='abc', expires_delta=False)
         bearer_token = 'Bearer ' + access_token
-        cache.set("bearer_token", bearer_token)
+        cache.set("service_bearer_token", bearer_token)
 
     for pipeline in active_pipelines:
         response = start_symbol_trading(pipeline, restart=True)
@@ -76,7 +76,7 @@ def create_app():
     app.register_blueprint(user_management, url_prefix='/api')
     app.register_blueprint(proxy, url_prefix='/api')
 
-    app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
+    app.config["JWT_SECRET_KEY"] = get_jwt_secret_key()
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=config_vars.token_expires_days)
 
     JWTManager(app)

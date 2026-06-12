@@ -11,6 +11,8 @@ from shared.utils.exceptions import NoSuchPipeline
 from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
+from database.model.models import Pipeline
+
 
 def inject_fixture(mock_name, method):
     globals()[f"{mock_name}"] = binance_handler_execution_app_factory(method)
@@ -399,6 +401,10 @@ class TestExecutionService:
         res = client.post(f"/execute_order", json=params)
 
         assert res.json == expected_value
+
+        # a fatal API error must deactivate the pipeline so the data service
+        # stops sending signals into a broken trading state
+        assert Pipeline.objects.get(id=params["pipeline_id"]).active is False
 
     @pytest.mark.parametrize(
         "endpoint,params,expected_value",

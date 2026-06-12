@@ -15,6 +15,9 @@ def mock_rq_job(*args, **kwargs):
             if "raise_error" in kwargs:
                 raise NoSuchJobError
 
+        def __getattr__(self, item):
+            return False
+
     return MockJob()
 
 
@@ -23,7 +26,7 @@ def mocked_rq_job(mocker):
     return mocker.patch("rq.job.Job.fetch")
 
 
-def mock_enqueue_call(get_signal, params):
+def mock_enqueue_call(get_signal, params, **kwargs):
     class MockJob:
         def __init__(self):
             pass

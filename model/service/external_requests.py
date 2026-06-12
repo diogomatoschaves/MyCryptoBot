@@ -23,7 +23,7 @@ def execute_order(pipeline_id, signal, bearer_token, header=''):
 
     logging.info(header + f"Sending {side} order with signal {signal}.")
 
-    r = requests.post(url, json=payload, headers={"Authorization": bearer_token})
+    r = requests.post(url, json=payload, headers={"Authorization": bearer_token}, timeout=(5, 60))
     logging.debug(r.text)
 
     response = r.json()

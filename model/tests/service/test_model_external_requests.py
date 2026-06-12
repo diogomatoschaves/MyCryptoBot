@@ -34,5 +34,6 @@ class TestModelExternalRequests:
                 os.getenv("EXECUTION_APP_URL")
             ),
             json=params,
-            headers={"Authorization": bearer_token}
+            headers={"Authorization": bearer_token},
+            timeout=(5, 60)
         )

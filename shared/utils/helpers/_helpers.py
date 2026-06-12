@@ -50,6 +50,23 @@ def get_root_dir():
     )
 
 
+def get_jwt_secret_key():
+    """JWT signing key for service auth. Prefer a dedicated JWT_SECRET_KEY so
+    a leaked Django SECRET_KEY can't be used to forge service tokens; fall
+    back to SECRET_KEY for backwards compatibility with existing deployments.
+    """
+    secret_key = os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY"))
+
+    if not secret_key:
+        if os.getenv("TEST"):
+            return "test-jwt-secret"
+        raise EnvironmentError(
+            "JWT_SECRET_KEY (or SECRET_KEY) environment variable must be set"
+        )
+
+    return secret_key
+
+
 def get_logging_row_header(cache, pipeline):
     header = f"{pipeline.symbol.name}|{pipeline.name}|{pipeline.id}|{pipeline.interval}: "
 

@@ -141,7 +141,7 @@ def get_existing_pipeline(fields):
         pipeline.open_time = datetime.datetime.now(pytz.utc)
         pipeline.restarted = 0
 
-        pipeline.save()
+        pipeline.save(update_fields=["active", "open_time", "restarted"])
 
     return pipeline
 

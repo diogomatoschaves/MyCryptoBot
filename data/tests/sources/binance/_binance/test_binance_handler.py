@@ -158,6 +158,7 @@ class TestBinanceDataHandler:
         binance_handler_instances_spy_stop_bot,
         patch_time_sleep,
         mock_redis_connection_external_requests,
+        mock_redis_connection_binance,
         trigger_signal_spy,
         create_open_position
     ):
@@ -166,6 +167,13 @@ class TestBinanceDataHandler:
 
         print(ExchangeData.objects.all().count())
         print(StructuredData.objects.all().count())
+
+        # seed the failure counter so this candle's failure is the one that
+        # exceeds MAX_CONSECUTIVE_FAILURES and stops the pipeline
+        mock_redis_connection_binance.set(
+            f"signal_failures {input_params['pipeline_id']}",
+            BinanceDataHandler.MAX_CONSECUTIVE_FAILURES - 1
+        )
 
         binance_data_handler = BinanceDataHandler(**input_params)
         binance_data_handler.start_data_ingestion()

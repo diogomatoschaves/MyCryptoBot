@@ -257,6 +257,10 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     def _stop_websocket(self):
         self.stop_socket(self.conn_key)
 
+    # number of consecutive failed signal generations after which the
+    # pipeline is stopped and its position closed
+    MAX_CONSECUTIVE_FAILURES = 3
+
     def generate_new_signal(self, header, retries=0):
 
         if retries >= 2:
@@ -264,13 +268,36 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         success, message = trigger_signal(self.pipeline_id, header=header)
 
-        if not success:
-            if "Too many retries" in message:
-                success = self.generate_new_signal(header, retries=retries + 1)
-            else:
-                logging.warning(header + message)
+        failures_key = f"signal_failures {self.pipeline_id}"
 
+        if success:
+            cache.delete(failures_key)
+        else:
+            if "Too many retries" in message:
+                return self.generate_new_signal(header, retries=retries + 1)
+
+            logging.warning(header + message)
+
+            if "not active" in message:
+                # the pipeline is gone from the DB - stop streaming right away
                 stop_pipeline(self.pipeline_id, header, raise_exception=False)
+                return success
+
+            # a single failure can be transient (worker hiccup, queue
+            # backlog): skip this candle and only liquidate the position
+            # after several consecutive failures
+            failures = cache.incr(failures_key)
+
+            if failures >= self.MAX_CONSECUTIVE_FAILURES:
+                logging.warning(
+                    header + f"{failures} consecutive signal failures. Stopping pipeline."
+                )
+                cache.delete(failures_key)
+                stop_pipeline(self.pipeline_id, header, raise_exception=False)
+            else:
+                logging.info(
+                    header + f"Skipping candle ({failures} consecutive signal failures)."
+                )
 
         return success
 

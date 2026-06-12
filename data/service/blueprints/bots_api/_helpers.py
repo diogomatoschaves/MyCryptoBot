@@ -105,13 +105,13 @@ def start_symbol_trading(pipeline, restart=False):
     if not response["success"] and not (response["code"] == "SYMBOL_ALREADY_TRADED" and restart):
         pipeline.active = False
         pipeline.open_time = None
-        pipeline.save()
+        pipeline.save(update_fields=["active", "open_time"])
 
         return response
     else:
         response["success"] = True
         pipeline.last_entry = None
-        pipeline.save()
+        pipeline.save(update_fields=["last_entry"])
 
     executor.submit(
         initialize_data_collection,

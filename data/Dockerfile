@@ -14,14 +14,8 @@ RUN npm run build
 
 FROM --platform=linux/amd64 python:3.8-slim
 
-ARG BINANCE_API_KEY
-ARG BINANCE_API_SECRET
-ARG BINANCE_API_KEY_TEST
-ARG BINANCE_API_SECRET_TEST
-ARG MODEL_APP_URL
-ARG EXECUTION_APP_URL
-ARG APP_NAME
-ARG SECRET_KEY
+# Secrets and app config are injected at runtime (Heroku config vars /
+# compose env_file) — never as build args, which persist in image layers.
 
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -56,14 +50,5 @@ COPY ./shared/ ./app/shared/
 COPY --from=build-step app/dist/. ./app/$DIRECTORY/build
 
 WORKDIR /app
-
-ENV BINANCE_API_KEY=$BINANCE_API_KEY
-ENV BINANCE_API_SECRET=$BINANCE_API_SECRET
-ENV BINANCE_API_KEY_TEST=$BINANCE_API_KEY_TEST
-ENV BINANCE_API_SECRET_TEST=$BINANCE_API_SECRET_TEST
-ENV MODEL_APP_URL=$MODEL_APP_URL
-ENV EXECUTION_APP_URL=$EXECUTION_APP_URL
-ENV APP_NAME=$APP_NAME
-ENV SECRET_KEY=$SECRET_KEY
 
 CMD bash $DIRECTORY/entrypoint.sh

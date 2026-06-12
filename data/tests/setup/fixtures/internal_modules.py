@@ -242,6 +242,7 @@ def mock_redis():
 
         def __init__(self):
             setattr(self, "bearer_token", "mock bearer_token")
+            setattr(self, "service_bearer_token", "mock bearer_token")
 
         def set(self, object_name, object_value):
             setattr(self, object_name, object_value)
@@ -251,6 +252,15 @@ def mock_redis():
                 return getattr(self, object_name)
             except AttributeError:
                 '""'
+
+        def incr(self, object_name):
+            value = int(getattr(self, object_name, 0)) + 1
+            setattr(self, object_name, value)
+            return value
+
+        def delete(self, object_name):
+            if hasattr(self, object_name):
+                delattr(self, object_name)
 
     return RedisCache()
 

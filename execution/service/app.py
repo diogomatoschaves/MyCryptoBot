@@ -16,6 +16,7 @@ from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.futures import BinanceFuturesTrader
 from shared.utils.config_parser import get_config
 from shared.utils.decorators import handle_db_connection_error
+from shared.utils.helpers import get_jwt_secret_key
 from shared.utils.exceptions import EquityRequired
 from shared.utils.logger import configure_logger
 
@@ -58,7 +59,7 @@ def startup_task():
         except InsufficientBalance:
             logging.info(f"Insufficient balance to start pipeline {pipeline.id}.")
             pipeline.active = False
-            pipeline.save()
+            pipeline.save(update_fields=["active"])
 
 
 def start_pipeline_trade(pipeline, header):
@@ -86,7 +87,7 @@ def create_app():
     app = Flask(__name__)
     app.register_blueprint(market_data)
 
-    app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
+    app.config["JWT_SECRET_KEY"] = get_jwt_secret_key()
 
     JWTManager(app)
 

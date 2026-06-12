@@ -87,7 +87,7 @@ def stop_bot():
 
         pipeline = Pipeline.objects.get(id=pipeline_id)
         pipeline.active = False
-        pipeline.save()
+        pipeline.save(update_fields=["active"])
 
         return jsonify(Responses.DATA_PIPELINE_STOPPED(pipeline))
     except Pipeline.DoesNotExist:
