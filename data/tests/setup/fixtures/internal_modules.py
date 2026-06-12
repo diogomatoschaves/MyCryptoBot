@@ -262,6 +262,9 @@ def mock_redis():
             if hasattr(self, object_name):
                 delattr(self, object_name)
 
+        def expire(self, object_name, seconds):
+            return True
+
     return RedisCache()
 
 

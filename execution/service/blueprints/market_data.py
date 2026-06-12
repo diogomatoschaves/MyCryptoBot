@@ -52,6 +52,7 @@ def get_account_data():
 
 
 @market_data.get('/prices')
+@jwt_required()
 def get_current_price():
 
     symbol = request.args.get("symbol", None)

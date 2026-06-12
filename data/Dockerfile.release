@@ -1,0 +1,6 @@
+# Heroku release-phase image: runs migrations before traffic switches to a
+# new release. Based on the web image pushed immediately before it in CI.
+ARG HEROKU_APP_NAME
+FROM registry.heroku.com/$HEROKU_APP_NAME/web
+
+CMD python database/manage.py migrate

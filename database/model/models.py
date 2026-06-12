@@ -113,6 +113,11 @@ class ExchangeData(models.Model):
 
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")
+        indexes = [
+            # covering index for the hot candle query:
+            # filter(symbol, interval, open_time__gte).order_by('open_time')
+            models.Index(fields=["symbol", "interval", "open_time"]),
+        ]
 
     def __repr__(self):
         return self.__class__.__name__
@@ -140,6 +145,11 @@ class StructuredData(models.Model):
 
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")
+        indexes = [
+            # covering index for the hot candle query:
+            # filter(symbol, interval, open_time__gte).order_by('open_time')
+            models.Index(fields=["symbol", "interval", "open_time"]),
+        ]
 
 
 class Jobs(models.Model):

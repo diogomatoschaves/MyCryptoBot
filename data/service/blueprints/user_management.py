@@ -50,10 +50,22 @@ def refresh_expiring_jwts(response):
         return response
 
 
+MAX_LOGIN_ATTEMPTS = 10
+LOGIN_ATTEMPTS_WINDOW_SECONDS = 300
+
+
 @user_management.post('/token')
 @general_app_error
 @handle_db_connection_error
 def create_token():
+    # simple fixed-window rate limit to slow down password brute-forcing
+    attempts_key = f"login_attempts {request.remote_addr}"
+    attempts = cache.incr(attempts_key)
+    if attempts == 1:
+        cache.expire(attempts_key, LOGIN_ATTEMPTS_WINDOW_SECONDS)
+    if attempts > MAX_LOGIN_ATTEMPTS:
+        return {"msg": "Too many login attempts. Try again later."}, 429
+
     username = request.json.get("username", None)
     password = request.json.get("password", None)
 
@@ -66,6 +78,8 @@ def create_token():
         return {"msg": "Wrong email or password"}, 401
 
     access_token = create_access_token(identity=username)
+
+    cache.delete(attempts_key)
 
     response = {"access_token": access_token}
 

@@ -91,7 +91,7 @@ def create_app():
 
     JWTManager(app)
 
-    CORS(app)
+    CORS(app, origins=os.getenv("CORS_ALLOWED_ORIGINS", "*").split(","))
 
     startup_task()
 

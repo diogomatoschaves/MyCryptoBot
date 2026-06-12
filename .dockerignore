@@ -2,3 +2,4 @@
 database/db.sqlite3
 database/datasets
 dashboard/node_modules
+database/local_db
