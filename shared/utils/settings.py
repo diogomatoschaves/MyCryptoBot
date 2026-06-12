@@ -6,7 +6,11 @@ the values that used to live in proj.conf, so behaviour is unchanged when no
 env var is set.
 """
 import os
-from distutils.util import strtobool
+
+
+def _strtobool(value):
+    # distutils.util.strtobool replacement (distutils removed in Python 3.12)
+    return str(value).strip().lower() in ("1", "true", "yes", "y", "t", "on")
 
 
 def _get_str(env_var, default):
@@ -20,7 +24,7 @@ def _get_int(env_var, default):
 
 def _get_bool(env_var, default):
     value = os.getenv(env_var)
-    return bool(strtobool(value)) if value is not None else default
+    return _strtobool(value) if value is not None else default
 
 
 class Settings:
@@ -38,7 +42,7 @@ class Settings:
 
         # [data]
         self.token_expires_days = _get_int("TOKEN_EXPIRES_DAYS", 3)
-        self.app_check_interval_seconds = _get_int("CHECKS_INTERVAL", 3600)
+        self.app_check_interval_seconds = _get_int("CHECKS_INTERVAL", 300)
         self.base_candle_size = _get_str("BASE_CANDLE_SIZE", "5m")
 
         # [execution]

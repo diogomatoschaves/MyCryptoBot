@@ -369,17 +369,17 @@ class TestBinanceFuturesTrader:
             {
                 **futures_order_creation,
                 "side": "BUY" if signal == 1 else "SELL",
-                "orderId": randint(0, 1E9),
+                "orderId": randint(0, 10**9),
                 "cumQuote": side_effect[0]
             },
             {
                 **futures_order_creation,
-                "orderId": randint(0, 1E9),
+                "orderId": randint(0, 10**9),
                 "cumQuote": side_effect[1]
             },
             {
                 **futures_order_creation,
-                "orderId": randint(0, 1E9),
+                "orderId": randint(0, 10**9),
                 "cumQuote": side_effect[2]
             }
         ]
@@ -521,14 +521,14 @@ class TestBinanceFuturesTrader:
                     {
                         **futures_order_creation,
                         "side": -1,
-                        "orderId": randint(0, 1E9),
+                        "orderId": randint(0, 10**9),
                         "cumQuote": 120,
                         "executedQty": "0.005"
                     },
                     {
                         **futures_order_creation,
                         "side": 1,
-                        "orderId": randint(0, 1E9),
+                        "orderId": randint(0, 10**9),
                         "cumQuote": 10,
                         "executedQty": "0.005"
                     },
@@ -543,14 +543,14 @@ class TestBinanceFuturesTrader:
                     {
                         **futures_order_creation,
                         "side": -1,
-                        "orderId": randint(0, 1E9),
+                        "orderId": randint(0, 10**9),
                         "cumQuote": 50,
                         "executedQty": "0.005"
                     },
                     {
                         **futures_order_creation,
                         "side": 1,
-                        "orderId": randint(0, 1E9),
+                        "orderId": randint(0, 10**9),
                         "cumQuote": 200,
                         "executedQty": "0.005"
                     },

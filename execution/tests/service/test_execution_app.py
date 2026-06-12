@@ -51,7 +51,7 @@ class TestExecutionService:
 
         res = client.get("/")
 
-        assert res.data.decode(res.charset) == "I'm up!"
+        assert res.data.decode("utf-8") == "I'm up!"
 
     @pytest.mark.parametrize(
         "route",

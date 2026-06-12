@@ -380,7 +380,7 @@ def create_all_pipelines(
 @pytest.fixture
 def create_orders(db, create_exchange, create_symbol, create_pipeline):
     order_1 = Orders.objects.create(
-        order_id=randint(1, 1E9),
+        order_id=randint(1, 10**9),
         client_order_id=1234,
         symbol_id="BTCUSDT",
         transact_time=datetime.datetime.now(pytz.utc),
@@ -396,7 +396,7 @@ def create_orders(db, create_exchange, create_symbol, create_pipeline):
         pipeline_id=1
     )
     order_2 = Orders.objects.create(
-        order_id=randint(1, 1E9),
+        order_id=randint(1, 10**9),
         client_order_id=1234,
         symbol_id="BTCUSDT",
         transact_time=datetime.datetime.now(pytz.utc),

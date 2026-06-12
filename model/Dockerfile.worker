@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.8-slim
+FROM --platform=linux/amd64 python:3.12-slim
 
 # Secrets and app config are injected at runtime (Heroku config vars /
 # compose env_file) — never as build args, which persist in image layers.
@@ -17,8 +17,8 @@ RUN pip install -U pip \
     && apt-get update \
     && yes | apt-get install libpq-dev \
     && apt install -y curl netcat-traditional \
-    && curl -sSL https://install.python-poetry.org | python - --version 1.7.1 \
-    && pip install psycopg2-binary==2.8.6
+    && curl -sSL https://install.python-poetry.org | python - --version 2.4.0 \
+    && pip install psycopg2-binary==2.9.9
 ENV PATH="$POETRY_HOME/bin:$PATH"
 
 COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /

@@ -12,7 +12,7 @@ class TestDataService:
 
         res = client.get('/')
 
-        assert res.data.decode(res.charset) == 'No files found!'
+        assert res.data.decode("utf-8") == 'No files found!'
 
     def test_set_service_token_populates_cache(self, app):
         import data.service.app as data_app

@@ -18,7 +18,7 @@ class TestModelService:
 
         res = app_client.get("/")
 
-        assert res.data.decode(res.charset) == "It's up!"
+        assert res.data.decode("utf-8") == "It's up!"
 
     @pytest.mark.parametrize(
         "route,method",

@@ -25,19 +25,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.8
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
+          python-version: '3.12'
       - name: Install and configure Poetry
-        uses: snok/install-poetry@v1.3.3
+        uses: snok/install-poetry@v1.4.1
         with:
-          version: 1.7.1
+          version: 2.4.0
           virtualenvs-create: false
       - name: Install dependencies
         run: |
           cd $DIRECTORY/
           poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+      - name: Security audit (pip-audit, advisory)
+        continue-on-error: true
+        run: |
+          pip install pip-audit
+          pip-audit
       - name: Test with pytest
         env:
           TEST: true
