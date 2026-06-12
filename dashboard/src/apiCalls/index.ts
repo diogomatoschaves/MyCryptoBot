@@ -1,12 +1,12 @@
-const dataAPIHost = import.meta.env.VITE_DATA_API_HOST || ''
+// Always call the data service same-origin at /api so the httpOnly JWT cookie
+// is sent: in dev the Vite proxy forwards /api, in docker-compose the dashboard
+// nginx forwards it, and in production the data service serves the dashboard.
+const urlPrefix = '/api'
 
-const domain = window.location.origin !== dataAPIHost && dataAPIHost ? dataAPIHost : window.location.origin
 
-const urlPrefix = new URL('api', domain).toString();
-
-
-const getToken = () => {
-  return `Bearer ${window.localStorage.getItem('crypto-token')}`
+const getCookie = (name: string): string | null => {
+  const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'))
+  return match ? decodeURIComponent(match[2]) : null
 }
 
 interface RequestOptions {
@@ -21,12 +21,18 @@ const request = async <T = any>(path: string, options: RequestOptions = {}): Pro
   const headers: Record<string, string> = {
     "Accept": "application/json, text/plain, */*",
   }
-  if (auth) headers["Authorization"] = getToken()
   if (body) headers["Content-Type"] = "application/json"
+
+  // CSRF double-submit: echo the readable csrf cookie on state-changing calls
+  if (method !== 'GET' && method !== 'HEAD') {
+    const csrf = getCookie('csrf_access_token')
+    if (csrf) headers["X-CSRF-TOKEN"] = csrf
+  }
 
   const response = await fetch(`${urlPrefix}${path}`, {
     method,
     headers,
+    credentials: 'include',  // send/receive the httpOnly JWT cookie
     ...(body ? { body: JSON.stringify(body) } : {})
   })
 
@@ -78,6 +84,12 @@ export const getPipelinesMetrics = () =>
 
 export const userLogin = (requestData: object) =>
   request('/token', { method: 'POST', body: requestData, auth: false })
+
+// auth state probe (httpOnly cookie can't be read by JS)
+export const getMe = () => request('/me')
+
+export const logout = () =>
+  request('/logout', { method: 'POST', auth: false })
 
 export const getEquityTimeSeries = ({ pipelineId, maxItems }: { pipelineId?: number | string | null, maxItems?: number }) =>
   request(`/pipeline-equity${pipelineId ? '/' + pipelineId : ''}${maxItems ? `?maxItems=${maxItems}` : ''}`)

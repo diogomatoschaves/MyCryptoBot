@@ -93,9 +93,23 @@ def create_app():
     app.config["JWT_SECRET_KEY"] = get_jwt_secret_key()
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=settings.token_expires_days)
 
+    # the JWT rides in an httpOnly cookie (not localStorage), with CSRF
+    # double-submit protection on state-changing requests
+    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    app.config["JWT_COOKIE_CSRF_PROTECT"] = True
+    app.config["JWT_COOKIE_SAMESITE"] = "Lax"
+    app.config["JWT_ACCESS_COOKIE_PATH"] = "/api/"
+    # served over https in prod; disable only for local http dev
+    app.config["JWT_COOKIE_SECURE"] = os.getenv("JWT_COOKIE_SECURE", "true").lower() == "true"
+
     JWTManager(app)
 
-    CORS(app, origins=os.getenv("CORS_ALLOWED_ORIGINS", "*").split(","))
+    # cookies require credentialed CORS with explicit origins (no wildcard)
+    CORS(
+        app,
+        origins=os.getenv("CORS_ALLOWED_ORIGINS", "*").split(","),
+        supports_credentials=True,
+    )
 
     startup_task(app)
 

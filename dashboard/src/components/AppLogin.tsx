@@ -24,6 +24,12 @@ const AppLogin = (props: Props) => {
 
   const { size, location, history, token, saveToken, removeToken, updateMessage } = props
 
+  // still resolving the /me auth probe - render nothing to avoid flashing
+  // the app or the login screen before the auth state is known
+  if (token === undefined) {
+    return null
+  }
+
   return (
     <Fragment>
       {token ? (

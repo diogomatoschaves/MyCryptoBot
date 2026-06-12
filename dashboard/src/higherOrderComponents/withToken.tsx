@@ -1,25 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getMe, logout } from '../apiCalls';
 
+// The JWT now lives in an httpOnly cookie that JS can't read, so auth state is
+// derived from a /me probe rather than a localStorage token. `token` is:
+//   undefined -> still resolving, null -> logged out, truthy -> logged in.
 const withToken = (WrappedComponent: any) => {
 
   return function(props: any) {
 
-    const getToken = () => {
-      const userToken = window.localStorage.getItem('crypto-token');
-      return userToken && userToken
-    }
+    const [token, setToken] = useState<string | null | undefined>(undefined);
 
-    const [token, setToken] = useState(getToken());
+    useEffect(() => {
+      getMe()
+        .then((res) => setToken(res && res.username ? res.username : null))
+        .catch(() => setToken(null));
+    }, []);
 
-    const saveToken = (userToken: string) => {
-      window.localStorage.setItem('crypto-token', userToken);
-      setToken(userToken);
+    const saveToken = (username: string) => {
+      setToken(username || (true as any));
     };
 
     const removeToken = () => {
-      window.localStorage.removeItem("crypto-token");
-      setToken(null);
-    }
+      logout().catch(() => {}).finally(() => setToken(null));
+    };
 
     return <WrappedComponent saveToken={saveToken} token={token} removeToken={removeToken} {...props}/>
   }

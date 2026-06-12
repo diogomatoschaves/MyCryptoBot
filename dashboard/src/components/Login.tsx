@@ -103,13 +103,14 @@ function Login(props: Props) {
     })
       .then((response) => {
         setLoading(false)
-        if (response.access_token) {
-          saveToken(response.access_token)
+        if (response.login) {
+          // the JWT cookie was set by the server; just flip to logged-in
+          saveToken(response.username)
           updateMessage({
             text: "You're logged in!",
             success: true
           })
-        } else if(response.status !== 200) {
+        } else {
           updateMessage({
             text: response.msg,
             success: false

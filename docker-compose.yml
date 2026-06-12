@@ -33,6 +33,8 @@ services:
       - EXECUTION_APP_URL=http://execution-service:5000
       - PORT=5000
       - LOGGER_LEVEL=INFO
+      # local dev is http, so the JWT cookie can't be Secure-only
+      - JWT_COOKIE_SECURE=false
     depends_on:
       db:
         condition: service_healthy
@@ -122,9 +124,6 @@ services:
     build:
       context: .
       dockerfile: dashboard/Dockerfile
-      args:
-        # Vite bakes this in at build time
-        - VITE_DATA_API_HOST=${VITE_DATA_API_HOST:-http://localhost:5003}
     image: dashboard-server
     ports:
       # Picks the first free host port in the range (3000 if available)
