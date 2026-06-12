@@ -15,8 +15,10 @@ with pytest.MonkeyPatch().context() as ctx:
     from execution.service.helpers.exceptions import SymbolNotBeingTraded  # noqa: F401
     from execution.exchanges.binance.futures import BinanceFuturesTrader
 
-from database.model.models import Orders
-from shared.utils.tests.fixtures.models import create_exchange, create_symbol, create_assets
+from database.model.models import Orders, Position
+from shared.utils.tests.fixtures.models import (
+    create_exchange, create_symbol, create_assets, create_pipeline,
+)
 
 
 def _order_fields(**overrides):
@@ -181,3 +183,15 @@ class TestExecuteOrderKwargs:
         assert kwargs["reduceOnly"] is True
         assert kwargs["newClientOrderId"].startswith("11-")
         assert len(kwargs["newClientOrderId"]) <= 36
+
+
+class TestPositionUniqueness:
+
+    def test_one_position_per_pipeline(self, create_pipeline):
+        Position.objects.create(pipeline_id=1, position=1)
+
+        # the racy exists-then-create path can no longer produce a second
+        # position row for the same pipeline
+        with pytest.raises(IntegrityError):
+            with transaction.atomic():
+                Position.objects.create(pipeline_id=1, position=-1)

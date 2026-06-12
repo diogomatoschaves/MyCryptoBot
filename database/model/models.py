@@ -259,7 +259,9 @@ class Pipeline(models.Model):
 class Position(models.Model):
 
     position = models.IntegerField()
-    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE)
+    # exactly one position per pipeline; the unique index prevents the
+    # MultipleObjectsReturned the racy exists-then-create path could cause
+    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE, unique=True)
     buying_price = models.FloatField(null=True, blank=True)
     amount = models.FloatField(null=True, blank=True)
     open_time = models.DateTimeField(auto_now_add=True, null=True)
