@@ -111,7 +111,9 @@ services:
     volumes:
       - ./database/model:/usr/src/app/database/model
   redis:
-    image: redis:7
+    # Must stay >= the version that wrote the data volume (redis:latest 8.8.0
+    # ran in prod before the pin; its RDB v14 file is unreadable by redis 7)
+    image: redis:8
     restart: always
     volumes:
       - redis-data:/data

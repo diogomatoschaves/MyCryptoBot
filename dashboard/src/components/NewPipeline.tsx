@@ -123,8 +123,8 @@ const NewPipeline = (props: Props) => {
   ));
 
   const [availableBalance, updateBalance] = useReducer(availableBalanceReducer, {
-    live: balances ? balances.live.USDT.availableBalance : 0,
-    test: balances ? balances.test.USDT.availableBalance : 0
+    live: balances?.live?.USDT?.availableBalance ?? 0,
+    test: balances?.test?.USDT?.availableBalance ?? 0
   })
 
   const previous = useRef({positions, balances}).current;
@@ -206,7 +206,7 @@ const NewPipeline = (props: Props) => {
         leverage,
         edit,
         pipelineId: pipeline && pipeline.id,
-        balance: balances[liveTrading ? 'live': 'test'].USDT.availableBalance
+        balance: balances[liveTrading ? 'live': 'test']?.USDT?.availableBalance ?? 0
       })
       if (success) setOpen(false)
     } finally {

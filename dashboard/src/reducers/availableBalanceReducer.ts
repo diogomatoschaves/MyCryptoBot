@@ -22,8 +22,8 @@ export const availableBalanceReducer = (state: any, action: any) => {
             return accum
           }
         }, {
-          live: action.balances.live.USDT.availableBalance,
-          test: action.balances.test.USDT.availableBalance
+          live: action.balances?.live?.USDT?.availableBalance ?? 0,
+          test: action.balances?.test?.USDT?.availableBalance ?? 0
         }),
       }
     default:

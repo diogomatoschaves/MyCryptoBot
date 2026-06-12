@@ -185,12 +185,12 @@ function Dashboard(props: Props) {
           <StatsRow>
             <Stat
               label="Total Equity"
-              value={`${balances[key].USDT.totalBalance.toFixed(1)} USDT`}
+              value={`${(balances[key]?.USDT?.totalBalance ?? 0).toFixed(1)} USDT`}
               size="lg"
             />
             <Stat
               label="Available"
-              value={`${balances[key].USDT.availableBalance.toFixed(1)} USDT`}
+              value={`${(balances[key]?.USDT?.availableBalance ?? 0).toFixed(1)} USDT`}
               size="lg"
               color={theme.textDim}
             />
