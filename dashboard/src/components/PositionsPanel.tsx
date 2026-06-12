@@ -1,8 +1,23 @@
-import React from 'react';
-import {Message, Table} from "semantic-ui-react";
-import StyledSegment from "../styledComponents/StyledSegment";
+import {Layers} from 'lucide-react'
 import {Decimals, PipelinesObject, Position} from "../types";
 import PositionRow from "./PositionRow";
+import {EmptyState, Table, TableScroll} from "../ui";
+
+
+const POSITIONS_HEADER = [
+  'Trading Bot',
+  'Mode',
+  'Symbol',
+  'Open since',
+  'Side',
+  'Size',
+  'Units',
+  'Entry Price',
+  'Mark Price',
+  'Leverage',
+  'PnL (ROI%)',
+  'Exchange',
+]
 
 
 interface Props {
@@ -18,65 +33,48 @@ const PositionsPanel = (props: Props) => {
   const { size, positions, currentPrices, pipelines, decimals } = props
 
   const mobile = ['mobile'].includes(size)
-  const cellType = mobile ? 'div' : 'th'
-  const headerStyle = mobile ? styles.header : {}
 
-  const positionsHeader = [
-    <Table.HeaderCell as={cellType} style={headerStyle} width={2}>Trading Bot</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Mode</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Symbol</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Open since</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Side</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Size</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Units</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Entry Price</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Mark Price</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Leverage</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>PnL (ROI%)</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Exchange</Table.HeaderCell>,
-  ]
+  if (positions.length === 0) {
+    return (
+      <EmptyState
+        icon={<Layers/>}
+        title="There are no open positions"
+        hint="Positions opened by your trading bots will show up here."
+      />
+    )
+  }
+
+  const rows = positions.map((position, index) => (
+    <PositionRow
+      key={`${position.pipelineId}-${position.symbol}-${index}`}
+      size={size}
+      index={index}
+      position={position}
+      pipelines={pipelines}
+      currentPrices={currentPrices}
+      decimals={decimals}
+      positionsHeader={POSITIONS_HEADER}
+    />
+  ))
+
+  if (mobile) {
+    return <div style={{width: '100%', animation: 'fadeUp 0.35s ease both'}}>{rows}</div>
+  }
 
   return (
-      <StyledSegment padding={'40px'} basic className="flex-column">
-        <Table basic='very' striped compact textAlign={'center'}>
-          {!mobile && (
-            <Table.Header>
-              <Table.Row>
-                {positionsHeader.map(entry => entry)}
-              </Table.Row>
-            </Table.Header>
-          )}
-          <Table.Body>
-            {positions.map((position, index) => {
-              return (
-                <PositionRow
-                  size={size}
-                  index={index}
-                  position={position}
-                  pipelines={pipelines}
-                  currentPrices={currentPrices}
-                  decimals={decimals}
-                  positionsHeader={positionsHeader}
-                />
-              )
-            })}
-          </Table.Body>
-        </Table>
-          {positions.length === 0 && (
-              <Message style={{width: "100%"}}>
-                <Message.Header>
-                  There are no open positions.
-                </Message.Header>
-              </Message>
-          )}
-      </StyledSegment>
+    <TableScroll style={{animation: 'fadeUp 0.35s ease both'}}>
+      <Table>
+        <thead>
+          <tr>
+            {POSITIONS_HEADER.map((header) => (
+              <th key={header}>{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </Table>
+    </TableScroll>
   );
 };
 
 export default PositionsPanel;
-
-const styles = {
-  header: {
-    fontWeight: '600'
-  }
-}

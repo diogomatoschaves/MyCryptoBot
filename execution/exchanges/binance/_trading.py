@@ -173,7 +173,7 @@ class BinanceTrader(BinanceHandler, Trader):
             return new_trade
 
         return None
-    
+
     @staticmethod
     def _process_trading_bot_results(trades):
         df = pd.DataFrame(trades)
@@ -226,7 +226,6 @@ class BinanceTrader(BinanceHandler, Trader):
         results["max_trade_duration"] = pd.Timedelta(results["max_trade_duration"]).round('1s')
         results["avg_trade_duration"] = pd.Timedelta(seconds=results["avg_trade_duration"]).round('1s')
 
-        # print results
         log_results(results, backtesting=False)
 
     def report_trade(self, order, units, going, header='', **kwargs):

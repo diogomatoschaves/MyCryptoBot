@@ -1,8 +1,8 @@
-import {Decimals, PipelinesObject, TradesObject, UpdateTrades} from "../types";
-import {Button} from "semantic-ui-react";
-import styled from "styled-components";
 import {useEffect, useReducer, useRef} from "react";
+import styled from "styled-components";
+import {Decimals, PipelinesObject, TradesObject, UpdateTrades} from "../types";
 import TradesTable from "./TradesTable";
+import {SegmentedControl} from "../ui";
 
 
 interface Props {
@@ -15,14 +15,17 @@ interface Props {
 }
 
 
-const StyledDiv = styled.div`
+const Panel = styled.div`
     width: 100%;
-    height: calc(100% - 50px);
-    justify-content: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+`
+
+const Toolbar = styled.div`
+    display: flex;
     align-items: center;
-    padding-left: 30px;
-    padding-top: 0;
-    position: relative;
+    animation: fadeUp 0.3s ease both;
 `
 
 const FILTER_TRADES = 'FILTER_TRADES'
@@ -90,27 +93,30 @@ function TradesPanel(props: Props) {
     }, [trades, options, previous]);
 
     return (
-      <StyledDiv className="flex-column" >
-          <Button.Group size="mini" style={{alignSelf: 'center'}}>
-              {Object.keys(initialOptions).map((option, index) =>
-                <Button key={index} onClick={() => dispatch({
+      <Panel>
+          <Toolbar>
+              <SegmentedControl
+                options={[
+                    {value: 'live', label: 'Live'},
+                    {value: 'test', label: 'Test'},
+                ]}
+                isActive={(value) => options[value]}
+                onToggle={(value) => dispatch({
                     type: TOGGLE_OPTIONS,
-                    [option]: !options[option]
-                })} color={options && options[option] && 'grey'}>
-                    {option}
-                </Button>
-              )}
-          </Button.Group>
-            <TradesTable
-              size={size}
-              filteredTrades={filteredTrades}
-              trades={trades}
-              decimals={decimals}
-              currentPrices={currentPrices}
-              pipelines={pipelines}
-              updateTrades={updateTrades}
-            />
-      </StyledDiv>
+                    [value]: !options[value]
+                })}
+              />
+          </Toolbar>
+          <TradesTable
+            size={size}
+            filteredTrades={filteredTrades}
+            trades={trades}
+            decimals={decimals}
+            currentPrices={currentPrices}
+            pipelines={pipelines}
+            updateTrades={updateTrades}
+          />
+      </Panel>
     );
 }
 

@@ -1,22 +1,135 @@
-import {Divider, Icon, Menu} from "semantic-ui-react";
+import styled from 'styled-components'
 import {Link} from 'react-router-dom'
+import {Activity, ArrowLeftRight, Bot, Layers, LogOut} from 'lucide-react'
 import {MenuOption, UpdateMessage} from "../types";
-import {useEffect, useRef} from "react";
 
+
+const NAV_ICONS: Record<string, React.ComponentType<any>> = {
+  '/dashboard': Activity,
+  '/pipelines': Bot,
+  '/positions': Layers,
+  '/trades': ArrowLeftRight,
+}
+
+const Nav = styled.nav`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px 14px;
+`
+
+const Brand = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 12px 28px;
+`
+
+const BrandName = styled.span`
+  font-family: var(--font-ui);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text);
+
+  em {
+    font-style: normal;
+    color: var(--accent);
+  }
+`
+
+const BrandSub = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulseGlow 2.4s ease infinite;
+  }
+`
+
+const NavList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+`
+
+const NavItem = styled(Link)<{$active?: boolean}>`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: ${({$active}) => ($active ? 700 : 500)};
+  color: ${({$active}) => ($active ? 'var(--accent)' : 'var(--text-dim)')};
+  background: ${({$active}) => ($active ? 'var(--accent-dim)' : 'transparent')};
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: ${({$active}) => ($active ? 'var(--accent)' : 'var(--text)')};
+    background: ${({$active}) => ($active ? 'var(--accent-dim)' : 'rgba(255, 255, 255, 0.04)')};
+  }
+
+  svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+  }
+`
+
+const LogoutButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+
+  &:hover {
+    color: var(--red);
+    background: var(--red-dim);
+  }
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+`
 
 interface Props {
-  size?: string
   menuOption: MenuOption | undefined
   menuProperties: MenuOption[]
   removeToken: () => void
   updateMessage: UpdateMessage
-  setMobileMenuVisibility?: (toggle: boolean) => void
+  onNavigate?: () => void
 }
 
 
 function AppMenu(props: Props) {
 
-  const { size, menuOption, menuProperties, removeToken, updateMessage } = props
+  const { menuOption, menuProperties, removeToken, updateMessage, onNavigate } = props
 
   const logout = () => {
     updateMessage({
@@ -26,55 +139,36 @@ function AppMenu(props: Props) {
     removeToken()
   }
 
-  const previous = useRef({menuOption}).current;
-
-  useEffect(() => {
-
-    const {setMobileMenuVisibility, menuOption} = props
-
-    if (previous.menuOption !== menuOption) {
-      setMobileMenuVisibility && setMobileMenuVisibility(false)
-    }
-
-    return () => {
-      previous.menuOption = menuOption
-    };
-  }, [menuOption, previous, props]);
-
   return (
-    <Menu style={{paddingTop: '50px', width: size ? '70%' : undefined}} secondary vertical size={size as any}>
-      {menuProperties.map((menuItem, index) => (
-        <Link key={index} to={menuItem.code}>
-          <Menu.Item
-            style={styles}
-            active={menuOption && menuOption.code === menuItem.code}
-          >
-            <div className="flex-row" style={{justifyContent: 'space-between'}}>
-              <span>{menuItem.text}</span>
-              <span>{menuItem.emoji}</span>
-            </div>
-          </Menu.Item>
-        </Link>
-      ))}
-      <Divider/>
-      <Link to="/login">
-        <Menu.Item style={styles}>
-          <a onClick={logout} className="flex-row" style={{justifyContent: 'space-between'}}>
-            <span>Logout</span>
-            <span><Icon name="log out"/></span>
-          </a>
-        </Menu.Item>
-      </Link>
-    </Menu>
+    <Nav>
+      <Brand to="/dashboard" onClick={onNavigate}>
+        <BrandName>
+          MyCrypto<em>Bot</em>
+        </BrandName>
+        <BrandSub>Trading Terminal</BrandSub>
+      </Brand>
+      <NavList>
+        {menuProperties.map((menuItem) => {
+          const Icon = NAV_ICONS[menuItem.code] || Activity
+          return (
+            <NavItem
+              key={menuItem.code}
+              to={menuItem.code}
+              $active={menuOption && menuOption.code === menuItem.code}
+              onClick={onNavigate}
+            >
+              <Icon/>
+              {menuItem.text}
+            </NavItem>
+          )
+        })}
+      </NavList>
+      <LogoutButton onClick={logout}>
+        <LogOut/>
+        Logout
+      </LogoutButton>
+    </Nav>
   );
 }
 
 export default AppMenu;
-
-
-const styles = {
-  fontSize: '1.1em',
-  padding: '15px',
-  color: 'rgb(57, 57, 57)',
-  fontWeight: 'bold',
-}

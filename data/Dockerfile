@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:13.12.0-alpine as build-step
+FROM --platform=linux/amd64 node:20-alpine as build-step
 ENV DIRECTORY dashboard
 
 WORKDIR /app
@@ -53,7 +53,7 @@ COPY ./database/ ./app/database/
 COPY ./$DIRECTORY/ ./app/$DIRECTORY/
 COPY ./shared/ ./app/shared/
 
-COPY --from=build-step app/build/. ./app/$DIRECTORY/build
+COPY --from=build-step app/dist/. ./app/$DIRECTORY/build
 
 WORKDIR /app
 

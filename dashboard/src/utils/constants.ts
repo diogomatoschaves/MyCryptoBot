@@ -1,12 +1,14 @@
-export const GREEN = '#21BA45'
-export const RED = '#DB2828'
-export const YELLOW = '#FBBD08'
-export const DARK_YELLOW = '#E7AF06'
-export const PURPLE = '#A333C8'
-export const VIOLET = '#6435C9'
-export const PINK = '#E03997'
-export const BLUE = '#2185D0'
-export const TEAL = '#00B5AD'
+import {theme, BOT_COLORS} from "../theme";
+
+export const GREEN = theme.green
+export const RED = theme.red
+export const YELLOW = theme.yellow
+export const DARK_YELLOW = theme.yellow
+export const PURPLE = BOT_COLORS.purple
+export const VIOLET = BOT_COLORS.violet
+export const PINK = BOT_COLORS.pink
+export const BLUE = theme.blue
+export const TEAL = BOT_COLORS.teal
 
 
 export const COLORS = [PURPLE, VIOLET, PINK, BLUE, TEAL, GREEN, RED, YELLOW]

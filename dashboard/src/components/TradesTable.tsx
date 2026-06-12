@@ -1,9 +1,24 @@
-import {Message, Table} from "semantic-ui-react";
-import TradeRow from "./TradeRow";
-import {Decimals, PipelinesObject, TradesObject, UpdateTrades} from "../types";
-import {Wrapper} from "../styledComponents";
 import {useEffect, useReducer, useRef, useState} from "react";
 import {debounce, throttle} from "lodash";
+import {ArrowLeftRight} from 'lucide-react'
+import TradeRow from "./TradeRow";
+import {Decimals, PipelinesObject, TradesObject, UpdateTrades} from "../types";
+import {EmptyState, Spinner, Table, TableScroll} from "../ui";
+
+
+const TRADES_HEADER = [
+  'Trading Bot',
+  'Mode',
+  'Symbol',
+  'Opened On',
+  'Duration',
+  'Side',
+  'Units',
+  'Leverage',
+  'Entry Price',
+  'Exit Price',
+  'PnL (ROI%)',
+]
 
 
 interface Props {
@@ -96,66 +111,77 @@ const TradesTable = (props: Props) => {
   }, 500)).current
 
   const mobile = ['mobile'].includes(size)
-  const cellType = mobile ? 'div' : 'th'
-  const headerStyle = mobile ? styles : {}
 
-  const tradesTableHeader = [
-    <Table.HeaderCell as={cellType} style={headerStyle}>Trading Bot</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Mode</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Symbol</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Opened On</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Duration</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Side</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Units</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Leverage</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Entry Price</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>Exit Price</Table.HeaderCell>,
-    <Table.HeaderCell as={cellType} style={headerStyle}>PnL (ROI%)</Table.HeaderCell>
-  ]
+  if (sortedTrades.length === 0) {
+    return (
+      <EmptyState
+        icon={<ArrowLeftRight/>}
+        title="No trades to show yet"
+        hint="Closed trades will appear here as your bots operate."
+      />
+    )
+  }
+
+  const rows = sortedTrades.map((tradeId: string, index: number) => {
+    const trade = trades[tradeId]
+    return (
+      <TradeRow
+        size={size}
+        key={tradeId}
+        index={index}
+        trade={trade}
+        pipeline={pipelines[trade.pipelineId]}
+        currentPrices={currentPrices}
+        decimals={decimals}
+        tradesTableHeader={TRADES_HEADER}
+      />
+    )
+  })
+
+  if (mobile) {
+    return (
+      <div
+        style={{
+          width: '100%',
+          maxHeight: maxHeight || 'none',
+          overflowY: maxHeight ? 'auto' : 'visible',
+          animation: 'fadeUp 0.35s ease both',
+        }}
+        onScroll={(event: any) => handleScroll(event)}
+      >
+        {rows}
+        {bottomed && (
+          <div className="flex-row" style={{gap: 8, padding: 12, color: 'var(--text-faint)', fontSize: 12}}>
+            <Spinner size={14}/> Loading more trades…
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
-    <Wrapper maxHeight={maxHeight} onScroll={(e: any) => handleScroll(e)}>
-      <Table stackable basic='very' size="small" compact striped textAlign="center">
-        {!mobile && (
-          <Table.Header>
-            <Table.Row>
-              {tradesTableHeader.map(entry => entry)}
-            </Table.Row>
-          </Table.Header>
-        )}
-        <Table.Body>
-          {sortedTrades.map((tradeId: string, index: number) => {
-            // @ts-ignore
-            const trade = trades[tradeId]
-            return (
-              <TradeRow
-                size={size}
-                key={index}
-                index={index}
-                trade={trade}
-                pipeline={pipelines[trade.pipelineId]}
-                currentPrices={currentPrices}
-                decimals={decimals}
-                tradesTableHeader={tradesTableHeader}
-              />
-            )
-          })}
-        </Table.Body>
+    <TableScroll
+      $maxHeight={maxHeight || 'calc(100vh - 220px)'}
+      onScroll={(event: any) => handleScroll(event)}
+      style={{animation: 'fadeUp 0.35s ease both'}}
+    >
+      <Table>
+        <thead>
+          <tr>
+            {TRADES_HEADER.map((header) => (
+              <th key={header}>{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
       </Table>
-      {sortedTrades.length === 0 && (
-          <Message>
-            <Message.Header>
-              No trades to show yet.
-            </Message.Header>
-          </Message>
+      {bottomed && (
+        <div className="flex-row" style={{gap: 8, padding: 12, color: 'var(--text-faint)', fontSize: 12}}>
+          <Spinner size={14}/> Loading more trades…
+        </div>
       )}
-      {bottomed && <h1>Fetching more list items...</h1>}
-    </Wrapper>
+    </TableScroll>
   )
 }
 
 export default TradesTable
-
-const styles = {
-  fontWeight: '600'
-}
