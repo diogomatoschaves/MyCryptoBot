@@ -40,19 +40,35 @@ configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
 
 cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
 
+# Internal service token: bounded lifetime + periodic rotation so a leaked
+# token can't be used indefinitely. The TTL is comfortably longer than any
+# job's lifetime, so in-flight RQ jobs (which carry a token captured at
+# enqueue time) never fail mid-flight.
+SERVICE_TOKEN_TTL = timedelta(hours=24)
+SERVICE_TOKEN_REFRESH_HOURS = 12
+
+
+def set_service_token(app):
+    with app.app_context():
+        access_token = create_access_token(
+            identity='data-service', expires_delta=SERVICE_TOKEN_TTL
+        )
+        cache.set("service_bearer_token", f"Bearer {access_token}")
+
 
 def startup_task(app):
 
     cache.set(LOADING, json.dumps([]))
 
-    start_background_scheduler(config_vars)
+    set_service_token(app)
+
+    start_background_scheduler(
+        config_vars,
+        token_refresher=lambda: set_service_token(app),
+        refresh_hours=SERVICE_TOKEN_REFRESH_HOURS,
+    )
 
     active_pipelines = Pipeline.objects.filter(active=True)
-
-    with app.app_context():
-        access_token = create_access_token(identity='abc', expires_delta=False)
-        bearer_token = 'Bearer ' + access_token
-        cache.set("service_bearer_token", bearer_token)
 
     for pipeline in active_pipelines:
         response = start_symbol_trading(pipeline, restart=True)
