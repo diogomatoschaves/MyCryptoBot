@@ -338,6 +338,25 @@ class TestBotsAPI:
 
         assert res.json == getattr(Responses, response)('Data pipeline 1 is already ongoing.', 1)
 
+    def test_failed_strategy_fetch_is_not_cached(self, client, mocker):
+        # a failed get_strategies() (model app down -> None) must not be cached,
+        # or it poisons every later request for the process lifetime
+        import data.service.blueprints.bots_api._bots_api as bots_api_module
+        bots_api_module.__dict__.pop("STRATEGIES", None)
+
+        fetch = mocker.patch.object(
+            bots_api_module, "get_strategies", side_effect=[None, None]
+        )
+
+        body = {"symbol": "BTCUSDT"}
+        client.put(f'{API_PREFIX}/start_bot', json=body)
+        client.put(f'{API_PREFIX}/start_bot', json=body)
+
+        # the second request re-fetched because None was never cached
+        assert fetch.call_count == 2
+
+        bots_api_module.__dict__.pop("STRATEGIES", None)
+
     @pytest.mark.parametrize(
         "params,response",
         [

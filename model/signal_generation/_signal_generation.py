@@ -6,6 +6,7 @@ import django
 import pandas as pd
 from stratestic.backtesting.combining import StrategyCombiner
 from stratestic.strategies import *
+from stratestic.strategies._mixin import StrategyMixin
 
 from model.strategies import *
 from model.service.helpers import LOCAL_MODELS_LOCATION
@@ -26,6 +27,26 @@ from database.model.models import StructuredData
 config_vars = get_config('model')
 
 configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
+
+_strategy_registry = None
+
+
+def get_strategy_class(name):
+    """Resolve a strategy class by name from a whitelist of StrategyMixin
+    subclasses already imported into this module. Replaces eval() of a
+    DB-provided string, which was an arbitrary-code-execution path.
+    """
+    global _strategy_registry
+    if _strategy_registry is None:
+        _strategy_registry = {
+            cls_name: obj for cls_name, obj in globals().items()
+            if isinstance(obj, type) and issubclass(obj, StrategyMixin) and obj is not StrategyMixin
+        }
+
+    try:
+        return _strategy_registry[name]
+    except KeyError:
+        raise StrategyInvalid(name)
 
 
 def strategy_combiner(strategies, combination_method: Literal["Unanimous", "Majority"], data: pd.DataFrame):
@@ -67,12 +88,10 @@ def strategy_combiner(strategies, combination_method: Literal["Unanimous", "Majo
     strategies_objs = []
 
     for strategy in strategies:
-        try:
-            extra_args = strategies_defaults.get(strategy["name"], {})
+        extra_args = strategies_defaults.get(strategy["name"], {})
 
-            strategy_obj = eval(strategy["name"])(**strategy["params"], **extra_args)
-        except NameError:
-            raise StrategyInvalid(strategy["name"])
+        strategy_cls = get_strategy_class(strategy["name"])
+        strategy_obj = strategy_cls(**strategy["params"], **extra_args)
 
         strategies_objs.append(strategy_obj)
 

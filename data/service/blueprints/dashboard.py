@@ -97,11 +97,13 @@ def get_trades(page):
 @jwt_required()
 def handle_pipelines(page):
 
-    if "STRATEGIES" not in globals():
+    # cache strategies, but never cache a failed fetch (None) - otherwise a
+    # transient model-app outage poisons the cache for the process lifetime
+    STRATEGIES = globals().get("STRATEGIES")
+    if not STRATEGIES:
         STRATEGIES = get_strategies()
-        globals()["STRATEGIES"] = STRATEGIES
-    else:
-        STRATEGIES = globals()["STRATEGIES"]
+        if STRATEGIES:
+            globals()["STRATEGIES"] = STRATEGIES
 
     response = {"message": "This method is not allowed", "success": False}
 

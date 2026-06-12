@@ -509,6 +509,17 @@ class TestExecutionService:
 
         assert pipeline_11.active is False
 
+    @pytest.mark.slow
+    def test_startup_task_survives_generic_error(
+        self,
+        app_with_open_positions_generic_error,
+        spy_start_pipeline_trade
+    ):
+        # a non-InsufficientBalance boot error must not crash create_app;
+        # every offending pipeline is deactivated and startup continues
+        assert spy_start_pipeline_trade.call_count == 3
+        assert Pipeline.objects.filter(active=True).count() == 0
+
     def test_startup_task_no_open_positions(
         self,
         client,

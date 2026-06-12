@@ -23,7 +23,7 @@ from shared.utils.logger import configure_logger
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Position
+from database.model.models import Position, Pipeline
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -60,6 +60,11 @@ def startup_task():
             logging.info(f"Insufficient balance to start pipeline {pipeline.id}.")
             pipeline.active = False
             pipeline.save(update_fields=["active"])
+        except Exception as e:
+            # never let one bad pipeline crash app startup into a boot loop -
+            # deactivate the offender and carry on with the rest
+            logging.error(f"Failed to start pipeline {pipeline.id}: {e}")
+            Pipeline.objects.filter(id=pipeline.id).update(active=False)
 
 
 def start_pipeline_trade(pipeline, header):

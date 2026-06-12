@@ -17,7 +17,7 @@ from execution.service.cron_jobs.save_pipelines_snapshot import save_pipeline_sn
 from execution.service.helpers.exceptions import SymbolAlreadyTraded, SymbolNotBeingTraded, NoUnits, NegativeEquity, \
     InsufficientBalance
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
-from execution.service.helpers.decorators import handle_order_execution_errors, binance_error_handler
+from execution.service.helpers.decorators import handle_order_execution_errors
 from shared.utils.decorators.failed_connection import retry_failed_connection
 from shared.utils.helpers import get_pipeline_data
 
@@ -397,7 +397,6 @@ class BinanceFuturesTrader(BinanceTrader):
 
             self._check_negative_equity(symbol, reducing=reducing, stop_trading=stop_trading)
 
-    @binance_error_handler(num_times=2)
     def _convert_units(self, amount, units, symbol, units_factor=1):
         """
         Converts the amount specified in quote currency to units of the base currency or adjusts units

@@ -81,6 +81,21 @@ def app_with_open_positions_insufficient_balance(
 
 
 @pytest.fixture
+def app_with_open_positions_generic_error(
+    mock_client_env_vars,
+    futures_init,
+    mock_jwt_required,
+    mock_redis_connection,
+    exchange_data,
+    create_positions,
+    mock_start_pipeline_trade_raise_generic_error,
+    spy_start_pipeline_trade
+):
+    app = create_app(testing=True)
+    return app
+
+
+@pytest.fixture
 def client_with_open_positions(app_with_open_positions):
     with app_with_open_positions.test_client() as client:
         yield client

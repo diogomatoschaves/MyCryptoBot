@@ -37,11 +37,13 @@ bots_api = Blueprint('bots_api', __name__)
 @handle_db_connection_error
 def start_bot():
 
-    if "STRATEGIES" not in globals():
+    # cache strategies, but never cache a failed fetch (None) - otherwise a
+    # transient model-app outage poisons the cache for the process lifetime
+    STRATEGIES = globals().get("STRATEGIES")
+    if not STRATEGIES:
         STRATEGIES = get_strategies()
-        globals()["STRATEGIES"] = STRATEGIES
-    else:
-        STRATEGIES = globals()["STRATEGIES"]
+        if STRATEGIES:
+            globals()["STRATEGIES"] = STRATEGIES
 
     request_data = extract_request_params(request)
 
