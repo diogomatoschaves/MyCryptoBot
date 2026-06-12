@@ -99,3 +99,6 @@ export const getAlertsStatus = () =>
 
 export const sendTestAlert = () =>
   request('/alerts/test', { method: 'POST' })
+
+export const saveAlertsSettings = (settings: { botToken: string; chatId: string }) =>
+  request('/alerts', { method: 'PUT', body: settings })

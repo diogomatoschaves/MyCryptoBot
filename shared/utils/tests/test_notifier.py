@@ -102,3 +102,31 @@ class TestSendAlert:
         mock_post.side_effect = None
         assert send_alert("title", "body") is False
         assert mock_post.call_count == 1
+
+
+@pytest.mark.django_db
+class TestDatabaseCredentials:
+
+    def test_db_settings_used_when_env_unset(self, monkeypatch, mock_post):
+        from database.model.models import AppSetting
+
+        monkeypatch.delenv("TEST", raising=False)
+        monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+        monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+
+        AppSetting.objects.create(key=notifier.TELEGRAM_TOKEN_KEY, value="db-token")
+        AppSetting.objects.create(key=notifier.TELEGRAM_CHAT_ID_KEY, value="42")
+
+        assert send_alert("title", "body") is True
+        assert "db-token" in mock_post.call_args[0][0]
+        assert mock_post.call_args[1]["json"]["chat_id"] == "42"
+
+    def test_env_wins_over_db(self, configured, mock_post):
+        from database.model.models import AppSetting
+
+        AppSetting.objects.create(key=notifier.TELEGRAM_TOKEN_KEY, value="db-token")
+        AppSetting.objects.create(key=notifier.TELEGRAM_CHAT_ID_KEY, value="42")
+
+        assert send_alert("title", "body") is True
+        assert "test-token" in mock_post.call_args[0][0]
+        assert mock_post.call_args[1]["json"]["chat_id"] == "12345"

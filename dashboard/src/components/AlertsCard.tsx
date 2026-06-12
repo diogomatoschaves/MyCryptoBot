@@ -1,8 +1,10 @@
 import {useEffect, useState} from 'react'
 import styled from 'styled-components'
-import {BellRing, BookOpen, Send} from 'lucide-react'
-import {getAlertsStatus, sendTestAlert} from '../apiCalls'
-import {Button, Card, CardHeader, CardTitle, InlineMessage, Modal, Stat, Tag} from '../ui'
+import {BellRing, BookOpen, Send, Settings2} from 'lucide-react'
+import {getAlertsStatus, saveAlertsSettings, sendTestAlert} from '../apiCalls'
+import {
+  Button, Card, CardHeader, CardTitle, Field, InlineMessage, Modal, Stat, Tag, TextInput
+} from '../ui'
 import {theme} from '../theme'
 
 
@@ -18,6 +20,19 @@ const Actions = styled.div`
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 16px;
+`
+
+const FormStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+`
+
+const FormNote = styled.p`
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.6;
 `
 
 const GuideList = styled.ol`
@@ -54,25 +69,42 @@ const GuideNote = styled.p`
 
 interface AlertsStatus {
   configured: boolean
+  source: 'env' | 'database' | null
   chatId: string | null
+}
+
+const SOURCE_LABELS: Record<string, string> = {
+  env: 'Environment',
+  database: 'Dashboard',
 }
 
 const AlertsCard = () => {
 
   const [status, setStatus] = useState<AlertsStatus | null>(null)
   const [guideOpen, setGuideOpen] = useState(false)
+  const [configOpen, setConfigOpen] = useState(false)
+  const [botToken, setBotToken] = useState('')
+  const [chatId, setChatId] = useState('')
+  const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{success: boolean; message: string} | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const refreshStatus = () => {
     getAlertsStatus()
       .then((response) => {
         if (response && response.success) {
-          setStatus({configured: response.configured, chatId: response.chatId})
+          setStatus({
+            configured: response.configured,
+            source: response.source,
+            chatId: response.chatId,
+          })
         }
       })
       .catch(() => {})
-  }, [])
+  }
+
+  useEffect(refreshStatus, [])
 
   const handleTestAlert = () => {
     setSending(true)
@@ -87,7 +119,29 @@ const AlertsCard = () => {
       .finally(() => setSending(false))
   }
 
+  const handleSave = () => {
+    setSaving(true)
+    setFormError(null)
+    saveAlertsSettings({botToken: botToken.trim(), chatId: chatId.trim()})
+      .then((response) => {
+        if (response.success) {
+          setConfigOpen(false)
+          setBotToken('')
+          setChatId('')
+          setResult({success: true, message: response.message})
+          refreshStatus()
+        } else {
+          setFormError(response.message)
+        }
+      })
+      .catch(() => {
+        setFormError('Could not reach the server.')
+      })
+      .finally(() => setSaving(false))
+  }
+
   const configured = status ? status.configured : null
+  const envManaged = status ? status.source === 'env' : false
 
   return (
     <Card>
@@ -103,14 +157,15 @@ const AlertsCard = () => {
         )}
       </CardHeader>
       <Row>
-        <Stat
-          label="Channel"
-          value="Telegram"
-          size="sm"
-        />
+        <Stat label="Channel" value="Telegram" size="sm"/>
         <Stat
           label="Chat ID"
           value={status && status.chatId ? status.chatId : '—'}
+          size="sm"
+        />
+        <Stat
+          label="Source"
+          value={status && status.source ? SOURCE_LABELS[status.source] : '—'}
           size="sm"
         />
         <Stat
@@ -124,6 +179,19 @@ const AlertsCard = () => {
         <Button
           size="sm"
           variant="primary"
+          icon={<Settings2/>}
+          disabled={envManaged}
+          title={envManaged ? 'Managed through environment variables' : undefined}
+          onClick={() => {
+            setFormError(null)
+            setConfigOpen(true)
+          }}
+        >
+          Configure
+        </Button>
+        <Button
+          size="sm"
+          variant="success"
           icon={<Send/>}
           loading={sending}
           disabled={configured === false}
@@ -143,6 +211,74 @@ const AlertsCard = () => {
           <InlineMessage success={result.success}>{result.message}</InlineMessage>
         )}
       </Actions>
+      {envManaged && (
+        <FormNote style={{marginTop: 12}}>
+          Alerts are configured through environment variables, which take
+          precedence over settings saved here.
+        </FormNote>
+      )}
+      <Modal
+        open={configOpen}
+        onClose={() => setConfigOpen(false)}
+        width="480px"
+        title={
+          <>
+            <Settings2 size={17} color="var(--accent)"/>
+            Configure Telegram alerts
+          </>
+        }
+        footer={
+          <>
+            <div style={{flex: 1, minWidth: 0}}>
+              {formError && <InlineMessage success={false}>{formError}</InlineMessage>}
+            </div>
+            <div style={{display: 'flex', gap: 10, flexShrink: 0}}>
+              <Button variant="ghost" onClick={() => setConfigOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                loading={saving}
+                disabled={Boolean(botToken.trim()) !== Boolean(chatId.trim())}
+                onClick={handleSave}
+              >
+                {botToken.trim() || chatId.trim() ? 'Save settings' : 'Clear settings'}
+              </Button>
+            </div>
+          </>
+        }
+      >
+        <FormStack>
+          <Field
+            label="Bot Token"
+            hint={status && status.configured && status.source === 'database'
+              ? 'A token is already stored - saving replaces it.'
+              : 'From @BotFather, looks like 1234567:AA...'}
+          >
+            <TextInput
+              type="password"
+              value={botToken}
+              placeholder="1234567:AA..."
+              autoComplete="off"
+              onChange={(event) => setBotToken(event.target.value)}
+            />
+          </Field>
+          <Field label="Chat ID" hint="Your numeric Telegram chat id (e.g. from @userinfobot)">
+            <TextInput
+              value={chatId}
+              placeholder="987654321"
+              autoComplete="off"
+              onChange={(event) => setChatId(event.target.value)}
+            />
+          </Field>
+          <FormNote>
+            The token is stored on the server and never shown again in the
+            dashboard. Leave both fields empty and save to clear the stored
+            settings. See the setup guide for how to create the bot and find
+            your chat id.
+          </FormNote>
+        </FormStack>
+      </Modal>
       <Modal
         open={guideOpen}
         onClose={() => setGuideOpen(false)}
@@ -180,21 +316,19 @@ const AlertsCard = () => {
             <code>@userinfobot</code> and it replies with your ID.
           </li>
           <li>
-            <strong>Configure the services.</strong> Set{' '}
-            <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_CHAT_ID</code> as
-            environment variables (in your <code>.env</code> file for
-            docker-compose, or in your deployment&apos;s config), then restart the
-            services.
+            <strong>Save the credentials.</strong> Press <strong>Configure</strong> on
+            this page and paste the bot token and chat ID. (Alternatively, set the{' '}
+            <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_CHAT_ID</code>{' '}
+            environment variables — those take precedence when present.)
           </li>
           <li>
-            <strong>Verify.</strong> Reload this page — the badge should read{' '}
-            <strong>Active</strong> — and press <strong>Send test alert</strong>.
+            <strong>Verify.</strong> The badge should read <strong>Active</strong> —
+            press <strong>Send test alert</strong> to confirm a message arrives.
           </li>
         </GuideList>
         <GuideNote>
-          The token is a secret: it is only ever read from the server&apos;s
-          environment and is never stored in the database or shown in this
-          dashboard. Alerts cover pipeline stops and deactivations, position
+          The token is a secret: it is stored server-side and never sent back to
+          the browser. Alerts cover pipeline stops and deactivations, position
           mismatches, failed or unconfirmed orders, restarts, and unreachable
           services or workers.
         </GuideNote>

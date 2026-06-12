@@ -15,12 +15,18 @@ from shared.utils.decorators import general_app_error
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
 from shared.utils.exceptions import NoSuchPipeline
-from shared.utils.notifier import send_alert
+from shared.utils.notifier import (
+    send_alert,
+    get_telegram_credentials,
+    TELEGRAM_TOKEN_KEY,
+    TELEGRAM_CHAT_ID_KEY,
+)
+import shared.utils.notifier as notifier
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol, Exchange, Pipeline, Position, Trade
+from database.model.models import Symbol, Exchange, Pipeline, Position, Trade, AppSetting
 
 dashboard = Blueprint('dashboard', __name__)
 
@@ -322,27 +328,72 @@ def get_pipeline_equity(pipeline_id):
         return jsonify({"success": True, "data": data})
 
 
+def _mask(value):
+    return f"{value[:2]}***{value[-2:]}" if value and len(value) > 4 else ("***" if value else None)
+
+
 @dashboard.get('/alerts')
 @general_app_error
 @jwt_required()
 def get_alerts_status():
-    """Reports whether Telegram alerting is configured on this deployment.
-    Only a masked chat id is ever exposed - never the bot token."""
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID")
-
-    configured = bool(token and chat_id)
-
-    masked_chat_id = None
-    if configured:
-        masked_chat_id = (
-            f"{chat_id[:2]}***{chat_id[-2:]}" if len(chat_id) > 4 else "***"
-        )
+    """Reports whether Telegram alerting is configured and from which source
+    (environment variables win over dashboard-saved settings). Only a masked
+    chat id is ever exposed - never the bot token."""
+    token, chat_id, source = get_telegram_credentials()
 
     return jsonify({
         "success": True,
-        "configured": configured,
-        "chatId": masked_chat_id,
+        "configured": bool(token and chat_id),
+        "source": source,
+        "chatId": _mask(chat_id),
+    })
+
+
+@dashboard.put('/alerts')
+@general_app_error
+@jwt_required()
+@handle_db_connection_error
+def save_alerts_settings():
+    """Saves the Telegram credentials from the dashboard. The token is
+    write-only: it is stored server-side and never returned to the client.
+    Sending empty strings clears the stored settings."""
+    if os.getenv("TELEGRAM_BOT_TOKEN") and os.getenv("TELEGRAM_CHAT_ID"):
+        return jsonify({
+            "success": False,
+            "message": (
+                "Telegram alerts are configured through environment variables, "
+                "which take precedence - update them in your deployment config instead."
+            ),
+        })
+
+    request_data = request.get_json(force=True)
+
+    bot_token = (request_data.get("botToken") or "").strip()
+    chat_id = (request_data.get("chatId") or "").strip()
+
+    if bool(bot_token) != bool(chat_id):
+        return jsonify({
+            "success": False,
+            "message": "Both the bot token and the chat ID are required.",
+        })
+
+    AppSetting.objects.update_or_create(
+        key=TELEGRAM_TOKEN_KEY, defaults={"value": bot_token}
+    )
+    AppSetting.objects.update_or_create(
+        key=TELEGRAM_CHAT_ID_KEY, defaults={"value": chat_id}
+    )
+
+    # the notifier caches resolved credentials briefly - drop it so a test
+    # alert right after saving uses the new values
+    notifier._reset_state()
+
+    if not bot_token:
+        return jsonify({"success": True, "message": "Telegram settings cleared."})
+
+    return jsonify({
+        "success": True,
+        "message": "Telegram settings saved - send a test alert to verify.",
     })
 
 

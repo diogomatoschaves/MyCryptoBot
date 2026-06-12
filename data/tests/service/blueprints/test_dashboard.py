@@ -733,13 +733,20 @@ class TestDashboardService:
 
 class TestAlertsEndpoints:
 
+    @pytest.fixture(autouse=True)
+    def reset_notifier(self):
+        from shared.utils import notifier
+        notifier._reset_state()
+        yield
+        notifier._reset_state()
+
     def test_alerts_status_unconfigured(self, client, monkeypatch):
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
         monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
 
         res = client.get(f'{API_PREFIX}/alerts')
 
-        assert res.json == {"success": True, "configured": False, "chatId": None}
+        assert res.json == {"success": True, "configured": False, "chatId": None, "source": None}
 
     def test_alerts_status_configured_masks_chat_id(self, client, monkeypatch):
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:abc")
@@ -748,8 +755,58 @@ class TestAlertsEndpoints:
         res = client.get(f'{API_PREFIX}/alerts')
 
         assert res.json["configured"] is True
+        assert res.json["source"] == "env"
         assert res.json["chatId"] == "98***21"
         assert "123" not in str(res.json)
+
+    def test_save_settings_then_status_reads_database(self, db, client, monkeypatch):
+        monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+        monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+
+        res = client.put(
+            f'{API_PREFIX}/alerts',
+            json={"botToken": "123:abc", "chatId": "987654321"},
+        )
+
+        assert res.json["success"] is True
+
+        status = client.get(f'{API_PREFIX}/alerts').json
+        assert status["configured"] is True
+        assert status["source"] == "database"
+        assert status["chatId"] == "98***21"
+        assert "123" not in str(status)
+
+    def test_save_settings_requires_both_fields(self, db, client, monkeypatch):
+        monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+        monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+
+        res = client.put(f'{API_PREFIX}/alerts', json={"botToken": "123:abc"})
+
+        assert res.json["success"] is False
+
+    def test_save_settings_rejected_when_env_configured(self, db, client, monkeypatch):
+        monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:abc")
+        monkeypatch.setenv("TELEGRAM_CHAT_ID", "987654321")
+
+        res = client.put(
+            f'{API_PREFIX}/alerts',
+            json={"botToken": "other", "chatId": "1"},
+        )
+
+        assert res.json["success"] is False
+        assert "environment" in res.json["message"]
+
+    def test_clear_settings(self, db, client, monkeypatch):
+        monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+        monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+
+        client.put(f'{API_PREFIX}/alerts', json={"botToken": "123:abc", "chatId": "9"})
+        res = client.put(f'{API_PREFIX}/alerts', json={"botToken": "", "chatId": ""})
+
+        assert res.json["success"] is True
+
+        status = client.get(f'{API_PREFIX}/alerts').json
+        assert status["configured"] is False
 
     def test_send_test_alert_success(self, client, mocker):
         mock_alert = mocker.patch(

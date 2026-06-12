@@ -333,3 +333,16 @@ class PortfolioTimeSeries(models.Model):
     time = models.DateTimeField()
     value = models.FloatField()
     type = models.TextField(null=True, blank=True, default=None)
+
+
+class AppSetting(models.Model):
+    """Server-side key/value settings editable from the dashboard (e.g. the
+    Telegram alert credentials). Environment variables always take
+    precedence over rows in this table."""
+
+    key = models.TextField(primary_key=True)
+    value = models.TextField(blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.key

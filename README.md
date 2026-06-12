@@ -142,11 +142,12 @@ To enable alerts:
 2. Open your new bot's chat and press **Start** (bots can only message users who have messaged them first).
 3. Get your **chat ID**: visit `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and read the 
    number at `"chat": {"id": ...}` — or message [@userinfobot](https://t.me/userinfobot) and it replies with your ID.
-4. Set the `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` environment variables (in your `.env` file for 
-   docker-compose, or in your deployment's config) and restart the services.
+4. Press **Configure** on the Alerts page and paste the bot token and chat ID. Alternatively, set the 
+   `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` environment variables — when present, they take precedence 
+   over settings saved in the dashboard.
 
-The bot token is only ever read from the server's environment — it is never stored in the database or 
-exposed in the dashboard. If the variables are unset, alerting is simply disabled.
+The bot token is write-only: it is stored server-side and never sent back to the browser. If neither the 
+dashboard settings nor the environment variables are set, alerting is simply disabled.
 
 
 ## Software Requirements
