@@ -5,6 +5,8 @@ import time
 from binance.exceptions import BinanceAPIException
 from requests import ReadTimeout, ConnectionError
 
+from shared.utils.notifier import send_alert
+
 
 def retry_failed_connection(_func=None, *, num_times=2, backoff_base=1):
     """Retries the wrapped function on connection errors with exponential
@@ -27,6 +29,13 @@ def retry_failed_connection(_func=None, *, num_times=2, backoff_base=1):
 
                     retries += 1
                     if retries > num_times:
+                        send_alert(
+                            title="Connection retries exhausted",
+                            body=f"{func.__name__} failed after {num_times} retries: {e!r}",
+                            severity="warning",
+                            dedup_key=f"conn-{func.__name__}",
+                            throttle_seconds=900,
+                        )
                         raise
 
                     logging.debug('Retrying failed connection.')

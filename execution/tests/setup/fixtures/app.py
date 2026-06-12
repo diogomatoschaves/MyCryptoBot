@@ -31,6 +31,20 @@ def mock_client_env_vars(mocker):
 
 
 @pytest.fixture
+def mock_startup_task(mocker):
+    """Endpoint-focused tests boot the app without the startup side effects
+    (scheduler, reconciliation, auto-starting active pipelines)."""
+    return mocker.patch("execution.service.app.startup_task")
+
+
+@pytest.fixture
+def mock_reconcile_positions(mocker):
+    """Startup-focused tests run the real startup_task but skip the exchange
+    reconciliation, which would otherwise attempt network calls."""
+    return mocker.patch("execution.service.app.reconcile_positions")
+
+
+@pytest.fixture
 def app(
     mock_client_env_vars,
     futures_init,
@@ -39,6 +53,7 @@ def app(
     exchange_data,
     create_pipeline,
     create_inactive_pipeline,
+    mock_startup_task,
 ):
     app = create_app(testing=True)
     return app
@@ -58,6 +73,7 @@ def app_with_open_positions(
     mock_redis_connection,
     exchange_data,
     create_positions,
+    mock_reconcile_positions,
     mock_start_pipeline_trade,
     spy_start_pipeline_trade
 ):
@@ -73,6 +89,7 @@ def app_with_open_positions_insufficient_balance(
     mock_redis_connection,
     exchange_data,
     create_positions,
+    mock_reconcile_positions,
     mock_start_pipeline_trade_raise_exception,
     spy_start_pipeline_trade
 ):
@@ -88,6 +105,7 @@ def app_with_open_positions_generic_error(
     mock_redis_connection,
     exchange_data,
     create_positions,
+    mock_reconcile_positions,
     mock_start_pipeline_trade_raise_generic_error,
     spy_start_pipeline_trade
 ):

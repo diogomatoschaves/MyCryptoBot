@@ -14,11 +14,13 @@ from execution.service.helpers import validate_signal, extract_and_validate, get
 from execution.service.helpers.exceptions import PipelineNotActive, InsufficientBalance
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.futures import BinanceFuturesTrader
+from execution.service.reconciliation import reconcile_positions
 from shared.utils.settings import settings
 from shared.utils.decorators import handle_db_connection_error
 from shared.utils.helpers import get_jwt_secret_key
 from shared.utils.exceptions import EquityRequired
 from shared.utils.logger import configure_logger
+from shared.utils.notifier import send_alert
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -47,9 +49,13 @@ def startup_task():
 
     start_background_scheduler()
 
-    active_pipelines = [position.pipeline for position in Position.objects.filter(pipeline__active=True)]
+    # the exchange is the source of truth: repair any Position/Trade/units
+    # drift left behind by a crash before trusting the local records below
+    reconcile_positions(get_binance_trader_instance)
 
-    for pipeline in active_pipelines:
+    # iterate pipelines (not Position rows) so pipelines without a Position
+    # row are started - reconciliation creates the row when one is missing
+    for pipeline in Pipeline.objects.filter(active=True):
 
         header = get_header(pipeline.id)
 
@@ -59,11 +65,29 @@ def startup_task():
             logging.info(f"Insufficient balance to start pipeline {pipeline.id}.")
             pipeline.active = False
             pipeline.save(update_fields=["active"])
+            send_alert(
+                title="Pipeline deactivated at startup",
+                body=(
+                    f"Pipeline {pipeline.id} ('{pipeline.name}'): insufficient balance "
+                    f"to restart - deactivated; it will not trade until manually restarted."
+                ),
+                severity="critical",
+                dedup_key=f"boot-failed-{pipeline.id}",
+            )
         except Exception as e:
             # never let one bad pipeline crash app startup into a boot loop -
             # deactivate the offender and carry on with the rest
             logging.error(f"Failed to start pipeline {pipeline.id}: {e}")
             Pipeline.objects.filter(id=pipeline.id).update(active=False)
+            send_alert(
+                title="Pipeline deactivated at startup",
+                body=(
+                    f"Pipeline {pipeline.id} ('{pipeline.name}') failed to start "
+                    f"({e}) - deactivated; it will not trade until manually restarted."
+                ),
+                severity="critical",
+                dedup_key=f"boot-failed-{pipeline.id}",
+            )
 
 
 def start_pipeline_trade(pipeline, header):

@@ -8,3 +8,4 @@ from execution.service.helpers.exceptions.no_units import NoUnits
 from execution.service.helpers.exceptions.leverage_setting_fail import LeverageSettingFail
 from execution.service.helpers.exceptions.negative_equity import NegativeEquity
 from execution.service.helpers.exceptions.insufficient_balance import InsufficientBalance
+from execution.service.helpers.exceptions.bookkeeping_failed import BookkeepingFailed

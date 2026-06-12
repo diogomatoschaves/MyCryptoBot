@@ -21,7 +21,8 @@ RESPONSES = namedtuple(
         "SYMBOL_NOT_BEING_TRADED",
         "LEVERAGE_SETTING_FAILURE",
         "NEGATIVE_EQUITY",
-        "INSUFFICIENT_BALANCE"
+        "INSUFFICIENT_BALANCE",
+        "BOOKKEEPING_FAILED"
     ]
 )
 
@@ -44,7 +45,8 @@ ReturnCodes = RESPONSES(
     SYMBOL_NOT_BEING_TRADED="SYMBOL_NOT_BEING_TRADED",
     LEVERAGE_SETTING_FAILURE="LEVERAGE_SETTING_FAILURE",
     NEGATIVE_EQUITY="NEGATIVE_EQUITY",
-    INSUFFICIENT_BALANCE="INSUFFICIENT_BALANCE"
+    INSUFFICIENT_BALANCE="INSUFFICIENT_BALANCE",
+    BOOKKEEPING_FAILED="BOOKKEEPING_FAILED"
 )
 
 
@@ -136,6 +138,11 @@ Responses = RESPONSES(
     },
     INSUFFICIENT_BALANCE=lambda message: {
         "code": ReturnCodes.INSUFFICIENT_BALANCE,
+        "success": False,
+        "message":  message
+    },
+    BOOKKEEPING_FAILED=lambda message: {
+        "code": ReturnCodes.BOOKKEEPING_FAILED,
         "success": False,
         "message":  message
     },

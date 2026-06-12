@@ -47,6 +47,14 @@ def handle_app_errors(_func=None):
             except NegativeEquity as e:
                 logging.info(e.message)
                 return jsonify(Responses.NEGATIVE_EQUITY(e.message))
+            except BookkeepingFailed as e:
+                logging.error(e.message)
+                # freeze the pipeline: local records lag the exchange and any
+                # further trading would compound the divergence
+                if e.pipeline_id is not None:
+                    from database.model.models import Pipeline
+                    Pipeline.objects.filter(id=e.pipeline_id).update(active=False)
+                return jsonify(Responses.BOOKKEEPING_FAILED(e.message))
 
         return wrapper
 

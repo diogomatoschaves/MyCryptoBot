@@ -6,6 +6,7 @@ import django
 from binance.exceptions import BinanceAPIException
 
 from execution.service.helpers.exceptions import SymbolNotBeingTraded, NegativeEquity
+from shared.utils.notifier import send_alert
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -53,6 +54,17 @@ def handle_order_execution_errors(symbol, trader_instance, header, pipeline_id):
                 stop_symbol_trading(trader_instance, pipeline_id, symbol, header)
                 deactivate_pipeline(pipeline_id)
 
+                send_alert(
+                    title="Pipeline deactivated by exchange error",
+                    body=(
+                        f"Pipeline {pipeline_id} ({symbol}): Binance rejected the "
+                        f"operation ({e.message}). The position was closed and the "
+                        f"pipeline deactivated."
+                    ),
+                    severity="critical",
+                    dedup_key=f"deactivated-{pipeline_id}",
+                )
+
                 from execution.service.helpers.responses import Responses
 
                 return Responses.API_ERROR(symbol, e.message)
@@ -62,6 +74,16 @@ def handle_order_execution_errors(symbol, trader_instance, header, pipeline_id):
 
                 stop_symbol_trading(trader_instance, pipeline_id, symbol, header)
                 deactivate_pipeline(pipeline_id)
+
+                send_alert(
+                    title="Pipeline deactivated - negative equity",
+                    body=(
+                        f"Pipeline {pipeline_id} ({symbol}): {e.message} The position "
+                        f"was closed and the pipeline deactivated."
+                    ),
+                    severity="critical",
+                    dedup_key=f"deactivated-{pipeline_id}",
+                )
 
                 from execution.service.helpers.responses import Responses
 

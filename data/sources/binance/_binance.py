@@ -23,6 +23,7 @@ from data.sources.binance.extract import (
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.utils.helpers import get_minimum_lookback_date, get_pipeline_max_window, remove_pipeline_loading
+from shared.utils.notifier import send_alert
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.settings import settings
 import shared.exchanges.binance.constants as const
@@ -262,10 +263,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     # pipeline is stopped and its position closed
     MAX_CONSECUTIVE_FAILURES = 3
 
-    def generate_new_signal(self, header, retries=0):
-
-        if retries >= 2:
-            return False
+    def generate_new_signal(self, header):
 
         success, message = trigger_signal(self.pipeline_id, header=header)
 
@@ -274,8 +272,10 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         if success:
             cache.delete(failures_key)
         else:
-            if "Too many retries" in message:
-                return self.generate_new_signal(header, retries=retries + 1)
+            # NOTE: a "Too many retries" polling timeout is deliberately
+            # treated like any other failure below. Re-triggering a fresh
+            # signal here would enqueue a duplicate job while the first one
+            # may still be running.
 
             logging.warning(header + message)
 
@@ -295,9 +295,29 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                 )
                 cache.delete(failures_key)
                 stop_pipeline(self.pipeline_id, header, raise_exception=False)
+                send_alert(
+                    title="Pipeline stopped after consecutive signal failures",
+                    body=(
+                        f"Pipeline {self.pipeline_id} ({self.symbol}): {failures} "
+                        f"consecutive signal failures (last: {message}). The pipeline "
+                        f"was stopped and its position closed."
+                    ),
+                    severity="critical",
+                    dedup_key=f"signal-failures-stop-{self.pipeline_id}",
+                )
             else:
                 logging.info(
                     header + f"Skipping candle ({failures} consecutive signal failures)."
+                )
+                send_alert(
+                    title="Signal generation failed - candle skipped",
+                    body=(
+                        f"Pipeline {self.pipeline_id} ({self.symbol}): {message} "
+                        f"(failure {failures}/{self.MAX_CONSECUTIVE_FAILURES} - the "
+                        f"pipeline stops when the threshold is reached)."
+                    ),
+                    severity="warning",
+                    dedup_key=f"signal-failures-{self.pipeline_id}",
                 )
 
         return success

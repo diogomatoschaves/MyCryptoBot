@@ -10,6 +10,7 @@ from data.service.blueprints.bots_api import stop_pipeline, start_symbol_trading
 from data.service.external_requests import get_open_positions, start_stop_symbol_trading
 from shared.utils.settings import settings
 from shared.utils.decorators import handle_db_connection_error
+from shared.utils.notifier import send_alert
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -19,6 +20,25 @@ from database.model.models import Pipeline, Position
 
 
 cache = redis.from_url(settings.redis_url)
+
+# 3 missed base candles (5m): short websocket hiccups recover on their own,
+# anything longer warrants a stop + restart attempt
+STUCK_THRESHOLD = datetime.timedelta(minutes=15)
+
+# grace period before a missing remote position counts as a mismatch - must
+# stay larger than CHECKS_INTERVAL so a just-(re)started pipeline whose first
+# order is still settling is never force-stopped by the very next check
+POSITION_MISMATCH_GRACE = datetime.timedelta(minutes=15)
+
+# a pipeline healthy for this long after a restart gets its retry budget
+# back: restart_retries means "retries per incident", not "per lifetime"
+RESTART_COUNTER_RESET_AFTER = datetime.timedelta(hours=1)
+
+
+def pipeline_label(pipeline):
+    symbol = getattr(pipeline.symbol, "name", "?")
+    mode = "paper" if pipeline.paper_trading else "LIVE"
+    return f"Pipeline {pipeline.id} ('{pipeline.name}', {symbol}, {mode})"
 
 
 def find_position(positions, symbol):
@@ -45,21 +65,56 @@ def find_position(positions, symbol):
 
 
 def restart_pipeline(pipeline):
-    if settings.restart_failed_pipelines and pipeline.restarted < settings.restart_retries:
+    if not settings.restart_failed_pipelines:
+        return
 
-        logging.info(f"Restarting pipeline {pipeline.id}...")
-
-        response = start_symbol_trading(pipeline, restart=True)
-
-        if not response or not response["success"]:
-            logging.warning(f"Pipeline {pipeline.id} could not be restarted.")
-            return
-
-        Pipeline.objects.filter(id=pipeline.id).update(
-            restarted=pipeline.restarted + 1,
-            open_time=datetime.datetime.now(pytz.utc),
-            active=True,
+    if pipeline.restarted >= settings.restart_retries:
+        send_alert(
+            title="Pipeline restart retries exhausted",
+            body=(
+                f"{pipeline_label(pipeline)}: restart retries exhausted "
+                f"({pipeline.restarted}/{settings.restart_retries}). The pipeline "
+                f"stays stopped - manual intervention required."
+            ),
+            severity="critical",
+            dedup_key=f"restart-exhausted-{pipeline.id}",
+            throttle_seconds=1800,
         )
+        return
+
+    logging.info(f"Restarting pipeline {pipeline.id}...")
+
+    response = start_symbol_trading(pipeline, restart=True)
+
+    if not response or not response["success"]:
+        logging.warning(f"Pipeline {pipeline.id} could not be restarted.")
+        send_alert(
+            title="Pipeline restart attempt failed",
+            body=(
+                f"{pipeline_label(pipeline)}: restart attempt "
+                f"{pipeline.restarted + 1} of {settings.restart_retries} failed"
+                f"{': ' + str(response.get('message')) if response else ''}."
+            ),
+            severity="critical",
+            dedup_key=f"restart-failed-{pipeline.id}",
+        )
+        return
+
+    Pipeline.objects.filter(id=pipeline.id).update(
+        restarted=pipeline.restarted + 1,
+        open_time=datetime.datetime.now(pytz.utc),
+        active=True,
+    )
+
+    send_alert(
+        title="Pipeline restarted",
+        body=(
+            f"{pipeline_label(pipeline)}: restart attempt "
+            f"{pipeline.restarted + 1} of {settings.restart_retries} succeeded."
+        ),
+        severity="info",
+        dedup_key=f"restart-ok-{pipeline.id}",
+    )
 
 
 def check_pipeline_stuck(pipeline):
@@ -81,10 +136,21 @@ def check_pipeline_stuck(pipeline):
 
     now = datetime.datetime.now(pytz.utc)
 
-    if pipeline.last_entry and now - pipeline.last_entry > datetime.timedelta(minutes=10):
+    if pipeline.last_entry and now - pipeline.last_entry > STUCK_THRESHOLD:
 
         logging.info(f'Pipeline {pipeline.id} found to be stuck. Sending stop request...')
         stop_pipeline(pipeline.id, '', raise_exception=False)
+
+        minutes_stuck = int((now - pipeline.last_entry).total_seconds() // 60)
+        send_alert(
+            title="Stuck pipeline stopped",
+            body=(
+                f"{pipeline_label(pipeline)}: no candle entry for {minutes_stuck} "
+                f"minutes - stopped; a restart will be attempted."
+            ),
+            severity="warning",
+            dedup_key=f"stuck-{pipeline.id}",
+        )
 
         return True
 
@@ -122,20 +188,33 @@ def check_matching_remote_position(positions, pipeline):
         pipeline__id=pipeline.id, position__in=[1, -1]
     ).exists()
 
-    if td > datetime.timedelta(minutes=5) and position is None and local_position_open:
+    if td > POSITION_MISMATCH_GRACE and position is None and local_position_open:
 
         logging.info(f'Remote position for pipeline {pipeline.id} not found. Stopping pipeline...')
 
         stop_pipeline(pipeline.id, '', raise_exception=False, force=True)
 
+        restored_balance = pipeline.current_equity * pipeline.leverage
+
         # Restore balance of pipeline
         Pipeline.objects.filter(id=pipeline.id).update(
             active=False,
             units=0,
-            balance=pipeline.current_equity * pipeline.leverage,
+            balance=restored_balance,
         )
 
         Position.objects.filter(pipeline__id=pipeline.id).update(position=0)
+
+        send_alert(
+            title="Position mismatch - pipeline stopped",
+            body=(
+                f"{pipeline_label(pipeline)}: local records show an open position "
+                f"but the {account} account has none. The pipeline was force-stopped "
+                f"and its balance restored to {restored_balance:.2f}."
+            ),
+            severity="critical",
+            dedup_key=f"mismatch-{pipeline.id}",
+        )
 
         return True
 
@@ -157,6 +236,8 @@ def check_active_pipelines(positions):
     """
     active_pipelines = Pipeline.objects.filter(active=True)
 
+    now = datetime.datetime.now(pytz.utc)
+
     for pipeline in active_pipelines:
 
         restart1 = check_pipeline_stuck(pipeline)
@@ -165,6 +246,14 @@ def check_active_pipelines(positions):
 
         if restart1 or restart2:
             restart_pipeline(pipeline)
+        elif (
+            pipeline.restarted > 0
+            and pipeline.open_time
+            and now - pipeline.open_time > RESTART_COUNTER_RESET_AFTER
+        ):
+            # healthy for a sustained period after a restart: give the retry
+            # budget back so unrelated incidents don't exhaust it over time
+            Pipeline.objects.filter(id=pipeline.id).update(restarted=0)
 
 
 def check_inconsistencies(positions):
@@ -204,6 +293,16 @@ def check_inconsistencies(positions):
                 logging.info(f'No active pipeline found matching {position["symbol"]} position. '
                              f'Closing {position["symbol"]} position...')
 
+                send_alert(
+                    title="Orphaned exchange position - closing",
+                    body=(
+                        f"{position['symbol']} ({account}): an open exchange position "
+                        f"has no matching active pipeline. Closing the remote position."
+                    ),
+                    severity="critical",
+                    dedup_key=f"orphan-{account}-{position['symbol']}",
+                )
+
                 # Close remote position for symbol
                 start_stop_symbol_trading(payload, 'stop')
 
@@ -223,11 +322,26 @@ def check_app_health():
     """
     logging.info('Checking app health...')
 
-    # Get open positions
-    response = get_open_positions()
+    # Get open positions - a raised connection error must not kill the
+    # scheduler job, and an unreachable execution service is alert-worthy
+    try:
+        response = get_open_positions()
+    except Exception as e:
+        response = None
+        logging.warning(f'Could not retrieve open positions: {e}')
 
-    if not response["success"]:
+    if not response or not response["success"]:
         logging.info('Could not retrieve open positions.')
+        send_alert(
+            title="Execution service unreachable",
+            body=(
+                "Could not retrieve open positions from the execution service - "
+                "health checks are degraded until it responds again."
+            ),
+            severity="warning",
+            dedup_key="execution-unreachable",
+            throttle_seconds=1800,
+        )
         return
 
     positions = response["positions"]

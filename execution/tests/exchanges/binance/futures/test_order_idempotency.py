@@ -154,6 +154,7 @@ class TestPlaceOrderIdempotent:
 
 class TestExecuteOrderKwargs:
 
+    @pytest.mark.django_db
     def test_internal_kwargs_not_forwarded_to_binance(self, trader, mocker):
         """reducing/stop_trading/pipeline_id are internal flags and must not
         leak into the Binance API request; closing orders are reduce-only."""

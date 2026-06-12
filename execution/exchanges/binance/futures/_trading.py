@@ -8,6 +8,7 @@ from datetime import datetime
 
 import django
 from binance.exceptions import BinanceAPIException
+from django.db import transaction
 from requests import ReadTimeout, ConnectionError
 
 from database.model.models import Pipeline
@@ -20,6 +21,7 @@ from execution.service.helpers.exceptions.leverage_setting_fail import LeverageS
 from execution.service.helpers.decorators import handle_order_execution_errors
 from shared.utils.decorators.failed_connection import retry_failed_connection
 from shared.utils.helpers import get_pipeline_data
+from shared.utils.notifier import send_alert
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -307,10 +309,31 @@ class BinanceFuturesTrader(BinanceTrader):
                     )
                 except BinanceAPIException as e:
                     if e.code != -2013:  # anything but ORDER_DOES_NOT_EXIST
-                        raise            # outcome unknown - do not re-place
+                        # outcome unknown - do not re-place
+                        send_alert(
+                            title="Order outcome UNKNOWN - check Binance manually",
+                            body=(
+                                f"{symbol}: order {client_order_id} timed out and its "
+                                f"status could not be confirmed ({e.message}). VERIFY "
+                                f"ON BINANCE whether the order exists before restarting."
+                            ),
+                            severity="critical",
+                            dedup_key=client_order_id,
+                        )
+                        raise
 
                 retries += 1
                 if retries > num_times:
+                    send_alert(
+                        title="Order placement failed - exchange unreachable",
+                        body=(
+                            f"{symbol}: order {client_order_id} could not be placed "
+                            f"after {num_times} retries ({conn_error!r}). The order "
+                            f"was confirmed NOT to exist on Binance."
+                        ),
+                        severity="critical",
+                        dedup_key=client_order_id,
+                    )
                     raise conn_error
 
                 logging.debug("Retrying order placement.")
@@ -376,24 +399,45 @@ class BinanceFuturesTrader(BinanceTrader):
             **({"reduceOnly": True} if reducing else {})
         )
 
-        order = self._process_order(order, pipeline_id)
+        # The exchange has filled the order at this point: everything below is
+        # bookkeeping, written in one transaction so local records are
+        # all-or-nothing, and applied to in-memory state only after commit so
+        # that memory always matches the database.
+        def bookkeeping():
+            with transaction.atomic():
+                formatted_order = self._process_order(order, pipeline_id)
 
-        units = float(order["executed_qty"])
+                state = None
+                if pipeline:
+                    factor = 1 if order_side == self.SIDE_SELL else -1
+                    units_filled = float(formatted_order["executed_qty"])
 
-        factor = 1 if order_side == self.SIDE_SELL else -1
+                    state = self._compute_net_value(
+                        symbol,
+                        factor * float(formatted_order['cummulative_quote_qty']),
+                        factor * units_filled,
+                        pipeline,
+                        reducing
+                    )
+                    self._persist_net_value(pipeline, state, reducing)
+
+                return formatted_order, state
+
+        formatted_order, new_state = self._run_bookkeeping(
+            bookkeeping,
+            pipeline_id=pipeline_id,
+            symbol=symbol,
+            detail=f"order {client_order_id} ({order_side} {units} {symbol})"
+        )
+
+        units = float(formatted_order["executed_qty"])
 
         self.nr_trades += 1
 
         if pipeline:
-            self._update_net_value(
-                symbol,
-                factor * float(order['cummulative_quote_qty']),
-                factor * units,
-                pipeline,
-                reducing
-            )
+            self._apply_net_value(symbol, new_state)
 
-            self.report_trade(order, units, going, header, symbol=symbol)
+            self.report_trade(formatted_order, units, going, header, symbol=symbol)
 
             self._check_negative_equity(symbol, reducing=reducing, stop_trading=stop_trading)
 
@@ -485,50 +529,66 @@ class BinanceFuturesTrader(BinanceTrader):
 
         self.print_current_balance(datetime.now(), header=header, symbol=symbol)
 
-    def _update_net_value(self, symbol, balance, units, pipeline, reducing=False):
+    def _compute_net_value(self, symbol, balance, units, pipeline, reducing=False):
         """
-        Updates the net value, units, and balances for a specified symbol,
-        accounting for open trades and leverage.
+        Computes the new net value, units, and balances for a specified symbol
+        without mutating any state.
 
-        Parameters
-        ----------
-        symbol : str
-            The trading symbol for which to update the net value.
-        balance : float
-            The amount to update the current balance by, based on trade results.
-        units : float
-            The number of units involved in the trade, to adjust the symbol's current units.
-        pipeline : Pipeline object
-            The trading pipeline configuration object, used to update the pipeline's balance,
-            units, and current equity.
-        reducing : bool, optional
-            Indicates whether the update is reducing the position size, triggering a correction
-            of balance if leverage is applied. Default is False.
+        Pure on purpose: the result is first persisted to the database inside
+        a transaction and only applied to the in-memory trading state after
+        the commit succeeds, so memory and database can never diverge.
 
-        Notes
-        -----
-        This method adjusts the trading state for the symbol based on the outcome of a trade.
-        It applies leverage adjustments if reducing a position and saves the updated pipeline configuration.
+        Returns
+        -------
+        dict
+            The new `units`, `balance` and `equity` values for the symbol.
         """
-
-        self.units[symbol] -= units
-        self.current_balance[symbol] += balance
+        new_units = self.units[symbol] - units
+        new_balance = self.current_balance[symbol] + balance
+        new_equity = self.current_equity[symbol]
 
         # Correction of balance if leverage is different from 1
         if reducing:
-            initial_balance = self.current_equity[symbol] * pipeline.leverage
-            pnl = self.current_balance[symbol] - initial_balance
+            initial_balance = new_equity * pipeline.leverage
+            pnl = new_balance - initial_balance
 
-            self.current_equity[symbol] = self.current_equity[symbol] + pnl
-            self.current_balance[symbol] = self.current_equity[symbol] * pipeline.leverage
+            new_equity = new_equity + pnl
+            new_balance = new_equity * pipeline.leverage
 
-        pipeline.balance = self.current_balance[symbol]
-        pipeline.units = self.units[symbol]
-        pipeline.current_equity = self.current_equity[symbol]
+        return {"units": new_units, "balance": new_balance, "equity": new_equity}
+
+    def _persist_net_value(self, pipeline, state, reducing):
+        """
+        Writes the computed net value to the pipeline row. Must be called
+        inside a transaction; the snapshot is deferred to after the commit
+        so it only ever records committed state.
+        """
+        pipeline.balance = state["balance"]
+        pipeline.units = state["units"]
+        pipeline.current_equity = state["equity"]
         pipeline.save(update_fields=["balance", "units", "current_equity"])
 
         if reducing:
-            save_pipeline_snapshot(pipeline_id=pipeline.id)
+            transaction.on_commit(lambda: save_pipeline_snapshot(pipeline_id=pipeline.id))
+
+    def _apply_net_value(self, symbol, state):
+        """Applies a computed net value to the in-memory trading state."""
+        self.units[symbol] = state["units"]
+        self.current_balance[symbol] = state["balance"]
+        self.current_equity[symbol] = state["equity"]
+
+    def _update_net_value(self, symbol, balance, units, pipeline, reducing=False):
+        """
+        Computes, persists and applies a net value update in one step. Used
+        outside the order path (e.g. when initializing a symbol's balance);
+        the order path runs the same pieces inside its own transaction.
+        """
+        state = self._compute_net_value(symbol, balance, units, pipeline, reducing)
+
+        with transaction.atomic():
+            self._persist_net_value(pipeline, state, reducing)
+
+        self._apply_net_value(symbol, state)
 
     def _get_symbol_info(self, symbol):
         """

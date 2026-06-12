@@ -91,7 +91,8 @@ def patch_datetime_now(monkeypatch):
     monkeypatch.setattr(datetime, 'datetime', mydatetime)
 
 
-FUTURE_TIME = datetime.datetime.now(pytz.utc) + datetime.timedelta(minutes=10)
+# must exceed app_health's POSITION_MISMATCH_GRACE / STUCK_THRESHOLD (15 min)
+FUTURE_TIME = datetime.datetime.now(pytz.utc) + datetime.timedelta(minutes=20)
 
 
 @pytest.fixture
