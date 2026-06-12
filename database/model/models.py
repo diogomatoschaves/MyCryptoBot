@@ -164,7 +164,10 @@ class Jobs(models.Model):
 
 class Orders(models.Model):
 
-    order_id = models.TextField(primary_key=True)
+    # Binance order ids are only unique per symbol (and differ between live and
+    # testnet/mock), so order_id is a plain field with a composite unique key
+    # rather than the global primary key it used to be.
+    order_id = models.TextField()
     client_order_id = models.TextField(null=True)
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     transact_time = models.DateTimeField()
@@ -179,6 +182,9 @@ class Orders(models.Model):
     exchange = models.ForeignKey(Exchange, default='binance', on_delete=models.SET_DEFAULT)
     mock = models.BooleanField(null=True, default=False)
     pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        unique_together = ("order_id", "symbol", "mock")
 
 
 class Strategy(models.Model):

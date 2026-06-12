@@ -45,7 +45,7 @@ class TestBinanceDataHandler:
                     "candle_size": "1h",
                 },
                 {
-                    "expected_number_objs_structured": 2,
+                    "expected_number_objs_structured": 3,
                     "expected_number_objs_exchange": 14,
                     "expected_times_called": 2
                 },
@@ -58,7 +58,7 @@ class TestBinanceDataHandler:
                     "pipeline_id": 1
                 },
                 {
-                    "expected_number_objs_structured": 2,
+                    "expected_number_objs_structured": 3,
                     "expected_number_objs_exchange": 14,
                     "expected_times_called": 2
                 },
@@ -127,8 +127,40 @@ class TestBinanceDataHandler:
 
         binance_data_handler.stop_data_ingestion()
 
-        assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
-        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"] - 1
+        # the last candle is a completed historical one, so it is preserved
+        # (only the still-forming candle would be deleted)
+        assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"]
+        assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
+
+    def test_delete_last_entry_removes_only_incomplete_candle(self, common_fixture):
+        handler = BinanceDataHandler(symbol="BTCUSDT", candle_size="5m")
+
+        ExchangeData.objects.all().delete()
+        StructuredData.objects.all().delete()
+
+        now = datetime.datetime.now(tz=pytz.utc)
+        base = dict(
+            exchange_id="binance", symbol_id="BTCUSDT", interval=handler.base_candle_size,
+            open=1, high=1, low=1, close=1, volume=1, quote_volume=1, trades=1,
+            taker_buy_asset_volume=1, taker_buy_quote_volume=1,
+        )
+
+        completed = ExchangeData.objects.create(
+            open_time=now - datetime.timedelta(hours=2),
+            close_time=now - datetime.timedelta(hours=1), **base,
+        )
+        forming = ExchangeData.objects.create(
+            open_time=now - datetime.timedelta(minutes=2),
+            close_time=now + datetime.timedelta(minutes=3), **base,
+        )
+
+        handler.delete_last_entry()
+
+        remaining = set(ExchangeData.objects.values_list("id", flat=True))
+        # the still-forming candle is removed; the completed one (shared with
+        # other pipelines) is preserved
+        assert forming.id not in remaining
+        assert completed.id in remaining
 
     @pytest.mark.slow
     @pytest.mark.parametrize(
@@ -141,7 +173,7 @@ class TestBinanceDataHandler:
                     "pipeline_id": 2
                 },
                 {
-                    "expected_number_objs_structured": 1,
+                    "expected_number_objs_structured": 3,
                     "expected_number_objs_exchange": 13,
                     "expected_value": 1
                 },
@@ -185,7 +217,8 @@ class TestBinanceDataHandler:
 
         assert trigger_signal_spy.call_args_list[-1][0] == (pipeline_id,)
 
-        assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"] - 1
+        # completed historical candles are preserved on stop
+        assert ExchangeData.objects.all().count() == output["expected_number_objs_exchange"]
         assert StructuredData.objects.all().count() == output["expected_number_objs_structured"]
 
         pipeline = Pipeline.objects.get(id=pipeline_id)

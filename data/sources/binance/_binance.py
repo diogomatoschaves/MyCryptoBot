@@ -1,7 +1,9 @@
 import logging
 import os
+from datetime import datetime
 
 import pandas as pd
+import pytz
 import django
 import redis
 from binance import ThreadedWebsocketManager
@@ -404,18 +406,24 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         return get_earliest_missing_date(minimum_lookback_date, self.symbol)
 
     def delete_last_entry(self):
+        # ExchangeData/StructuredData rows are shared by every pipeline on the
+        # same (symbol, exchange, interval). Only the still-forming candle
+        # (close_time in the future) is safe to delete; removing a completed
+        # candle would desync another pipeline that already acted on it.
+        now = datetime.now(tz=pytz.utc)
+
         for model_class, candle_size in [
             (ExchangeData, self.base_candle_size),
             (StructuredData, self.candle_size)
         ]:
-            try:
-                model_class.objects.filter(
-                    symbol=self.symbol,
-                    exchange_id=self.exchange,
-                    interval=candle_size
-                ).last().delete()
-            except AttributeError:
-                pass
+            last = model_class.objects.filter(
+                symbol=self.symbol,
+                exchange_id=self.exchange,
+                interval=candle_size
+            ).order_by('open_time').last()
+
+            if last is not None and last.close_time is not None and last.close_time > now:
+                last.delete()
 
     def print_added_entries(self, new_entries, model_class):
 

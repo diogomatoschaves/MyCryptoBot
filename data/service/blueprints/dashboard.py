@@ -1,6 +1,5 @@
 import os
 from collections import defaultdict
-from functools import reduce
 
 import django
 from django.core.paginator import Paginator
@@ -225,20 +224,19 @@ def get_trades_metrics():
     except NoSuchPipeline:
         aggregate_values = convert_trades_to_dict(query_trades_metrics())
 
-        symbols_objs = Symbol.objects.all()
+        # one grouped count per symbol instead of a query per symbol
+        symbol_counts = (
+            Trade.objects.exclude(close_time=None)
+            .values("pipeline__symbol")
+            .annotate(value=Count("id"))
+            .filter(value__gt=0)
+            .order_by("pipeline__symbol")
+        )
 
-        symbols = []
-
-        for symbol in symbols_objs:
-
-            trades = Trade.objects.filter(pipeline__symbol=symbol).exclude(close_time=None).count()
-
-            if trades > 0:
-                symbol_dict = {"name": symbol.name, "value": trades}
-
-                symbols.append(symbol_dict)
-
-        aggregate_values["tradesCount"] = symbols
+        aggregate_values["tradesCount"] = [
+            {"name": row["pipeline__symbol"], "value": row["value"]}
+            for row in symbol_counts
+        ]
 
     return jsonify(aggregate_values)
 
@@ -249,41 +247,46 @@ def get_trades_metrics():
 @handle_db_connection_error
 def get_pipelines_metrics():
 
-    def reduce_pipelines(accum, pipeline):
-        try:
-            trades_metrics = convert_trades_to_dict(query_trades_metrics(pipeline))
-
-            try:
-                win_rate = trades_metrics["winningTrades"] / trades_metrics["numberTrades"]
-            except TypeError:
-                win_rate = None
-
-            return {
-                **accum,
-                "totalPipelines": accum["totalPipelines"] + 1,
-                "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
-                "bestWinRate": {**pipeline.as_json(), "winRate": win_rate}
-                if win_rate and win_rate > accum["bestWinRate"]["winRate"] else accum["bestWinRate"],
-                "mostTrades": {**pipeline.as_json(), "totalTrades": trades_metrics["numberTrades"]}
-                if trades_metrics["numberTrades"] > accum["mostTrades"]["totalTrades"] else accum["mostTrades"],
-            }
-        except AttributeError:
-            return {
-                **accum,
-                "totalPipelines": accum["totalPipelines"] + 1,
-                "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
-            }
-
     pipelines = Pipeline.objects.exclude(deleted=True)
 
-    pipelines_metrics = reduce(reduce_pipelines, pipelines, {
+    # per-pipeline trade counts in a single grouped query instead of one
+    # aggregate query per pipeline
+    trade_stats = {
+        row["pipeline_id"]: row
+        for row in Trade.objects.exclude(close_time=None)
+        .values("pipeline_id")
+        .annotate(
+            number_trades=Count("id"),
+            winning_trades=Count("pnl_pct", filter=Q(pnl_pct__gte=0)),
+        )
+    }
+
+    metrics = {
         "totalPipelines": 0,
         "activePipelines": 0,
         "bestWinRate": {"winRate": 0},
         "mostTrades": {"totalTrades": 0},
-    })
+    }
 
-    return jsonify(pipelines_metrics)
+    for pipeline in pipelines:
+        metrics["totalPipelines"] += 1
+        if pipeline.active:
+            metrics["activePipelines"] += 1
+
+        stats = trade_stats.get(pipeline.id)
+        if not stats:
+            continue
+
+        number_trades = stats["number_trades"]
+        win_rate = stats["winning_trades"] / number_trades if number_trades else None
+
+        if win_rate and win_rate > metrics["bestWinRate"]["winRate"]:
+            metrics["bestWinRate"] = {**pipeline.as_json(), "winRate": win_rate}
+
+        if number_trades > metrics["mostTrades"]["totalTrades"]:
+            metrics["mostTrades"] = {**pipeline.as_json(), "totalTrades": number_trades}
+
+    return jsonify(metrics)
 
 
 @dashboard.get('/pipeline-equity', defaults={'pipeline_id': None})

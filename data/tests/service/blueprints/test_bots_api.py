@@ -518,6 +518,24 @@ class TestBotsAPI:
 
         binance_handler_stop_data_ingestion_spy.assert_called()
 
+    def test_stop_bot_force_stops_when_no_local_instance(self, client, create_pipeline, mocker):
+        # no local data instance is attached (e.g. after a worker restart), so
+        # stop_instance returns False; the execution service must still be told
+        # to force-close the position rather than orphaning it
+        import data.service.blueprints.bots_api._helpers as helpers
+        helpers.binance_instances = []
+
+        force_stop = mocker.patch(
+            "data.service.blueprints.bots_api._bots_api.start_stop_symbol_trading",
+            return_value={"success": True, "message": "ok"},
+        )
+
+        client.put(f'{API_PREFIX}/stop_bot', json={"pipelineId": 1})
+
+        force_stop.assert_called_once()
+        assert force_stop.call_args[0][0]["force"] is True
+        assert Pipeline.objects.get(id=1).active is False
+
     @pytest.mark.parametrize(
         "params,response",
         [

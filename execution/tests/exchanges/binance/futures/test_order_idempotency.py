@@ -1,8 +1,11 @@
 import json
+from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytest
+import pytz
 from binance.exceptions import BinanceAPIException
+from django.db import IntegrityError, transaction
 from requests import ReadTimeout
 
 with pytest.MonkeyPatch().context() as ctx:
@@ -11,6 +14,44 @@ with pytest.MonkeyPatch().context() as ctx:
     # circular import (same order as test_binance_futures_trader.py)
     from execution.service.helpers.exceptions import SymbolNotBeingTraded  # noqa: F401
     from execution.exchanges.binance.futures import BinanceFuturesTrader
+
+from database.model.models import Orders
+from shared.utils.tests.fixtures.models import create_exchange, create_symbol, create_assets
+
+
+def _order_fields(**overrides):
+    fields = dict(
+        order_id="123",
+        transact_time=datetime(2023, 9, 1, tzinfo=pytz.utc),
+        price=1, original_qty=1, executed_qty=1, cummulative_quote_qty=1,
+        status="FILLED", type="MARKET", side="BUY",
+    )
+    fields.update(overrides)
+    return fields
+
+
+class TestOrdersUniqueness:
+
+    def test_same_order_id_coexists_across_symbols(self, create_exchange, create_symbol):
+        # identical Binance order id on two symbols used to collide on the
+        # global primary key; now both rows persist
+        Orders.objects.create(symbol_id="BTCUSDT", **_order_fields())
+        Orders.objects.create(symbol_id="ETHUSDT", **_order_fields())
+
+        assert Orders.objects.filter(order_id="123").count() == 2
+
+    def test_same_order_id_coexists_live_and_mock(self, create_exchange, create_symbol):
+        Orders.objects.create(symbol_id="BTCUSDT", mock=False, **_order_fields())
+        Orders.objects.create(symbol_id="BTCUSDT", mock=True, **_order_fields())
+
+        assert Orders.objects.filter(order_id="123").count() == 2
+
+    def test_true_duplicate_still_rejected(self, create_exchange, create_symbol):
+        Orders.objects.create(symbol_id="BTCUSDT", mock=False, **_order_fields())
+
+        with pytest.raises(IntegrityError):
+            with transaction.atomic():
+                Orders.objects.create(symbol_id="BTCUSDT", mock=False, **_order_fields())
 
 
 ORDER = {
