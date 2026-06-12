@@ -10,6 +10,11 @@ services:
       - "127.0.0.1:5433:5432"
     volumes:
       - ./database/local_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   data-service:
     build:
       context: .
@@ -28,6 +33,11 @@ services:
       - EXECUTION_APP_URL=http://execution-service:5000
       - PORT=5000
       - LOGGER_LEVEL=INFO
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./database/model:/usr/src/app/database/model
   model-service:
@@ -46,6 +56,11 @@ services:
       - APP_NAME=crypto-bot-model
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./database/model:/usr/src/app/database/model
       - ./model/strategies/models:/usr/src/app/model/strategies/models
@@ -62,7 +77,10 @@ services:
       - REDIS_URL=redis://redis:6379
       - EXECUTION_APP_URL=http://execution-service:5000
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./database/model:/usr/src/app/database/model
       - ./model/strategies/models:/usr/src/app/model/strategies/models
@@ -83,19 +101,30 @@ services:
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
       - SNAPSHOTS_INTERVAL=180
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./database/model:/usr/src/app/database/model
   redis:
-    image: redis
+    image: redis:7
+    restart: always
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   dashboard:
     build:
       context: .
       dockerfile: dashboard/Dockerfile
       args:
         # Vite bakes this in at build time
-        - VITE_DATA_API_HOST=http://localhost:5003
+        - VITE_DATA_API_HOST=${VITE_DATA_API_HOST:-http://localhost:5003}
     image: dashboard-server
     ports:
       # Picks the first free host port in the range (3000 if available)

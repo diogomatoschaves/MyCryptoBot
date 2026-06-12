@@ -40,8 +40,6 @@ COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /
 RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi --only main
 
-USER root
-
 COPY ./proj.conf ./app/$DIRECTORY/service/
 COPY ./database/ ./app/database/
 COPY ./$DIRECTORY/ ./app/$DIRECTORY/
@@ -50,5 +48,9 @@ COPY ./shared/ ./app/shared/
 COPY --from=build-step app/dist/. ./app/$DIRECTORY/build
 
 WORKDIR /app
+
+# run as a non-root user (mirrors the model/execution images)
+RUN useradd -m myuser
+USER myuser
 
 CMD bash $DIRECTORY/entrypoint.sh
