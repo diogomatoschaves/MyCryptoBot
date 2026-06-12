@@ -6,13 +6,12 @@ import redis
 import requests
 
 from data.service.helpers import MODEL_APP_ENDPOINTS, EXECUTION_APP_ENDPOINTS
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.decorators import retry_failed_connection, json_error_handler
 from shared.utils.helpers import get_item_from_cache
 
-config_vars = get_config()
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
 
 
 def prepare_payload(**kwargs):

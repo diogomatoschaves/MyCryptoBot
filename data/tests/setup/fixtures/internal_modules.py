@@ -380,24 +380,17 @@ def mock_get_open_positions_unsuccessful(mocker):
     mocker.patch.object(data.service.cron_jobs.app_health._app_health, 'get_open_positions', lambda: {"success": False})
 
 
-FakeConfig = namedtuple(
-    'fake_config',
-    [
-        'check_inconsistencies',
-        'restart_failed_pipelines',
-        'restart_retries',
-        'redis_url'
-    ]
-)
-fake_config_no_restart = FakeConfig('false', 'false', '2', '')
-fake_config_no_retries = FakeConfig('false', 'true', '0', '')
+_app_health_settings = data.service.cron_jobs.app_health._app_health.settings
 
 
 @pytest.fixture
 def mock_config_no_restart(mocker):
-    mocker.patch('data.service.cron_jobs.app_health._app_health.config', fake_config_no_restart)
+    mocker.patch.object(_app_health_settings, 'check_inconsistencies', False)
+    mocker.patch.object(_app_health_settings, 'restart_failed_pipelines', False)
 
 
 @pytest.fixture
 def mock_config_no_retries(mocker):
-    mocker.patch('data.service.cron_jobs.app_health._app_health.config', fake_config_no_retries)
+    mocker.patch.object(_app_health_settings, 'check_inconsistencies', False)
+    mocker.patch.object(_app_health_settings, 'restart_failed_pipelines', True)
+    mocker.patch.object(_app_health_settings, 'restart_retries', 0)

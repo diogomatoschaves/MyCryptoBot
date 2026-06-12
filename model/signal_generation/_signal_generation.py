@@ -13,7 +13,7 @@ from model.service.helpers import LOCAL_MODELS_LOCATION
 from model.service.cloud_storage import upload_models
 from model.service.external_requests import execute_order
 from model.signal_generation._helpers import convert_signal_to_text, strategies_defaults
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.exceptions import StrategyInvalid
 from shared.utils.helpers import get_pipeline_max_window, get_minimum_lookback_date
 from shared.utils.logger import configure_logger
@@ -24,9 +24,8 @@ django.setup()
 
 from database.model.models import StructuredData
 
-config_vars = get_config('model')
 
-configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
+configure_logger(settings.logger_level)
 
 _strategy_registry = None
 
@@ -125,7 +124,7 @@ def signal_generator(pipeline, bearer_token, header=''):
         a trade based on this signal.
     - Logging is used to provide information about the process and any potential issues encountered.
     """
-    max_window = get_pipeline_max_window(pipeline["id"], config_vars.default_min_rows)
+    max_window = get_pipeline_max_window(pipeline["id"], settings.default_min_rows)
 
     start_date = get_minimum_lookback_date(max_window, pipeline["interval"])
 

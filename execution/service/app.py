@@ -14,7 +14,7 @@ from execution.service.helpers import validate_signal, extract_and_validate, get
 from execution.service.helpers.exceptions import PipelineNotActive, InsufficientBalance
 from execution.service.helpers.responses import Responses
 from execution.exchanges.binance.futures import BinanceFuturesTrader
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.decorators import handle_db_connection_error
 from shared.utils.helpers import get_jwt_secret_key
 from shared.utils.exceptions import EquityRequired
@@ -29,9 +29,8 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-config_vars = get_config('execution')
 
-configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
+configure_logger(settings.logger_level)
 
 
 global binance_futures_mock_trader, binance_futures_trader
@@ -46,7 +45,7 @@ def get_binance_trader_instance(paper_trading):
 
 def startup_task():
 
-    start_background_scheduler(config_vars)
+    start_background_scheduler()
 
     active_pipelines = [position.pipeline for position in Position.objects.filter(pipeline__active=True)]
 

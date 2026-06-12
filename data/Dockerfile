@@ -40,7 +40,6 @@ COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /
 RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi --only main
 
-COPY ./proj.conf ./app/$DIRECTORY/service/
 COPY ./database/ ./app/database/
 COPY ./$DIRECTORY/ ./app/$DIRECTORY/
 COPY ./shared/ ./app/shared/

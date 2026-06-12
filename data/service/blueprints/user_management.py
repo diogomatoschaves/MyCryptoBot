@@ -12,16 +12,15 @@ from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, v
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from jwt import DecodeError, ExpiredSignatureError
 
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.decorators import general_app_error
 from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-config_vars = get_config()
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
 
 User = get_user_model()
 

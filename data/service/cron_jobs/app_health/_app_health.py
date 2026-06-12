@@ -1,7 +1,6 @@
 import logging
 import os
 import datetime
-from distutils.util import strtobool
 
 import django
 import pytz
@@ -9,7 +8,7 @@ import redis
 
 from data.service.blueprints.bots_api import stop_pipeline, start_symbol_trading
 from data.service.external_requests import get_open_positions, start_stop_symbol_trading
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.decorators import handle_db_connection_error
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -18,9 +17,8 @@ django.setup()
 from database.model.models import Pipeline, Position
 
 
-config = get_config()
 
-cache = redis.from_url(os.getenv('REDIS_URL', config.redis_url))
+cache = redis.from_url(settings.redis_url)
 
 
 def find_position(positions, symbol):
@@ -47,7 +45,7 @@ def find_position(positions, symbol):
 
 
 def restart_pipeline(pipeline):
-    if strtobool(config.restart_failed_pipelines) and pipeline.restarted < int(config.restart_retries):
+    if settings.restart_failed_pipelines and pipeline.restarted < settings.restart_retries:
 
         logging.info(f"Restarting pipeline {pipeline.id}...")
 
@@ -234,7 +232,7 @@ def check_app_health():
 
     positions = response["positions"]
 
-    if strtobool(config.check_inconsistencies):
+    if settings.check_inconsistencies:
         check_inconsistencies(positions)
 
     check_active_pipelines(positions)

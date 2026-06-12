@@ -10,7 +10,7 @@ from flask_jwt_extended import jwt_required
 from data.service.blueprints.bots_api._helpers import start_symbol_trading, stop_instance
 from data.service.external_requests import get_strategies, start_stop_symbol_trading
 from data.service.helpers import check_input, get_or_create_pipeline, extract_request_params, convert_client_request
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.decorators import general_app_error
 from data.service.helpers.decorators.handle_app_errors import handle_app_errors
 from data.service.helpers.exceptions import (
@@ -25,9 +25,8 @@ django.setup()
 
 from database.model.models import Pipeline
 
-config_vars = get_config()
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
 
 bots_api = Blueprint('bots_api', __name__)
 

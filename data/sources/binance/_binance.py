@@ -24,7 +24,7 @@ from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.utils.helpers import get_minimum_lookback_date, get_pipeline_max_window, remove_pipeline_loading
 from shared.exchanges.binance import BinanceHandler
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 import shared.exchanges.binance.constants as const
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -34,9 +34,8 @@ from database.model.models import ExchangeData, StructuredData, Pipeline, Positi
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
-config_vars = get_config('data')
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
 
 
 class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
@@ -48,7 +47,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
     def __init__(self, symbol, candle_size, pipeline_id=None, start_date=None):
 
-        BinanceHandler.__init__(self, base_candle_size=config_vars.base_candle_size)
+        BinanceHandler.__init__(self, base_candle_size=settings.base_candle_size)
         ThreadedWebsocketManager.__init__(self, self.binance_api_key, self.binance_api_secret)
 
         self._validate_input(symbol, candle_size)
@@ -398,7 +397,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         if self.start_date is not None:
             minimum_lookback_date = self.start_date
         else:
-            max_window = get_pipeline_max_window(self.pipeline_id, config_vars.default_min_rows)
+            max_window = get_pipeline_max_window(self.pipeline_id, settings.default_min_rows)
             minimum_lookback_date = get_minimum_lookback_date(max_window, self.candle_size)
 
         self.start_date = minimum_lookback_date

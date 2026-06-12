@@ -9,12 +9,11 @@ import redis
 from data.service.external_requests import start_stop_symbol_trading
 from data.sources._sources import DataHandler
 from shared.exchanges.binance import BinanceHandler
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.helpers import get_logging_row_header, add_pipeline_loading, is_pipeline_loading
 
-config_vars = get_config()
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
 executor = ThreadPoolExecutor(16)
 
 binance_instances = []

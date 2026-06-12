@@ -18,7 +18,7 @@ from model.service.helpers.responses import Responses
 from model.strategies.properties import compile_strategies
 from model.worker import conn
 import shared.exchanges.binance.constants as const
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.decorators import handle_db_connection_error
 from shared.utils.helpers import get_pipeline_data, get_item_from_cache, get_jwt_secret_key
 from shared.utils.logger import configure_logger
@@ -32,12 +32,11 @@ ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
-config_vars = get_config('model')
 
-configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
+configure_logger(settings.logger_level)
 logging.getLogger('botocore').setLevel(logging.CRITICAL)
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
 
 q = Queue(connection=conn)
 

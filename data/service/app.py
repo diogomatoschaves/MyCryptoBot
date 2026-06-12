@@ -14,7 +14,7 @@ from flask_jwt_extended import JWTManager, create_access_token
 
 from data.service.cron_jobs.app_health import check_app_health
 from data.service.cron_jobs.main import start_background_scheduler
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.helpers import is_pipeline_loading, get_jwt_secret_key, LOADING
 
 module_path = os.path.abspath(os.path.join('..'))
@@ -34,11 +34,10 @@ django.setup()
 from database.model.models import Pipeline
 from shared.utils.logger import configure_logger
 
-config_vars = get_config('data')
 
-configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
+configure_logger(settings.logger_level)
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
 
 # Internal service token: bounded lifetime + periodic rotation so a leaked
 # token can't be used indefinitely. The TTL is comfortably longer than any
@@ -63,7 +62,6 @@ def startup_task(app):
     set_service_token(app)
 
     start_background_scheduler(
-        config_vars,
         token_refresher=lambda: set_service_token(app),
         refresh_hours=SERVICE_TOKEN_REFRESH_HOURS,
     )
@@ -93,7 +91,7 @@ def create_app():
     app.register_blueprint(proxy, url_prefix='/api')
 
     app.config["JWT_SECRET_KEY"] = get_jwt_secret_key()
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=config_vars.token_expires_days)
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=settings.token_expires_days)
 
     JWTManager(app)
 
