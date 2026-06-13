@@ -18,7 +18,7 @@ class TestModelService:
 
         res = app_client.get("/")
 
-        assert res.data.decode(res.charset) == "It's up!"
+        assert res.data.decode("utf-8") == "It's up!"
 
     @pytest.mark.parametrize(
         "route,method",
@@ -183,3 +183,57 @@ class TestModelService:
         print(res.json)
 
         assert res.json == STRATEGIES
+
+
+class TestSignalJobEnqueueSemantics:
+
+    @pytest.mark.slow
+    def test_enqueue_includes_failure_handling_kwargs(
+        self,
+        mocker,
+        app_client,
+        mock_settings_env_vars,
+        mock_redis_connection,
+        create_exchange,
+        create_pipeline,
+    ):
+        import model.service.app as app_module
+
+        enqueue = mocker.patch.object(app_module.q, "enqueue_call")
+        enqueue.return_value.get_id.return_value = "abcde"
+        mocker.patch.object(app_module, "warn_if_no_workers", return_value=False)
+
+        res = app_client.post("/generate_signal", json={"pipeline_id": 1})
+
+        assert res.json["success"] is True
+
+        kwargs = enqueue.call_args.kwargs
+        assert kwargs["failure_ttl"] == app_module.JOB_FAILURE_TTL
+        assert kwargs["on_failure"].name == app_module.SIGNAL_FAILURE_CALLBACK
+
+        pipeline_dict = enqueue.call_args.args[1][0]
+        assert "enqueued_at" in pipeline_dict
+
+    @pytest.mark.slow
+    def test_no_workers_still_enqueues_but_alerts(
+        self,
+        mocker,
+        app_client,
+        mock_settings_env_vars,
+        mock_redis_connection,
+        create_exchange,
+        create_pipeline,
+    ):
+        import model.service.app as app_module
+
+        enqueue = mocker.patch.object(app_module.q, "enqueue_call")
+        enqueue.return_value.get_id.return_value = "abcde"
+        mocker.patch.object(app_module.Worker, "count", return_value=0)
+        alert = mocker.patch.object(app_module, "send_alert")
+
+        res = app_client.post("/generate_signal", json={"pipeline_id": 1})
+
+        assert res.json["success"] is True
+        enqueue.assert_called_once()
+        alert.assert_called_once()
+        assert alert.call_args.kwargs["severity"] == "critical"

@@ -1,6 +1,6 @@
 import functools
+import json
 import logging
-import sys
 import traceback
 
 from flask import Response
@@ -16,16 +16,25 @@ def general_app_error(func):
             return func(*args, **kwargs)
         except ExpiredSignatureError as e:
             logging.debug(e)
-            return Response({"msg": f"{str(e)}"}, status=422, mimetype='application/json')
+            return Response(
+                json.dumps({"msg": "Token has expired."}),
+                status=422,
+                mimetype='application/json'
+            )
         except DecodeError as e:
             logging.debug(e)
-            return Response({"msg": f"{str(e)}"}, status=401, mimetype='application/json')
-        except Exception as e:
-
-            logging.warning('Error encountered. Restarting app.')
-
+            return Response(
+                json.dumps({"msg": "Invalid token."}),
+                status=401,
+                mimetype='application/json'
+            )
+        except Exception:
             logging.error(traceback.format_exc())
 
-            return sys.exit(0)
+            return Response(
+                json.dumps({"msg": "Internal server error.", "success": False}),
+                status=500,
+                mimetype='application/json'
+            )
 
     return wrapper

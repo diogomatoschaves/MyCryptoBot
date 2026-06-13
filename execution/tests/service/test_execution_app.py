@@ -11,6 +11,8 @@ from shared.utils.exceptions import NoSuchPipeline
 from shared.utils.tests.fixtures.models import *
 from shared.utils.tests.fixtures.external_modules import mock_jwt_required
 
+from database.model.models import Pipeline
+
 
 def inject_fixture(mock_name, method):
     globals()[f"{mock_name}"] = binance_handler_execution_app_factory(method)
@@ -49,7 +51,7 @@ class TestExecutionService:
 
         res = client.get("/")
 
-        assert res.data.decode(res.charset) == "I'm up!"
+        assert res.data.decode("utf-8") == "I'm up!"
 
     @pytest.mark.parametrize(
         "route",
@@ -400,6 +402,10 @@ class TestExecutionService:
 
         assert res.json == expected_value
 
+        # a fatal API error must deactivate the pipeline so the data service
+        # stops sending signals into a broken trading state
+        assert Pipeline.objects.get(id=params["pipeline_id"]).active is False
+
     @pytest.mark.parametrize(
         "endpoint,params,expected_value",
         [
@@ -502,6 +508,17 @@ class TestExecutionService:
         pipeline_11 = Pipeline.objects.get(id=11)
 
         assert pipeline_11.active is False
+
+    @pytest.mark.slow
+    def test_startup_task_survives_generic_error(
+        self,
+        app_with_open_positions_generic_error,
+        spy_start_pipeline_trade
+    ):
+        # a non-InsufficientBalance boot error must not crash create_app;
+        # every offending pipeline is deactivated and startup continues
+        assert spy_start_pipeline_trade.call_count == 3
+        assert Pipeline.objects.filter(active=True).count() == 0
 
     def test_startup_task_no_open_positions(
         self,

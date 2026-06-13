@@ -1,10 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2020",
+    "useDefineForClassFields": true,
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
+    ],
+    "types": [
+      "vite/client"
     ],
     "allowJs": true,
     "skipLibCheck": true,
@@ -14,7 +18,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,

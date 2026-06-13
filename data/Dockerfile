@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:13.12.0-alpine as build-step
+FROM --platform=linux/amd64 node:20-alpine as build-step
 ENV DIRECTORY dashboard
 
 WORKDIR /app
@@ -12,16 +12,10 @@ COPY ./$DIRECTORY/ ./
 RUN npm run build
 
 
-FROM --platform=linux/amd64 python:3.8-slim
+FROM --platform=linux/amd64 python:3.12-slim
 
-ARG BINANCE_API_KEY
-ARG BINANCE_API_SECRET
-ARG BINANCE_API_KEY_TEST
-ARG BINANCE_API_SECRET_TEST
-ARG MODEL_APP_URL
-ARG EXECUTION_APP_URL
-ARG APP_NAME
-ARG SECRET_KEY
+# Secrets and app config are injected at runtime (Heroku config vars /
+# compose env_file) — never as build args, which persist in image layers.
 
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -37,8 +31,8 @@ RUN pip install -U pip \
     && apt-get update \
     && yes | apt-get install libpq-dev \
     && apt install -y curl netcat-traditional \
-    && curl -sSL https://install.python-poetry.org | python - --version 1.7.1 \
-    && pip install psycopg2-binary==2.8.6
+    && curl -sSL https://install.python-poetry.org | python - --version 2.4.0 \
+    && pip install psycopg2-binary==2.9.9
 ENV PATH="$POETRY_HOME/bin:$PATH"
 
 COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /
@@ -46,24 +40,16 @@ COPY $DIRECTORY/poetry.lock $DIRECTORY/pyproject.toml /
 RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi --only main
 
-USER root
-
-COPY ./proj.conf ./app/$DIRECTORY/service/
 COPY ./database/ ./app/database/
 COPY ./$DIRECTORY/ ./app/$DIRECTORY/
 COPY ./shared/ ./app/shared/
 
-COPY --from=build-step app/build/. ./app/$DIRECTORY/build
+COPY --from=build-step app/dist/. ./app/$DIRECTORY/build
 
 WORKDIR /app
 
-ENV BINANCE_API_KEY=$BINANCE_API_KEY
-ENV BINANCE_API_SECRET=$BINANCE_API_SECRET
-ENV BINANCE_API_KEY_TEST=$BINANCE_API_KEY_TEST
-ENV BINANCE_API_SECRET_TEST=$BINANCE_API_SECRET_TEST
-ENV MODEL_APP_URL=$MODEL_APP_URL
-ENV EXECUTION_APP_URL=$EXECUTION_APP_URL
-ENV APP_NAME=$APP_NAME
-ENV SECRET_KEY=$SECRET_KEY
+# run as a non-root user (mirrors the model/execution images)
+RUN useradd -m myuser
+USER myuser
 
 CMD bash $DIRECTORY/entrypoint.sh

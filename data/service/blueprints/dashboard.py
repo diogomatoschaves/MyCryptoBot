@@ -1,6 +1,6 @@
 import os
+import time
 from collections import defaultdict
-from functools import reduce
 
 import django
 from django.core.paginator import Paginator
@@ -15,11 +15,18 @@ from shared.utils.decorators import general_app_error
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER, CANDLE_SIZES_ORDERED
 from shared.utils.decorators import handle_db_connection_error
 from shared.utils.exceptions import NoSuchPipeline
+from shared.utils.notifier import (
+    send_alert,
+    get_telegram_credentials,
+    TELEGRAM_TOKEN_KEY,
+    TELEGRAM_CHAT_ID_KEY,
+)
+import shared.utils.notifier as notifier
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
 
-from database.model.models import Symbol, Exchange, Pipeline, Position, Trade
+from database.model.models import Symbol, Exchange, Pipeline, Position, Trade, AppSetting
 
 dashboard = Blueprint('dashboard', __name__)
 
@@ -97,11 +104,13 @@ def get_trades(page):
 @jwt_required()
 def handle_pipelines(page):
 
-    if "STRATEGIES" not in globals():
+    # cache strategies, but never cache a failed fetch (None) - otherwise a
+    # transient model-app outage poisons the cache for the process lifetime
+    STRATEGIES = globals().get("STRATEGIES")
+    if not STRATEGIES:
         STRATEGIES = get_strategies()
-        globals()["STRATEGIES"] = STRATEGIES
-    else:
-        STRATEGIES = globals()["STRATEGIES"]
+        if STRATEGIES:
+            globals()["STRATEGIES"] = STRATEGIES
 
     response = {"message": "This method is not allowed", "success": False}
 
@@ -223,20 +232,19 @@ def get_trades_metrics():
     except NoSuchPipeline:
         aggregate_values = convert_trades_to_dict(query_trades_metrics())
 
-        symbols_objs = Symbol.objects.all()
+        # one grouped count per symbol instead of a query per symbol
+        symbol_counts = (
+            Trade.objects.exclude(close_time=None)
+            .values("pipeline__symbol")
+            .annotate(value=Count("id"))
+            .filter(value__gt=0)
+            .order_by("pipeline__symbol")
+        )
 
-        symbols = []
-
-        for symbol in symbols_objs:
-
-            trades = Trade.objects.filter(pipeline__symbol=symbol).exclude(close_time=None).count()
-
-            if trades > 0:
-                symbol_dict = {"name": symbol.name, "value": trades}
-
-                symbols.append(symbol_dict)
-
-        aggregate_values["tradesCount"] = symbols
+        aggregate_values["tradesCount"] = [
+            {"name": row["pipeline__symbol"], "value": row["value"]}
+            for row in symbol_counts
+        ]
 
     return jsonify(aggregate_values)
 
@@ -247,41 +255,46 @@ def get_trades_metrics():
 @handle_db_connection_error
 def get_pipelines_metrics():
 
-    def reduce_pipelines(accum, pipeline):
-        try:
-            trades_metrics = convert_trades_to_dict(query_trades_metrics(pipeline))
-
-            try:
-                win_rate = trades_metrics["winningTrades"] / trades_metrics["numberTrades"]
-            except TypeError:
-                win_rate = None
-
-            return {
-                **accum,
-                "totalPipelines": accum["totalPipelines"] + 1,
-                "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
-                "bestWinRate": {**pipeline.as_json(), "winRate": win_rate}
-                if win_rate and win_rate > accum["bestWinRate"]["winRate"] else accum["bestWinRate"],
-                "mostTrades": {**pipeline.as_json(), "totalTrades": trades_metrics["numberTrades"]}
-                if trades_metrics["numberTrades"] > accum["mostTrades"]["totalTrades"] else accum["mostTrades"],
-            }
-        except AttributeError:
-            return {
-                **accum,
-                "totalPipelines": accum["totalPipelines"] + 1,
-                "activePipelines": accum["activePipelines"] + 1 if pipeline.active else accum["activePipelines"],
-            }
-
     pipelines = Pipeline.objects.exclude(deleted=True)
 
-    pipelines_metrics = reduce(reduce_pipelines, pipelines, {
+    # per-pipeline trade counts in a single grouped query instead of one
+    # aggregate query per pipeline
+    trade_stats = {
+        row["pipeline_id"]: row
+        for row in Trade.objects.exclude(close_time=None)
+        .values("pipeline_id")
+        .annotate(
+            number_trades=Count("id"),
+            winning_trades=Count("pnl_pct", filter=Q(pnl_pct__gte=0)),
+        )
+    }
+
+    metrics = {
         "totalPipelines": 0,
         "activePipelines": 0,
         "bestWinRate": {"winRate": 0},
         "mostTrades": {"totalTrades": 0},
-    })
+    }
 
-    return jsonify(pipelines_metrics)
+    for pipeline in pipelines:
+        metrics["totalPipelines"] += 1
+        if pipeline.active:
+            metrics["activePipelines"] += 1
+
+        stats = trade_stats.get(pipeline.id)
+        if not stats:
+            continue
+
+        number_trades = stats["number_trades"]
+        win_rate = stats["winning_trades"] / number_trades if number_trades else None
+
+        if win_rate and win_rate > metrics["bestWinRate"]["winRate"]:
+            metrics["bestWinRate"] = {**pipeline.as_json(), "winRate": win_rate}
+
+        if number_trades > metrics["mostTrades"]["totalTrades"]:
+            metrics["mostTrades"] = {**pipeline.as_json(), "totalTrades": number_trades}
+
+    return jsonify(metrics)
 
 
 @dashboard.get('/pipeline-equity', defaults={'pipeline_id': None})
@@ -313,3 +326,104 @@ def get_pipeline_equity(pipeline_id):
             )
 
         return jsonify({"success": True, "data": data})
+
+
+def _mask(value):
+    return f"{value[:2]}***{value[-2:]}" if value and len(value) > 4 else ("***" if value else None)
+
+
+@dashboard.get('/alerts')
+@general_app_error
+@jwt_required()
+def get_alerts_status():
+    """Reports whether Telegram alerting is configured and from which source
+    (environment variables win over dashboard-saved settings). Only a masked
+    chat id is ever exposed - never the bot token."""
+    token, chat_id, source = get_telegram_credentials()
+
+    return jsonify({
+        "success": True,
+        "configured": bool(token and chat_id),
+        "source": source,
+        "chatId": _mask(chat_id),
+    })
+
+
+@dashboard.put('/alerts')
+@general_app_error
+@jwt_required()
+@handle_db_connection_error
+def save_alerts_settings():
+    """Saves the Telegram credentials from the dashboard. The token is
+    write-only: it is stored server-side and never returned to the client.
+    Sending empty strings clears the stored settings."""
+    if os.getenv("TELEGRAM_BOT_TOKEN") and os.getenv("TELEGRAM_CHAT_ID"):
+        return jsonify({
+            "success": False,
+            "message": (
+                "Telegram alerts are configured through environment variables, "
+                "which take precedence - update them in your deployment config instead."
+            ),
+        })
+
+    request_data = request.get_json(force=True)
+
+    bot_token = (request_data.get("botToken") or "").strip()
+    chat_id = (request_data.get("chatId") or "").strip()
+
+    if bool(bot_token) != bool(chat_id):
+        return jsonify({
+            "success": False,
+            "message": "Both the bot token and the chat ID are required.",
+        })
+
+    AppSetting.objects.update_or_create(
+        key=TELEGRAM_TOKEN_KEY, defaults={"value": bot_token}
+    )
+    AppSetting.objects.update_or_create(
+        key=TELEGRAM_CHAT_ID_KEY, defaults={"value": chat_id}
+    )
+
+    # the notifier caches resolved credentials briefly - drop it so a test
+    # alert right after saving uses the new values
+    notifier._reset_state()
+
+    if not bot_token:
+        return jsonify({"success": True, "message": "Telegram settings cleared."})
+
+    return jsonify({
+        "success": True,
+        "message": "Telegram settings saved - send a test alert to verify.",
+    })
+
+
+@dashboard.post('/alerts/test')
+@general_app_error
+@jwt_required()
+def send_test_alert():
+    """Sends a test alert so the user can verify their Telegram setup
+    end-to-end from the dashboard."""
+    sent = send_alert(
+        title="Test alert",
+        body=(
+            "This is a test alert from your MyCryptoBot dashboard. "
+            "Alerting is configured correctly."
+        ),
+        severity="info",
+        # unique key: repeated test clicks must not be throttled away
+        dedup_key=f"test-alert-{time.time()}",
+    )
+
+    if sent:
+        return jsonify({
+            "success": True,
+            "message": "Test alert sent - check your Telegram.",
+        })
+
+    return jsonify({
+        "success": False,
+        "message": (
+            "The alert could not be sent. Check the TELEGRAM_BOT_TOKEN and "
+            "TELEGRAM_CHAT_ID environment variables and the data service logs."
+        ),
+    })

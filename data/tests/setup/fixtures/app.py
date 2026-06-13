@@ -3,7 +3,7 @@ import os
 import pytest
 
 from data.service import create_app
-from data.tests.setup.fixtures.external_modules import mock_create_access_token, mock_binance_client_exchange_info
+from data.tests.setup.fixtures.external_modules import mock_create_access_token, mock_binance_client_exchange_info, patch_time_sleep
 from data.tests.setup.fixtures.internal_modules import (
     mock_redis_connection,
     mock_settings_env_vars,
@@ -79,6 +79,7 @@ def app_with_open_position(
     mock_requests_post,
     spy_start_stop_symbol_trading,
     fake_executor_submit,
+    patch_time_sleep,
     create_exchange,
     create_assets,
     create_symbol,

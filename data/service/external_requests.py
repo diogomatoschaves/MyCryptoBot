@@ -6,13 +6,12 @@ import redis
 import requests
 
 from data.service.helpers import MODEL_APP_ENDPOINTS, EXECUTION_APP_ENDPOINTS
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 from shared.utils.decorators import retry_failed_connection, json_error_handler
 from shared.utils.helpers import get_item_from_cache
 
-config_vars = get_config()
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
 
 
 def prepare_payload(**kwargs):
@@ -20,10 +19,11 @@ def prepare_payload(**kwargs):
 
 
 @retry_failed_connection(num_times=1)
+@json_error_handler
 def check_job_status(job_id):
     url = MODEL_APP_ENDPOINTS["CHECK_JOB"](os.getenv("MODEL_APP_URL"), job_id)
 
-    r = requests.get(url, headers={"Authorization": cache.get("bearer_token")})
+    r = requests.get(url, headers={"Authorization": cache.get("service_bearer_token")}, timeout=(5, 30))
     logging.debug(r.text)
 
     response = r.json()
@@ -44,7 +44,7 @@ def generate_signal(pipeline_id, header=''):
 
     logging.info(header + "Triggering signal generation.")
 
-    r = requests.post(url, json=payload, headers={"Authorization": cache.get("bearer_token")})
+    r = requests.post(url, json=payload, headers={"Authorization": cache.get("service_bearer_token")}, timeout=(5, 30))
     logging.debug(r.text)
 
     response = r.json()
@@ -62,11 +62,11 @@ def start_stop_symbol_trading(payload, start_or_stop):
 
     endpoint = f"{start_or_stop.upper()}_SYMBOL_TRADING"
 
-    headers = {"Authorization": cache.get("bearer_token")}
+    headers = {"Authorization": cache.get("service_bearer_token")}
 
     url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL"))
 
-    r = requests.post(url, json=payload, headers=headers)
+    r = requests.post(url, json=payload, headers=headers, timeout=(5, 60))
     logging.debug(r.text)
 
     response = r.json()
@@ -83,7 +83,7 @@ def get_strategies():
 
     url = MODEL_APP_ENDPOINTS[endpoint](os.getenv("MODEL_APP_URL"))
 
-    r = requests.get(url, headers={"Authorization": cache.get("bearer_token")})
+    r = requests.get(url, headers={"Authorization": cache.get("service_bearer_token")}, timeout=(5, 30))
     logging.debug("get_strategies: " + r.text)
 
     response = r.json()
@@ -100,7 +100,7 @@ def get_price(symbol):
 
     url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL"), symbol)
 
-    r = requests.get(url, headers={"Authorization": cache.get("bearer_token")})
+    r = requests.get(url, headers={"Authorization": cache.get("service_bearer_token")}, timeout=(5, 30))
     logging.debug("get_price: " + r.text)
 
     response = r.json()
@@ -117,7 +117,7 @@ def get_balance():
 
     url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL"))
 
-    r = requests.get(url, headers={"Authorization": cache.get("bearer_token")})
+    r = requests.get(url, headers={"Authorization": cache.get("service_bearer_token")}, timeout=(5, 30))
     logging.debug("get_balance: " + r.text)
 
     response = r.json()
@@ -134,7 +134,7 @@ def get_open_positions():
 
     url = EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL"))
 
-    r = requests.get(url, headers={"Authorization": cache.get("bearer_token")})
+    r = requests.get(url, headers={"Authorization": cache.get("service_bearer_token")}, timeout=(5, 30))
     logging.debug("get_open_positions: " + r.text)
 
     response = r.json()

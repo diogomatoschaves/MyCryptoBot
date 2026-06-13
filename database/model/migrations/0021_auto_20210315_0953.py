@@ -101,7 +101,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='asset',
             name='token_is_treasury_centralized',
-            field=models.NullBooleanField(),
+            field=models.BooleanField(null=True),
         ),
         migrations.AddField(
             model_name='asset',

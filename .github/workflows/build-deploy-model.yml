@@ -19,31 +19,30 @@ env:
   HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
   HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}
   HEROKU_APP_NAME: ${{ secrets.HEROKU_MODEL_APP_NAME }}
-  EXECUTION_APP_URL: https://${{ secrets.HEROKU_EXECUTION_APP_NAME }}.herokuapp.com
-  SECRET_KEY: ${{ secrets.SECRET_KEY}}
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-  AWS_BUCKET: ${{ secrets.AWS_BUCKET}}
-  USE_CLOUD_STORAGE: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v1
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: '3.12'
       - name: Install and configure Poetry
-        uses: snok/install-poetry@v1.3.3
+        uses: snok/install-poetry@v1.4.1
         with:
-          version: 1.4.2
+          version: 2.4.0
           virtualenvs-create: false
       - name: Install dependencies
         run: |
           cd $DIRECTORY/
           poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
+      - name: Security audit (pip-audit, advisory)
+        continue-on-error: true
+        run: |
+          pip install pip-audit
+          pip-audit
       - name: Test with pytest
         env:
           TEST: true
@@ -51,10 +50,10 @@ jobs:
           python -m pytest $DIRECTORY/ --ds=database.settings --verbose --cov=model/strategies \
           --cov=model/service --cov=model/signal_generation --cov-report=xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
@@ -63,7 +62,7 @@ jobs:
     needs: test
     if: github.ref != 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build web Docker image
         run: docker build -f $DIRECTORY/Dockerfile.$HEROKU_WEB_PROCESS -t $DIRECTORY-$HEROKU_WEB_PROCESS-app .
       - name: Build worker Docker image
@@ -72,23 +71,24 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/master'
+    concurrency: deploy-model
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Login to heroku container registry
         run: |
           echo ${{ secrets.HEROKU_API_KEY }} | docker login --username=${{ secrets.HEROKU_EMAIL }} registry.heroku.com --password-stdin
       - name: Build and push
         run: |
           cd $DIRECTORY/
-          heroku container:push --recursive --app $HEROKU_APP_NAME --context-path=../ --arg APP_NAME=$HEROKU_APP_NAME,\
-          EXECUTION_APP_URL=$EXECUTION_APP_URL,SECRET_KEY=$SECRET_KEY,AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID,\
-          AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY,AWS_BUCKET=$AWS_BUCKET,USE_CLOUD_STORAGE=$USE_CLOUD_STORAGE
+          heroku container:push --recursive --app $HEROKU_APP_NAME --context-path=../
   deploy:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/master'
+    environment: production
+    concurrency: deploy-model
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Login to heroku container registry
         run: |
           echo ${{ secrets.HEROKU_API_KEY }} | docker login --username=${{ secrets.HEROKU_EMAIL }} registry.heroku.com --password-stdin

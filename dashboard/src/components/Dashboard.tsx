@@ -1,4 +1,7 @@
-import {Grid, Header, Label, Segment} from "semantic-ui-react";
+import React, {useEffect, useReducer, useRef, useState} from "react";
+import {Link} from 'react-router-dom'
+import styled from 'styled-components'
+import {Bot, Layers, PieChart, Radio, TestTube2} from 'lucide-react'
 import {
   BalanceObj, EquityTimeSeries,
   PipelinesMetrics,
@@ -7,10 +10,7 @@ import {
   TradesObject,
   UpdatePipelinesMetrics
 } from "../types";
-import {StyledSegment} from "../styledComponents";
-import {useEffect, useReducer, useRef, useState} from "react";
 import {COLORS, COLORS_ALT, GREEN, RED} from "../utils/constants";
-import {Link} from 'react-router-dom'
 import {
   positionsReducer,
   positionsReducerCallback,
@@ -22,6 +22,43 @@ import TradesStats from "./TradesStats";
 import PortfolioChart from "./PortfolioChart";
 import TradingBotLabel from "./TradingBotLabel";
 import CustomPieChart from "./CustomPieChart";
+import {Card, CardHeader, CardTitle, Stat, Tag} from "../ui";
+import {theme} from "../theme";
+
+
+const DashboardGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  width: 100%;
+
+  @media (max-width: 991px) {
+    grid-template-columns: 1fr;
+  }
+
+  /* staggered entrance */
+  & > * {
+    animation: fadeUp 0.4s ease both;
+  }
+  & > *:nth-child(2) { animation-delay: 0.05s; }
+  & > *:nth-child(3) { animation-delay: 0.1s; }
+  & > *:nth-child(4) { animation-delay: 0.15s; }
+  & > *:nth-child(5) { animation-delay: 0.2s; }
+  & > *:nth-child(6) { animation-delay: 0.25s; }
+`
+
+const StatsRow = styled.div`
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+`
+
+const PiesRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+`
 
 
 interface Props {
@@ -39,7 +76,7 @@ interface Props {
 
 function Dashboard(props: Props) {
 
-  const { size, balances, pipelines, trades, positions, currentPrices, pipelinesMetrics: {
+  const { balances, pipelines, trades, positions, currentPrices, pipelinesMetrics: {
     totalPipelines,
     activePipelines,
     bestWinRate,
@@ -111,264 +148,113 @@ function Dashboard(props: Props) {
     pnlColor = pnl > 0 ? GREEN : RED
     totalPnl = `${(pnl / totalInitialEquity * 100).toFixed(2)}%`
   } else {
-    totalPnl = '-'
-    pnlColor = '#6435C9'
+    totalPnl = '—'
+    pnlColor = theme.textDim
   }
 
   const positionsPieChartData = Object.keys(symbolsCount).map((symbol, index) => ({
     name: symbol,
     value: symbolsCount[symbol],
-    color: COLORS[index],
+    color: COLORS[index % COLORS.length],
   }))
 
   const tradesPieChartData = tradesMetrics.tradesCount.map((entry, index) => {
     return {
       // @ts-ignore
       ...entry,
-      color: COLORS_ALT[index],
+      color: COLORS_ALT[index % COLORS_ALT.length],
     }
   })
 
-  const isMobile = ['mobile'].includes(size)
-
-  const rowStyle = {
-    width: '100%',
-    paddingBottom: isMobile ? 0 : '3px',
-    paddingTop: isMobile ? 0 : '3px'
-  }
+  const equityCards: Array<{key: 'live' | 'test'; label: string; icon: React.ReactNode; color: string}> = [
+    {key: 'live', label: 'Live', icon: <Radio/>, color: theme.accent},
+    {key: 'test', label: 'Testnet', icon: <TestTube2/>, color: theme.blue},
+  ]
 
   return (
-      <StyledSegment basic className="flex-column">
-        <Grid style={{width: '100%'}} className="flex-column">
-              <Grid.Row style={rowStyle} className="flex-row">
-              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '44%'}}>
-                <Header size={'medium'} color="blue">
-                  Equity
-                  <Label basic color='blue' >
-                    {'live'}
-                  </Label>
-                </Header>
-                <Grid columns={2}>
-                  <Grid.Row>
-                    <Grid.Column>
-                      <Grid.Column style={styles.balanceHeader}>
-                        Total Equity
-                      </Grid.Column>
-                      <Grid.Column style={styles.balanceColumn} >
-                        {/*@ts-ignore*/}
-                        {`${balances.live.USDT.totalBalance.toFixed(1)} $USDT`}
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column style={styles.balanceHeader}>
-                        Available Equity
-                      </Grid.Column>
-                      <Grid.Column style={styles.balanceColumn} >
-                        {/*@ts-ignore*/}
-                        {`${balances.live.USDT.availableBalance.toFixed(1)} $USDT`}
-                      </Grid.Column>
-                    </Grid.Column>
-                  </Grid.Row>
-                </Grid>
-                <PortfolioChart dataProp={equityTimeSeries.live}/>
-              </Segment>
-              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '44%'}}>
-                <Header size={'medium'} color="blue">
-                  Equity
-                  <Label basic color='blue' >
-                    {'test'}
-                  </Label>
-                </Header>
-                <Grid columns={2}>
-                  <Grid.Row>
-                    <Grid.Column>
-                      <Grid.Column style={styles.balanceHeader}>
-                        Total Equity
-                      </Grid.Column>
-                      <Grid.Column style={styles.balanceColumn} >
-                        {/*@ts-ignore*/}
-                        {`${balances.test.USDT.totalBalance.toFixed(1)} $USDT`}
-                      </Grid.Column>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <Grid.Column style={styles.balanceHeader}>
-                        Available Equity
-                      </Grid.Column>
-                      <Grid.Column style={styles.balanceColumn} >
-                        {/*@ts-ignore*/}
-                        {`${balances.test.USDT.availableBalance.toFixed(1)} $USDT`}
-                      </Grid.Column>
-                    </Grid.Column>
-                  </Grid.Row>
-                </Grid>
-                <PortfolioChart dataProp={equityTimeSeries.test}/>
-              </Segment>
-            </Grid.Row>
-            <Grid.Row style={rowStyle} className="flex-row">
-              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '44%'}}>
-                <Link to="/pipelines">
-                  <Header size={'medium'} color="teal">
-                    Trading Bots
-                  </Header>
-                  <Grid columns={2}>
-                    <Grid.Row>
-                      <Grid.Column>
-                        <Grid.Column style={styles.pipelinesHeader}>
-                          # trading bots
-                        </Grid.Column>
-                        <Grid.Column style={styles.pipelinesColumn} >
-                          {totalPipelines}
-                        </Grid.Column>
-                      </Grid.Column>
-                      <Grid.Column>
-                        <Grid.Column floated='left' style={styles.pipelinesHeader}>
-                          # active trading bots
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={styles.pipelinesColumn}>
-                          {activePipelines}
-                        </Grid.Column>
-                      </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row>
-                      <Grid.Column>
-                        <Grid.Column floated='left' style={styles.pipelinesHeader}>
-                          Best Win Rate
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={styles.pipelinesColumn}>
-                          {bestWinRate && <TradingBotLabel pipelineId={bestWinRate.id} name={bestWinRate.name} color={bestWinRate.color}/>}
-                        </Grid.Column>
-                      </Grid.Column>
-                      <Grid.Column>
-                        <Grid.Column style={styles.pipelinesHeader}>
-                          Most Trades
-                        </Grid.Column>
-                        <Grid.Column style={styles.pipelinesColumn}>
-                          {mostTrades && <TradingBotLabel pipelineId={mostTrades.id} name={mostTrades.name} color={mostTrades.color}/>}
-                        </Grid.Column>
-                      </Grid.Column>
-                    </Grid.Row>
-                  </Grid>
-                </Link>
-              </Segment>
-              <TradesStats tradesMetrics={tradesMetrics} style={{...styles.tradesStatsStyle , width: isMobile ? '100%' : '44%'}}/>
-            </Grid.Row>
-            <Grid.Row style={rowStyle} className="flex-row">
-              <Segment secondary raised style={{...styles.rowSegment, minHeight: '245px', width: isMobile ? '100%' : '44%'}}>
-                <Link to='/positions'>
-                  <Header size={'medium'} color="pink">
-                    Positions
-                  </Header>
-                  <Grid columns={3}>
-                    <Grid.Row>
-                      <Grid.Column>
-                        <Grid.Column style={styles.positionsHeader}>
-                          # positions
-                        </Grid.Column>
-                        <Grid.Column style={styles.positionsColumn} >
-                          {openPositions}
-                        </Grid.Column>
-                      </Grid.Column>
-                      <Grid.Column>
-                        <Grid.Column floated='left' style={styles.positionsHeader}>
-                          Total Size
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={styles.positionsColumn} >
-                          {totalEquityPositions.toFixed(1)} USDT
-                        </Grid.Column>
-                      </Grid.Column>
-                      <Grid.Column>
-                        <Grid.Column floated='left' style={styles.positionsHeader}>
-                          Net profit
-                        </Grid.Column>
-                        <Grid.Column floated='right' style={{...styles.positionsColumn, color: pnlColor}} >
-                          {totalPnl}
-                        </Grid.Column>
-                      </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row>
-                    </Grid.Row>
-                  </Grid>
-                </Link>
-              </Segment>
-              <Segment secondary raised style={{...styles.rowSegment, width: isMobile ? '100%' : '44%'}}>
-                <Header size={'medium'} color="pink">
-                  Currencies
-                </Header>
-                <Grid>
-                  <Grid.Row columns={2}>
-                    <Grid.Column>
-                      <CustomPieChart title={'Positions'} pieChartData={positionsPieChartData}/>
-                    </Grid.Column>
-                    <Grid.Column>
-                      <CustomPieChart title={'Trades'} pieChartData={tradesPieChartData}/>
-                    </Grid.Column>
-                  </Grid.Row>
-                </Grid>
-              </Segment>
-            </Grid.Row>
-        </Grid>
-      </StyledSegment>
+    <DashboardGrid>
+      {equityCards.map(({key, label, icon, color}) => (
+        <Card key={key}>
+          <CardHeader>
+            <CardTitle>
+              {icon}
+              Equity
+            </CardTitle>
+            <Tag color={color}>{label}</Tag>
+          </CardHeader>
+          <StatsRow>
+            <Stat
+              label="Total Equity"
+              value={`${(balances[key]?.USDT?.totalBalance ?? 0).toFixed(1)} USDT`}
+              size="lg"
+            />
+            <Stat
+              label="Available"
+              value={`${(balances[key]?.USDT?.availableBalance ?? 0).toFixed(1)} USDT`}
+              size="lg"
+              color={theme.textDim}
+            />
+          </StatsRow>
+          <PortfolioChart dataProp={equityTimeSeries[key]} color={color}/>
+        </Card>
+      ))}
+      <Card $interactive>
+        <Link to="/pipelines">
+          <CardHeader>
+            <CardTitle>
+              <Bot/>
+              Trading Bots
+            </CardTitle>
+          </CardHeader>
+          <StatsRow>
+            <Stat label="# Bots" value={totalPipelines}/>
+            <Stat label="# Active" value={activePipelines} color={GREEN}/>
+            <Stat
+              label="Best Win Rate"
+              value={bestWinRate && bestWinRate.name ? (
+                <TradingBotLabel pipelineId={bestWinRate.id} name={bestWinRate.name} color={bestWinRate.color}/>
+              ) : '—'}
+            />
+            <Stat
+              label="Most Trades"
+              value={mostTrades && mostTrades.name ? (
+                <TradingBotLabel pipelineId={mostTrades.id} name={mostTrades.name} color={mostTrades.color}/>
+              ) : '—'}
+            />
+          </StatsRow>
+        </Link>
+      </Card>
+      <TradesStats tradesMetrics={tradesMetrics}/>
+      <Card $interactive>
+        <Link to='/positions'>
+          <CardHeader>
+            <CardTitle>
+              <Layers/>
+              Positions
+            </CardTitle>
+          </CardHeader>
+          <StatsRow>
+            <Stat label="# Positions" value={openPositions}/>
+            <Stat label="Total Size" value={`${totalEquityPositions.toFixed(1)} USDT`}/>
+            <Stat label="Net Profit" value={totalPnl} color={pnlColor}/>
+          </StatsRow>
+        </Link>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <PieChart/>
+            Currencies
+          </CardTitle>
+        </CardHeader>
+        <PiesRow>
+          <CustomPieChart title={'Positions'} pieChartData={positionsPieChartData}/>
+          <CustomPieChart title={'Trades'} pieChartData={tradesPieChartData}/>
+        </PiesRow>
+      </Card>
+    </DashboardGrid>
   );
 }
 
 
 export default Dashboard;
-
-const styles = {
-    tradesStatsStyle: {
-      margin: '20px 10px',
-      width: '50%',
-    },
-    segment: {
-      width: '80%',
-      padding: '30px 30px 20px',
-      marginBottom: '40px'
-    },
-    balanceTitle: {
-      alignSelf: 'center'
-    },
-    rowSegment: {
-      margin: '20px 10px',
-      minHeight: '200px'
-    },
-    balanceHeader: {
-      fontSize: '1.0em',
-      color: 'rgb(119,137,220)',
-    },
-    tradesHeader: {
-      fontSize: '1.0em',
-      color: 'rgb(169,142,227)',
-    },
-    positionsHeader: {
-      fontSize: '1.0em',
-      color: 'rgb(198,104,206)',
-    },
-    pipelinesHeader: {
-      fontSize: '1.0em',
-      color: 'rgb(94,182,182)'
-    },
-    balanceColumn: {
-      fontSize: '1.2em',
-      color: '#3555c9',
-      fontWeight: '600',
-    },
-    tradesColumn: {
-      fontSize: '1.2em',
-      color: '#6435C9',
-      fontWeight: '600',
-    },
-    positionsColumn: {
-      fontSize: '1.2em',
-      color: '#9235ad',
-      fontWeight: '600',
-    },
-    pipelinesColumn: {
-      fontSize: '1.2em',
-      color: '#0e6972',
-      fontWeight: '600',
-    },
-    buttonDiv: {
-      width: '100%',
-      alignSelf: 'center'
-    }
-  }

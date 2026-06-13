@@ -14,8 +14,8 @@ from flask_jwt_extended import JWTManager, create_access_token
 
 from data.service.cron_jobs.app_health import check_app_health
 from data.service.cron_jobs.main import start_background_scheduler
-from shared.utils.config_parser import get_config
-from shared.utils.helpers import is_pipeline_loading, LOADING
+from shared.utils.settings import settings
+from shared.utils.helpers import is_pipeline_loading, get_jwt_secret_key, LOADING
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
@@ -25,6 +25,7 @@ from data.service.blueprints.user_management import user_management
 from data.service.blueprints.dashboard import dashboard
 from data.service.blueprints.bots_api import start_symbol_trading, bots_api
 from data.service.blueprints.proxy import proxy
+from data.service.blueprints.events import events_bp
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -34,25 +35,39 @@ django.setup()
 from database.model.models import Pipeline
 from shared.utils.logger import configure_logger
 
-config_vars = get_config('data')
 
-configure_logger(os.getenv("LOGGER_LEVEL", config_vars.logger_level))
+configure_logger(settings.logger_level)
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
+
+# Internal service token: bounded lifetime + periodic rotation so a leaked
+# token can't be used indefinitely. The TTL is comfortably longer than any
+# job's lifetime, so in-flight RQ jobs (which carry a token captured at
+# enqueue time) never fail mid-flight.
+SERVICE_TOKEN_TTL = timedelta(hours=24)
+SERVICE_TOKEN_REFRESH_HOURS = 12
+
+
+def set_service_token(app):
+    with app.app_context():
+        access_token = create_access_token(
+            identity='data-service', expires_delta=SERVICE_TOKEN_TTL
+        )
+        cache.set("service_bearer_token", f"Bearer {access_token}")
 
 
 def startup_task(app):
 
     cache.set(LOADING, json.dumps([]))
 
-    start_background_scheduler(config_vars)
+    set_service_token(app)
+
+    start_background_scheduler(
+        token_refresher=lambda: set_service_token(app),
+        refresh_hours=SERVICE_TOKEN_REFRESH_HOURS,
+    )
 
     active_pipelines = Pipeline.objects.filter(active=True)
-
-    with app.app_context():
-        access_token = create_access_token(identity='abc', expires_delta=False)
-        bearer_token = 'Bearer ' + access_token
-        cache.set("bearer_token", bearer_token)
 
     for pipeline in active_pipelines:
         response = start_symbol_trading(pipeline, restart=True)
@@ -75,13 +90,28 @@ def create_app():
     app.register_blueprint(dashboard, url_prefix='/api')
     app.register_blueprint(user_management, url_prefix='/api')
     app.register_blueprint(proxy, url_prefix='/api')
+    app.register_blueprint(events_bp, url_prefix='/api')
 
-    app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY')
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=config_vars.token_expires_days)
+    app.config["JWT_SECRET_KEY"] = get_jwt_secret_key()
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=settings.token_expires_days)
+
+    # the JWT rides in an httpOnly cookie (not localStorage), with CSRF
+    # double-submit protection on state-changing requests
+    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    app.config["JWT_COOKIE_CSRF_PROTECT"] = True
+    app.config["JWT_COOKIE_SAMESITE"] = "Lax"
+    app.config["JWT_ACCESS_COOKIE_PATH"] = "/api/"
+    # served over https in prod; disable only for local http dev
+    app.config["JWT_COOKIE_SECURE"] = os.getenv("JWT_COOKIE_SECURE", "true").lower() == "true"
 
     JWTManager(app)
 
-    CORS(app)
+    # cookies require credentialed CORS with explicit origins (no wildcard)
+    CORS(
+        app,
+        origins=os.getenv("CORS_ALLOWED_ORIGINS", "*").split(","),
+        supports_credentials=True,
+    )
 
     startup_task(app)
 

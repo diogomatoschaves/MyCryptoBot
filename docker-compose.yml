@@ -1,4 +1,3 @@
-version: "3.3"
 services:
   db:
     image: postgres:15
@@ -8,10 +7,14 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - ./database/local_db:/var/lib/postgresql/data
-    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=syslog"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   data-service:
     build:
       context: .
@@ -30,6 +33,13 @@ services:
       - EXECUTION_APP_URL=http://execution-service:5000
       - PORT=5000
       - LOGGER_LEVEL=INFO
+      # local dev is http, so the JWT cookie can't be Secure-only
+      - JWT_COOKIE_SECURE=false
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./database/model:/usr/src/app/database/model
   model-service:
@@ -48,6 +58,11 @@ services:
       - APP_NAME=crypto-bot-model
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./database/model:/usr/src/app/database/model
       - ./model/strategies/models:/usr/src/app/model/strategies/models
@@ -64,7 +79,10 @@ services:
       - REDIS_URL=redis://redis:6379
       - EXECUTION_APP_URL=http://execution-service:5000
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./database/model:/usr/src/app/database/model
       - ./model/strategies/models:/usr/src/app/model/strategies/models
@@ -75,7 +93,7 @@ services:
     image: execution-server
     platform: linux/amd64
     ports:
-      - "5002:5002"
+      - "5002:5000"
     env_file:
       - .env
     environment:
@@ -85,24 +103,33 @@ services:
       - PORT=5000
       - LOGGER_LEVEL=DEBUG
       - SNAPSHOTS_INTERVAL=180
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./database/model:/usr/src/app/database/model
   redis:
-    image: redis
+    # Must stay >= the version that wrote the data volume (redis:latest 8.8.0
+    # ran in prod before the pin; its RDB v14 file is unreadable by redis 7)
+    image: redis:8
+    restart: always
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   dashboard:
     build:
       context: .
       dockerfile: dashboard/Dockerfile
     image: dashboard-server
     ports:
-      - "3000:3000"
-    environment:
-      - REACT_APP_DATA_API_HOST=http://localhost:5003
-      - REACT_APP_EXECUTION_API_HOST=http://localhost:5002
-    volumes:
-      - ./dashboard/src:/app/src
+      # Picks the first free host port in the range (3000 if available)
+      - "3000-3010:80"
 volumes:
   db:
     driver: local

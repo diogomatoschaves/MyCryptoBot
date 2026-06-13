@@ -242,6 +242,7 @@ def mock_redis():
 
         def __init__(self):
             setattr(self, "bearer_token", "mock bearer_token")
+            setattr(self, "service_bearer_token", "mock bearer_token")
 
         def set(self, object_name, object_value):
             setattr(self, object_name, object_value)
@@ -251,6 +252,18 @@ def mock_redis():
                 return getattr(self, object_name)
             except AttributeError:
                 '""'
+
+        def incr(self, object_name):
+            value = int(getattr(self, object_name, 0)) + 1
+            setattr(self, object_name, value)
+            return value
+
+        def delete(self, object_name):
+            if hasattr(self, object_name):
+                delattr(self, object_name)
+
+        def expire(self, object_name, seconds):
+            return True
 
     return RedisCache()
 
@@ -263,6 +276,13 @@ def mock_redis_connection(mocker):
 @pytest.fixture
 def mock_redis_connection_external_requests(mocker):
     return mocker.patch("data.service.external_requests.cache", mock_redis())
+
+
+@pytest.fixture
+def mock_redis_connection_app_health(mocker):
+    return mocker.patch(
+        "data.service.cron_jobs.app_health._app_health.cache", mock_redis()
+    )
 
 
 @pytest.fixture
@@ -367,24 +387,17 @@ def mock_get_open_positions_unsuccessful(mocker):
     mocker.patch.object(data.service.cron_jobs.app_health._app_health, 'get_open_positions', lambda: {"success": False})
 
 
-FakeConfig = namedtuple(
-    'fake_config',
-    [
-        'check_inconsistencies',
-        'restart_failed_pipelines',
-        'restart_retries',
-        'redis_url'
-    ]
-)
-fake_config_no_restart = FakeConfig('false', 'false', '2', '')
-fake_config_no_retries = FakeConfig('false', 'true', '0', '')
+_app_health_settings = data.service.cron_jobs.app_health._app_health.settings
 
 
 @pytest.fixture
 def mock_config_no_restart(mocker):
-    mocker.patch('data.service.cron_jobs.app_health._app_health.config', fake_config_no_restart)
+    mocker.patch.object(_app_health_settings, 'check_inconsistencies', False)
+    mocker.patch.object(_app_health_settings, 'restart_failed_pipelines', False)
 
 
 @pytest.fixture
 def mock_config_no_retries(mocker):
-    mocker.patch('data.service.cron_jobs.app_health._app_health.config', fake_config_no_retries)
+    mocker.patch.object(_app_health_settings, 'check_inconsistencies', False)
+    mocker.patch.object(_app_health_settings, 'restart_failed_pipelines', True)
+    mocker.patch.object(_app_health_settings, 'restart_retries', 0)

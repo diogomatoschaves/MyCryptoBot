@@ -35,7 +35,8 @@ class TestDataExternalRequests:
         requests_post_spy.assert_called_with(
             MODEL_APP_ENDPOINTS["GENERATE_SIGNAL"](os.getenv("MODEL_APP_URL")),
             json={"pipeline_id": 1},
-            headers={"Authorization": "mock bearer_token"}
+            headers={"Authorization": "mock bearer_token"},
+            timeout=(5, 30)
         )
 
     @pytest.mark.parametrize(
@@ -85,7 +86,8 @@ class TestDataExternalRequests:
         requests_post_spy.assert_called_with(
             EXECUTION_APP_ENDPOINTS[endpoint](os.getenv("EXECUTION_APP_URL")),
             json=params,
-            headers={"Authorization": "mock bearer_token"}
+            headers={"Authorization": "mock bearer_token"},
+            timeout=(5, 60)
         )
 
     def test_check_job_status(
@@ -109,7 +111,8 @@ class TestDataExternalRequests:
         assert res == response
         requests_get_spy.assert_called_with(
             MODEL_APP_ENDPOINTS["CHECK_JOB"](os.getenv("MODEL_APP_URL"), job_id),
-            headers={"Authorization": "mock bearer_token"}
+            headers={"Authorization": "mock bearer_token"},
+            timeout=(5, 30)
         )
 
     def test_get_strategies(
@@ -131,7 +134,8 @@ class TestDataExternalRequests:
         assert res == response
         requests_get_spy.assert_called_with(
             MODEL_APP_ENDPOINTS["GET_STRATEGIES"](os.getenv("MODEL_APP_URL")),
-            headers={"Authorization": "mock bearer_token"}
+            headers={"Authorization": "mock bearer_token"},
+            timeout=(5, 30)
         )
 
     def test_get_price(
@@ -155,7 +159,8 @@ class TestDataExternalRequests:
         assert res == response
         requests_get_spy.assert_called_with(
             EXECUTION_APP_ENDPOINTS["GET_PRICE"](os.getenv("EXECUTION_APP_URL"), symbol),
-            headers={"Authorization": "mock bearer_token"}
+            headers={"Authorization": "mock bearer_token"},
+            timeout=(5, 30)
         )
 
     def test_get_balance(
@@ -177,7 +182,8 @@ class TestDataExternalRequests:
         assert res == response
         requests_get_spy.assert_called_with(
             EXECUTION_APP_ENDPOINTS["GET_BALANCE"](os.getenv("EXECUTION_APP_URL")),
-            headers={"Authorization": "mock bearer_token"}
+            headers={"Authorization": "mock bearer_token"},
+            timeout=(5, 30)
         )
 
     def test_get_open_positions(
@@ -202,5 +208,6 @@ class TestDataExternalRequests:
 
         requests_get_spy.assert_called_with(
             EXECUTION_APP_ENDPOINTS["GET_OPEN_POSITIONS"](os.getenv("EXECUTION_APP_URL")),
-            headers={"Authorization": "mock bearer_token"}
+            headers={"Authorization": "mock bearer_token"},
+            timeout=(5, 30)
         )

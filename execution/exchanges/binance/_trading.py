@@ -6,6 +6,7 @@ import django
 import numpy as np
 import pandas as pd
 import pytz
+from django.db import DatabaseError, transaction
 from stratestic.trading import Trader
 from stratestic.backtesting.helpers.evaluation import (
     get_overview_results,
@@ -16,8 +17,10 @@ from stratestic.backtesting.helpers.evaluation import (
 )
 from stratestic.backtesting.helpers.evaluation.metrics import exposure_time
 
+from execution.service.helpers.exceptions.bookkeeping_failed import BookkeepingFailed
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.helpers import get_pipeline_data, convert_trade
+from shared.utils.notifier import send_alert
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -75,41 +78,83 @@ class BinanceTrader(BinanceHandler, Trader):
 
     def _set_position(self, symbol, position, **kwargs):
 
-        super()._set_position(symbol, position)
-
         pipeline_id = kwargs.pop("pipeline_id", None)
 
         previous_position = kwargs.pop("previous_position", 0)
 
-        new_trade = self._handle_trades(pipeline_id, symbol, previous_position, position)
+        # Trade and Position rows are written in one transaction; the
+        # in-memory position is only updated after the commit so memory
+        # always matches the database.
+        def bookkeeping():
+            with transaction.atomic():
+                new_trade = self._handle_trades(pipeline_id, symbol, previous_position, position)
 
-        if Position.objects.filter(pipeline_id=pipeline_id).exists():
-            if position == 0:
-                Position.objects.filter(
-                    pipeline_id=pipeline_id,
-                ).update(
-                    position=position,
-                    amount=None,
-                    buying_price=None,
-                    open_time=None,
-                )
-            else:
-                if new_trade:
-                    Position.objects.filter(
-                        pipeline_id=pipeline_id,
-                    ).update(
+                if Position.objects.filter(pipeline_id=pipeline_id).exists():
+                    if position == 0:
+                        Position.objects.filter(
+                            pipeline_id=pipeline_id,
+                        ).update(
+                            position=position,
+                            amount=None,
+                            buying_price=None,
+                            open_time=None,
+                        )
+                    else:
+                        if new_trade:
+                            Position.objects.filter(
+                                pipeline_id=pipeline_id,
+                            ).update(
+                                position=position,
+                                open_time=datetime.now(tz=pytz.UTC),
+                                buying_price=new_trade.open_price,
+                                amount=new_trade.amount
+                            )
+                else:
+                    Position.objects.create(
                         position=position,
-                        open_time=datetime.now(tz=pytz.UTC),
-                        buying_price=new_trade.open_price,
-                        amount=new_trade.amount
+                        pipeline_id=pipeline_id,
+                        buying_price=new_trade.open_price if new_trade else None,
+                        amount=new_trade.amount if new_trade else None,
                     )
-        else:
-            Position.objects.create(
-                position=position,
-                pipeline_id=pipeline_id,
-                buying_price=new_trade.open_price if new_trade else None,
-                amount=new_trade.amount if new_trade else None,
+
+        self._run_bookkeeping(
+            bookkeeping,
+            pipeline_id=pipeline_id,
+            symbol=symbol,
+            detail=f"position change {previous_position} -> {position}"
+        )
+
+        super()._set_position(symbol, position)
+
+    def _run_bookkeeping(self, operation, pipeline_id, symbol, detail):
+        """
+        Runs a post-exchange bookkeeping operation, retrying once on a
+        transient database error. If the database still cannot be written,
+        the exchange holds state that the local records do not: alert the
+        operator and raise BookkeepingFailed so the request handler freezes
+        the pipeline (startup reconciliation repairs the records later).
+        """
+        try:
+            try:
+                return operation()
+            except DatabaseError as e:
+                logging.warning(
+                    f"Bookkeeping for pipeline {pipeline_id} failed ({e}). Retrying once."
+                )
+                return operation()
+        except DatabaseError as e:
+            send_alert(
+                title="Bookkeeping failed after exchange fill",
+                body=(
+                    f"Pipeline {pipeline_id}, symbol {symbol}: {detail}. "
+                    f"Database error: {e}. The exchange was updated but local records "
+                    f"were not - the pipeline will be deactivated and reconciled at "
+                    f"next startup."
+                ),
+                severity="critical",
+                dedup_key=f"bookkeeping-{pipeline_id}",
             )
+            raise BookkeepingFailed(pipeline_id, detail) from e
 
     def _format_order(self, order, pipeline_id):
         raise NotImplementedError
@@ -119,13 +164,13 @@ class BinanceTrader(BinanceHandler, Trader):
 
     def _process_order(self, order, pipeline_id):
 
-        self.filled_orders.append(order)
-
         logging.debug(order)
 
         formatted_order = self._format_order(order, pipeline_id)
 
         Orders.objects.create(**formatted_order)
+
+        self.filled_orders.append(order)
 
         return formatted_order
 
@@ -173,7 +218,7 @@ class BinanceTrader(BinanceHandler, Trader):
             return new_trade
 
         return None
-    
+
     @staticmethod
     def _process_trading_bot_results(trades):
         df = pd.DataFrame(trades)
@@ -226,7 +271,6 @@ class BinanceTrader(BinanceHandler, Trader):
         results["max_trade_duration"] = pd.Timedelta(results["max_trade_duration"]).round('1s')
         results["avg_trade_duration"] = pd.Timedelta(seconds=results["avg_trade_duration"]).round('1s')
 
-        # print results
         log_results(results, backtesting=False)
 
     def report_trade(self, order, units, going, header='', **kwargs):

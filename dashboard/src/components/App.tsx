@@ -1,4 +1,3 @@
-import '../App.css';
 import {Component} from 'react'
 import {Route, Switch, Redirect, useHistory} from 'react-router-dom'
 import {Location} from 'history'
@@ -31,35 +30,51 @@ import {
     getPrice,
     deleteBot, getPipelinesMetrics, editBot, getEquityTimeSeries,
 } from "../apiCalls";
+import {subscribePipelineEvents, PipelineEvent} from "../apiCalls/events";
 import {RESOURCES_MAPPING} from "../utils/constants";
-import MenuWrapper from "./MenuWrapper";
+import MenuWrapper, {SIDEBAR_WIDTH} from "./MenuWrapper";
 import PipelinePanel from "./PipelinePanel";
 import TradesPanel from "./TradesPanel";
 import {parseTrade, organizePositions, organizePipeline} from "../utils/helpers";
 import PositionsPanel from "./PositionsPanel";
-import {StyledSegment} from "../styledComponents";
 import Dashboard from "./Dashboard";
-import {Header, Label} from "semantic-ui-react";
+import AlertsPanel from "./AlertsPanel";
+import {MOBILE_TOPBAR_HEIGHT} from "./MobileMenu";
 import {balanceReducer} from "../reducers/balancesReducer";
 
 
-const AppDiv: any = styled.div`
-  text-align: center;
-  width: 100vw;
-  height: 100vh;
-  position: absolute;
-  justify-content: flex-start;
+const AppShell = styled.div`
+  min-height: 100vh;
 `
 
-const AppColumn: any = styled.div`
-    position: absolute;
-    left: ${(props: any) => ['mobile', 'tablet'].includes(props.size) ? 0 : 'min(25vw, 300px)'};
-    bottom: 0;
-    top: 0;
-    right: 0;
-    width: ${(props: any) => ['mobile', 'tablet'].includes(props.size) ? '100vw' : 'calc(100vw - min(25vw, 300px))'};
-    height: 100vh;
-    overflow-x: ${(props: any) => props.overflowX ? props.overflowX : 'hidden'};
+const Main = styled.main<{$compact: boolean}>`
+  margin-left: ${({$compact}) => ($compact ? 0 : SIDEBAR_WIDTH)}px;
+  min-height: 100vh;
+  padding: ${({$compact}) =>
+    $compact ? `${MOBILE_TOPBAR_HEIGHT + 20}px 16px 32px` : '28px 32px 48px'};
+  display: flex;
+  flex-direction: column;
+`
+
+const PageTitle = styled.h1`
+  margin: 0 0 22px;
+  font-family: var(--font-ui);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  animation: fadeUp 0.3s ease both;
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border-strong), transparent);
+    align-self: center;
+  }
 `
 
 interface State {
@@ -86,6 +101,7 @@ interface Props {
     decimals: Decimals
     menuProperties: MenuOption[]
     updateMessage: UpdateMessage
+    children?: React.ReactNode
 }
 
 
@@ -96,6 +112,7 @@ class App extends Component<Props, State> {
     getPositionsInterval: any
     getPipelinesInterval: any
     getPipelineMetricsInterval: any
+    unsubscribeEvents: (() => void) | null = null
 
     static defaultProps = {
         decimals: {
@@ -107,6 +124,7 @@ class App extends Component<Props, State> {
             {icon: 'play', emoji: '🤖', text: 'Trading Bots', code: "/pipelines"},
             {icon: 'list', emoji: '📒', text: 'Positions', code: "/positions"},
             {icon: 'dollar', emoji: '💵', text: 'Trades', code: "/trades"},
+            {icon: 'bell', emoji: '🔔', text: 'Alerts', code: "/alerts"},
         ]
     }
 
@@ -143,7 +161,7 @@ class App extends Component<Props, State> {
     }
 
     componentDidMount() {
-        getResources(Object.keys(RESOURCES_MAPPING), this.props.history)
+        getResources(Object.keys(RESOURCES_MAPPING))
             .then(resources => {
 
                 const options = resources ? Object.keys(resources).reduce((accum: any, resource: any) => {
@@ -180,6 +198,36 @@ class App extends Component<Props, State> {
         this.getTotalEquityTimeSeries()
 
         this.updatePipelinesMetrics()
+
+        // live bot-status push; the onConnect resync covers events missed
+        // while disconnected, and polling remains the fallback
+        this.unsubscribeEvents = subscribePipelineEvents(
+            this.handlePipelineEvent,
+            this.updatePipelines,
+        )
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeEvents) {
+            this.unsubscribeEvents()
+        }
+        clearInterval(this.getPricesInterval)
+        clearInterval(this.getTradesInterval)
+        clearInterval(this.getPositionsInterval)
+        clearInterval(this.getPipelinesInterval)
+        clearInterval(this.getPipelineMetricsInterval)
+    }
+
+    handlePipelineEvent = (event: PipelineEvent) => {
+        this.updatePipelines()
+
+        if (event.type === 'pipeline.start_failed' || event.type === 'pipeline.deactivated') {
+            const what = event.type === 'pipeline.start_failed' ? 'failed to start' : 'was deactivated'
+            this.props.updateMessage({
+                text: `Trading bot ${event.pipelineId} ${what}${event.reason ? `: ${event.reason}` : ''}`,
+                success: false,
+            })
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {
@@ -379,8 +427,8 @@ class App extends Component<Props, State> {
                   return {
                       ...state,
                       balances: {
-                          live: response.live && response.live.reduce(balanceReducer, {}),
-                          test: response.testnet && response.testnet.reduce(balanceReducer, {})
+                          live: response.live ? response.live.reduce(balanceReducer, {}) : state.balances.live,
+                          test: response.testnet ? response.testnet.reduce(balanceReducer, {}) : state.balances.test
                       }
                   }
               })
@@ -487,8 +535,10 @@ class App extends Component<Props, State> {
 
         const menuOption = menuProperties.find(option => location.pathname.includes(option.code))
 
+        const compact = ['mobile', 'tablet'].includes(size)
+
         return (
-            <AppDiv className="flex-row">
+            <AppShell>
                 <MenuWrapper
                   menuOption={menuOption}
                   menuProperties={menuProperties}
@@ -496,22 +546,11 @@ class App extends Component<Props, State> {
                   updateMessage={updateMessage}
                   size={size}
                 />
-                <AppColumn size={size} overflowX={menuOption && menuOption.code === '/positions' && "scroll"} >
-                    <StyledSegment
-                        basic
-                        paddingTop="10px"
-                        padding="0"
-                        className="flex-column"
-                    >
-                        {menuOption && (
-                          <Header size={'large'} style={{height: '40px', marginTop: '10px'}}>
-                              <Label size={'big'}>
-                                {menuOption.text}
-                                <span style={{marginLeft: 10}}>{menuOption.emoji}</span>
-                              </Label>
-                          </Header>
-                        )}
-                        <Switch>
+                <Main $compact={compact}>
+                    {menuOption && (
+                      <PageTitle>{menuOption.text}</PageTitle>
+                    )}
+                    <Switch>
                             <Route path='/trades' exact={true}>
                                 <TradesPanel
                                   size={size}
@@ -557,6 +596,9 @@ class App extends Component<Props, State> {
                                   updatePipelinesMetrics={this.updatePipelinesMetrics}
                                 />
                             </Route>
+                            <Route path="/alerts">
+                                <AlertsPanel/>
+                            </Route>
                             <Route path="/positions">
                                 <PositionsPanel
                                   size={size}
@@ -571,9 +613,8 @@ class App extends Component<Props, State> {
                             </Route>
                         </Switch>
                         {this.props.children}
-                    </StyledSegment>
-                </AppColumn>
-            </AppDiv>
+                </Main>
+            </AppShell>
         );
     }
 }

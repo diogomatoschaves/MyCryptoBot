@@ -1,19 +1,10 @@
+import {Fragment} from "react";
 import {Decimals, PipelinesObject, Position} from "../types";
-import {Label, Table, Image} from "semantic-ui-react";
-import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
-import React, {Fragment} from "react";
+import {GREEN, RED, YELLOW, BLUE} from "../utils/constants";
 import {getRoi, timeFormatterDate} from "../utils/helpers";
-import binanceLogo from '../utils/resources/binance.png'
 import TradingBotLabel from "./TradingBotLabel";
-import styled from "styled-components";
-
-
-const MobileCell = styled.div`
-  display: flex !important;
-  flex-direction: row;
-  justify-content: space-between;
-  padding: 3px 0
-`
+import {MobileRowCard, MobileRowLine, Num, Tag} from "../ui";
+import {theme} from "../theme";
 
 
 interface Props {
@@ -23,7 +14,7 @@ interface Props {
     pipelines: PipelinesObject
     currentPrices: Object
     decimals: Decimals
-    positionsHeader: Array<any>
+    positionsHeader: string[]
 }
 
 function PositionRow(props: Props) {
@@ -33,7 +24,7 @@ function PositionRow(props: Props) {
     const negative = position.position === -1
     const positive = position.position === 1
     const positionSide = positive ? "LONG" : negative ? "SHORT" : "NEUTRAL"
-    const color = negative ? RED : positive ? GREEN : DARK_YELLOW
+    const color = negative ? RED : positive ? GREEN : YELLOW
 
     const age = timeFormatterDate(position.openTime)
 
@@ -52,60 +43,48 @@ function PositionRow(props: Props) {
     const pipelineColor = pipeline && pipeline.color
 
     const mobile = ['mobile'].includes(size)
-    const cellType = mobile ? 'div' : 'td'
 
-    const positionsTable = [
-        <Table.Cell as={cellType} style={styles.defaultCell}>
-            <TradingBotLabel pipelineId={position.pipelineId} name={position.pipelineName} color={pipelineColor}/>
-        </Table.Cell>,
-        <Table.Cell as={cellType} style={{...styles.defaultCell, fontWeight: 600}}>
-            <Label basic color='blue'>{position.paperTrading ? "test" : "live"}</Label>
-        </Table.Cell>,
-        <Table.Cell as={cellType} style={{fontWeight: 600, color: DARK_YELLOW}}>{position.symbol}</Table.Cell>,
-        <Table.Cell as={cellType} style={styles.defaultCell}>{age}</Table.Cell>,
-        <Table.Cell as={cellType} style={{color, fontWeight: '600'}}>{positionSide}</Table.Cell>,
-        <Table.Cell as={cellType} style={{...styles.quantityCell, color}}>{(Number(position.amount) * markPrice).toFixed(quoteDecimal)} USDT</Table.Cell>,
-        <Table.Cell as={cellType} style={styles.quantityCell}>{Number(position.amount).toFixed(baseDecimal)}</Table.Cell>,
-        <Table.Cell as={cellType} style={styles.quantityCell}>{Number(position.price).toFixed(quoteDecimal)}</Table.Cell>,
-        <Table.Cell as={cellType} style={styles.quantityCell}>{markPrice ? markPrice.toFixed(quoteDecimal) : '-'}</Table.Cell>,
-        <Table.Cell as={cellType} style={styles.quantityCell}>{position.leverage}</Table.Cell>,
-        <Table.Cell as={cellType} style={{...styles.quantityCell, color: pnlColor}}>
-            {roi && `${profit.toFixed(quoteDecimal)} USDT (${roi.toFixed(2)}%)`}
-        </Table.Cell>,
-        <Table.Cell as={cellType} style={styles.defaultCell}>{position.exchange === 'binance' && <Image src={binanceLogo} size='tiny'/>}</Table.Cell>
+    const cells = [
+        <TradingBotLabel pipelineId={position.pipelineId} name={position.pipelineName} color={pipelineColor}/>,
+        <Tag color={position.paperTrading ? theme.blue : theme.accent}>
+            {position.paperTrading ? "test" : "live"}
+        </Tag>,
+        <Num $color={YELLOW}>{position.symbol}</Num>,
+        <span style={{color: 'var(--text-dim)'}}>{age}</span>,
+        <Num $color={color}>{positionSide}</Num>,
+        <Num $color={color}>{(Number(position.amount) * markPrice).toFixed(quoteDecimal)} USDT</Num>,
+        <Num>{Number(position.amount).toFixed(baseDecimal)}</Num>,
+        <Num>{Number(position.price).toFixed(quoteDecimal)}</Num>,
+        <Num>{markPrice ? markPrice.toFixed(quoteDecimal) : '—'}</Num>,
+        <Num>×{position.leverage}</Num>,
+        <Num $color={pnlColor}>
+            {roi ? `${profit.toFixed(quoteDecimal)} USDT (${roi.toFixed(2)}%)` : '—'}
+        </Num>,
+        <Num $color={BLUE} style={{textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.08em'}}>
+            {position.exchange}
+        </Num>,
     ]
 
+    if (mobile) {
+        return (
+          <MobileRowCard>
+              {cells.map((cell, cellIndex) => (
+                <MobileRowLine key={`position-${index}-${cellIndex}`}>
+                    <span>{positionsHeader[cellIndex]}</span>
+                    {cell}
+                </MobileRowLine>
+              ))}
+          </MobileRowCard>
+        )
+    }
+
     return (
-      <Table.Row key={index}>
-          {mobile ? (
-            <Fragment>
-                {positionsTable.map((entry, index) => {
-                    return (
-                      <MobileCell key={`trades-${index}`}>
-                          {positionsHeader[index]}
-                          {entry}
-                      </MobileCell>
-                    )})}
-            </Fragment>
-          ) : (
-            <Fragment>
-                {positionsTable.map((entry) => entry)}
-            </Fragment>
-          )}
-      </Table.Row>
+      <tr>
+          {cells.map((cell, cellIndex) => (
+            <td key={`position-${index}-${cellIndex}`}>{cell}</td>
+          ))}
+      </tr>
     );
 }
 
 export default PositionRow;
-
-
-const styles = {
-    defaultCell: {
-        color: 'rgb(70, 70, 70)',
-        fontWeight: '500',
-    },
-    quantityCell: {
-        color: 'rgb(70, 70, 70)',
-        fontWeight: '600',
-    },
-}

@@ -36,54 +36,45 @@ class TestUserManagementService:
 
         assert res.status_code == 405
 
-    @pytest.mark.parametrize(
-        "user,response",
-        [
-            pytest.param(
-                dict(username='username', password='password'),
-                {"access_token": 'access_token'},
-                id="existent-user",
-            ),
-            pytest.param(
-                dict(username='non-user', password='password'),
-                {"msg": "Wrong email or password"},
-                id="non-existent-user",
-            ),
-        ],
-    )
-    def test_token_endpoint(
+    def test_token_endpoint_sets_cookie(
         self,
-        user,
-        response,
         client,
         create_user,
-        mock_create_access_token_user_mgmt,
         mock_redis_connection_user_mgmt,
     ):
-        res = client.post(f'{API_PREFIX}/token', json=user)
+        res = client.post(
+            f'{API_PREFIX}/token', json=dict(username='username', password='password')
+        )
 
-        assert res.json == jsonify(response).json
+        # the JWT is delivered as an httpOnly cookie, not in the body
+        assert res.status_code == 200
+        assert res.json == {"login": True, "username": "username"}
+        assert "access_token" not in res.json
+        assert any(
+            "access_token_cookie" in header
+            for header in res.headers.getlist("Set-Cookie")
+        )
 
-    @pytest.mark.parametrize(
-        "user,response",
-        [
-            pytest.param(
-                dict(username='username', password='password'),
-                {"access_token": 'renewed_access_token'},
-                id="renewed_access_token",
-            ),
-        ],
-    )
-    def test_token_endpoint_after_request(
+    def test_token_endpoint_wrong_credentials(
         self,
-        user,
-        response,
         client,
         create_user,
-        mock_create_access_token_user_mgmt,
         mock_redis_connection_user_mgmt,
-        mock_get_jwt
     ):
-        res = client.post(f'{API_PREFIX}/token', json=user)
+        res = client.post(
+            f'{API_PREFIX}/token', json=dict(username='non-user', password='password')
+        )
 
-        assert res.json == jsonify(response).json
+        assert res.status_code == 401
+        assert res.json == {"msg": "Wrong email or password"}
+
+    def test_logout_clears_cookie(self, client, mock_redis_connection_user_mgmt):
+        res = client.post(f'{API_PREFIX}/logout')
+
+        assert res.status_code == 200
+        assert res.json == {"logout": True}
+        # the access cookie is unset (cleared) on logout
+        assert any(
+            "access_token_cookie=;" in header
+            for header in res.headers.getlist("Set-Cookie")
+        )

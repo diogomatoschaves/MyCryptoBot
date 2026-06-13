@@ -113,6 +113,11 @@ class ExchangeData(models.Model):
 
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")
+        indexes = [
+            # covering index for the hot candle query:
+            # filter(symbol, interval, open_time__gte).order_by('open_time')
+            models.Index(fields=["symbol", "interval", "open_time"]),
+        ]
 
     def __repr__(self):
         return self.__class__.__name__
@@ -140,6 +145,11 @@ class StructuredData(models.Model):
 
     class Meta:
         unique_together = ("open_time", "exchange", "interval", "symbol")
+        indexes = [
+            # covering index for the hot candle query:
+            # filter(symbol, interval, open_time__gte).order_by('open_time')
+            models.Index(fields=["symbol", "interval", "open_time"]),
+        ]
 
 
 class Jobs(models.Model):
@@ -154,7 +164,10 @@ class Jobs(models.Model):
 
 class Orders(models.Model):
 
-    order_id = models.TextField(primary_key=True)
+    # Binance order ids are only unique per symbol (and differ between live and
+    # testnet/mock), so order_id is a plain field with a composite unique key
+    # rather than the global primary key it used to be.
+    order_id = models.TextField()
     client_order_id = models.TextField(null=True)
     symbol = models.ForeignKey(Symbol, on_delete=models.SET_NULL, null=True)
     transact_time = models.DateTimeField()
@@ -169,6 +182,9 @@ class Orders(models.Model):
     exchange = models.ForeignKey(Exchange, default='binance', on_delete=models.SET_DEFAULT)
     mock = models.BooleanField(null=True, default=False)
     pipeline = models.ForeignKey('Pipeline', on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        unique_together = ("order_id", "symbol", "mock")
 
 
 class Strategy(models.Model):
@@ -243,7 +259,9 @@ class Pipeline(models.Model):
 class Position(models.Model):
 
     position = models.IntegerField()
-    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE)
+    # exactly one position per pipeline; the unique index prevents the
+    # MultipleObjectsReturned the racy exists-then-create path could cause
+    pipeline = models.ForeignKey('Pipeline', on_delete=models.CASCADE, unique=True)
     buying_price = models.FloatField(null=True, blank=True)
     amount = models.FloatField(null=True, blank=True)
     open_time = models.DateTimeField(auto_now_add=True, null=True)
@@ -315,3 +333,16 @@ class PortfolioTimeSeries(models.Model):
     time = models.DateTimeField()
     value = models.FloatField()
     type = models.TextField(null=True, blank=True, default=None)
+
+
+class AppSetting(models.Model):
+    """Server-side key/value settings editable from the dashboard (e.g. the
+    Telegram alert credentials). Environment variables always take
+    precedence over rows in this table."""
+
+    key = models.TextField(primary_key=True)
+    value = models.TextField(blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.key

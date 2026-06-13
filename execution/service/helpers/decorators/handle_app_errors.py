@@ -4,6 +4,7 @@ import logging
 from flask import jsonify
 
 from execution.service.helpers.exceptions import *
+from shared.utils.events import publish_pipeline_event, EVENT_DEACTIVATED
 from shared.utils.exceptions import NoSuchPipeline, EquityRequired
 
 
@@ -47,6 +48,17 @@ def handle_app_errors(_func=None):
             except NegativeEquity as e:
                 logging.info(e.message)
                 return jsonify(Responses.NEGATIVE_EQUITY(e.message))
+            except BookkeepingFailed as e:
+                logging.error(e.message)
+                # freeze the pipeline: local records lag the exchange and any
+                # further trading would compound the divergence
+                if e.pipeline_id is not None:
+                    from database.model.models import Pipeline
+                    Pipeline.objects.filter(id=e.pipeline_id).update(active=False)
+                    publish_pipeline_event(
+                        EVENT_DEACTIVATED, e.pipeline_id, reason=e.message
+                    )
+                return jsonify(Responses.BOOKKEEPING_FAILED(e.message))
 
         return wrapper
 

@@ -1,7 +1,9 @@
 import logging
 import os
+from datetime import datetime
 
 import pandas as pd
+import pytz
 import django
 import redis
 from binance import ThreadedWebsocketManager
@@ -21,8 +23,10 @@ from data.sources.binance.extract import (
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.utils.helpers import get_minimum_lookback_date, get_pipeline_max_window, remove_pipeline_loading
+from shared.utils.events import publish_pipeline_event, EVENT_DEACTIVATED
+from shared.utils.notifier import send_alert
 from shared.exchanges.binance import BinanceHandler
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 import shared.exchanges.binance.constants as const
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -32,9 +36,8 @@ from database.model.models import ExchangeData, StructuredData, Pipeline, Positi
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
-config_vars = get_config('data')
 
-cache = redis.from_url(os.getenv('REDIS_URL', config_vars.redis_url))
+cache = redis.from_url(settings.redis_url)
 
 
 class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
@@ -46,7 +49,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
     def __init__(self, symbol, candle_size, pipeline_id=None, start_date=None):
 
-        BinanceHandler.__init__(self, base_candle_size=config_vars.base_candle_size)
+        BinanceHandler.__init__(self, base_candle_size=settings.base_candle_size)
         ThreadedWebsocketManager.__init__(self, self.binance_api_key, self.binance_api_secret)
 
         self._validate_input(symbol, candle_size)
@@ -257,20 +260,70 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
     def _stop_websocket(self):
         self.stop_socket(self.conn_key)
 
-    def generate_new_signal(self, header, retries=0):
+    # number of consecutive failed signal generations after which the
+    # pipeline is stopped and its position closed
+    MAX_CONSECUTIVE_FAILURES = 3
 
-        if retries >= 2:
-            return False
+    def generate_new_signal(self, header):
 
         success, message = trigger_signal(self.pipeline_id, header=header)
 
-        if not success:
-            if "Too many retries" in message:
-                success = self.generate_new_signal(header, retries=retries + 1)
-            else:
-                logging.warning(header + message)
+        failures_key = f"signal_failures {self.pipeline_id}"
 
+        if success:
+            cache.delete(failures_key)
+        else:
+            # NOTE: a "Too many retries" polling timeout is deliberately
+            # treated like any other failure below. Re-triggering a fresh
+            # signal here would enqueue a duplicate job while the first one
+            # may still be running.
+
+            logging.warning(header + message)
+
+            if "not active" in message:
+                # the pipeline is gone from the DB - stop streaming right away
                 stop_pipeline(self.pipeline_id, header, raise_exception=False)
+                return success
+
+            # a single failure can be transient (worker hiccup, queue
+            # backlog): skip this candle and only liquidate the position
+            # after several consecutive failures
+            failures = cache.incr(failures_key)
+
+            if failures >= self.MAX_CONSECUTIVE_FAILURES:
+                logging.warning(
+                    header + f"{failures} consecutive signal failures. Stopping pipeline."
+                )
+                cache.delete(failures_key)
+                stop_pipeline(self.pipeline_id, header, raise_exception=False)
+                send_alert(
+                    title="Pipeline stopped after consecutive signal failures",
+                    body=(
+                        f"Pipeline {self.pipeline_id} ({self.symbol}): {failures} "
+                        f"consecutive signal failures (last: {message}). The pipeline "
+                        f"was stopped and its position closed."
+                    ),
+                    severity="critical",
+                    dedup_key=f"signal-failures-stop-{self.pipeline_id}",
+                )
+                publish_pipeline_event(
+                    EVENT_DEACTIVATED, self.pipeline_id,
+                    reason=f"{failures} consecutive signal failures (last: {message})",
+                )
+            else:
+                logging.info(
+                    header + f"Skipping candle ({failures} consecutive signal failures)."
+                )
+                send_alert(
+                    title="Signal generation failed - candle skipped",
+                    body=(
+                        f"Pipeline {self.pipeline_id} ({self.symbol}): {message} "
+                        f"(failure {failures}/{self.MAX_CONSECUTIVE_FAILURES} - the "
+                        f"pipeline stops when the threshold is reached)."
+                    ),
+                    severity="warning",
+                    dedup_key=f"signal-failures-{self.pipeline_id}",
+                )
 
         return success
 
@@ -369,7 +422,7 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         if self.start_date is not None:
             minimum_lookback_date = self.start_date
         else:
-            max_window = get_pipeline_max_window(self.pipeline_id, config_vars.default_min_rows)
+            max_window = get_pipeline_max_window(self.pipeline_id, settings.default_min_rows)
             minimum_lookback_date = get_minimum_lookback_date(max_window, self.candle_size)
 
         self.start_date = minimum_lookback_date
@@ -377,18 +430,24 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         return get_earliest_missing_date(minimum_lookback_date, self.symbol)
 
     def delete_last_entry(self):
+        # ExchangeData/StructuredData rows are shared by every pipeline on the
+        # same (symbol, exchange, interval). Only the still-forming candle
+        # (close_time in the future) is safe to delete; removing a completed
+        # candle would desync another pipeline that already acted on it.
+        now = datetime.now(tz=pytz.utc)
+
         for model_class, candle_size in [
             (ExchangeData, self.base_candle_size),
             (StructuredData, self.candle_size)
         ]:
-            try:
-                model_class.objects.filter(
-                    symbol=self.symbol,
-                    exchange_id=self.exchange,
-                    interval=candle_size
-                ).last().delete()
-            except AttributeError:
-                pass
+            last = model_class.objects.filter(
+                symbol=self.symbol,
+                exchange_id=self.exchange,
+                interval=candle_size
+            ).order_by('open_time').last()
+
+            if last is not None and last.close_time is not None and last.close_time > now:
+                last.delete()
 
     def print_added_entries(self, new_entries, model_class):
 

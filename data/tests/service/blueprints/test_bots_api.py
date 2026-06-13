@@ -338,6 +338,25 @@ class TestBotsAPI:
 
         assert res.json == getattr(Responses, response)('Data pipeline 1 is already ongoing.', 1)
 
+    def test_failed_strategy_fetch_is_not_cached(self, client, mocker):
+        # a failed get_strategies() (model app down -> None) must not be cached,
+        # or it poisons every later request for the process lifetime
+        import data.service.blueprints.bots_api._bots_api as bots_api_module
+        bots_api_module.__dict__.pop("STRATEGIES", None)
+
+        fetch = mocker.patch.object(
+            bots_api_module, "get_strategies", side_effect=[None, None]
+        )
+
+        body = {"symbol": "BTCUSDT"}
+        client.put(f'{API_PREFIX}/start_bot', json=body)
+        client.put(f'{API_PREFIX}/start_bot', json=body)
+
+        # the second request re-fetched because None was never cached
+        assert fetch.call_count == 2
+
+        bots_api_module.__dict__.pop("STRATEGIES", None)
+
     @pytest.mark.parametrize(
         "params,response",
         [
@@ -485,8 +504,13 @@ class TestBotsAPI:
         binance_handler_stop_data_ingestion_spy,
         mock_start_stop_symbol_trading_success_true,
         binance_handler_instances_spy_stop_bot,
-        create_pipeline
+        create_pipeline,
+        mocker,
     ):
+        publish_event = mocker.patch(
+            "data.service.blueprints.bots_api._bots_api.publish_pipeline_event"
+        )
+
         assert len(binance_handler_instances_spy_stop_bot) == 2
 
         res = client.put(f'{API_PREFIX}/stop_bot', json=params)
@@ -498,6 +522,27 @@ class TestBotsAPI:
         assert pipeline.active is False
 
         binance_handler_stop_data_ingestion_spy.assert_called()
+
+        publish_event.assert_called_once()
+        assert publish_event.call_args.args[0] == "pipeline.stopped"
+
+    def test_stop_bot_force_stops_when_no_local_instance(self, client, create_pipeline, mocker):
+        # no local data instance is attached (e.g. after a worker restart), so
+        # stop_instance returns False; the execution service must still be told
+        # to force-close the position rather than orphaning it
+        import data.service.blueprints.bots_api._helpers as helpers
+        helpers.binance_instances = []
+
+        force_stop = mocker.patch(
+            "data.service.blueprints.bots_api._bots_api.start_stop_symbol_trading",
+            return_value={"success": True, "message": "ok"},
+        )
+
+        client.put(f'{API_PREFIX}/stop_bot', json={"pipelineId": 1})
+
+        force_stop.assert_called_once()
+        assert force_stop.call_args[0][0]["force"] is True
+        assert Pipeline.objects.get(id=1).active is False
 
     @pytest.mark.parametrize(
         "params,response",
@@ -606,11 +651,11 @@ class TestBotsAPI:
 
         mock_get_strategies_raise_exception.side_effect = side_effect
 
-        if raises_error:
-            client.get(f'{API_PREFIX}/resources/strategies')
-        else:
-            client.get(f'{API_PREFIX}/resources/strategies')
+        res = client.get(f'{API_PREFIX}/resources/strategies')
 
         assert spy_db_connection.call_count == call_count
 
-        assert spy_sys_exit.call_count > 0 if raises_error else spy_sys_exit.call_count == 0
+        # unhandled errors no longer kill the worker - they return a 500
+        assert spy_sys_exit.call_count == 0
+        if raises_error:
+            assert res.status_code == 500

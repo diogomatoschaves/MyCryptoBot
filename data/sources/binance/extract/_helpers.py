@@ -9,7 +9,7 @@ import pytz
 from shared.data.queries import get_data
 from shared.exchanges.binance import constants as const
 from shared.exchanges.binance.constants import CANDLE_SIZES_MAPPER
-from shared.utils.config_parser import get_config
+from shared.utils.settings import settings
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
 django.setup()
@@ -17,7 +17,6 @@ django.setup()
 from database.model.models import ExchangeData
 
 
-config_vars = get_config('data')
 
 
 def get_missing_dates(start_date, symbol, end_date):
@@ -46,9 +45,9 @@ def get_missing_dates(start_date, symbol, end_date):
         If `base_candle_size` does not correspond to a valid key in `CANDLE_SIZES_MAPPER`.
     """
 
-    data = get_data(ExchangeData, start_date, symbol, config_vars.base_candle_size, exchange='binance')
+    data = get_data(ExchangeData, start_date, symbol, settings.base_candle_size, exchange='binance')
 
-    freq = CANDLE_SIZES_MAPPER[config_vars.base_candle_size]
+    freq = CANDLE_SIZES_MAPPER[settings.base_candle_size]
 
     datetime_index = pd.date_range(start_date, end_date, freq=freq)
 
@@ -105,7 +104,7 @@ def convert_date(date):
     if date is None:
         date = datetime.now(pytz.utc)
 
-    pd_date = pd.Timestamp(date).round(CANDLE_SIZES_MAPPER[config_vars.base_candle_size])
+    pd_date = pd.Timestamp(date).round(CANDLE_SIZES_MAPPER[settings.base_candle_size])
 
     if pd_date.tzinfo is None:
         pd_date = pd_date.tz_localize(pytz.utc)

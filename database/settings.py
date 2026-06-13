@@ -21,7 +21,7 @@ if os.getenv("TEST"):
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.getenv('POSTGRES_DB'),
             'USER': os.getenv('POSTGRES_USER'),
             'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
@@ -42,6 +42,16 @@ INSTALLED_APPS = (
 )
 
 SECRET_KEY = os.getenv('SECRET_KEY')
+
+if not SECRET_KEY:
+    if os.getenv("TEST"):
+        SECRET_KEY = 'insecure-test-only-secret-key'
+    else:
+        raise EnvironmentError("SECRET_KEY environment variable must be set")
+
+# Pin the implicit primary key type to what the existing schema already uses;
+# switching to BigAutoField would require migrating every table's PK to bigint.
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 USE_TZ = True
 

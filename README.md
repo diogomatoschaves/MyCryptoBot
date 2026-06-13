@@ -125,6 +125,30 @@ This page displays the currently open positions linked to the trading bots.
 
 This page shows all the trades executed by any of the trading bots. It is possible to filter by live or testnet trades.
 
+#### Alerts
+
+<p align="middle">
+  <img src="shared/utils/drawings/alerts.png" style="width: 60%" />
+</p>
+
+The app can push operational alerts to your phone via a Telegram bot: pipeline stops and deactivations, 
+position mismatches between the local records and the exchange, failed or unconfirmed orders, restart 
+attempts, and unreachable services or workers. This page shows whether alerting is configured, lets you 
+send a test alert, and includes a step-by-step setup guide.
+
+To enable alerts:
+
+1. In Telegram, open [@BotFather](https://t.me/BotFather), send `/newbot` and follow the prompts. Copy the **bot token**.
+2. Open your new bot's chat and press **Start** (bots can only message users who have messaged them first).
+3. Get your **chat ID**: visit `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and read the 
+   number at `"chat": {"id": ...}` — or message [@userinfobot](https://t.me/userinfobot) and it replies with your ID.
+4. Press **Configure** on the Alerts page and paste the bot token and chat ID. Alternatively, set the 
+   `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` environment variables — when present, they take precedence 
+   over settings saved in the dashboard.
+
+The bot token is write-only: it is stored server-side and never sent back to the browser. If neither the 
+dashboard settings nor the environment variables are set, alerting is simply disabled.
+
 
 ## Software Requirements
 

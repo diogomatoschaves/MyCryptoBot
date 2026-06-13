@@ -12,13 +12,14 @@ BINANCE_SPOT_TRADING = "SPOT"
 BINANCE_MARGIN_TRADING = "MARGIN"
 
 
+# pandas frequency aliases (2.2+ notation: lowercase h/min, 'T'/'H' deprecated)
 CANDLE_SIZES_MAPPER = {
-    '5m': '5T',
-    '10m': '10T',
-    '15m': '15T',
-    '30m': '30T',
-    '1h': '1H',
-    '4h': '4H',
+    '5m': '5min',
+    '10m': '10min',
+    '15m': '15min',
+    '30m': '30min',
+    '1h': '1h',
+    '4h': '4h',
     '1d': '1D',
 }
 

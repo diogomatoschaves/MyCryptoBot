@@ -129,6 +129,21 @@ export const validatePipelineCreation = async (
 }
 
 
+// Whitelist of type-conversion functions the API can reference by name in
+// strategy param definitions. Replaces eval() of API-provided strings.
+const TYPE_CONVERTERS: Record<string, (value: any) => any> = {
+  Number,
+  String,
+  Boolean,
+  parseInt: (value: any) => parseInt(value, 10),
+  parseFloat,
+}
+
+const convertParam = (func: string, value: any) => {
+  const converter = TYPE_CONVERTERS[func]
+  return converter ? converter(value) : value
+}
+
 export const validateParams = (strategy: any) => {
 
   const params = strategy.selectedParams
@@ -144,7 +159,7 @@ export const validateParams = (strategy: any) => {
 
     let typedParam
     if (strategy.params[param].type) {
-      typedParam = eval(strategy.params[param].type.func)(params[param])
+      typedParam = convertParam(strategy.params[param].type.func, params[param])
       if (isNaN(typedParam) || typeof(typedParam) !== strategy.params[param].type.type) {
         return {
           success: false,
@@ -176,7 +191,7 @@ export const validateParams = (strategy: any) => {
 
     let typedParam
     if (strategy.optionalParams[param].type) {
-      typedParam = eval(strategy.optionalParams[param].type.func)(paramValue)
+      typedParam = convertParam(strategy.optionalParams[param].type.func, paramValue)
       if (typedParam !== typedParam || typeof (typedParam) !== paramData.type.type) {
         return {
           success: reduced.success && false,
@@ -282,13 +297,3 @@ export const convertDate = (timeStamp: number) => {
   return new Date(timeStamp).toLocaleDateString('en-GB', options);
 }
 
-export const addLineBreaks = (text: string) => {
-  const regex = /\s{2}/g;
-  return text.replace(regex, '<br/>')
-}
-
-
-const Split = (str: string) => {
-  const re = /\s*(?:,|$)\s*/;
-  return str.split(re)
-}

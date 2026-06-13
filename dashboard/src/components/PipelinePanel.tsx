@@ -1,6 +1,7 @@
-import React, {Fragment} from 'react'
-import {Button, Grid, Icon, Message} from "semantic-ui-react";
+import {Fragment, useEffect, useReducer, useRef} from 'react'
 import {Link} from 'react-router-dom';
+import styled from "styled-components";
+import {Bot, Plus} from 'lucide-react'
 import {
     DropdownOptions,
     StartPipeline,
@@ -17,10 +18,40 @@ import {
 } from "../types";
 import PipelineItem from './Pipeline'
 import NewPipeline from "./NewPipeline";
-import styled from "styled-components";
-import {useEffect, useReducer, useRef} from "react";
 import PipelineDetail from "./PipelineDetail";
-import {Wrapper} from "../styledComponents";
+import {Button, EmptyState, SegmentedControl} from "../ui";
+
+
+const Toolbar = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+    animation: fadeUp 0.3s ease both;
+`
+
+const Filters = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+`
+
+const BotList = styled.div`
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    & > a {
+        animation: fadeUp 0.35s ease both;
+    }
+    & > a:nth-child(2) { animation-delay: 0.05s; }
+    & > a:nth-child(3) { animation-delay: 0.1s; }
+    & > a:nth-child(4) { animation-delay: 0.15s; }
+    & > a:nth-child(5) { animation-delay: 0.2s; }
+`
 
 
 interface Props {
@@ -44,16 +75,6 @@ interface Props {
     updateTrades: UpdateTrades
 }
 
-
-const ButtonWrapper = styled(Grid)`
-    margin-bottom: 40px;
-    width: 100%;
-    justify-content: space-around;
-`
-
-const NewPipelineWrapper = styled(Grid.Column)`
-    margin-top: ${(props: any) => props.isMobile && '20px !important'};
-`
 
 const FILTER_PIPELINES = 'FILTER_PIPELINES'
 const TOGGLE_OPTIONS = 'TOGGLE_OPTIONS'
@@ -174,61 +195,33 @@ function PipelinePanel(props: Props) {
                 exchangeOptions={exchangeOptions}
               />
             ) : (
-              <Wrapper>
-                <ButtonWrapper columns={3}>
-                    <Grid.Row style={{marginBottom: '30px'}}>
-                        <Grid.Column>
-                        <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                            {['live', 'test'].map((option, index) => (
-                                <Button key={index} onClick={() => dispatch({
-                                    type: TOGGLE_OPTIONS,
-                                    [option]: !options[option]
-                                })} color={options && options[option] && 'grey'}>
-                                    {option}
-                                </Button>
-                            ))}
-                        </Button.Group>
-                        </Grid.Column>
-                        <Grid.Column>
-                            <Button.Group size="mini" style={{alignSelf: 'center'}}>
-                                {['active', 'stopped'].map((option, index) => (
-                                  <Button key={index} onClick={() => dispatch({
-                                      type: TOGGLE_OPTIONS,
-                                      [option]: !options[option]
-                                  })} color={options && options[option] && 'grey'}>
-                                      {option}
-                                  </Button>
-                                ))}
-                            </Button.Group>
-                        </Grid.Column>
-                        <NewPipelineWrapper width={isMobile && 16} isMobile={isMobile}>
-                            <NewPipeline
-                                balances={balances}
-                                pipelines={pipelines}
-                                positions={positions}
-                                symbolsOptions={symbolsOptions}
-                                strategiesOptions={strategiesOptions}
-                                candleSizeOptions={candleSizeOptions}
-                                exchangeOptions={exchangeOptions}
-                                startPipeline={startPipeline}
-                                editPipeline={editPipeline}
-                                isMobile={isMobile}
-                            >
-                                <Button inverted secondary>
-                                  <span style={{marginRight: '10px'}}>
-                                      <Icon name={'plus'}/>
-                                  </span>
-                                    New Trading Bot
-                                </Button>
-                            </NewPipeline>
-                        </NewPipelineWrapper>
-                    </Grid.Row>
-                </ButtonWrapper>
-                  <div className="flex-column">
-                {filteredPipelines.map((pipelineId: string, index: number) => (
-                  <Link key={index} to={`/pipelines/${pipelineId}`} className="flex-row" style={{width: isMobile ? 'calc(100% - 30px)' : 'calc(80% - 50px)'}}>
-                    <PipelineItem
-                        size={size}
+              <div style={{width: '100%'}}>
+                <Toolbar>
+                    <Filters>
+                        <SegmentedControl
+                          options={[
+                              {value: 'live', label: 'Live'},
+                              {value: 'test', label: 'Test'},
+                          ]}
+                          isActive={(value) => options[value]}
+                          onToggle={(value) => dispatch({
+                              type: TOGGLE_OPTIONS,
+                              [value]: !options[value]
+                          })}
+                        />
+                        <SegmentedControl
+                          options={[
+                              {value: 'active', label: 'Active'},
+                              {value: 'stopped', label: 'Stopped'},
+                          ]}
+                          isActive={(value) => options[value]}
+                          onToggle={(value) => dispatch({
+                              type: TOGGLE_OPTIONS,
+                              [value]: !options[value]
+                          })}
+                        />
+                    </Filters>
+                    <NewPipeline
                         balances={balances}
                         pipelines={pipelines}
                         positions={positions}
@@ -236,30 +229,49 @@ function PipelinePanel(props: Props) {
                         strategiesOptions={strategiesOptions}
                         candleSizeOptions={candleSizeOptions}
                         exchangeOptions={exchangeOptions}
-                        key={index}
                         startPipeline={startPipeline}
                         editPipeline={editPipeline}
-                        stopPipeline={stopPipeline}
-                        deletePipeline={deletePipeline}
-                        pipeline={pipelines[pipelineId]}
-                        lastRow={true}
-                        position={positions.find((position) => String(position.pipelineId) === pipelineId)}
-                    />
-                  </Link>
-                ))}
-                  </div>
+                        isMobile={isMobile}
+                    >
+                        <Button variant="primary" icon={<Plus/>}>
+                            New Trading Bot
+                        </Button>
+                    </NewPipeline>
+                </Toolbar>
+                <BotList>
+                    {filteredPipelines.map((pipelineId: string) => (
+                      <Link key={pipelineId} to={`/pipelines/${pipelineId}`}>
+                        <PipelineItem
+                            size={size}
+                            balances={balances}
+                            pipelines={pipelines}
+                            positions={positions}
+                            symbolsOptions={symbolsOptions}
+                            strategiesOptions={strategiesOptions}
+                            candleSizeOptions={candleSizeOptions}
+                            exchangeOptions={exchangeOptions}
+                            startPipeline={startPipeline}
+                            editPipeline={editPipeline}
+                            stopPipeline={stopPipeline}
+                            deletePipeline={deletePipeline}
+                            pipeline={pipelines[pipelineId]}
+                            lastRow={true}
+                            position={positions.find((position) => String(position.pipelineId) === pipelineId)}
+                        />
+                      </Link>
+                    ))}
+                </BotList>
                 {filteredPipelines.length === 0 && (
-                    <Message>
-                        <Message.Header>
-                            There are no trading bots matching the chosen filters.
-                        </Message.Header>
-                    </Message>
+                    <EmptyState
+                      icon={<Bot/>}
+                      title="No trading bots match the chosen filters"
+                      hint="Adjust the filters above or create a new trading bot."
+                    />
                 )}
-              </Wrapper>
+              </div>
             )}
         </Fragment>
     );
 }
 
-// @ts-ignore
 export default PipelinePanel;

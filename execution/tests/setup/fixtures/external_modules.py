@@ -27,7 +27,7 @@ class MockBinanceHandler(BinanceFuturesTrader):
             "side": side,
             "type": type,
             "origQty": quantity,
-            "orderId": randint(0, 1E9)
+            "orderId": randint(0, 10**9)
         }
 
     def futures_account_balance(self):

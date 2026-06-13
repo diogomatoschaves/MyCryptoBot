@@ -1,11 +1,9 @@
-import {Fragment} from "react";
 import {Decimals, Pipeline, Trade} from "../types";
-import {Label, Table} from "semantic-ui-react";
-import {DARK_YELLOW, GREEN, RED} from "../utils/constants";
+import {GREEN, RED, YELLOW} from "../utils/constants";
 import {timeFormatterDate} from "../utils/helpers";
-import React from "react";
 import TradingBotLabel from "./TradingBotLabel";
-import styled from "styled-components";
+import {MobileRowCard, MobileRowLine, Num, Tag} from "../ui";
+import {theme} from "../theme";
 
 
 interface Props {
@@ -15,15 +13,8 @@ interface Props {
     pipeline: Pipeline
     currentPrices: Object
     decimals: Decimals
-    tradesTableHeader: Array<any>
+    tradesTableHeader: string[]
 }
-
-const MobileCell = styled.div`
-  display: flex !important;
-  flex-direction: row;
-  justify-content: space-between;
-  padding: 3px 0
-`
 
 
 const dateStringOptions = {day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric'}
@@ -43,84 +34,53 @@ function TradeRow(props: Props) {
   const openPrice = Number(trade.openPrice)
   const closePrice = Number(trade.closePrice)
 
-  const profitLoss = trade.profitLoss ? trade.profitLoss.toFixed(2) : '-'
-  const profitLossPct = trade.profitLossPct ? (trade.profitLossPct * 100).toFixed(2) : '-'
-  const pnlColor = trade.profitLossPct ? trade.profitLossPct > 0 ? GREEN : RED : '#000000'
+  const profitLoss = trade.profitLoss ? trade.profitLoss.toFixed(2) : '—'
+  const profitLossPct = trade.profitLossPct ? (trade.profitLossPct * 100).toFixed(2) : '—'
+  const pnlColor = trade.profitLossPct ? trade.profitLossPct > 0 ? GREEN : RED : theme.textDim
 
   const mobile = ['mobile'].includes(size)
-  const cellType = mobile ? 'div' : 'td'
 
   const duration = timeFormatterDate(trade.openTime, trade.closeTime && trade.closeTime)
-  
-  const tableContent = [
-    <Table.Cell as={cellType} style={styles.defaultCell}>
-      <TradingBotLabel pipelineId={trade.pipelineId} name={trade.pipelineName} color={trade.pipelineColor}/>
-    </Table.Cell>,
-    <Table.Cell as={cellType} style={styles.defaultCell}>
-      <Label basic color='blue'>{trade.mock ? "test" : "live"}</Label>
-    </Table.Cell>,
-    <Table.Cell as={cellType} collapsing style={{...styles.defaultCell, color: DARK_YELLOW, fontWeight: '600'}}>
-      {trade.symbol}
-    </Table.Cell>,
-    <Table.Cell as={cellType} style={styles.defaultCell}>
+
+  const cells = [
+    <TradingBotLabel pipelineId={trade.pipelineId} name={trade.pipelineName} color={trade.pipelineColor}/>,
+    <Tag color={trade.mock ? theme.blue : theme.accent}>
+      {trade.mock ? "test" : "live"}
+    </Tag>,
+    <Num $color={YELLOW}>{trade.symbol}</Num>,
+    <span style={{color: 'var(--text-dim)'}}>
       {/*@ts-ignore*/}
       {trade.openTime.toLocaleString('en-UK', dateStringOptions)}
-    </Table.Cell>,
-    <Table.Cell as={cellType} style={{...styles.defaultCell }}>
-      {duration}
-    </Table.Cell>,
-    <Table.Cell as={cellType} style={{color, fontWeight: '600'}}>{side}</Table.Cell>,
-    <Table.Cell as={cellType} style={{...styles.defaultCell, ...styles.quantityCell}}>
-      {amount.toFixed(baseDecimal)}
-    </Table.Cell>,
-    <Table.Cell as={cellType} style={styles.defaultCell}>
-      {trade.leverage}
-    </Table.Cell>,
-    <Table.Cell as={cellType} style={{...styles.defaultCell, ...styles.quantityCell}}>
-      {openPrice.toFixed(quoteDecimal)}
-    </Table.Cell>,
-    <Table.Cell as={cellType} style={{...styles.defaultCell, ...styles.quantityCell}}>
-      {closePrice.toFixed(quoteDecimal)}
-    </Table.Cell>,
-    <Table.Cell as={cellType} style={{...styles.defaultCell, ...styles.quantityCell, color: pnlColor}}>
-      {`${profitLoss} USDT (${profitLossPct}%)`}
-    </Table.Cell>
+    </span>,
+    <span style={{color: 'var(--text-dim)'}}>{duration}</span>,
+    <Num $color={color}>{side}</Num>,
+    <Num>{amount.toFixed(baseDecimal)}</Num>,
+    <Num>×{trade.leverage}</Num>,
+    <Num>{openPrice.toFixed(quoteDecimal)}</Num>,
+    <Num>{closePrice.toFixed(quoteDecimal)}</Num>,
+    <Num $color={pnlColor}>{`${profitLoss} USDT (${profitLossPct}%)`}</Num>,
   ]
 
+  if (mobile) {
     return (
-        <Table.Row key={index}>
-          {mobile ? (
-            <Fragment>
-              {tableContent.map((entry, index) => {
-                return (
-                  <MobileCell key={`trades-${index}`}>
-                    {tradesTableHeader[index]}
-                    {entry}
-                  </MobileCell>
-              )})}
-            </Fragment>
-          ) : (
-            <Fragment>
-              {tableContent.map(entry => entry)}
-            </Fragment>
-          )}
-        </Table.Row>
-    );
+      <MobileRowCard>
+        {cells.map((cell, cellIndex) => (
+          <MobileRowLine key={`trade-${index}-${cellIndex}`}>
+            <span>{tradesTableHeader[cellIndex]}</span>
+            {cell}
+          </MobileRowLine>
+        ))}
+      </MobileRowCard>
+    )
+  }
+
+  return (
+    <tr>
+      {cells.map((cell, cellIndex) => (
+        <td key={`trade-${index}-${cellIndex}`}>{cell}</td>
+      ))}
+    </tr>
+  );
 }
 
 export default TradeRow;
-
-
-const styles = {
-    defaultCell: {
-        color: 'rgb(70, 70, 70)',
-        fontWeight: '500',
-    },
-    mobileCell: {
-      display: 'flex !important',
-    },
-    quantityCell: {
-      // color: TEAL,
-      fontWeight: '500',
-    }
-}

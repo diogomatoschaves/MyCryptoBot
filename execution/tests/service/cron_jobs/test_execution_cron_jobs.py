@@ -1,5 +1,6 @@
 import pytest
 
+import execution.service.blueprints.market_data
 from execution.service.cron_jobs.save_pipelines_snapshot import save_portfolio_value_snapshot, save_pipeline_snapshot
 from execution.tests.setup.fixtures.external_modules import binance_handler_market_data_factory
 from shared.utils.tests.fixtures.models import *
@@ -82,6 +83,49 @@ class TestCronJobs:
         save_portfolio_value_snapshot()
 
         assert PortfolioTimeSeries.objects.count() == response
+
+    def test_save_portfolio_value_snapshot_skips_account_without_active_pipelines(
+        self,
+        mocker,
+        test_mock_setup,
+        create_open_position_paper_trading_pipeline,
+    ):
+        spy = mocker.spy(
+            execution.service.blueprints.market_data.BinanceHandler, "futures_account"
+        )
+
+        save_portfolio_value_snapshot()
+
+        assert spy.call_count == 1
+        assert PortfolioTimeSeries.objects.count() == 2
+        assert not PortfolioTimeSeries.objects.filter(type="live").exists()
+        assert PortfolioTimeSeries.objects.filter(type="testnet").exists()
+        assert PortfolioTimeSeries.objects.filter(pipeline_id=11).exists()
+
+    def test_save_portfolio_value_snapshot_empty_balance_fields(
+        self,
+        mocker,
+        test_mock_setup,
+        create_open_position,
+        create_open_position_paper_trading_pipeline,
+    ):
+        mocker.patch.object(
+            execution.service.blueprints.market_data.BinanceHandler,
+            "futures_account",
+            lambda self: {"totalWalletBalance": "", "totalUnrealizedProfit": "", "positions": []},
+        )
+
+        save_portfolio_value_snapshot()
+
+        assert PortfolioTimeSeries.objects.count() == 4
+
+        for account_type in ["testnet", "live"]:
+            entry = PortfolioTimeSeries.objects.filter(type=account_type).last()
+            assert entry.value == 0
+
+        for pipeline in [2, 11]:
+            entry = PortfolioTimeSeries.objects.filter(pipeline_id=pipeline).last()
+            assert entry.value == entry.pipeline.current_equity
 
     @pytest.mark.parametrize(
         "pipeline,unrealized_profit",

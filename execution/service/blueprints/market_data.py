@@ -44,14 +44,14 @@ def get_balances():
 
 
 @retry_failed_connection(num_times=2)
-def get_account_data():
-    testnet_balance = testnet_client.futures_account()
-    live_balance = client.futures_account()
+def get_account_data(account_types=("testnet", "live")):
+    clients = {"testnet": testnet_client, "live": client}
 
-    return {"testnet": testnet_balance, "live": live_balance}
+    return {account_type: clients[account_type].futures_account() for account_type in account_types}
 
 
 @market_data.get('/prices')
+@jwt_required()
 def get_current_price():
 
     symbol = request.args.get("symbol", None)

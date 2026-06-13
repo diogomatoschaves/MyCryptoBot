@@ -147,6 +147,19 @@ def mock_start_pipeline_trade_raise_exception(mocker):
     )
 
 
+def raise_generic_error(pipeline, header, **kwargs):
+    raise Exception("unexpected boot error")
+
+
+@pytest.fixture
+def mock_start_pipeline_trade_raise_generic_error(mocker):
+    return mocker.patch.object(
+        execution.service.app,
+        "start_pipeline_trade",
+        raise_generic_error
+    )
+
+
 @pytest.fixture
 def spy_start_pipeline_trade(mocker):
     return mocker.spy(execution.service.app, "start_pipeline_trade")
