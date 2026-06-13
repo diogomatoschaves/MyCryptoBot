@@ -205,6 +205,10 @@ class App extends Component<Props, State> {
             this.handlePipelineEvent,
             this.updatePipelines,
         )
+
+        // start polling for the initially-loaded route (previously polling only
+        // began after the first route change, so a fresh load never refreshed)
+        this.setupPolling(this.props.location.pathname)
     }
 
     componentWillUnmount() {
@@ -238,55 +242,47 @@ class App extends Component<Props, State> {
             this.getCurrentPrices()
         }
 
-        const { pathname } = this.props.location
-
-        if (prevProps.location.pathname !== pathname) {
-
-            clearInterval(this.getPricesInterval)
-            clearInterval(this.getTradesInterval)
-            clearInterval(this.getPositionsInterval)
-            clearInterval(this.getPipelinesInterval)
-            clearInterval(this.getPipelineMetricsInterval)
-
-            if (pathname.includes('/dashboard')) {
-                this.getAccountBalance()
-                this.getTotalEquityTimeSeries()
-                this.getCurrentPrices()
-                this.getPricesInterval = setInterval(() => {
-                    this.getCurrentPrices()
-                }, 10 * 1000)
-                this.getPipelineMetricsInterval = setInterval(() => {
-                    this.updatePipelinesMetrics()
-                }, 30 * 1000)
-
-
-            } else if (pathname.includes('/trades')){
-                this.updateTrades()
-                this.getCurrentPrices()
-                this.getTradesInterval = setInterval(() => {
-                    this.updateTrades()
-                }, 20 * 1000)
-            } else if (pathname.includes('/pipelines')){
-                this.updatePipelines()
-                this.getCurrentPrices()
-                this.getPipelinesInterval = setInterval(() => {
-                    this.updatePipelines()
-                }, 10 * 1000)
-            } else if (pathname.includes('/positions')){
-                this.updatePositions()
-                this.getCurrentPrices()
-
-                this.getPricesInterval = setInterval(() => {
-                    this.getCurrentPrices()
-                }, 10 * 1000)
-                this.getPositionsInterval = setInterval(() => {
-                    this.updatePositions()
-                }, 30 * 1000)
-            }
+        if (prevProps.location.pathname !== this.props.location.pathname) {
+            this.setupPolling(this.props.location.pathname)
         }
 
         if (prevState.trades !== trades) {
             this.updatePipelinesMetrics()
+        }
+    }
+
+    // (re)start the route-specific polling. Called on mount and on every route
+    // change. Interval callbacks skip a tick while the tab is hidden so a
+    // backgrounded dashboard doesn't keep hammering the API.
+    setupPolling(pathname: string) {
+        clearInterval(this.getPricesInterval)
+        clearInterval(this.getTradesInterval)
+        clearInterval(this.getPositionsInterval)
+        clearInterval(this.getPipelinesInterval)
+        clearInterval(this.getPipelineMetricsInterval)
+
+        const poll = (fn: () => void, ms: number) =>
+            setInterval(() => { if (!document.hidden) fn() }, ms)
+
+        if (pathname.includes('/dashboard')) {
+            this.getAccountBalance()
+            this.getTotalEquityTimeSeries()
+            this.getCurrentPrices()
+            this.getPricesInterval = poll(() => this.getCurrentPrices(), 10 * 1000)
+            this.getPipelineMetricsInterval = poll(() => this.updatePipelinesMetrics(), 30 * 1000)
+        } else if (pathname.includes('/trades')) {
+            this.updateTrades()
+            this.getCurrentPrices()
+            this.getTradesInterval = poll(() => this.updateTrades(), 20 * 1000)
+        } else if (pathname.includes('/pipelines')) {
+            this.updatePipelines()
+            this.getCurrentPrices()
+            this.getPipelinesInterval = poll(() => this.updatePipelines(), 10 * 1000)
+        } else if (pathname.includes('/positions')) {
+            this.updatePositions()
+            this.getCurrentPrices()
+            this.getPricesInterval = poll(() => this.getCurrentPrices(), 10 * 1000)
+            this.getPositionsInterval = poll(() => this.updatePositions(), 30 * 1000)
         }
     }
 
@@ -312,7 +308,7 @@ class App extends Component<Props, State> {
                     }
                 })
             })
-            .catch(() => {})
+            .catch(this.handleActionError)
     }
 
     stopPipeline: StopPipeline = (pipelineId) => {
@@ -337,7 +333,7 @@ class App extends Component<Props, State> {
 
                 this.updateTrades()
             })
-            .catch(() => {})
+            .catch(this.handleActionError)
     }
 
     editPipeline: EditPipeline = (pipelineParams: PipelineParams, pipelineId?: number) => {
@@ -362,7 +358,7 @@ class App extends Component<Props, State> {
                   }
               })
           })
-          .catch(() => {})
+          .catch(this.handleActionError)
     }
 
     deletePipeline: DeletePipeline = (pipelineId) => {
@@ -388,7 +384,7 @@ class App extends Component<Props, State> {
                     }
                 })
             })
-            .catch(() => {})
+            .catch(this.handleActionError)
     }
 
     getCurrentPrices: GetCurrentPrices = () => {
@@ -496,6 +492,21 @@ class App extends Component<Props, State> {
               })
           })
           .catch((error) => this.logoutUser(error.message))
+    }
+
+    // failed operator actions (start/stop/edit/delete) used to be swallowed
+    // silently. Route auth failures to logout (as the GET flows do) and
+    // surface anything else to the user instead of failing invisibly.
+    handleActionError = (error: Error) => {
+        const statusCode = error && error.message
+        if (["401", "422"].includes(statusCode)) {
+            this.logoutUser(statusCode)
+            return
+        }
+        this.props.updateMessage({
+            text: 'Something went wrong — please try again.',
+            success: false,
+        })
     }
 
     logoutUser = (statusCode: string) => {
