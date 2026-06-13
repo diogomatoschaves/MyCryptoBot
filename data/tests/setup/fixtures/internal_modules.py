@@ -279,6 +279,13 @@ def mock_redis_connection_external_requests(mocker):
 
 
 @pytest.fixture
+def mock_redis_connection_app_health(mocker):
+    return mocker.patch(
+        "data.service.cron_jobs.app_health._app_health.cache", mock_redis()
+    )
+
+
+@pytest.fixture
 def mock_redis_connection_bots_api(mocker):
     return mocker.patch("data.service.blueprints.bots_api._bots_api.cache", mock_redis())
 

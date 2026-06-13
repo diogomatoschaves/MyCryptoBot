@@ -30,6 +30,7 @@ import {
     getPrice,
     deleteBot, getPipelinesMetrics, editBot, getEquityTimeSeries,
 } from "../apiCalls";
+import {subscribePipelineEvents, PipelineEvent} from "../apiCalls/events";
 import {RESOURCES_MAPPING} from "../utils/constants";
 import MenuWrapper, {SIDEBAR_WIDTH} from "./MenuWrapper";
 import PipelinePanel from "./PipelinePanel";
@@ -111,6 +112,7 @@ class App extends Component<Props, State> {
     getPositionsInterval: any
     getPipelinesInterval: any
     getPipelineMetricsInterval: any
+    unsubscribeEvents: (() => void) | null = null
 
     static defaultProps = {
         decimals: {
@@ -196,6 +198,36 @@ class App extends Component<Props, State> {
         this.getTotalEquityTimeSeries()
 
         this.updatePipelinesMetrics()
+
+        // live bot-status push; the onConnect resync covers events missed
+        // while disconnected, and polling remains the fallback
+        this.unsubscribeEvents = subscribePipelineEvents(
+            this.handlePipelineEvent,
+            this.updatePipelines,
+        )
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribeEvents) {
+            this.unsubscribeEvents()
+        }
+        clearInterval(this.getPricesInterval)
+        clearInterval(this.getTradesInterval)
+        clearInterval(this.getPositionsInterval)
+        clearInterval(this.getPipelinesInterval)
+        clearInterval(this.getPipelineMetricsInterval)
+    }
+
+    handlePipelineEvent = (event: PipelineEvent) => {
+        this.updatePipelines()
+
+        if (event.type === 'pipeline.start_failed' || event.type === 'pipeline.deactivated') {
+            const what = event.type === 'pipeline.start_failed' ? 'failed to start' : 'was deactivated'
+            this.props.updateMessage({
+                text: `Trading bot ${event.pipelineId} ${what}${event.reason ? `: ${event.reason}` : ''}`,
+                success: false,
+            })
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any) {

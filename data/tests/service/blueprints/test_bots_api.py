@@ -504,8 +504,13 @@ class TestBotsAPI:
         binance_handler_stop_data_ingestion_spy,
         mock_start_stop_symbol_trading_success_true,
         binance_handler_instances_spy_stop_bot,
-        create_pipeline
+        create_pipeline,
+        mocker,
     ):
+        publish_event = mocker.patch(
+            "data.service.blueprints.bots_api._bots_api.publish_pipeline_event"
+        )
+
         assert len(binance_handler_instances_spy_stop_bot) == 2
 
         res = client.put(f'{API_PREFIX}/stop_bot', json=params)
@@ -517,6 +522,9 @@ class TestBotsAPI:
         assert pipeline.active is False
 
         binance_handler_stop_data_ingestion_spy.assert_called()
+
+        publish_event.assert_called_once()
+        assert publish_event.call_args.args[0] == "pipeline.stopped"
 
     def test_stop_bot_force_stops_when_no_local_instance(self, client, create_pipeline, mocker):
         # no local data instance is attached (e.g. after a worker restart), so

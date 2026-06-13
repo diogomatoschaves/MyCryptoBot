@@ -33,11 +33,18 @@ def mock_alert(mocker):
     return mocker.patch.object(decorator_module, "send_alert")
 
 
+@pytest.fixture
+def mock_publish_event(mocker):
+    return mocker.patch.object(decorator_module, "publish_pipeline_event")
+
+
 @pytest.mark.django_db
 class TestHandleOrderExecutionErrors:
 
     @pytest.mark.parametrize("exception", [api_exception(), NegativeEquity(1)])
-    def test_deactivation_paths_fire_critical_alert(self, exception, mock_alert, create_pipeline):
+    def test_deactivation_paths_fire_critical_alert(
+        self, exception, mock_alert, mock_publish_event, create_pipeline
+    ):
         trader = MagicMock()
 
         def failing_trade():
@@ -51,3 +58,5 @@ class TestHandleOrderExecutionErrors:
         assert Pipeline.objects.get(id=1).active is False
         mock_alert.assert_called_once()
         assert mock_alert.call_args.kwargs["severity"] == "critical"
+        mock_publish_event.assert_called_once()
+        assert mock_publish_event.call_args.args[0] == "pipeline.deactivated"

@@ -20,6 +20,7 @@ from shared.utils.decorators import handle_db_connection_error
 from shared.utils.helpers import get_jwt_secret_key
 from shared.utils.exceptions import EquityRequired
 from shared.utils.logger import configure_logger
+from shared.utils.events import publish_pipeline_event, EVENT_DEACTIVATED
 from shared.utils.notifier import send_alert
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -74,6 +75,10 @@ def startup_task():
                 severity="critical",
                 dedup_key=f"boot-failed-{pipeline.id}",
             )
+            publish_pipeline_event(
+                EVENT_DEACTIVATED, pipeline.id,
+                reason="insufficient balance to restart at startup",
+            )
         except Exception as e:
             # never let one bad pipeline crash app startup into a boot loop -
             # deactivate the offender and carry on with the rest
@@ -87,6 +92,10 @@ def startup_task():
                 ),
                 severity="critical",
                 dedup_key=f"boot-failed-{pipeline.id}",
+            )
+            publish_pipeline_event(
+                EVENT_DEACTIVATED, pipeline.id,
+                reason=f"failed to start at startup: {e}",
             )
 
 
@@ -147,6 +156,10 @@ def create_app():
 
             return jsonify(Responses.TRADING_SYMBOL_START(pipeline.symbol.name))
 
+        # falling through used to return None (jsonified to null), which
+        # crashed callers that subscript the response
+        return jsonify(Responses.EXCHANGE_INVALID(pipeline.exchange.name))
+
     @app.route('/stop_symbol_trading', methods=['POST'])
     @handle_app_errors
     @binance_error_handler(request_obj=request)
@@ -172,6 +185,8 @@ def create_app():
             bt.stop_symbol_trading(pipeline_id, symbol, header=parameters.header, force=parameters.force)
 
             return jsonify(Responses.TRADING_SYMBOL_STOP(symbol))
+
+        return jsonify(Responses.EXCHANGE_INVALID(pipeline.exchange.name))
 
     @app.route('/execute_order', methods=['POST'])
     @handle_app_errors

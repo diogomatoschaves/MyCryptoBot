@@ -23,6 +23,7 @@ from data.sources.binance.extract import (
 from data.sources.binance.load import load_data
 from data.sources.binance.transform import resample_data, transform_data
 from shared.utils.helpers import get_minimum_lookback_date, get_pipeline_max_window, remove_pipeline_loading
+from shared.utils.events import publish_pipeline_event, EVENT_DEACTIVATED
 from shared.utils.notifier import send_alert
 from shared.exchanges.binance import BinanceHandler
 from shared.utils.settings import settings
@@ -304,6 +305,10 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
                     ),
                     severity="critical",
                     dedup_key=f"signal-failures-stop-{self.pipeline_id}",
+                )
+                publish_pipeline_event(
+                    EVENT_DEACTIVATED, self.pipeline_id,
+                    reason=f"{failures} consecutive signal failures (last: {message})",
                 )
             else:
                 logging.info(

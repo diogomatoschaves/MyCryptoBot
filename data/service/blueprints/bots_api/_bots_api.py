@@ -10,6 +10,7 @@ from flask_jwt_extended import jwt_required
 from data.service.blueprints.bots_api._helpers import start_symbol_trading, stop_instance
 from data.service.external_requests import get_strategies, start_stop_symbol_trading
 from data.service.helpers import check_input, get_or_create_pipeline, extract_request_params, convert_client_request
+from shared.utils.events import publish_pipeline_event, EVENT_STOPPED
 from shared.utils.settings import settings
 from shared.utils.decorators import general_app_error
 from data.service.helpers.decorators.handle_app_errors import handle_app_errors
@@ -108,6 +109,8 @@ def stop_bot():
 
         pipeline.active = False
         pipeline.save(update_fields=["active"])
+
+        publish_pipeline_event(EVENT_STOPPED, pipeline.id)
 
         return jsonify(Responses.DATA_PIPELINE_STOPPED(pipeline))
     except Pipeline.DoesNotExist:

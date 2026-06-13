@@ -6,6 +6,7 @@ import django
 from binance.exceptions import BinanceAPIException
 
 from execution.service.helpers.exceptions import SymbolNotBeingTraded, NegativeEquity
+from shared.utils.events import publish_pipeline_event, EVENT_DEACTIVATED
 from shared.utils.notifier import send_alert
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -64,6 +65,7 @@ def handle_order_execution_errors(symbol, trader_instance, header, pipeline_id):
                     severity="critical",
                     dedup_key=f"deactivated-{pipeline_id}",
                 )
+                publish_pipeline_event(EVENT_DEACTIVATED, pipeline_id, reason=e.message)
 
                 from execution.service.helpers.responses import Responses
 
@@ -84,6 +86,7 @@ def handle_order_execution_errors(symbol, trader_instance, header, pipeline_id):
                     severity="critical",
                     dedup_key=f"deactivated-{pipeline_id}",
                 )
+                publish_pipeline_event(EVENT_DEACTIVATED, pipeline_id, reason=e.message)
 
                 from execution.service.helpers.responses import Responses
 

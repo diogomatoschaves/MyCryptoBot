@@ -4,6 +4,7 @@ import logging
 from flask import jsonify
 
 from execution.service.helpers.exceptions import *
+from shared.utils.events import publish_pipeline_event, EVENT_DEACTIVATED
 from shared.utils.exceptions import NoSuchPipeline, EquityRequired
 
 
@@ -54,6 +55,9 @@ def handle_app_errors(_func=None):
                 if e.pipeline_id is not None:
                     from database.model.models import Pipeline
                     Pipeline.objects.filter(id=e.pipeline_id).update(active=False)
+                    publish_pipeline_event(
+                        EVENT_DEACTIVATED, e.pipeline_id, reason=e.message
+                    )
                 return jsonify(Responses.BOOKKEEPING_FAILED(e.message))
 
         return wrapper

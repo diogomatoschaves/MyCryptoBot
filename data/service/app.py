@@ -25,6 +25,7 @@ from data.service.blueprints.user_management import user_management
 from data.service.blueprints.dashboard import dashboard
 from data.service.blueprints.bots_api import start_symbol_trading, bots_api
 from data.service.blueprints.proxy import proxy
+from data.service.blueprints.events import events_bp
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "database.settings")
@@ -89,6 +90,7 @@ def create_app():
     app.register_blueprint(dashboard, url_prefix='/api')
     app.register_blueprint(user_management, url_prefix='/api')
     app.register_blueprint(proxy, url_prefix='/api')
+    app.register_blueprint(events_bp, url_prefix='/api')
 
     app.config["JWT_SECRET_KEY"] = get_jwt_secret_key()
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=settings.token_expires_days)
