@@ -1,5 +1,7 @@
+import asyncio
 import logging
 import os
+import threading
 from datetime import datetime
 
 import pandas as pd
@@ -52,6 +54,16 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
         BinanceHandler.__init__(self, base_candle_size=settings.base_candle_size)
         ThreadedWebsocketManager.__init__(self, self.binance_api_key, self.binance_api_secret)
 
+        # python-binance binds self._loop via get_loop() (asyncio.get_event_loop)
+        # in __init__. Under gunicorn on Python 3.12 that can return a loop that
+        # is already running, so the websocket thread dies in run() with "This
+        # event loop is already running" and no live candles ever arrive. Replace
+        # it with a fresh, dedicated loop and make it this thread's current loop
+        # so the socket (created here) and the listener (run in the websocket
+        # thread) agree on a single, not-yet-running loop.
+        self._loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._loop)
+
         self._validate_input(symbol, candle_size)
 
         self.candle_size = candle_size
@@ -72,6 +84,16 @@ class BinanceDataHandler(BinanceHandler, ThreadedWebsocketManager):
 
         self.start()
         self.started = True
+
+    def _delete(self):
+        # BinanceDataHandler multiply-inherits Client (REST) and Thread; both
+        # define _delete with different signatures. Python 3.12's thread teardown
+        # calls self._delete(), which the MRO resolves to Client._delete (an HTTP
+        # verb requiring `path`) and raises TypeError. Force the Thread cleanup.
+        try:
+            threading.Thread._delete(self)
+        except AttributeError:
+            pass
 
     def _validate_input(self, symbol, candle_size):
         """
