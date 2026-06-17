@@ -27,6 +27,21 @@ The detailed steps for installing and using this application locally and remotel
 diving into the installation steps.
 
 
+## Deployment
+
+MyCryptoBot can be run in a few ways:
+
+- **Locally** — `docker-compose up --build` brings up all services on your machine
+  (see [INSTALLATION.md](INSTALLATION.md)).
+- **On your own server** — clone the repo on any VPS and run the same `docker-compose`
+  stack; pull and rebuild to update.
+- **On Heroku** — the repository ships with GitHub Actions workflows that build and
+  release each service to Heroku. This is **opt-in**: set the repository variable
+  `ENABLE_HEROKU_DEPLOY=true` (plus the `HEROKU_*` secrets) to deploy on pushes to
+  `master`. Left unset, CI only runs the tests and builds the images — nothing is
+  deployed. See the [Github](INSTALLATION.md#github) section of the installation guide.
+
+
 ## Introduction
 
 The primary goal of this repository is to provide a platform that enables you to deploy your strategies, 
