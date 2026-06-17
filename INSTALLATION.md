@@ -180,6 +180,18 @@ AWS_SECRET_ACCESS_KEY # Your Personal AWS secret access key
 AWS_BUCKET # The name of the bucket where you'll keep you files
 ```
 
+The Heroku deploy jobs in the CI workflows are **opt-in**: they only run when a
+repository *variable* (not secret) named `ENABLE_HEROKU_DEPLOY` is set to `true`.
+On the same settings page, open the `Variables` tab and add:
+
+```shell
+ENABLE_HEROKU_DEPLOY # Set to "true" to deploy to Heroku on pushes to master
+```
+
+If this variable is unset (the default), pushes to `master` only run the test
+suite and build the Docker images — no deployment happens. This lets you fork
+the repo and run CI without it trying to deploy to a Heroku account.
+
 Then, navigate to the tab `Actions` and click on `I understand my workflows, go ahead and enable them`. We can now
 trigger the workflows on Github actions required to deploy our apps onto Heroku. We can achieve that by sending a 
 request to the Github API as shown below:
