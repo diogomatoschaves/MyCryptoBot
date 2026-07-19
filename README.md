@@ -31,9 +31,9 @@ diving into the installation steps.
 
 MyCryptoBot can be run in a few ways:
 
-- **Locally** — `docker-compose up --build` brings up all services on your machine
+- **Locally** — `docker compose up --build` brings up all services on your machine
   (see [INSTALLATION.md](INSTALLATION.md)).
-- **On your own server** — clone the repo on any VPS and run the same `docker-compose`
+- **On your own server** — clone the repo on any VPS and run the same `docker compose`
   stack; pull and rebuild to update.
 - **On Heroku** — the repository ships with GitHub Actions workflows that build and
   release each service to Heroku. This is **opt-in**: set the repository variable

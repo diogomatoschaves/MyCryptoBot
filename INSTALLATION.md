@@ -46,27 +46,27 @@ The database is handled by a postgres docker container as a service, which ensur
 from local installations. When the database service is up, the database can be accessed on the local server on 
 the port `5433`, instead of the usual `5432`.
 
-In order to set up the database we need to start the services in detached mode via `docker-compose`, as follows:
+In order to set up the database we need to start the services in detached mode via `docker compose`, as follows:
 
-    $ docker-compose up -d --build
+    $ docker compose up -d --build
 
 This allows us to access the containers, in order to execute commands to migrate the schema and initialize the 
 database. Execute the following commands:
 
-    $ docker-compose exec model-service python database/manage.py migrate
-    $ docker-compose exec model-service python database/initial_setup.py
+    $ docker compose exec model-service python database/manage.py migrate
+    $ docker compose exec model-service python database/initial_setup.py
 
 In theory any of the web services can be used for the previous commands, but the other services will crash if 
 there is no database yet.
 
 Finally, we create a superuser, whose credentials we'll use in order to log in into the dashboard later on:
 
-    $ docker-compose exec model-service python database/manage.py createsuperuser
+    $ docker compose exec model-service python database/manage.py createsuperuser
 
 If needed, one can access the `psql` console inside the database container with the following steps.
 First we enter the database container with:
 
-    $ docker-compose exec db bash
+    $ docker compose exec db bash
 
 Once inside the container, we can enter the psql console with:
 
@@ -93,10 +93,32 @@ python version (`>=3.7.1,<3.10`) when creating your virtual environment.
 
 Now that everything is set up correctly, we can restart all the services and start all the apps with the following command:
 
-    $ docker-compose up --build
+    $ docker compose up --build
 
 You can now go to [http://localhost:3000](http://localhost:3000) to open the dashboard app and log in 
 using your superuser credentials.
+
+### Troubleshooting: `KeyError: 'ContainerConfig'`
+
+If `docker compose up --build` (or the legacy `docker-compose up --build`) fails while recreating containers with
+an error like:
+
+    ERROR: for mycryptobot_data-service_1  'ContainerConfig'
+    ...
+    KeyError: 'ContainerConfig'
+
+this is a known bug in the standalone **Compose V1** CLI (the Python `docker-compose` package, e.g. `docker-compose==1.29.2`)
+when it tries to recreate containers against a newer Docker Engine. Compose V1 has been deprecated by Docker since
+mid-2023 and is no longer receiving fixes.
+
+The fix is to use **Compose V2** instead — the `docker compose` plugin (no hyphen), which ships built into current
+Docker Desktop and Docker Engine installs. If `docker compose version` doesn't work, install the plugin by following
+the [official Compose V2 install guide](https://docs.docker.com/compose/install/linux/), then remove the old
+`docker-compose` binary/package so it doesn't get used by mistake.
+
+If you were already using Compose V2 and still hit this, the stale containers were likely first created by a V1
+run — remove them once with `docker compose down --remove-orphans` (or `docker-compose down` if that's what created
+them) before running `docker compose up --build` again.
 
 ## Remote Installation (On Heroku)
 
